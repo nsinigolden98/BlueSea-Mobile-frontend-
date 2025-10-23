@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BlueseaMobile — Login / Sign up</title>
+  <meta name="description" content="BlueseaMobile — secure login & signup" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="../basic_imgs/logo.png" />
+</head>
+<body class="bs_page" data-theme="dark">
+
+  <header class="bs_header" role="banner">
+    <div class="bs_header_left">
+      <!-- Replace with your SVG or PNG logo file at basic_imgs/logo.png -->
+      <img src="../basic_imgs/logo.png" alt="BlueseaMobile logo" class="bs_logo_image" onclick="location.href='../landing page/index.html'" />
+    </div>
+
+    <div class="bs_header_right">
+      <button class="bs_theme_toggle" id="bs_theme_toggle" aria-label="Toggle theme" title="Toggle theme"></button>
+    </div>
+  </header>
+
+  <main class="bs_main" role="main">
+    <section class="bs_card" aria-labelledby="bs_card_title">
+      <h1 id="bs_card_title" class="bs_sr_only">BlueseaMobile — Sign in or create account</h1>
+
+      <!-- Tabs -->
+      <div class="bs_tabs" role="tablist" aria-label="Authentication tabs">
+        <button id="bs_tab_login" class="bs_tab bs_tab_login active"
+                role="tab" aria-selected="true" aria-controls="panel-login" tabindex="0"
+                data-target="login">Log in</button>
+
+        <button id="bs_tab_signup" class="bs_tab bs_tab_signup"
+                role="tab" aria-selected="false" aria-controls="panel-signup" tabindex="-1"
+                data-target="signup">Sign up</button>
+      </div>
+
+      <div class="bs_tab_indicator" id="bs_tab_indicator" aria-hidden="true"></div>
+
+      <div class="bs_divider" aria-hidden="true"> Welcome To BlueSea Mobile</div>
+
+      <!-- Sliding forms outer -->
+      <div class="bs_forms_outer">
+        <div class="bs_forms_inner" id="bs_forms_inner">
+          <!-- LOGIN -->
+          <form id="bs_form_login" class="bs_form bs_form_login" role="tabpanel"
+                aria-labelledby="bs_tab_login" aria-hidden="false" novalidate>
+            <!-- identifier: email / username / phone -->
+            <div class="bs_field">
+              <label for="login_identifier" class="bs_sr_only">Email, phone or username</label>
+              <input id="login_identifier" name="login_identifier" class="bs_input"
+                     type="text" placeholder="Email, Phone, or Username"
+                     autocomplete="username" aria-describedby="login_identifier_error" required />
+              <div id="login_identifier_error" class="bs_error" aria-live="polite"></div>
+            </div>
+
+            <div class="bs_field bs_field_password">
+              <label for="login_password" class="bs_sr_only">Password</label>
+              <div class="bs_password_wrapper">
+                <input id="login_password" name="login_password" class="bs_input bs_input_password"
+                       type="password" placeholder="Password" autocomplete="current-password"
+                       aria-describedby="login_password_error" required />
+                <button type="button" class="bs_toggle_password" data-target="login_password"
+                        aria-label="Show password" title="Show/hide password">
+                  <!-- eye icon toggles via CSS classes -->
+                  <svg class="bs_eye_icon bs_eye_closed" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                    <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="1.6" />
+                  </svg>
+                  <svg class="bs_eye_icon bs_eye_open" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                  </svg>
+                </button>
+              </div>
+              <div id="login_password_error" class="bs_error" aria-live="polite"></div>
+            </div>
+
+            <div class="bs_row bs_row_options">
+              <label class="bs_checkbox_label">
+                <input type="checkbox" id="login_remember" class="bs_checkbox" />
+                <span>Remember me</span>
+              </label>
+              <button type="button" class="bs_link bs_forgot" id="bs_forgot">Forgot password?</button>
+            </div>
+
+            <button class="bs_btn bs_btn_primary" id="bs_btn_login" type="submit">Log in</button>
+          </form>
+
+          <!-- SIGNUP -->
+          <form id="bs_form_signup" class="bs_form bs_form_signup" role="tabpanel"
+                aria-labelledby="bs_tab_signup" aria-hidden="true" novalidate>
+            <div class="bs_field">
+              <label for="signup_email" class="bs_sr_only">Email</label>
+              <input id="signup_email" name="signup_email" class="bs_input" type="email"
+                     placeholder="Email" autocomplete="email"
+                     aria-describedby="signup_email_error" required />
+              <div id="signup_email_error" class="bs_error" aria-live="polite"></div>
+            </div>
+
+            <div class="bs_field">
+              <label for="signup_phone" class="bs_sr_only">Phone</label>
+              <input id="signup_phone" name="signup_phone" class="bs_input" type="tel"
+                     placeholder="0803 123 4567 or +2348031234567" inputmode="tel" autocomplete="tel"
+                     aria-describedby="signup_phone_error" required />
+              <div id="signup_phone_error" class="bs_error" aria-live="polite"></div>
+            </div>
+
+            <!-- REPURPOSED: single "Full name" input (was signup_username) -->
+            <div class="bs_field">
+              <label for="signup_username" class="bs_sr_only">Full name</label>
+              <input id="signup_username" name="signup_username" class="bs_input" type="text"
+                     placeholder="Full name (e.g., John Doe)" autocomplete="name"
+                     aria-describedby="signup_username_error" required />
+              <div id="signup_username_error" class="bs_error" aria-live="polite"></div>
+            </div>
+
+            <div class="bs_field bs_field_password">
+              <label for="signup_password" class="bs_sr_only">Password</label>
+              <div class="bs_password_wrapper">
+                <input id="signup_password" name="signup_password" class="bs_input bs_input_password"
+                       type="password" placeholder="Password (min 8 chars, letters+digit, allowed #$@)"
+                       aria-describedby="signup_password_error" required />
+                <button type="button" class="bs_toggle_password" data-target="signup_password" aria-label="Show password" title="Show/hide password">
+                  <svg class="bs_eye_icon bs_eye_closed" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                    <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="1.6" />
+                  </svg>
+                  <svg class="bs_eye_icon bs_eye_open" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                  </svg>
+                </button>
+              </div>
+              <div id="signup_password_error" class="bs_error" aria-live="polite"></div>
+            </div>
+
+            <div class="bs_field bs_field_password">
+              <label for="signup_confirm" class="bs_sr_only">Confirm Password</label>
+              <div class="bs_password_wrapper">
+                <input id="signup_confirm" name="signup_confirm" class="bs_input bs_input_password"
+                       type="password" placeholder="Confirm password" aria-describedby="signup_confirm_error" required />
+                <button type="button" class="bs_toggle_password" data-target="signup_confirm" aria-label="Show password" title="Show/hide password">
+                  <svg class="bs_eye_icon bs_eye_closed" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                    <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="1.6" />
+                  </svg>
+                  <svg class="bs_eye_icon bs_eye_open" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                  </svg>
+                </button>
+              </div>
+              <div id="signup_confirm_error" class="bs_error" aria-live="polite"></div>
+            </div>
+
+            <div class="bs_field">
+              <label class="bs_checkbox_label">
+                <input type="checkbox" id="signup_terms" class="bs_checkbox" required />
+                <span>I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms & Policy</a></span>
+              </label>
+              <div id="signup_terms_error" class="bs_error" aria-live="polite"></div>
+            </div>
+
+            <button class="bs_btn bs_btn_primary" id="bs_btn_signup" type="submit">Sign up</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="bs_divider"><span>Or continue with</span></div>
+
+      <div class="bs_socials" aria-hidden="false">
+        <button class="bs_btn_social bs_google" id="bs_google">
+          <!-- Google SVG -->
+          Google</button>
+
+        <button class="bs_btn_social bs_apple" id="bs_apple" title="Apple Sign In (Apple devices only)">
+          <!-- Apple SVG -->
+          Apple</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- OTP Modal (reused for signup/login/forgot) -->
+  <div id="bs_modal" class="bs_modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="bs_modal_title">
+    <div class="bs_modal_panel" role="document">
+      <button class="bs_modal_close" id="bs_modal_close" aria-label="Close">✕</button>
+      <h2 id="bs_modal_title" class="bs_modal_title">Verify</h2>
+
+      <div class="bs_modal_tabs" role="tablist" aria-label="Verification targets">
+        <button class="bs_modal_tab active" data-target="email" role="tab" aria-selected="true" tabindex="0">Email</button>
+        <button class="bs_modal_tab" data-target="phone" role="tab" aria-selected="false" tabindex="-1">Phone</button>
+      </div>
+
+      <div class="bs_modal_body">
+        <!-- Email verification panel -->
+        <div class="bs_modal_panel_item" data-panel="email" aria-hidden="false">
+          <p class="bs_small">We sent a 6-digit code to your email. Enter it below.</p>
+          <div class="bs_field">
+            <label for="modal_email_otp" class="bs_sr_only">Email OTP</label>
+            <input id="modal_email_otp" class="bs_input" type="text" inputmode="numeric" maxlength="6" placeholder="Enter email OTP" />
+            <div id="modal_email_error" class="bs_error" aria-live="polite"></div>
+          </div>
+          <div class="bs_row bs_modal_actions">
+            <button id="bs_modal_verify_email" class="bs_btn">Verify Email OTP</button>
+            <button id="bs_modal_resend_email" class="bs_btn">Resend (<span id="bs_modal_timer_email">50</span>s)</button>
+          </div>
+        </div>
+
+        <!-- Phone verification panel -->
+        <div class="bs_modal_panel_item" data-panel="phone" aria-hidden="true">
+          <p class="bs_small">We sent a 6-digit code to your phone. Enter it below.</p>
+          <div class="bs_field">
+            <label for="modal_phone_otp" class="bs_sr_only">Phone OTP</label>
+            <input id="modal_phone_otp" class="bs_input" type="text" inputmode="numeric" maxlength="6" placeholder="Enter phone OTP" />
+            <div id="modal_phone_error" class="bs_error" aria-live="polite"></div>
+          </div>
+          <div class="bs_row bs_modal_actions">
+            <button id="bs_modal_verify_phone" class="bs_btn">Verify Phone OTP</button>
+            <button id="bs_modal_resend_phone" class="bs_btn">Resend (<span id="bs_modal_timer_phone">50</span>s)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="bs_toast" class="bs_toast" aria-live="assertive" hidden></div>
+
+  <script src="scripts.js" defer></script>
+</body>
+</html>

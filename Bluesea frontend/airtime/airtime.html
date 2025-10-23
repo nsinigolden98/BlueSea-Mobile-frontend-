@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BlueSea — Buy Airtime</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">BS</div>
+      <div class="title-wrap">
+        <h1 class="site-title">BlueSea</h1>
+        <div class="slogan">Smarter airtime & data</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+      <div class="wallet">₦ <span id="wallet-balance">1,200</span></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel buy-airtime">
+      <h2>Buy Airtime</h2>
+
+      <div class="row">
+        <label class="section-label">Select Network</label>
+        <div class="network-list" id="network-list" role="tablist">
+          <button class="network-btn" data-network="MTN">MTN</button>
+          <button class="network-btn" data-network="GLO">Glo</button>
+          <button class="network-btn" data-network="AIRTEL">Airtel</button>
+          <button class="network-btn" data-network="9MOBILE">9mobile</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="section-label">Select Plan</label>
+        <div class="plans" id="plans">
+          <button class="plan-btn" data-amount="50">₦50</button>
+          <button class="plan-btn" data-amount="100">₦100</button>
+          <button class="plan-btn" data-amount="500">₦500</button>
+          <button class="plan-btn" data-amount="1000">₦1,000</button>
+          <button class="plan-btn" data-amount="2000">₦2,000</button>
+          <button class="plan-btn" data-amount="5000">₦5,000</button>
+        </div>
+      </div>
+
+      <!-- Replaced AI Recommendation box with phone input as requested -->
+      <div class="row highlight-row">
+        <label class="section-label">Recipient's Phone Number</label>
+        <div class="phone-input-wrap">
+          <input id="phone" class="phone-input" inputmode="numeric" pattern="[0-9+]*" placeholder="e.g. 08031234567 or +2348031234567" aria-label="Recipient phone number" />
+          <div id="phone-hint" class="phone-hint">Nigerian numbers only • digits only</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="section-label">Amount (₦)</label>
+        <div class="amount-row">
+          <input id="amount" class="amount-input" type="number" min="15" max="500000" step="1" placeholder="Enter amount (min ₦15)" />
+          <button id="buy-now-inline" class="btn btn-primary small">Buy now</button>
+        </div>
+      </div>
+
+      <div class="summary-panel" id="summary">
+        <h3>Summary</h3>
+        <div class="summary-row"><span>Network</span><strong id="summary-network">—</strong></div>
+        <div class="summary-row"><span>Plan</span><strong id="summary-plan">—</strong></div>
+        <div class="summary-row"><span>Recipient</span><strong id="summary-recipient">—</strong></div>
+      </div>
+
+      <div class="actions">
+        <button id="buy-btn" class="btn btn-primary large">Buy now</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Confirmation modal -->
+  <div id="confirm-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+      <h4>Confirm Purchase</h4>
+      <p id="confirm-text">You are about to buy <strong id="confirm-amount">₦0</strong> airtime for <strong id="confirm-recipient">—</strong> on <strong id="confirm-network">—</strong>.</p>
+      <div class="modal-actions">
+        <button id="confirm-cancel" class="btn">Cancel</button>
+        <button id="confirm-ok" class="btn btn-primary">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

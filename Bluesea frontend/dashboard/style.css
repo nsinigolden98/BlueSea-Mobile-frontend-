@@ -1,0 +1,191 @@
+/* style.css — BlueSea Dashboard (cleaned & consolidated) */
+
+/* ========== Variables ========== */
+:root {
+  --accent-a: #00AEEF;
+  --accent-b: #007BFF;
+  --accent-purp: #6C63FF;
+
+  --bg: #F6F8FA;
+  --card: #FFFFFF;
+  --text: #0E1B22;
+  --muted: #6B7785;
+  --danger: #FF3B30;
+  --elev: rgba(12,20,24,0.06);
+
+  --space: 18px;
+  --radius: 12px;
+  --transition: 200ms cubic-bezier(.22,.9,.3,1);
+
+  --max-width: 1100px;
+}
+
+/* Dark theme */
+:root[data-theme="dark"], body[data-theme="dark"] {
+  --bg: #0D1117;
+  --card: #161B22;
+  --text: #E7EEF6;
+  --muted: #9AA7B2;
+  --elev: rgba(255,255,255,0.02);
+}
+
+/* ========== Base ========== */
+* { box-sizing: border-box; }
+html,body { height:100%; }
+body.bsdash_body {
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.35;
+  overflow-x: hidden; /* avoid horizontal breakout */
+}
+
+.bsdash_container { max-width: var(--max-width); margin:24px auto; padding:0 20px 64px; display:flex; flex-direction:column; gap:22px; }
+
+/* Header */
+.bsdash_header { display:flex; align-items:center; justify-content:space-between; padding: calc(var(--space) * 1.0); gap:12px; border-bottom:1px solid rgba(0,0,0,0.04); background:transparent; max-width:var(--max-width); margin:0 auto; }
+.bsdash_header_left { display:flex; flex-direction:column; gap:6px; }
+.bsdash_title { margin:0; font-size:20px; font-weight:700; color:var(--text); }
+.bsdash_username { color:var(--accent-b); }
+.bsdash_subtitle { margin:0; font-size:13px; color:var(--muted); }
+
+/* header right */
+.bsdash_header_right { display:flex; align-items:center; gap:12px; }
+.bsdash_icon_btn { background:transparent; border:0; padding:6px; border-radius:8px; cursor:pointer; position:relative; color:var(--text); text-decoration:none; display:inline-flex; align-items:center; }
+.bsdash_badge { position:absolute; top:2px; right:2px; min-width:18px; height:18px; border-radius:999px; background:var(--danger); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; padding:0 5px; box-shadow:0 6px 14px rgba(0,0,0,0.12); }
+
+.visually-hidden { position:absolute !important; clip: rect(1px,1px,1px,1px); padding:0;border:0;height:1px;width:1px;overflow:hidden; }
+
+/* theme toggle */
+.bsdash_theme_toggle { background: transparent; border: 1px solid rgba(0,0,0,0.06); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:600; color:var(--text); transition: all var(--transition); }
+.bsdash_theme_toggle:hover { transform: translateY(-2px); box-shadow: 0 6px 18px var(--elev); }
+
+/* wallet preview */
+.bsdash_wallet_preview { background: linear-gradient(90deg,var(--accent-a),var(--accent-b)); color:#fff; padding:8px 12px; border-radius:10px; font-weight:700; cursor: pointer; }
+.bsdash_wallet_amount { font-weight:700; }
+
+/* cards */
+/* toprow now stacks two cards with same width but different heights */
+.bsdash_toprow { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; }
+.bsdash_card { background:var(--card); border-radius:var(--radius); padding:18px; box-shadow: 0 6px 18px var(--elev); display:flex; flex-direction:column; gap:8px; overflow: hidden; flex: 1 1 100%; min-width: 280px; }
+.bsdash_card_balance { min-height:140px; border-left:6px solid var(--accent-a); position:relative; }
+.bsdash_card_loyalty { min-height:68px; border-left:4px solid  var(--accent-a); }
+
+/* subtle visual accent inside balance card */
+.bsdash_balance_amount { font-size:28px; font-weight:900; color:var(--accent-b); margin-top:6px; }
+
+/* small cards get subtle accent */
+.bsdash_action_btn { background:var(--card); border-radius:12px; padding:18px; display:flex; gap:10px; align-items:center; justify-content:flex-start; border:1px solid rgba(0,0,0,0.04); cursor:pointer; transition: transform var(--transition), box-shadow var(--transition); }
+.bsdash_action_btn:hover { transform: translateY(-4px); box-shadow: 0 12px 28px var(--elev); }
+
+/* quick actions grid */
+.bsdash_section_title { margin:0 0 12px 0; font-size:16px; font-weight:700; color:var(--text); }
+.bsdash_quick_actions { display:flex; flex-direction:column; gap:8px; }
+.bsdash_actions_grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; }
+
+/* transactions */
+.bsdash_transactions { display:flex; flex-direction:column; gap:10px; }
+.bsdash_tx_list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+.bsdash_tx_row { background:var(--card); border-radius:12px; padding:14px; display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid rgba(0,0,0,0.04); cursor:pointer; transition: transform var(--transition), box-shadow var(--transition); }
+.bsdash_tx_row:hover { transform: translateY(-3px); box-shadow: 0 14px 28px var(--elev); }
+
+/* notifications dropdown removed — kept small clamp CSS for wallet */
+.bsdash_wallet_dropdown, .bsdash_notifications_dropdown {
+  position: fixed;
+  top: 72px;
+  left: auto;
+  right: auto;
+  width: 360px;
+  max-width: calc(100vw - 24px);
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(11,18,32,0.12);
+  padding: 10px;
+  z-index: 1300;
+  overflow: auto;
+  contain: paint;
+  max-height: calc(100vh - 120px);
+}
+
+/* small utilities */
+.hidden { display:none !important; }
+.skeleton { background: linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.02)); border-radius:8px; display:inline-block; }
+.skeleton.w-48 { width:48%; height:16px; }
+.skeleton.w-60 { width:60%; height:18px; }
+.skeleton.w-40 { width:40%; height:14px; }
+.skeleton.w-30 { width:30%; height:12px; }
+.skeleton.h-18 { height:18px; }
+.skeleton.h-12 { height:12px; }
+.skeleton-row { opacity:0.95; }
+
+/* responsive */
+@media (max-width: 860px) {
+  .bsdash_actions_grid { grid-template-columns: repeat(2, 1fr); }
+  .bsdash_toprow { flex-direction:column; gap:12px; }
+  .bsdash_card_balance { min-height:120px; }
+  .bsdash_card_loyalty { min-height:56px; }
+}
+@media (max-width: 639px) {
+  .bsdash_balance_amount { font-size:22px; }
+}
+
+/* focus outlines */
+.bsdash_action_btn:focus, .bsdash_theme_toggle:focus, .bsdash_claim_btn:focus { outline:3px solid rgba(0,122,255,0.12); outline-offset:3px; }
+
+/* toast */
+.bsdash_toast { position: fixed; right: 18px; bottom: 18px; z-index: 1400; pointer-events: none; }
+
+/* small helpers for avatar and buttons */
+.avatar-s { width:36px; height:36px; border-radius:8px; background:linear-gradient(90deg,var(--accent-a),var(--accent-b)); }
+
+/* button used inside dropdown */
+.bsdash_small_btn { border:0; background:transparent; color:var(--accent-b); padding:6px 8px; cursor:pointer; font-weight:700; }
+
+/* ===== ADDED STYLES: wallet dropdown, profile avatar, loyalty, search, timeline, scheduled payments, streak ===== */
+
+/* Profile avatar/button - circular */
+.bsdash_profile_btn { background: transparent; border: 0; padding: 0; cursor: pointer; display:inline-flex; align-items:center; justify-content:center; }
+.bsdash_profile_svg { border-radius:50%; box-shadow:0 6px 16px rgba(0,0,0,0.06); width:40px; height:40px; display:block; }
+#bsdash_profile_img { width:40px; height:40px; border-radius:50%; object-fit:cover; display:block; }
+
+/* Gamify streak badge */
+.bsdash_streak { background: linear-gradient(90deg,var(--accent-a),var(--accent-b)); color:#fff; padding:6px 8px; border-radius:999px; font-weight:700; font-size:13px; }
+
+/* Wallet dropdown */
+.bsdash_wallet_dropdown {
+  position: fixed;
+  top: 72px;
+  left: auto;
+  right: auto;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(11,18,32,0.12);
+  padding: 12px;
+  z-index: 1350;
+  overflow: auto;
+  contain: paint;
+  max-height: calc(100vh - 120px);
+}
+.bsdash_wallet_dropdown_header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.bsdash_wallet_topup_ctas .bsdash_btn { background:linear-gradient(90deg,var(--accent-a),var(--accent-b)); color:white; border-radius:10px; border:0; padding:8px 12px; font-weight:700; cursor:pointer; }
+.bsdash_wallet_activity { margin-top:6px; display:flex; flex-direction:column; gap:8px; }
+
+/* Smart shortcuts (server-supplied quick actions) */
+#bsdash_shortcuts_container { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+.bsdash_shortcut { background:var(--card); border-radius:10px; padding:10px 12px; box-shadow:0 6px 12px rgba(0,0,0,0.04); cursor:pointer; border:1px solid rgba(0,0,0,0.04); }
+
+/* Search input */
+.bsdash_search_input { padding:6px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.06); min-width:180px; }
+
+/* Activity timeline */
+#bsdash_timeline_section { margin-top:12px; }
+.bsdash_timeline_item { display:flex; gap:12px; align-items:flex-start; padding:8px; border-radius:8px; background:var(--card); border:1px solid rgba(0,0,0,0.04); }
+.bsdash_timeline_item_time { font-size:12px; color:var(--muted); }
+
+/* Scheduled payments */
+#bsdash_scheduled_section { margin-top:12px; }

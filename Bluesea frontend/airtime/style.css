@@ -1,0 +1,154 @@
+:root{
+  --bg: #f6f8fb;
+  --panel: #ffffff;
+  --muted: #6b7280;
+  --accent: linear-gradient(90deg,#5ac7ff,#3b8dff);
+  --primary: #2b86ff;
+  --border: #e6e9ee;
+  --text: #0b1220;
+  --success: #00b894;
+  --glass: rgba(11,18,32,0.04);
+  --radius: 12px;
+  --shadow: 0 6px 18px rgba(11,18,32,0.08);
+  --glass-2: rgba(11,18,32,0.06);
+}
+
+/* Dark theme variables */
+:root.dark {
+  --bg: #0b0f12;
+  --panel: #0f1417;
+  --muted: #9aa4b2;
+  --accent: linear-gradient(90deg,#00c2ff,#3b8dff);
+  --primary: #5aa8ff;
+  --border: rgba(255,255,255,0.06);
+  --text: #e6eef8;
+  --success: #7be1b1;
+  --glass: rgba(255,255,255,0.02);
+  --glass-2: rgba(255,255,255,0.03);
+  --shadow: 0 8px 28px rgba(2,6,12,0.6);
+}
+
+/* Basic resets */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.4;
+  padding-bottom:40px;
+}
+
+/* Topbar */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px 28px;
+  gap:16px;
+}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{
+  width:44px;height:44px;border-radius:8px;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;color:#fff;
+  box-shadow: var(--shadow);
+}
+.site-title{margin:0;font-size:18px;letter-spacing:0.2px}
+.slogan{font-size:12px;color:var(--muted)}
+.controls{display:flex;align-items:center;gap:14px}
+#theme-toggle{
+  background:transparent;border:1px solid var(--border);padding:8px;border-radius:8px;cursor:pointer;
+}
+.wallet{background:transparent;padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-weight:600}
+
+/* Page container */
+.container{max-width:960px;margin:22px auto;padding:0 18px}
+.panel{background:var(--panel);border-radius:16px;padding:28px;box-shadow:var(--shadow);border:1px solid var(--border)}
+
+/* Headings */
+.buy-airtime h2{margin:0 0 18px;font-size:26px}
+.section-label{display:block;margin-bottom:10px;font-weight:600;color:var(--text)}
+
+/* Network buttons */
+.network-list{display:flex;gap:12px;flex-wrap:wrap}
+.network-btn{
+  background:transparent;border:1px solid var(--border);
+  padding:10px 14px;border-radius:8px;cursor:pointer;transition:all .18s ease;
+  color:var(--text);font-weight:600;
+}
+.network-btn:hover{transform:translateY(-3px);box-shadow:var(--glass-2)}
+.network-btn.active{
+  background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 6px 20px rgba(59,141,255,0.16);
+}
+
+/* Plan buttons */
+.plans{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.plan-btn{
+  background:transparent;border:1px solid var(--border);padding:12px 18px;border-radius:10px;font-weight:700;cursor:pointer;transition:all .16s ease;
+  min-width:100px;text-align:center;
+}
+.plan-btn:hover{transform:translateY(-3px);box-shadow:var(--glass)}
+.plan-btn.selected{background:transparent;border-color:var(--primary);box-shadow:0 4px 10px rgba(43,134,255,0.12)}
+
+/* Highlight row (phone input) */
+.highlight-row{margin-top:18px}
+.phone-input-wrap{display:flex;flex-direction:column;gap:6px}
+.phone-input{
+  padding:14px 16px;border-radius:10px;border:1px solid var(--border);
+  background:transparent;color:var(--text);font-size:16px;outline:none;transition:box-shadow .14s, border-color .14s;
+}
+.phone-input:focus{box-shadow:0 6px 20px rgba(43,134,255,0.08);border-color:var(--primary)}
+.phone-hint{font-size:12px;color:var(--muted)}
+
+/* Amount row */
+.amount-row{display:flex;gap:12px;align-items:center;margin-top:8px}
+.amount-input{flex:1;padding:12px 14px;border-radius:10px;border:1px solid var(--border);font-size:16px}
+.btn{padding:12px 18px;border-radius:10px;border:1px solid var(--border);background:transparent;cursor:pointer}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{
+  background:var(--accent);
+  color:#fff;border:0;box-shadow:0 6px 20px rgba(59,141,255,0.12);font-weight:700;
+}
+.btn.small{padding:10px 12px;font-size:14px}
+.btn.large{padding:16px 20px;font-size:18px;width:100%}
+
+/* Summary panel */
+.summary-panel{
+  margin-top:20px;padding:18px;border-radius:10px;background:var(--glass);border:1px solid var(--border);
+}
+.summary-panel h3{margin:0 0 12px}
+.summary-row{display:flex;justify-content:space-between;padding:12px 8px;border-top:1px solid var(--border)}
+.summary-row:first-of-type{border-top:0}
+
+/* Actions */
+.actions{margin-top:18px}
+
+/* Modal */
+.modal{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:rgba(2,6,12,0.4);opacity:0;pointer-events:none;transition:opacity .16s;
+}
+.modal[aria-hidden="false"]{opacity:1;pointer-events:auto}
+.modal-dialog{background:var(--panel);padding:20px;border-radius:12px;max-width:480px;width:100%;border:1px solid var(--border);box-shadow:var(--shadow)}
+.modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:14px}
+
+/* Responsive */
+@media (max-width:880px){
+  .container{padding:0 14px}
+  .plans .plan-btn{min-width:80px;padding:10px 12px}
+  .buy-airtime h2{font-size:22px}
+}
+@media (max-width:560px){
+  .topbar{padding:12px}
+  .brand .title-wrap{display:none}
+  .panel{padding:18px}
+  .network-list{gap:8px}
+  .amount-row{flex-direction:column;align-items:stretch}
+  .btn.large{font-size:16px}
+}
+
