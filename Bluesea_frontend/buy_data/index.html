@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy Data - BlueSea</title>
+    <link rel="stylesheet" href="css/index.css"> 
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">BlueSea</h1>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle light and dark mode" data-mode="dark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                </svg>
+            </button>
+        </header>
+
+        <main class="buy-data-form">
+            <h2>Buy Data</h2>
+
+            <section class="network-select-section">
+                <label class="section-label">Select Network</label>
+                <div class="network-tabs">
+                    <button class="tab-button active" data-network="MTN">MTN</button>
+                    <button class="tab-button" data-network="Glo">Glo</button>
+                    <button class="tab-button" data-network="Airtel">Airtel</button>
+                    <button class="tab-button" data-network="9mobile">9mobile</button>
+                </div>
+            </section>
+
+            <section class="recipient-section">
+                <label class="section-label">Recipient's Phone Number</label>
+                <div class="input-group">
+                    <input type="tel" id="recipient-number" placeholder="Enter phone number" value="" maxlength="11">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="use-my-number">
+                        <label for="use-my-number">Use My Own</label>
+                    </div>
+                </div>
+            </section>
+
+            <section class="plan-select-section">
+                <label class="section-label">Select Plan</label>
+                <div class="plan-tabs">
+                    <button class="tab-button active" data-plan-type="Daily">Daily</button>
+                    <button class="tab-button" data-plan-type="Weekly">Weekly</button>
+                    <button class="tab-button" data-plan-type="Monthly">Monthly</button>
+                    <button class="tab-button" data-plan-type="ExtraValue">ExtraValue</button>
+                </div>
+
+                <div class="data-plans-grid">
+                    </div>
+
+                <div class="recommendation-banner">
+                    <p>Select a network and plan to proceed.</p>
+                </div>
+            </section>
+            
+            <button class="buy-now-button" id="proceed-to-payment-btn">Proceed to Payment</button>
+        </main>
+    </div>
+
+    <div id="pin-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Enter Your Transaction PIN</h3>
+            <p>For your security, please enter your 4-digit PIN to confirm the purchase.</p>
+            
+            <div class="pin-input-group">
+                <input type="password" id="pin-digit-1" class="pin-digit" maxlength="1" inputmode="numeric" autocomplete="off" required>
+                <input type="password" id="pin-digit-2" class="pin-digit" maxlength="1" inputmode="numeric" autocomplete="off" required>
+                <input type="password" id="pin-digit-3" class="pin-digit" maxlength="1" inputmode="numeric" autocomplete="off" required>
+                <input type="password" id="pin-digit-4" class="pin-digit" maxlength="1" inputmode="numeric" autocomplete="off" required>
+            </div>
+
+            <p id="pin-message" class="error-message"></p>
+
+            <button id="confirm-payment-btn" class="buy-now-button">Confirm Payment</button>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

@@ -142,7 +142,7 @@ body.LP_body{
     position:absolute;
   inset:0;
   z-index:0;
-  background-image: url(img/hero.jpeg);
+  background-image: url(../basic_imgs/hero.jpeg);
   background-repeat: no-repeat;
   background-position: center bottom;  
   background-size: cover;
