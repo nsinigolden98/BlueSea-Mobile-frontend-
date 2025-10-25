@@ -17,12 +17,14 @@
 
   /* -------------- Configuration (change as needed) -------------- */
   // Domain base; update if your API is at another subdomain
-  const API_BASE = "https://blueseamobile.com.ng"; // <--- change if needed
+  //const API_BASE = "https://blueseamobile.com.ng"; // <--- change if needed
+  const API_BASE = "http://127.0.0.1:8000"; // <--- change if needed
 
   // Endpoints used by frontend (server must implement these)
   const ENDPOINTS = {
     login: `${API_BASE}/api/auth/login`,
-    signup: `${API_BASE}/api/auth/signup`,
+    //signup: `${API_BASE}/api/auth/signup`,
+    signup: `${API_BASE}/accounts/sign-up/`,
     sendOtp: `${API_BASE}/api/auth/send-otp`,       // POST { purpose, target } -> 200
     verifyOtp: `${API_BASE}/api/auth/verify-otp`,   // POST { purpose, target, otp } -> 200
     forgotReset: `${API_BASE}/api/auth/forgot-reset`, // POST { email, otp, newPassword }
@@ -386,18 +388,22 @@
   /* -------------- Helper to call backend endpoints (with credentials included) -------------- */
   async function apiPost(url, body) {
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        credentials: "include", // cookie-based auth
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const json = await res.json().catch(() => ({}));
-      return { ok: res.ok, status: res.status, data: json };
-    } catch (err) {
-      return { ok: false, status: 0, data: { error: "Network error" } };
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+        const json = await response.json().catch(() => ({})); 
+        console.log(typeof json);
+        // Return the structured response
+        return { data: json };
     }
-  }
+    catch (err) {
+        // Only network or fundamental request errors reach here
+        return { ok: false, status: 0, data: { error: "Network error" } };
+    }
+}
+
 
   /* -------------- Send OTP (email or phone) -------------- */
   async function sendOtp(purpose, target) {
@@ -533,7 +539,7 @@
     const rememberMe = !!$("#login_remember").checked;
 
     let valid = true;
-    if (!identifier) { setError($("#login_identifier"), "Please enter email, phone or username."); valid = false; }
+    if (!identifier) { setError($("#login_identifier"), "Please enter email or phone number"); valid = false; }
     if (!password) { setError($("#login_password"), "Please enter your password."); valid = false; }
     if (!valid) return;
 
@@ -580,7 +586,8 @@
     clearAllErrors(form_signup);
     const email = $("#signup_email").value.trim();
     const phoneRaw = $("#signup_phone").value.trim();
-    const username = $("#signup_username").value.trim();
+    const name = $("#signup_name").value.trim();
+    const surname = $("#signup_surname").value.trim();
     const password = $("#signup_password").value;
     const confirm = $("#signup_confirm").value;
     const terms = !!$("#signup_terms").checked;
@@ -588,7 +595,8 @@
     let valid = true;
     if (!email) { setError($("#signup_email"), "Please enter your email."); valid = false; }
     if (!phoneRaw) { setError($("#signup_phone"), "Please enter your phone."); valid = false; }
-    if (!username) { setError($("#signup_username"), "Please choose a username."); valid = false; }
+    if (!name) { setError($("#signup_name"), "Please enter your name."); valid = false; }
+    if (!surname) { setError($("#signup_surname"), "Please enter you surname."); valid = false; }
     if (!password) { setError($("#signup_password"), "Please enter a password."); valid = false; }
     if (!confirm) { setError($("#signup_confirm"), "Confirm your password."); valid = false; }
     if (!terms) { setError($("#signup_terms"), "You must accept Terms & Policy."); valid = false; }
@@ -607,32 +615,42 @@
     if (password !== confirm) { setError($("#signup_confirm"), "Passwords do not match."); return; }
 
     // POST to signup
-    const res = await apiPost(ENDPOINTS.signup, { email, phone, username, password });
-    if (!res.ok) {
+    let signup_payload = {
+        email: email, 
+        phone : String(phone),
+        other_names :name,
+        surname : surname, 
+        password : password 
+         };
+    let res = await apiPost(ENDPOINTS.signup, signup_payload);
+    showToast(res.data.message)
+    /* if (!res.ok) {
       if (res.data && res.data.errors) {
         for (const k in res.data.errors) {
           if (k.includes("email")) setError($("#signup_email"), res.data.errors[k]);
           if (k.includes("phone")) setError($("#signup_phone"), res.data.errors[k]);
-          if (k.includes("username")) setError($("#signup_username"), res.data.errors[k]);
+          if (k.includes("name")) setError($("#signup_name"), res.data.errors[k]);
+          if (k.includes("surname")) setError($("#signup_surname"), res.data.errors[k]);
           if (k.includes("password")) setError($("#signup_password"), res.data.errors[k]);
         }
       } else {
         showToast(res.data?.error || "Signup failed.");
       }
       return;
-    }
+    } */
 
     // Signup success: open OTP modal for either email or phone as user chooses.
-    showToast("Signup created. Please verify your email (and phone if you want).");
+    //showToast("Signup Successfully. Please verify your email (and phone if you want).");
+    
     // Open modal with purpose 'signup' and target = email by default (user can switch to phone)
-    openModal({ purpose: "signup", target: email });
+    /* openModal({ purpose: "signup", target: email });
     // send OTP for email by default (user can switch to phone and click resend for phone)
     const sendRes = await sendOtp("signup_email", email);
     if (sendRes.ok) {
       startCountdown(modal_timer_email, modal_resend_email);
     } else {
       showToast(sendRes.data?.error || "Failed to send email OTP.");
-    }
+    } */
   });
 
   /* -------------- Forgot password flow (trigger modal for email) -------------- */
