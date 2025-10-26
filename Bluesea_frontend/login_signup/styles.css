@@ -185,7 +185,7 @@ html[data-theme="light"]
 .bs_small{ color:var(--muted); font-size:13px }
 
 /* toast */
-.bs_toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(8,8,8,0.85); color:#fff; padding:10px 14px; border-radius:8px; box-shadow:0 6px 22px rgba(2,6,23,0.6); z-index:10000 }
+.bs_toast{ position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(8,8,8,0.85); color:#fff; padding:10px 14px; border-radius:8px; box-shadow:0 6px 22px rgba(2,6,23,0.6); z-index:10000 }
 
 /* responsive adjustments */
 @media (max-width:900px){

@@ -25,8 +25,8 @@
     login: `${API_BASE}/api/auth/login`,
     //signup: `${API_BASE}/api/auth/signup`,
     signup: `${API_BASE}/accounts/sign-up/`,
-    sendOtp: `${API_BASE}/api/auth/send-otp`,       // POST { purpose, target } -> 200
-    verifyOtp: `${API_BASE}/api/auth/verify-otp`,   // POST { purpose, target, otp } -> 200
+    sendOtp: `${API_BASE}/accounts/resend-otp/`,       // POST { purpose, target } -> 200
+    verifyOtp: `${API_BASE}/accounts/verify-email/`,   // POST { purpose, target, otp } -> 200
     forgotReset: `${API_BASE}/api/auth/forgot-reset`, // POST { email, otp, newPassword }
     oauthGoogle: `${API_BASE}/api/auth/oauth/google`, // GET -> starts OAuth handshake
     oauthApple: `${API_BASE}/api/auth/oauth/apple`,   // GET -> starts Apple handshake
@@ -47,8 +47,9 @@
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from((ctx || document).querySelectorAll(sel));
   const safeAdd = (el, ev, cb) => { if (el) el.addEventListener(ev, cb); };
+  
 
-  function showToast(msg, ms = 2200) {
+  function showToast(msg, ms = 8200) {
     const t = $("#bs_toast");
     if (!t) { alert(msg); return; }
     t.textContent = msg;
@@ -329,7 +330,7 @@
   /* -------------- Modal: open/close and tabs -------------- */
   function openModal(purposeData = {}) {
     // purposeData: { purpose: 'signup_email' | 'signup_phone' | 'login' | 'forgot_password', target: 'user@example.com' }
-    modal.dataset.purpose = JSON.stringify(purposeData || {});
+    //modal.dataset.purpose = JSON.stringify(purposeData || {});
     modal.setAttribute("aria-hidden", "false");
     // default to email tab
     switchModalPanel("email");
@@ -394,7 +395,7 @@
             body: JSON.stringify(body)
         });
         const json = await response.json().catch(() => ({})); 
-        console.log(typeof json);
+        console.log(json);
         // Return the structured response
         return { data: json };
     }
@@ -406,59 +407,34 @@
 
 
   /* -------------- Send OTP (email or phone) -------------- */
-  async function sendOtp(purpose, target) {
-    // purpose values: 'signup_email', 'signup_phone', 'login_email', 'login_phone', 'forgot_password'
-    if (!purpose || !target) return { ok:false, data:{error:"Missing purpose/target"} };
-
-    // check OTP blocked state
-    const state = getOtpState(target, purpose);
-    const now = Date.now();
-    if (state.blockedUntil && state.blockedUntil > now) {
-      return { ok:false, data:{ error:`Too many attempts. Try again after ${Math.ceil((state.blockedUntil - now)/60000)} minutes.` } };
-    }
-
-    const payload = { purpose, target };
-    const res = await apiPost(ENDPOINTS.sendOtp, payload);
-    return res;
+  async function sendOtp(email) {
+    //const payload = { purpose, target };
+    const res = await apiPost(ENDPOINTS.sendOtp, {email: email});
+    return res.data;
   }
 
   /* -------------- Verify OTP -------------- */
-  async function verifyOtp(purpose, target, otp) {
-    const state = getOtpState(target, purpose);
-    const now = Date.now();
-    if (state.blockedUntil && state.blockedUntil > now) {
-      return { ok:false, data:{ error:`Blocked. Try again later.` } };
-    }
-
+  async function verifyOtp(otp, mail) {
+    let verifyOtp_payload = {
+        otp: Number(otp),
+        email: mail
+    };
     // call backend
-    const res = await apiPost(ENDPOINTS.verifyOtp, { purpose, target, otp });
-    if (!res.ok) {
-      // increment attempt count
-      state.attempts = (state.attempts || 0) + 1;
-      if (state.attempts >= OTP_ATTEMPT_LIMIT) {
-        state.blockedUntil = Date.now() + OTP_BLOCK_MINUTES * 60 * 1000;
-        state.attempts = 0;
-      }
-      setOtpState(target, purpose, state);
-    } else {
-      // success: clear state
-      setOtpState(target, purpose, { attempts: 0, blockedUntil: 0 });
-    }
-    return res;
-  }
+    let res = await apiPost(ENDPOINTS.verifyOtp, verifyOtp_payload);
+    return res.data;
+  };
 
   /* -------------- Modal UI actions (resend & verify) -------------- */
   safeAdd(modal_resend_email, "click", async () => {
-    const meta = JSON.parse(modal.dataset.purpose || "{}");
-    const target = meta.target || $("#signup_email").value || $("#login_identifier").value;
-    const purpose = (meta.purpose === "signup" ? "signup_email" : (meta.purpose || "login_email"));
+    
+    const userEmail = $("#signup_email").value.trim();
     modal_resend_email.disabled = true;
-    const r = await sendOtp(purpose, target);
-    if (r.ok) {
+    const r = await sendOtp(userEmail);
+    if (r.state) {
       showToast("OTP sent to email.");
       startCountdown(modal_timer_email, modal_resend_email);
     } else {
-      showToast(r.data?.error || "Failed to send OTP.");
+      showToast(r.message);
       modal_resend_email.disabled = false;
     }
   });
@@ -478,35 +454,27 @@
     }
   });
 
-  safeAdd(modal_verify_email, "click", async () => {
-    const meta = JSON.parse(modal.dataset.purpose || "{}");
-    const target = meta.target || $("#signup_email").value || $("#login_identifier").value;
-    const purpose = meta.purpose || "login_email";
-    const code = modal_email_input.value.trim();
+  safeAdd(modal_verify_email, "click", async() =>{
+    const userEmail = $("#signup_email").value.trim();
+    const code = $("#modal_email_otp").value;
     if (!/^\d{6}$/.test(code)) { setError(modal_email_input, "Enter 6-digit code"); return; }
-    setError(modal_email_input, "");
-    const r = await verifyOtp(purpose, target, code);
-    if (r.ok) {
+    else{
+    setError(modal_email_input, "")
+    }; 
+    let r = await verifyOtp(Number(code), userEmail);
+    console.log(r.message);
+     if (r.state) {
       showToast("Email verified.");
-      // Post-success behaviour:
-      // if we were verifying as part of signup -> optionally continue to let user verify phone as well
       closeModal();
-      if (purpose.startsWith("signup")) {
-        // after signup verification, we switch UI to login
-        setActiveTab("login");
-        showToast("Signup verified. Please login.");
-      } else if (purpose === "login_email" || purpose === "login_phone") {
-        // Login finalization: server should have created session cookie upon OTP verify.
-        window.location.href = "/dashboard.html";
-      } else if (purpose === "forgot_password") {
-        // Show reset password UI inside modal (not implemented here) -> we will open a small prompt
-        // For simplicity, redirect to a reset flow page or show a prompt:
+     window.location.replace("../dashboard/dashboard.html");
+      
+     if (purpose === "forgot_password") {
         showToast("Email verified — now reset your password (server flow).");
       }
     } else {
-      setError(modal_email_input, r.data?.error || "Invalid code");
-    }
-  });
+      setError(modal_email_input, r.message);
+    } 
+ });
 
   safeAdd(modal_verify_phone, "click", async () => {
     const meta = JSON.parse(modal.dataset.purpose || "{}");
@@ -545,39 +513,9 @@
 
     // prepare payload: send identifier as-is. Server should accept email/phone/username.
     const res = await apiPost(ENDPOINTS.login, { identifier, password, rememberMe });
-    if (!res.ok) {
-      // server-side validation errors mapping
-      if (res.data && res.data.errors) {
-        for (const k in res.data.errors) {
-          const msg = res.data.errors[k];
-          // map server fields to UI elements
-          if (k.includes("email") || k.includes("identifier")) setError($("#login_identifier"), msg);
-          if (k.includes("password")) setError($("#login_password"), msg);
-        }
-      } else {
-        // if server indicates OTP required (e.g. status 202 or custom response)
-        if (res.status === 202 && res.data && res.data.otpRequiredFor) {
-          // open modal for OTP, meta { purpose, target }
-          const purpose = res.data.otpRequiredFor === "email" ? "login_email" : "login_phone";
-          const target = res.data.target || identifier;
-          openModal({ purpose, target });
-          // send otp proactively
-          await sendOtp(purpose, target);
-          startCountdown(modal_timer_email, modal_resend_email);
-          startCountdown(modal_timer_phone, modal_resend_phone);
-          return;
-        }
-        showToast(res.data?.error || "Login failed.");
-      }
-      return;
-    }
-
-    // Successful login: server should set session cookie.
-    // Save remember-me flag locally so we pre-check next time
-    try { localStorage.setItem("bs_remember_me", rememberMe ? "true" : "false"); } catch (e) {}
 
     showToast("Login successful. Redirecting...");
-    setTimeout(() => { window.location.href = "/dashboard.html"; }, 700);
+    setTimeout(() => { window.location.href = "../dashboard/dashboard.html"; }, 700);
   });
 
   /* -------------- Signup Form Submit -------------- */
@@ -602,7 +540,6 @@
     if (!terms) { setError($("#signup_terms"), "You must accept Terms & Policy."); valid = false; }
     if (!valid) return;
 
-
     // validate phone
     const phone = normalizeNigeriaPhone(phoneRaw);
     if (!phone) { setError($("#signup_phone"), "Use Nigerian format: 0XXXXXXXXXX or +234XXXXXXXXXX starting with 7|8|9."); return; }
@@ -622,35 +559,10 @@
         surname : surname, 
         password : password 
          };
-    let res = await apiPost(ENDPOINTS.signup, signup_payload);
-    showToast(res.data.message)
-    /* if (!res.ok) {
-      if (res.data && res.data.errors) {
-        for (const k in res.data.errors) {
-          if (k.includes("email")) setError($("#signup_email"), res.data.errors[k]);
-          if (k.includes("phone")) setError($("#signup_phone"), res.data.errors[k]);
-          if (k.includes("name")) setError($("#signup_name"), res.data.errors[k]);
-          if (k.includes("surname")) setError($("#signup_surname"), res.data.errors[k]);
-          if (k.includes("password")) setError($("#signup_password"), res.data.errors[k]);
-        }
-      } else {
-        showToast(res.data?.error || "Signup failed.");
-      }
-      return;
-    } */
-
-    // Signup success: open OTP modal for either email or phone as user chooses.
-    //showToast("Signup Successfully. Please verify your email (and phone if you want).");
-    
-    // Open modal with purpose 'signup' and target = email by default (user can switch to phone)
-    /* openModal({ purpose: "signup", target: email });
-    // send OTP for email by default (user can switch to phone and click resend for phone)
-    const sendRes = await sendOtp("signup_email", email);
-    if (sendRes.ok) {
-      startCountdown(modal_timer_email, modal_resend_email);
-    } else {
-      showToast(sendRes.data?.error || "Failed to send email OTP.");
-    } */
+   let res = await apiPost(ENDPOINTS.signup, signup_payload);
+   showToast(res.data.message);
+    openModal();
+    startCountdown(modal_timer_email, modal_resend_email);
   });
 
   /* -------------- Forgot password flow (trigger modal for email) -------------- */
