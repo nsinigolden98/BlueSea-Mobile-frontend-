@@ -114,12 +114,13 @@
       <div id="bsdash_shortcuts_container" style="margin-bottom:8px;"></div>
 
       <div class="bsdash_actions_grid" id="bsdash_actions_grid">
-        <button class="bsdash_action_btn" data-action="buy-airtime" aria-label="Buy Airtime">
+        <button class="bsdash_action_btn" data-action="buy-airtime" aria-label="Buy Airtime"
+        onclick="window.location.href = '../airtime/airtime.html';">
           <svg viewBox="0 0 640 640" width="28" height="28" aria-hidden="true"><path d="M224.2 89C..." /></svg>
           <span>Buy Airtime</span>
         </button>
 
-        <button class="bsdash_action_btn" data-action="buy-data" aria-label="Buy Data">
+        <button class="bsdash_action_btn" data-action="buy-data" aria-label="Buy Data" onclick="window.location.href = '../data/data.html';">
           <svg viewBox="0 0 640 640" width="28" height="28" aria-hidden="true"><path d="M320 160C..." /></svg>
           <span>Buy Data</span>
         </button>
@@ -182,6 +183,6 @@
   <!-- Tiny toast area -->
   <div id="bsdash_toast" class="bsdash_toast" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="script.js" defer></script>
+ <!--  <script src="script.js" defer></script> -->
 </body>
 </html>

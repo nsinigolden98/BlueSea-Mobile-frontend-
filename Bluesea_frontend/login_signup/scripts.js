@@ -18,12 +18,12 @@
   /* -------------- Configuration (change as needed) -------------- */
   // Domain base; update if your API is at another subdomain
   //const API_BASE = "https://blueseamobile.com.ng"; // <--- change if needed
-  const API_BASE = "http://127.0.0.1:8000"; // <--- change if needed
+  const API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
 
   // Endpoints used by frontend (server must implement these)
   const ENDPOINTS = {
-    login: `${API_BASE}/api/auth/login`,
-    //signup: `${API_BASE}/api/auth/signup`,
+    login: `${API_BASE}/accounts/login/`,
+ 
     signup: `${API_BASE}/accounts/sign-up/`,
     sendOtp: `${API_BASE}/accounts/resend-otp/`,       // POST { purpose, target } -> 200
     verifyOtp: `${API_BASE}/accounts/verify-email/`,   // POST { purpose, target, otp } -> 200
@@ -162,7 +162,7 @@
 
   /* -------------- initial state -------------- */
   htmlEl.dataset.show = "login";
-  htmlEl.dataset.theme = "light"; // default
+
   // If user has previously chosen remember-me (flag only) pre-check:
   try {
     const remembered = localStorage.getItem("bs_remember_me") === "true";
@@ -249,14 +249,6 @@
   safeAdd(window, "resize", () => { updateTabIndicator(); computeAndSetSlide(htmlEl.dataset.show === "signup" ? 1 : 0); });
   setTimeout(() => { updateTabIndicator(); computeAndSetSlide(0); }, 160);
 
-  /* -------------- Theme toggle -------------- */
-  safeAdd(theme_toggle, "click", () => {
-    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    // This only toggles CSS variables; persist if desired:
-    try { localStorage.setItem("bs_theme", next); } catch (e) {}
-  });
-
   /* -------------- Password toggle behaviour (eye icon) -------------- */
   $$(".bs_toggle_password").forEach(btn => {
     safeAdd(btn, "click", () => {
@@ -273,10 +265,6 @@
   });
 
   /* -------------- Social OAuth popup helpers -------------- */
-  function isApplePlatform() {
-    // simple check
-    return /iPad|iPhone|Macintosh/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent);
-  }
 
   function openOAuthPopup(url, name, w = 600, h = 700) {
     // open centered popup
@@ -315,26 +303,10 @@
     openOAuthPopup(ENDPOINTS.oauthGoogle, "bs_google_oauth");
   });
 
-  // Enable apple button only on Apple platforms per request
-  if (!isApplePlatform()) {
-    btn_apple.setAttribute("disabled", "true");
-    btn_apple.title = "Apple sign-in is only available on Apple devices";
-    btn_apple.classList.add("bs_disabled");
-  } else {
-    safeAdd(btn_apple, "click", (e) => {
-      e.preventDefault();
-      openOAuthPopup(ENDPOINTS.oauthApple, "bs_apple_oauth");
-    });
-  }
-
   /* -------------- Modal: open/close and tabs -------------- */
-  function openModal(purposeData = {}) {
-    // purposeData: { purpose: 'signup_email' | 'signup_phone' | 'login' | 'forgot_password', target: 'user@example.com' }
-    //modal.dataset.purpose = JSON.stringify(purposeData || {});
+  function openModal() {
     modal.setAttribute("aria-hidden", "false");
-    // default to email tab
     switchModalPanel("email");
-    // start timers (resend disabled initially until first send called)
     resetModalTimers();
   }
   function closeModal() {
@@ -342,12 +314,11 @@
     // clear inputs and errors
     modal_email_input.value = "";
     modal_phone_input.value = "";
+    $("#modal_email_FP").value = ""
     clearAllErrors(modal);
   }
-
   safeAdd(modal_close, "click", () => { closeModal(); });
   safeAdd(modal, "click", (ev) => { if (ev.target === modal) closeModal(); }); // backdrop click
-
   modal_tabs.forEach(tab => {
     safeAdd(tab, "click", () => {
       modal_tabs.forEach(t => { t.classList.remove("active"); t.setAttribute("aria-selected", "false"); t.setAttribute("tabindex", "-1"); });
@@ -395,7 +366,7 @@
             body: JSON.stringify(body)
         });
         const json = await response.json().catch(() => ({})); 
-        console.log(json);
+        //console.log(json);
         // Return the structured response
         return { data: json };
     }
@@ -462,15 +433,12 @@
     setError(modal_email_input, "")
     }; 
     let r = await verifyOtp(Number(code), userEmail);
-    console.log(r.message);
+    //console.log(r.message);
      if (r.state) {
       showToast("Email verified.");
       closeModal();
-     window.location.replace("../dashboard/dashboard.html");
-      
-     if (purpose === "forgot_password") {
-        showToast("Email verified — now reset your password (server flow).");
-      }
+     window.location.replace("login_signup.html");
+
     } else {
       setError(modal_email_input, r.message);
     } 
@@ -499,23 +467,34 @@
   });
 
   /* -------------- Login Form Submit -------------- */
+  function validateEmail(email) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+   return emailRegex.test(email);
+    }
+    
   safeAdd(form_login, "submit", async (ev) => {
     ev.preventDefault();
     clearAllErrors(form_login);
     const identifier = $("#login_identifier").value.trim();
     const password = $("#login_password").value;
     const rememberMe = !!$("#login_remember").checked;
-
+    
     let valid = true;
-    if (!identifier) { setError($("#login_identifier"), "Please enter email or phone number"); valid = false; }
+    if (!identifier) { setError($("#login_identifier"), "Please enter email"); valid = false; }
+    if (!validateEmail(identifier)) { setError($("#login_identifier"), "Please enter email"); valid = false; }
     if (!password) { setError($("#login_password"), "Please enter your password."); valid = false; }
     if (!valid) return;
-
-    // prepare payload: send identifier as-is. Server should accept email/phone/username.
-    const res = await apiPost(ENDPOINTS.login, { identifier, password, rememberMe });
-
-    showToast("Login successful. Redirecting...");
+    
+    const res = await apiPost(ENDPOINTS.login, { email: identifier,password: password});
+    if(res.data.access_token){
+         showToast("Login successful. Redirecting...");
+         localStorage.setItem("access_token",res.data.access_token);
     setTimeout(() => { window.location.href = "../dashboard/dashboard.html"; }, 700);
+      }  
+      else{
+          showToast(res.data.detail);
+          console.log(res);
+      }
   });
 
   /* -------------- Signup Form Submit -------------- */
@@ -550,7 +529,9 @@
       return;
     }
     if (password !== confirm) { setError($("#signup_confirm"), "Passwords do not match."); return; }
-
+    
+    $("#bs_modal_title").textContent = 'Verify Account';
+    document.getElementById("bs_modal_tabs").style.display = "block";
     // POST to signup
     let signup_payload = {
         email: email, 
@@ -559,8 +540,8 @@
         surname : surname, 
         password : password 
          };
-   let res = await apiPost(ENDPOINTS.signup, signup_payload);
-   showToast(res.data.message);
+   const res = await apiPost(ENDPOINTS.signup, signup_payload);
+    showToast(res.data.message);
     openModal();
     startCountdown(modal_timer_email, modal_resend_email);
   });
@@ -569,8 +550,27 @@
   safeAdd($("#bs_forgot"), "click", (ev) => {
     ev.preventDefault();
     // Show modal purpose forgot_password (default to email)
-    openModal({ purpose: "forgot_password", target: "" });
-    modal_tabs[0].click();
+    const headerElement = $("#bs_modal_title");
+    headerElement.textContent = 'Forgot Password';
+    modal.setAttribute("aria-hidden", "false");
+    document.getElementById("FP").style.display = "block";
+    document.getElementById("bs_modal_tabs").style.display = "none";
+    switchModalPanel("");
+  });
+  
+  // Forgot password button to get OTP
+  safeAdd($("#bs_modal_FP"), "click", async(ev) => {
+    ev.preventDefault();
+    const email = $("#modal_email_FP").value.trim();
+    let valid = true;
+    if (!email) { setError($("#modal_email_FP"), "Please enter email"); valid = false; }
+    if (!validateEmail(email)) { setError($("#modal_email_FP"), "Please enter email"); valid = false; }
+    if (!valid) return;
+    modal.setAttribute("aria-hidden", "false");
+    document.getElementById("FP").style.display = "none";
+    switchModalPanel("email");
+    resetModalTimers();
+    startCountdown(modal_timer_email, modal_resend_email);
   });
 
   /* -------------- Misc: auto-focus input when modal opens -------------- */

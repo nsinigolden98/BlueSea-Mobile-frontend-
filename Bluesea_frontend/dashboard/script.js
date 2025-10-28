@@ -8,10 +8,10 @@
 
   /* ------------- CONFIG ------------- */
   const API_BASE = 'http://127.0.0.1:8000'; // from Postman collection
-  const FALLBACK_BEARER = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkwMzM5NDk5LCJpYXQiOjE3NTkyMzU0OTksImp0aSI6ImU2NzRlOTRiMjU2YjQwZDdhODhjZmVkYjlkZjM3Y2FjIiwidXNlcl9pZCI6IjEifQ.o2o4PdU0jnI_wW5CqneyvbEU9HOm_Mct9L4Ubq2Zm24';
-
+  // const FALLBACK_BEARER = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkwMzM5NDk5LCJpYXQiOjE3NTkyMzU0OTksImp0aSI6ImU2NzRlOTRiMjU2YjQwZDdhODhjZmVkYjlkZjM3Y2FjIiwidXNlcl9pZCI6IjEifQ.o2o4PdU0jnI_wW5CqneyvbEU9HOm_Mct9L4Ubq2Zm24';
+// 
   function authHeaders() {
-    const token = localStorage.getItem('bs_token') || FALLBACK_BEARER;
+    const token = localStorage.getItem('access_token') ;
     if (!token) return {};
     return { 'Authorization': `Bearer ${token}` };
   }
@@ -47,7 +47,7 @@
 
   /* ------------- Theme handling ------------- */
   const root = document.documentElement;
-  const THEME_ENDPOINT = `${API_BASE}/user/preferences`;
+  //const THEME_ENDPOINT = `${API_BASE}/user/preferences`;
 
   function applyTheme(theme) {
     theme = (theme === 'dark') ? 'dark' : 'light';
@@ -94,7 +94,9 @@
   /* ------------- API helpers ------------- */
   async function apiGet(path) {
     const url = `${API_BASE}${path}`;
-    const res = await fetch(url, { headers: { 'Content-Type': 'application/json', ...authHeaders() }});
+    const res = await fetch(url, {
+        headers: { 'Content-Type': 'application/json', ...authHeaders()  }
+    });
     if (!res.ok) { const text = await res.text(); throw new Error(`HTTP ${res.status} ${text}`); }
     return res.json();
   }
@@ -251,6 +253,26 @@
   }
 
   /* ------------- Dropdown positioning utility (kept for wallet) ------------- */
+  function positionDropdownRelativeTo(anchorEl, dropdownEl) {
+    if (!anchorEl || !dropdownEl) return;
+    const rect = anchorEl.getBoundingClientRect();
+    let top = rect.bottom + window.scrollY + 8;
+    let left = rect.right + window.scrollX - dropdownEl.offsetWidth;
+    const viewportRight = window.scrollX + document.documentElement.clientWidth;
+    if (left + dropdownEl.offsetWidth > viewportRight) {
+      left = Math.max(window.scrollX + 8, rect.left + window.scrollX);
+    }
+    const viewportBottom = window.scrollY + document.documentElement.clientHeight;
+    if (top + dropdownEl.offsetHeight > viewportBottom) {
+      const altTop = rect.top + window.scrollY - dropdownEl.offsetHeight - 8;
+      if (altTop > window.scrollY) top = altTop;
+    }
+    left = Math.max(8 + window.scrollX, Math.min(left, viewportRight - dropdownEl.offsetWidth - 8));
+    top = Math.max(8 + window.scrollY, Math.min(top, viewportBottom - dropdownEl.offsetHeight - 8));
+    dropdownEl.style.top = `${top}px`;
+    dropdownEl.style.left = `${Math.max(8, left)}px`;
+    dropdownEl.style.maxHeight = `${Math.max(160, (window.innerHeight - 120))}px`;
+  }
   function positionDropdownRelativeTo(anchorEl, dropdownEl) {
     if (!anchorEl || !dropdownEl) return;
     const rect = anchorEl.getBoundingClientRect();

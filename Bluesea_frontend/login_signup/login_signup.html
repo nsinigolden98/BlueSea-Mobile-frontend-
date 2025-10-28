@@ -15,10 +15,6 @@
       <!-- Replace with your SVG or PNG logo file at basic_imgs/logo.png -->
       <img src="../basic_imgs/logo.png" alt="BlueseaMobile logo" class="bs_logo_image" onclick="location.href='../../index.html'" />
     </div>
-
-    <div class="bs_header_right">
-      <button class="bs_theme_toggle" id="bs_theme_toggle" aria-label="Toggle theme" title="Toggle theme"></button>
-    </div>
   </header>
 
   <main class="bs_main" role="main">
@@ -48,10 +44,10 @@
                 aria-labelledby="bs_tab_login" aria-hidden="false" novalidate>
             <!-- identifier: email / username / phone -->
             <div class="bs_field">
-              <label for="login_identifier" class="bs_sr_only">Email, phone or username</label>
+              <label for="login_identifier" class="bs_sr_only">Email</label>
               <input id="login_identifier" name="login_identifier" class="bs_input"
-                     type="text" placeholder="Email, Phone, or Username"
-                     autocomplete="username" aria-describedby="login_identifier_error" required />
+                     type="email" placeholder="Email"
+                     autocomplete="email" aria-describedby="login_identifier_error" required />
               <div id="login_identifier_error" class="bs_error" aria-live="polite"></div>
             </div>
 
@@ -173,29 +169,23 @@
             <button class="bs_btn bs_btn_primary" id="bs_btn_signup" type="submit">Sign up</button>
           </form>
         </div>
-      </div>
-
       <div class="bs_divider"><span>Or continue with</span></div>
-
       <div class="bs_socials" aria-hidden="false">
         <button class="bs_btn_social bs_google" id="bs_google">
           <!-- Google SVG -->
           Google</button>
+      </div>
 
-        <button class="bs_btn_social bs_apple" id="bs_apple" title="Apple Sign In (Apple devices only)">
-          <!-- Apple SVG -->
-          Apple</button>
       </div>
     </section>
   </main>
 
-  <!-- OTP Modal (reused for signup/login/forgot) -->
+  <!-- OTP Modal (reused for signup/login) -->
   <div id="bs_modal" class="bs_modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="bs_modal_title">
     <div class="bs_modal_panel" role="document">
       <button class="bs_modal_close" id="bs_modal_close" aria-label="Close">✕</button>
-      <h2 id="bs_modal_title" class="bs_modal_title">Verify</h2>
-
-      <div class="bs_modal_tabs" role="tablist" aria-label="Verification targets">
+      <h2 id="bs_modal_title" class="bs_modal_title">Verify Account</h2>
+      <div class="bs_modal_tabs" id= "bs_modal_tabs" role="tablist" aria-label="Verification targets">
         <button class="bs_modal_tab active" data-target="email" role="tab" aria-selected="true" tabindex="0">Email</button>
         <button class="bs_modal_tab" data-target="phone" role="tab" aria-selected="false" tabindex="-1">Phone</button>
       </div>
@@ -226,16 +216,35 @@
           <div class="bs_row bs_modal_actions">
             <button id="bs_modal_verify_phone" class="bs_btn">Verify Phone OTP</button>
             <button id="bs_modal_resend_phone" class="bs_btn">Resend (<span id="bs_modal_timer_phone">50</span>s)</button>
+        
           </div>
         </div>
+        <!-- Forgot Password panel -->
+        <div class="bs_model_item" id= "FP" data-panel="forgot password" aria-hidden="false">
+          <p class="bs_small">Enter Your Email Address </p>
+          <div class="bs_field">
+            <label for="modal_email_FP" class="bs_sr_only">Email</label>
+            <input id="modal_email_FP" class="bs_input" type="email" inputmode="email " placeholder="Enter email " />
+            <div id="modal_email_error" class="bs_error" aria-live="polite"></div>
+          </div>
+        <!--   <div class="OTP_field">
+            <label for="modal_email_FP" class="bs_sr_only">OTP</label>
+            <input id="modal_email_FP" class="bs_input" type="number" inputmode="numeric" placeholder="Enter OTP" maxlength="6"/>
+            <div id="modal_email_error" class="bs_error" aria-live="polite"></div>
+          </div> -->
+          <div class="bs_row bs_modal_actions">
+            <button id="bs_modal_FP" class="bs_btn">Request OTP</button>
+          </div>
+        </div>
+       </div>
       </div>
     </div>
-  </div>
+  
+ 
 
   <!-- Toast -->
   <div id="bs_toast" class="bs_toast" aria-live="assertive" hidden></div>
 
-  <!-- <script src="login.js" defer></script> -->
   <script src="scripts.js" defer></script>
 </body>
 </html>
