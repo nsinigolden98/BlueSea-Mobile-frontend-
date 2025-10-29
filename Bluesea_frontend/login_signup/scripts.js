@@ -485,8 +485,8 @@
     if (!password) { setError($("#login_password"), "Please enter your password."); valid = false; }
     if (!valid) return;
     
-    const res = await apiPost(ENDPOINTS.login, { email: identifier,password: password});
-    if(res.data.access_token){
+    //const res = await apiPost(ENDPOINTS.login, { email: identifier,password: password});
+   /* if(res.data.access_token){
          showToast("Login successful. Redirecting...");
          localStorage.setItem("access_token",res.data.access_token);
     setTimeout(() => { window.location.href = "../dashboard/dashboard.html"; }, 700);
@@ -494,7 +494,8 @@
       else{
           showToast(res.data.detail);
           console.log(res);
-      }
+      }*/
+     window.location.replace( "../dashboard/dashboard.html");
   });
 
   /* -------------- Signup Form Submit -------------- */
