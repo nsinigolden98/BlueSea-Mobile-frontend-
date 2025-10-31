@@ -153,6 +153,35 @@ body.bs_page{
 /* toast */
 .bs_toast{ position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(8,8,8,0.85); color:#fff; padding:10px 14px; border-radius:8px; box-shadow:0 6px 22px rgba(2,6,23,0.6); z-index:10000 }
 
+/* Forgot Password*/
+.forgot_modal{
+    background:var(--card); 
+    max-width:60%; 
+    min-width: 50%;
+    border-radius:12px; 
+    padding:18px; 
+    border:1px solid var(--border);
+    position:absolute;
+    margin-top: 50px;
+    justify-content:center;
+    display: none;
+}
+.forgot_modal_title{
+    margin:0 0 8px 0; 
+    font-size:18px }
+    
+.forgot_modal_close {
+    position:absolute; 
+    right:12px; top:12px; 
+    border:0; 
+    background:transparent; 
+    cursor:pointer; 
+    font-size:16px; 
+    color:var(--muted) }
+.OTP_field, .Reset_password, .FP_email_field{
+    display: none;
+}
+
 /* responsive adjustments */
 @media (max-width:900px){
   .bs_card{ padding:18px; margin:0 8px }

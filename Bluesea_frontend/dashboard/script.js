@@ -8,13 +8,12 @@
 
   /* ------------- CONFIG ------------- */
   const API_BASE = 'http://127.0.0.1:8000'; // from Postman collection
-  // const FALLBACK_BEARER = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzkwMzM5NDk5LCJpYXQiOjE3NTkyMzU0OTksImp0aSI6ImU2NzRlOTRiMjU2YjQwZDdhODhjZmVkYjlkZjM3Y2FjIiwidXNlcl9pZCI6IjEifQ.o2o4PdU0jnI_wW5CqneyvbEU9HOm_Mct9L4Ubq2Zm24';
-// 
-  function authHeaders() {
-    const token = localStorage.getItem('access_token') ;
-    if (!token) return {};
-    return { 'Authorization': `Bearer ${token}` };
-  }
+  
+  const token = localStorage.getItem('access_token') ;
+  const ENDPOINTS = {
+    theme: `${API_BASE}/api/user_preference/theme/`,
+    
+  };
 
   /* ------------- DOM helpers ------------- */
   const qs = (sel, ctx = document) => (ctx || document).querySelector(sel);
@@ -48,19 +47,59 @@
   /* ------------- Theme handling ------------- */
   const root = document.documentElement;
   //const THEME_ENDPOINT = `${API_BASE}/user/preferences`;
-
-  function applyTheme(theme) {
-    theme = (theme === 'dark') ? 'dark' : 'light';
-    root.setAttribute('data-theme', theme);
-    document.body.setAttribute('data-theme', theme);
-    const toggle = qs('#bsdash_toggle_theme');
-    if (toggle) {
-      toggle.querySelector('.bsdash_toggle_label').textContent = theme === 'dark' ? 'Light' : 'Dark';
-      toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+  async function getRequest(url){
+      try {
+        const response = await fetch(url, {
+            method:"GET",
+            headers: { "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload)
+        });
+        const json = await response.json().catch(() => ({})); 
+        //console.log(json);
+        // Return the structured response
+        return { data: json };
+    }
+    catch (err) {
+        // Only network or fundamental request errors reach here
+        return { ok: false, status: 0, data: { error: "Network error" } };
     }
   }
-
-  async function fetchAndApplyTheme() {
+  async function putRequest(url,payload){
+      try {
+        const response = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload)
+        });
+        const json = await response.json().catch(() => ({})); 
+        //console.log(json);
+        // Return the structured response
+        return { data: json };
+    }
+    catch (err) {
+        // Only network or fundamental request errors reach here
+        return { ok: false, status: 0, data: { error: "Network error" } };
+    }
+  }
+  async function changeTheme(res = "PUT") {
+    if(res === "PUT"){
+        newTheme = root.getAttribute('data-theme') === "dark" ? "light" : "light";
+        theme = await putRequest("PUT",ENDPOINTS.theme,{theme_color : newTheme}).theme_color;
+        root.setAttribute('data-theme', theme);
+       document.body.setAttribute('data-theme', theme);
+    }
+    else{
+    theme = await getRequest(ENDPOINTS.theme).theme_color;
+    root.setAttribute('data-theme', theme);
+    document.body.setAttribute('data-theme', theme);
+    }
+  }
+ 
+  /* async function fetchAndApplyTheme() {
     try {
       const res = await fetch(THEME_ENDPOINT, { headers: { 'Content-Type': 'application/json', ...authHeaders() }});
       if (res.ok) {
@@ -85,12 +124,11 @@
       showToast('Could not save theme preference');
       return false;
     }
-  }
+  } */
 
   /* ------------- Safety helpers ------------- */
   function safeText(node, text) { if (!node) return; node.textContent = String(text == null ? '' : text); }
-  function escapeHtml(str) { return String(str || '').replace(/[&<>"'`=\/]/g, s => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','/':'&#47;','=':'&#61;' }[s])); }
-
+  
   /* ------------- API helpers ------------- */
   async function apiGet(path) {
     const url = `${API_BASE}${path}`;
@@ -505,7 +543,7 @@
   }
 
   /* ------------- Activity timeline ------------- */
-  async function fetchAndRenderTimeline() {
+  /* async function fetchAndRenderTimeline() {
     const wrap = qs('#bsdash_timeline_list');
     if (!wrap) return;
     wrap.innerHTML = '<div class="skeleton w-60 h-14"></div>';
@@ -531,7 +569,7 @@
       wrap.innerHTML = '<div style="color:var(--muted)">Could not load activity</div>';
       console.warn('timeline error', err);
     }
-  }
+  } */
   function renderTimelineItems(items) {
     const wrap = qs('#bsdash_timeline_list');
     if (!wrap) return;
@@ -647,20 +685,6 @@
     }
   }
 
-  /* ------------- Theme toggle ------------- */
-  function bindThemeToggle() {
-    const toggle = qs('#bsdash_toggle_theme');
-    if (!toggle) return;
-    toggle.addEventListener('click', async () => {
-      const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-      const next = current === 'dark' ? 'light' : 'dark';
-      applyTheme(next);
-      localStorage.setItem('bsdash_theme', next);
-      const ok = await persistTheme(next);
-      if (!ok) applyTheme(current); else showToast('Theme updated');
-    });
-  }
-
   /* ------------- Profile image & streak ------------- */
   function setProfileImage(url) {
     const img = qs('#bsdash_profile_img');
@@ -715,8 +739,8 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
   /* ------------- Exports for debugging ------------- */
-  window.bsdash = {
-    apiGet, apiPost, fetchWalletActivity, fetchAndRenderShortcuts, fetchAndRenderLoyalty, fetchAndRenderScheduled, fetchAndRenderTimeline
-  };
+  // window.bsdash = {
+//     apiGet, apiPost, fetchWalletActivity, fetchAndRenderShortcuts, fetchAndRenderLoyalty, fetchAndRenderScheduled, fetchAndRenderTimeline
+//   };
 
 })();

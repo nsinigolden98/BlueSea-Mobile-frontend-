@@ -22,14 +22,14 @@
 
   // Endpoints used by frontend (server must implement these)
   const ENDPOINTS = {
-    login: `${API_BASE}/accounts/login/`,
+    login: `${API_BASE}/api/accounts/login/`,
  
-    signup: `${API_BASE}/accounts/sign-up/`,
+    signup: `${API_BASE}/api/accounts/sign-up/`,
     sendOtp: `${API_BASE}/accounts/resend-otp/`,       // POST { purpose, target } -> 200
-    verifyOtp: `${API_BASE}/accounts/verify-email/`,   // POST { purpose, target, otp } -> 200
-    forgotReset: `${API_BASE}/api/auth/forgot-reset`, // POST { email, otp, newPassword }
-    oauthGoogle: `${API_BASE}/api/auth/oauth/google`, // GET -> starts OAuth handshake
-    oauthApple: `${API_BASE}/api/auth/oauth/apple`,   // GET -> starts Apple handshake
+    sendOtp_FP: `${API_BASE}/api/accounts/reset-password/`,       // POST { purpose, target } -> 200
+    verifyOtp: `${API_BASE}/api/accounts/verify-email/`,   // POST { purpose, target, otp } -> 200
+    forgotReset: `${API_BASE}/api/accounts/auth/forgot-reset`, // POST { email, otp, newPassword }
+    oauthGoogle: `${API_BASE}/api/accounts/auth/google`, // GET -> starts OAuth handshake
   };
 
   // OTP & timers
@@ -47,7 +47,7 @@
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from((ctx || document).querySelectorAll(sel));
   const safeAdd = (el, ev, cb) => { if (el) el.addEventListener(ev, cb); };
-  
+
 
   function showToast(msg, ms = 8200) {
     const t = $("#bs_toast");
@@ -252,7 +252,9 @@
   /* -------------- Password toggle behaviour (eye icon) -------------- */
   $$(".bs_toggle_password").forEach(btn => {
     safeAdd(btn, "click", () => {
+        
       const targetId = btn.getAttribute("data-target");
+      console.log(targetId);
       if (!targetId) return;
       const input = document.getElementById(targetId);
       if (!input) return;
@@ -314,8 +316,14 @@
     // clear inputs and errors
     modal_email_input.value = "";
     modal_phone_input.value = "";
-    $("#modal_email_FP").value = ""
     clearAllErrors(modal);
+    // For Forgot Password
+    $("#modal_email_FP").value = "";
+    $("#modal_otp_FP").value = "";
+    $("#signup_password").value = "";
+    $("#signup_confirm").value = "";
+    document.getElementById("FP").style.display = "none";
+    resetModalTimers() 
   }
   safeAdd(modal_close, "click", () => { closeModal(); });
   safeAdd(modal, "click", (ev) => { if (ev.target === modal) closeModal(); }); // backdrop click
@@ -343,6 +351,7 @@
     modal_timer_phone.textContent = OTP_RESEND_SECONDS;
     modal_resend_email.disabled = true;
     modal_resend_phone.disabled = true;
+    $("#reset_resend").disabled = true;
   }
 
   function startCountdown(spanEl, btnEl) {
@@ -375,7 +384,6 @@
         return { ok: false, status: 0, data: { error: "Network error" } };
     }
 }
-
 
   /* -------------- Send OTP (email or phone) -------------- */
   async function sendOtp(email) {
@@ -484,18 +492,17 @@
     if (!validateEmail(identifier)) { setError($("#login_identifier"), "Please enter email"); valid = false; }
     if (!password) { setError($("#login_password"), "Please enter your password."); valid = false; }
     if (!valid) return;
-    
-    //const res = await apiPost(ENDPOINTS.login, { email: identifier,password: password});
-   /* if(res.data.access_token){
+   
+    const res = await apiPost(ENDPOINTS.login, { email: identifier,password: password});
+    if(res.data.access_token){
          showToast("Login successful. Redirecting...");
          localStorage.setItem("access_token",res.data.access_token);
-    setTimeout(() => { window.location.href = "../dashboard/dashboard.html"; }, 700);
+    setTimeout(() => { window.location.replace("../dashboard/dashboard.html"); });
       }  
       else{
           showToast(res.data.detail);
           console.log(res);
-      }*/
-     window.location.replace( "../dashboard/dashboard.html");
+      }
   });
 
   /* -------------- Signup Form Submit -------------- */
@@ -512,6 +519,7 @@
 
     let valid = true;
     if (!email) { setError($("#signup_email"), "Please enter your email."); valid = false; }
+    if (!validateEmail(email)) { setError($("#login_identifier"), "Please enter a valid email"); valid = false; }
     if (!phoneRaw) { setError($("#signup_phone"), "Please enter your phone."); valid = false; }
     if (!name) { setError($("#signup_name"), "Please enter your name."); valid = false; }
     if (!surname) { setError($("#signup_surname"), "Please enter you surname."); valid = false; }
@@ -531,8 +539,6 @@
     }
     if (password !== confirm) { setError($("#signup_confirm"), "Passwords do not match."); return; }
     
-    $("#bs_modal_title").textContent = 'Verify Account';
-    document.getElementById("bs_modal_tabs").style.display = "block";
     // POST to signup
     let signup_payload = {
         email: email, 
@@ -551,27 +557,61 @@
   safeAdd($("#bs_forgot"), "click", (ev) => {
     ev.preventDefault();
     // Show modal purpose forgot_password (default to email)
-    const headerElement = $("#bs_modal_title");
-    headerElement.textContent = 'Forgot Password';
-    modal.setAttribute("aria-hidden", "false");
     document.getElementById("FP").style.display = "block";
-    document.getElementById("bs_modal_tabs").style.display = "none";
-    switchModalPanel("");
+    document.getElementById("FP_email_field").style.display = "block";
+    document.getElementById("OTP_field").style.display = "none";
+    document.getElementById("Reset_password").style.display = "none";
   });
   
-  // Forgot password button to get OTP
+  // Send otp button
   safeAdd($("#bs_modal_FP"), "click", async(ev) => {
-    ev.preventDefault();
+    //ev.preventDefault();
     const email = $("#modal_email_FP").value.trim();
+
     let valid = true;
     if (!email) { setError($("#modal_email_FP"), "Please enter email"); valid = false; }
     if (!validateEmail(email)) { setError($("#modal_email_FP"), "Please enter email"); valid = false; }
     if (!valid) return;
-    modal.setAttribute("aria-hidden", "false");
-    document.getElementById("FP").style.display = "none";
-    switchModalPanel("email");
+    $("#reset_text").textContent = `Email: ${email}`;
+    document.getElementById("FP_email_field").style.display = "none";
+    document.getElementById("OTP_field").style.display = "block";
+    document.getElementById("Reset_password").style.display = "none";
+    // change this later but keep for now
+    const payload = {email: email};
+    console.log(payload);
+    const send = await apiPost(ENDPOINTS.sendOtp_FP,payload);
+    console.log(send);
+    $("#signup_password").value = "";
     resetModalTimers();
-    startCountdown(modal_timer_email, modal_resend_email);
+   startCountdown(modal_timer_email, modal_resend_email);
+  });
+  // confirm password button 
+  safeAdd($("#change_pass"), "click", async(ev) => {
+    ev.preventDefault();
+    const email = $("#modal_email_FP").value.trim();
+    const otp = $("#modal_otp_FP").value.trim();
+    let valid = true;
+    if (!email) { setError($("#modal_email_FP"), "Please enter email"); valid = false; }
+    if (!validateEmail(email)) { setError($("#modal_email_FP"), "Please enter email"); valid = false; }
+    if (!valid) return;
+    document.getElementById("FP_email_field").style.display = "none";
+    document.getElementById("OTP_field").style.display = "none";
+    document.getElementById("Reset_password").style.display = "block";
+    resetModalTimers();
+  });
+  // Resend OTP
+  safeAdd($("#reset_resend"), "click", async(ev) => {
+    ev.preventDefault();
+    const email = $("#modal_email_FP").value.trim();
+    resetModalTimers();
+     startCountdown(modal_timer_email, modal_resend_email);
+  });
+  // confirm password button (last)
+  safeAdd($("#reset_btn"), "click", async(ev) => {
+    ev.preventDefault();
+    const reset_password = $("#signup_password").value.trim();
+    const reset_confirm= $("#signup_confirm").value.trim();
+    closeModal();
   });
 
   /* -------------- Misc: auto-focus input when modal opens -------------- */
@@ -604,5 +644,6 @@
      - All fetch() calls use credentials: 'include' to allow server to set HttpOnly cookie; ensure server CORS allows credentials and returns appropriate Access-Control-Allow-Origin.
      - Replace API_BASE with your real base if different.
   -------------------------------------------------------------- */
+
 
 })();
