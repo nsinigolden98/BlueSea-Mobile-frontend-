@@ -86,13 +86,13 @@
                      <!-- Forgot Password panel -->
        <div class="forgot_modal bs_field" id= "FP" data-panel="forgot password" aria-hidden="false">
          <h2  class="forgot_modal_title">Forgot Password</h2>
-               <button class="bs_modal_close" id="bs_modal_close" aria-label="Close">✕</button>
+               <button class="bs_modal_close" id="fp_modal_close" aria-label="Close">✕</button>
             <div class="FP_email_field" id="FP_email_field">
           <p class="bs_small">Enter Your Email Address </p>
             <label for="modal_email_FP" class="bs_sr_only">Email</label>
             <input id="modal_email_FP" class="bs_input" type="email" inputmode="email " placeholder="Enter email " />
-            <div id="modal_email_error" class="bs_error" aria-live="polite">
-            </div>
+            <h3 id="fp_email_error" class="bs_error" aria-live="polite">
+            </h3>
                <button id="bs_modal_FP" class="bs_btn">Request OTP</button>  
             
           </div>
@@ -100,11 +100,11 @@
             <div class="OTP_field" id ="OTP_field">
             <p id="reset_text" class="reset_text"></p>
             <label for="modal_otp_FP" class="bs_sr_only">OTP</label>
-            <input id="modal_otp_FP" class="bs_input" type="number" inputmode="numeric" placeholder="Enter OTP" maxlength="6"/>
-            <div id="modal_email_error" class="bs_error" aria-live="polite"></div>
+            <input id="modal_otp_FP" class="bs_input" type="text" inputmode="numeric" placeholder="Enter OTP" maxlength="6"/>
+            <h3 id="fp_otp_error" class="bs_error" aria-live="polite"></h3>
           <div class="bs_row bs_modal_actions">
             <button id="change_pass" class="bs_btn">Confirm</button>
-        <button id="reset_resend" class="bs_btn">Resend (<span id="bs_modal_timer_email">50</span>s)</button>
+        <button id="reset_resend" class="bs_btn">Resend (<span id="fp_modal_timer_email">50</span>s)</button>
           </div>
           
           </div> 
@@ -112,12 +112,12 @@
             <div class="Reset_password" id="Reset_password">
                 <div class="set_password">
                     <p> Enter a new password</p>
-              <label for="reset_pass" class="bs_sr_only">Password</label>
+              <label for="reset_password" class="bs_sr_only">Password</label>
               <div class="bs_password_wrapper">
-                <input id="signup_password" name="signup_password" class="bs_input bs_input_password"
+                <input id="reset_password" name="signup_password" class="bs_input bs_input_password"
                        type="password" placeholder="Password (min 8 chars, letters+digit, allowed #$@)"
                        aria-describedby="signup_password_error" required />
-                <button type="button" class="bs_toggle_password" data-target="signup_password" aria-label="Show password" title="Show/hide password">
+                <button type="button" id="reset_show" class="fp_toggle_password" data-target="signup_password" aria-label="Show password" title="Show/hide password">
                   <svg class="bs_eye_icon bs_eye_closed" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                     <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/>
                     <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="1.6" />
@@ -128,15 +128,15 @@
                   </svg>
                 </button>
               </div>
-              <div id="signup_password_error" class="bs_error" aria-live="polite"></div>
+              <h3 id="reset_password_error" class="bs_error" aria-live="polite"></h3>
             </div>
 
             <div class="confirm_reset">
               <label for="reset_confirm" class="bs_sr_only">Confirm Password</label>
               <div class="bs_password_wrapper">
-                <input id="signup_confirm" name="signup_confirm" class="bs_input bs_input_password"
+                <input id="reset_confirm" name="signup_confirm" class="bs_input bs_input_password"
                        type="password" placeholder="Confirm password" aria-describedby="signup_confirm_error" required />
-                <button type="button" class="bs_toggle_password" data-target="signup_confirm" aria-label="Show password" title="Show/hide password">
+                <button type="button" id="confirm_show" class="fp_toggle_password" data-target="signup_confirm" aria-label="Show password" title="Show/hide password">
                   <svg class="bs_eye_icon bs_eye_closed" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                     <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/>
                     <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="1.6" />
@@ -147,7 +147,7 @@
                   </svg>
                 </button>
               </div>
-              <div id="signup_confirm_error" class="bs_error" aria-live="polite"></div>
+              <h3 id="reset_confirm_error" class="bs_error" aria-live="polite"></h3>
             </div>
                <button id="reset_btn" class="bs_btn">Reset</button>     
             </div>

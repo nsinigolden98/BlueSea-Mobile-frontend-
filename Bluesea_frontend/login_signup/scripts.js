@@ -22,14 +22,16 @@
 
   // Endpoints used by frontend (server must implement these)
   const ENDPOINTS = {
-    login: `${API_BASE}/api/accounts/login/`,
+    login: `${API_BASE}/accounts/login/`,
  
-    signup: `${API_BASE}/api/accounts/sign-up/`,
+    signup: `${API_BASE}/accounts/sign-up/`,
     sendOtp: `${API_BASE}/accounts/resend-otp/`,       // POST { purpose, target } -> 200
-    sendOtp_FP: `${API_BASE}/api/accounts/reset-password/`,       // POST { purpose, target } -> 200
-    verifyOtp: `${API_BASE}/api/accounts/verify-email/`,   // POST { purpose, target, otp } -> 200
-    forgotReset: `${API_BASE}/api/accounts/auth/forgot-reset`, // POST { email, otp, newPassword }
-    oauthGoogle: `${API_BASE}/api/accounts/auth/google`, // GET -> starts OAuth handshake
+    sendOtp_FP: `${API_BASE}/accounts/password/reset/request/`,       // POST { purpose, target } -> 200
+    verify_FP: `${API_BASE}/accounts/password/reset/verify-otp/`,       // POST { purpose, target } -> 200
+    confirm_FP: `${API_BASE}/accounts/password/reset/confirm/`,       // POST { purpose, target } -> 200
+    verifyOtp: `${API_BASE}/accounts/verify-email/`,   // POST { purpose, target, otp } -> 200
+    forgotReset: `${API_BASE}/accounts/auth/forgot-reset`, // POST { email, otp, newPassword }
+    oauthGoogle: `${API_BASE}/accounts/auth/google`, // GET -> starts OAuth handshake
   };
 
   // OTP & timers
@@ -309,7 +311,7 @@
   function openModal() {
     modal.setAttribute("aria-hidden", "false");
     switchModalPanel("email");
-    resetModalTimers();
+    resetModalTimers("signup");
   }
   function closeModal() {
     modal.setAttribute("aria-hidden", "true");
@@ -317,15 +319,20 @@
     modal_email_input.value = "";
     modal_phone_input.value = "";
     clearAllErrors(modal);
+  }
+  function reset_closeModal(){
     // For Forgot Password
     $("#modal_email_FP").value = "";
     $("#modal_otp_FP").value = "";
-    $("#signup_password").value = "";
-    $("#signup_confirm").value = "";
+    $("#reset_password").value = "";
+    $("#reset_confirm").value = "";
     document.getElementById("FP").style.display = "none";
-    resetModalTimers() 
-  }
+   // resetModalTimers("forgot_password");
+  };
   safeAdd(modal_close, "click", () => { closeModal(); });
+  safeAdd($("#fp_modal_close"), "click",() =>{
+      reset_closeModal();
+  });
   safeAdd(modal, "click", (ev) => { if (ev.target === modal) closeModal(); }); // backdrop click
   modal_tabs.forEach(tab => {
     safeAdd(tab, "click", () => {
@@ -346,14 +353,20 @@
   }
 
   /* -------------- Modal resend timers & OTP logic -------------- */
-  function resetModalTimers() {
+  function resetModalTimers(purpose) {
+    if(purpose === "signup"){
     modal_timer_email.textContent = OTP_RESEND_SECONDS;
     modal_timer_phone.textContent = OTP_RESEND_SECONDS;
     modal_resend_email.disabled = true;
     modal_resend_phone.disabled = true;
-    $("#reset_resend").disabled = true;
+    }
+    else if(purpose === "forgot_password"){
+     $("#fp_modal_timer_email").textContent =OTP_RESEND_SECONDS;
+     $("#reset_resend").disabled = true;
+    }
+    
   }
-
+    
   function startCountdown(spanEl, btnEl) {
     let t = OTP_RESEND_SECONDS;
     spanEl.textContent = t;
@@ -375,7 +388,7 @@
             body: JSON.stringify(body)
         });
         const json = await response.json().catch(() => ({})); 
-        //console.log(json);
+        console.log(json);
         // Return the structured response
         return { data: json };
     }
@@ -549,6 +562,7 @@
          };
    const res = await apiPost(ENDPOINTS.signup, signup_payload);
     showToast(res.data.message);
+    console.log(res);
     openModal();
     startCountdown(modal_timer_email, modal_resend_email);
   });
@@ -562,57 +576,94 @@
     document.getElementById("OTP_field").style.display = "none";
     document.getElementById("Reset_password").style.display = "none";
   });
-  
   // Send otp button
   safeAdd($("#bs_modal_FP"), "click", async(ev) => {
     //ev.preventDefault();
     const email = $("#modal_email_FP").value.trim();
-
     let valid = true;
-    if (!email) { setError($("#modal_email_FP"), "Please enter email"); valid = false; }
-    if (!validateEmail(email)) { setError($("#modal_email_FP"), "Please enter email"); valid = false; }
+    if (!validateEmail(email)) { showToast("Invalid email"); valid = false; }
     if (!valid) return;
+    const payload = {email: email};
+    const send = await apiPost(ENDPOINTS.sendOtp_FP,payload);
+    if (send.data.state){
     $("#reset_text").textContent = `Email: ${email}`;
     document.getElementById("FP_email_field").style.display = "none";
     document.getElementById("OTP_field").style.display = "block";
     document.getElementById("Reset_password").style.display = "none";
-    // change this later but keep for now
-    const payload = {email: email};
-    console.log(payload);
-    const send = await apiPost(ENDPOINTS.sendOtp_FP,payload);
-    console.log(send);
-    $("#signup_password").value = "";
-    resetModalTimers();
-   startCountdown(modal_timer_email, modal_resend_email);
+    $("#reset_password").value = "";
+    resetModalTimers("forgot_password");
+   startCountdown($("#fp_modal_timer_email"), $("#reset_resend"));}
+   else{
+       showToast("User not found");
+   }
   });
   // confirm password button 
   safeAdd($("#change_pass"), "click", async(ev) => {
     ev.preventDefault();
     const email = $("#modal_email_FP").value.trim();
     const otp = $("#modal_otp_FP").value.trim();
-    let valid = true;
-    if (!email) { setError($("#modal_email_FP"), "Please enter email"); valid = false; }
-    if (!validateEmail(email)) { setError($("#modal_email_FP"), "Please enter email"); valid = false; }
-    if (!valid) return;
+    if (!/^\d{6}$/.test(otp)) { showToast("Enter 6-digit code"); return; };
+    
+     const payload = {
+         email: email,
+         otp : otp
+     };
+    const send = await apiPost(ENDPOINTS.verify_FP,payload);
+    console.log(send);
+    if(send.data.state){
+    localStorage.setItem("reset_token",send.data.reset_token);
     document.getElementById("FP_email_field").style.display = "none";
     document.getElementById("OTP_field").style.display = "none";
     document.getElementById("Reset_password").style.display = "block";
-    resetModalTimers();
+    resetModalTimers("forgot_password");}
+    else{
+        showToast("Invalid OTP")
+    }
   });
   // Resend OTP
   safeAdd($("#reset_resend"), "click", async(ev) => {
     ev.preventDefault();
     const email = $("#modal_email_FP").value.trim();
-    resetModalTimers();
-     startCountdown(modal_timer_email, modal_resend_email);
+    const payload = {email: email};
+    const send = await apiPost(ENDPOINTS.sendOtp_FP,payload);
+    resetModalTimers("forgot_password");
+    startCountdown($("#fp_modal_timer_email"), $("#reset_resend"));
   });
   // confirm password button (last)
   safeAdd($("#reset_btn"), "click", async(ev) => {
     ev.preventDefault();
-    const reset_password = $("#signup_password").value.trim();
-    const reset_confirm= $("#signup_confirm").value.trim();
-    closeModal();
+    const reset_password = $("#reset_password").value.trim();
+    const reset_confirm= $("#reset_confirm").value.trim();
+    
+    // password policy
+    if (!validPassword(reset_password)) {
+      showToast("Password must be >=8 chars, include letters and digits; allowed specials: # $ @");
+      return;
+    }
+    if (reset_password !== reset_confirm) { showToast("Passwords do not match."); return; }
+    const payload = {
+        token: localStorage.getItem('reset_token'),
+        new_password:reset_password,
+        confirm_password: reset_confirm
+    };
+    const send = await apiPost(ENDPOINTS.confirm_FP,payload);
+    showToast(send.data.message);
+    reset_closeModal();
   });
+  
+  // Toggle effects to view password 
+  function  resetToggle(id){
+    target = document.getElementById(id);
+    target.type = "text";
+    //target.type = target.type !== "text" ? "text" : "password";
+  };
+  safeAdd($("#reset_show"), "click", function (){
+    resetToggle("reset_password") ;
+  });
+  safeAdd($("#confirm_show"), "click", function (){
+    resetToggle("confirm_password") ;
+  });
+  
 
   /* -------------- Misc: auto-focus input when modal opens -------------- */
   const mo = new MutationObserver(mutations => {

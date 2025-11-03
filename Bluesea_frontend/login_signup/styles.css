@@ -95,7 +95,7 @@ body.bs_page{
 
 /* Password wrapper & toggles */
 .bs_password_wrapper{ position:relative; display:flex; align-items:center; }
-.bs_toggle_password{ position:absolute; right:8px; top:50%; transform:translateY(-50%); height:32px; width:32px; border-radius:8px; border:0; background:transparent; cursor:pointer; opacity:0.8 }
+.bs_toggle_password, .fp_toggle_password{ position:absolute; right:8px; top:50%; transform:translateY(-50%); height:32px; width:32px; border-radius:8px; border:0; background:transparent; cursor:pointer; opacity:0.8 }
 .bs_toggle_password:hover{ opacity:1 }
 .bs_eye_icon{ display:block; color:var(--muted) }
 .bs_eye_open{ display:none }
@@ -180,6 +180,11 @@ body.bs_page{
     color:var(--muted) }
 .OTP_field, .Reset_password, .FP_email_field{
     display: none;
+}
+
+h3{
+    color:red;
+    font-size: 12px;
 }
 
 /* responsive adjustments */
