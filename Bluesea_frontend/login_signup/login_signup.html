@@ -7,7 +7,7 @@
   <meta name="description" content="BlueseaMobile — secure login & signup" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="../basic_imgs/logo.png" />
-  <script src="style.js" defer></script>
+  <script src="script.js" defer></script>
   
 <!--   <script src="logic.js" defer></script> -->
 </head>
@@ -81,7 +81,7 @@
                      <!-- Forgot Password panel -->
                <div class="forgot_modal field" id= "FP" data-panel="forgot password" aria-hidden="false">
          <h2  class="forgot_modal_title">Forgot Password</h2>
-               <button class="modal_close" id="fp_modal_close" aria-label="Close">✕</button>
+               <button class="modal_close" id="fp_modal_close" aria-label="Close" onclick="closeModal()">✕</button>
             <div class="FP_email_field" id="FP_email_field">
           <p class="small">Enter Your Email Address </p>
             <label for="modal_email_FP" class="sr_only">Email</label>
@@ -235,9 +235,49 @@
           </form>
         
             <!-- OTP Modal (reused for signup/login) -->
+        <div class="modal_panel" id= "modal_panel" role="document">
+      <button class="modal_close" id="modal_close" aria-label="Close" onclick="closeModal()">✕</button>
+      <h2 id="modal_title" class="modal_title">Verify Account</h2>
+      <div class="modal_tabs" id= "modal_tabs" role="tablist" aria-label="Verification targets">
+        <button class="modal_tab active" id="modal_tab_email" onclick="emailSwitch()">Email</button>
+        <button class="modal_tab" id= "modal_tab_phone" onclick="phoneSwitch()">Phone</button>
+      </div>
+
+      <div class="modal_body">
+        <!-- Email verification panel -->
+        <div class="modal_panel_item email_modal" id ="email_modal" data-panel="email" aria-hidden="false">
+          <p class="small">We sent a 6-digit code to your email. Enter it below.</p>
+          <div class="field">
+            <label for="modal_email_otp" class="sr_only">Email OTP</label>
+            <input id="modal_email_otp" class="input" type="text" inputmode="numeric" maxlength="6" placeholder="Enter email OTP" />
+            <div id="modal_email_error" class="error" aria-live="polite"></div>
+          </div>
+          <div class="row modal_actions">
+            <button id="modal_verify_email" class="btn">Verify Email OTP</button>
+            <button id="modal_resend_email" class="btn">Resend (<span id="modal_timer_email">50</span>s)</button>
+          </div>
+        </div>
+
+        <!-- Phone verification panel -->
+        <div class="modal_panel_item phone_modal"  id="phone_modal"   data-panel="phone" aria-hidden="true">
+          <p class="small">We sent a 6-digit code to your phone. Enter it below.</p>
+          <div class="field">
+            <label for="modal_phone_otp" class="sr_only">Phone OTP</label>
+            <input id="modal_phone_otp" class="input" type="text" inputmode="numeric" maxlength="6" placeholder="Enter phone OTP" />
+            <div id="modal_phone_error" class="error" aria-live="polite"></div>
+          </div>
+          <div class="row modal_actions">
+            <button id="modal_verify_phone" class="btn">Verify Phone OTP</button>
+            <button id="modal_resend_phone" class="btn">Resend (<span id="modal_timer_phone">50</span>s)</button>
+        
+          </div>
+        </div>
+       </div>
+      </div>
+            
+          </section>
       
    
-          </section>
           <div class="divider"><span>Or continue with</span></div>
       
       <div class="socials" >

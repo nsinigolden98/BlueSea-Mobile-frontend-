@@ -68,19 +68,22 @@ body.page{
 
 .sign-up{
     display: none;
+    position: relative;         
+    overflow: hidden; 
 }
 .login{
     display: block;
+    position: relative;
 }
 
 /* Tabs */
-.tabs {
+.tabs, .modal_tabs {
   gap: 20px;
   align-items: center;
   margin-bottom: 8px;
   display: flex;
 }
-.tab {
+.tab, .modal_tab{
   background: transparent;
   color: var(--muted);
   font-weight: 600;
@@ -115,31 +118,31 @@ body.page{
     border-radius:8px; 
     box-shadow:0 6px 22px rgba(2,6,23,0.6);  }
 
-/* Forgot Password*/
-.forgot_modal{
+/* Forgot Password and sign up*/
+.forgot_modal, .modal_panel{
     background:var(--card); 
-    max-width:60%; 
-    min-width: 50%;
     border-radius:12px; 
-    padding:18px; 
     border:1px solid var(--border);
-    position:absolute;
-    margin-top: 50px;
-    justify-content:center;
-    display: none;
+    top:50px;
+    position: absolute ;
+    width:100%;
+    display: block;
+    padding: 20px;
 }
-.forgot_modal_title{
+.forgot_modal_title, .modal_title{
     margin:0 0 8px 0; 
     font-size:18px }
     
-.forgot_modal_close {
+.forgot_modal_close, .modal_close {
     position:absolute; 
-    right:12px; top:12px; 
+    right:12px; 
+    top:12px; 
     border:0; 
     background:transparent; 
     cursor:pointer; 
     font-size:16px; 
     color:var(--muted) }
+    
 .OTP_field, .Reset_password, .FP_email_field{
     display: none;
 }
@@ -148,7 +151,6 @@ h3{
     color:red;
     font-size: 12px;
 }
-
 
 /* google button*/
 
@@ -162,7 +164,7 @@ h3{
   border-radius: 10px;
   height:30px ;
   font-weight: 600;
-  border: 1px solid var(--border);
+  border:0px;
   background: transparent;
   color: var(--text);
   transition: all var(--dur-fast);

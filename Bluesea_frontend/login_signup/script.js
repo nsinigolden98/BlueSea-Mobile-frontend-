@@ -1,13 +1,18 @@
 "use strict";
 const login = document.getElementById("login");
 const signUp = document.getElementById("sign-up");
+const email_tab = document.getElementById("email_modal")
+const phone_tab = document.getElementById("phone_modal")
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById("tab_signup").style.borderBottomColor = "#f4f7f8";
+    document.getElementById("modal_tab_phone").style.borderBottomColor = "#ffffff";
+    document.getElementById("modal_tab_email").style.color = "#0ea5e9";
     document.getElementById("tab_login").style.color = "#0ea5e9";
+    phone_tab.style.display = 'none';
 }); 
 
-// sgn up tab button function 
+// sign up tab button function 
 function signUpSwitch(){
     signUp.style.display =  "block";
     login.style.display ="none";
@@ -25,12 +30,35 @@ function loginSwitch(){
     login.style.display ="block";
     document.getElementById("tab_signup").style.borderBottomColor = "#f4f7f8";
     document.getElementById("tab_login").style.borderBottomColor = "#0ea5e9";
-
     document.getElementById("tab_login").style.color = "#0ea5e9";
     document.getElementById("tab_signup").style.color = "black";
 };
 
+// email switch tab for verifying user account 
+function emailSwitch(){
+    phone_tab.style.display =  "none";
+    email_tab.style.display ="block";
+    document.getElementById("modal_tab_phone").style.borderBottomColor = "#ffffff";
+    document.getElementById("modal_tab_email").style.borderBottomColor = "#0ea5e9";
+    document.getElementById("modal_tab_email").style.color = "#0ea5e9";
+    document.getElementById("modal_tab_phone").style.color = "black";
+};
 
+// phone number switch tab for verifying user account 
+
+function phoneSwitch(){
+    email_tab.style.display =  "none";
+    phone_tab.style.display ="block";
+    document.getElementById("modal_tab_email").style.borderBottomColor = "#ffffff";
+    document.getElementById("modal_tab_phone").style.borderBottomColor = "#0ea5e9";
+    document.getElementById("modal_tab_phone").style.color = "#0ea5e9";
+    document.getElementById("modal_tab_email").style.color = "black";
+};
+
+function closeModal(){
+    document.getElementById("FP").style.display= "none";
+    document.getElementById("modal_panel").style.display= "none";
+};
  // Domain base; update if your API is at another subdomain
  //const API_BASE = "https://blueseamobile.com.ng"; // <--- change if needed
 const API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
@@ -251,6 +279,7 @@ safeAdd(form_login, "submit", async (ev) => {
 
   /* -------------- Signup Form Submit -------------- */
 async  function SignUpButton() {
+    event.preventDefault()
     clearAllErrors(form_signup);
     const email = $("#signup_email").value.trim();
     const phoneRaw = $("#signup_phone").value.trim();
@@ -262,7 +291,7 @@ async  function SignUpButton() {
 
     let valid = true;
     if (!email) { setError($("#signup_email"), "Please enter your email."); valid = false; }
-    if (!validateEmail(email)) { setError($("#login_identifier"), "Please enter a valid email"); valid = false; }
+    if (!validateEmail(email)) { setError($("#signup_email"), "Please enter a valid email"); valid = false; }
     if (!phoneRaw) { setError($("#signup_phone"), "Please enter your phone."); valid = false; }
     if (!name) { setError($("#signup_name"), "Please enter your name."); valid = false; }
     if (!surname) { setError($("#signup_surname"), "Please enter you surname."); valid = false; }
@@ -282,6 +311,7 @@ async  function SignUpButton() {
     }
     if (password !== confirm) { setError($("#signup_confirm"), "Passwords do not match."); return; }
     
+    document.getElementById("modal_panel").style.display = "block";
     // POST to signup
     let signup_payload = {
         email: email, 
