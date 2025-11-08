@@ -1,9 +1,3 @@
-/* styles.css
-   BlueseaMobile styles.
-   All classes prefixed with bs_ to avoid collisions.
-*/
-
-/* ---------------- Variables ---------------- */
 :root{
   --brand-blue: #0ea5e9;
     --bg: #f4f7f8;
@@ -20,9 +14,13 @@
   --card-width: 520px;
 }
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body.bs_page{
+*{
+    box-sizing:border-box;
+}
+html,body{
+    height:100%;
+}
+body.page{
   margin:0;
   min-height:100vh;
   background:var(--bg);
@@ -30,13 +28,13 @@ body.bs_page{
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
-  display:flex;
-  flex-direction:column;
   align-items:stretch;
+    max-width: 540px;
+    margin:0 auto ;
 }
 
 /* screen-reader only helper */
-.bs_sr_only{
+.sr_only{
   position:absolute !important;
   width:1px !important;
   height:1px !important;
@@ -47,111 +45,75 @@ body.bs_page{
   white-space:nowrap !important;
   border:0 !important;
 }
-
 /* Header */
-.bs_header{
+.header{
   width:100%;
   display:flex;
   align-items:center;
   justify-content:space-between;
   padding:16px 28px;
-  max-width:1200px;
-  margin:0 auto;
 }
-.bs_logo_image{ height:28px; width:auto; display:block; }
+.logo_image{ 
+    height:28px; 
+    width:auto; 
+    display:block; 
+}
 
 /* Main */
-.bs_main{ flex:1; display:flex; align-items:center; justify-content:center; padding:40px 20px; }
+.main{ 
+    align-items:center; 
+    justify-content:center; 
+    padding:40px 20px; 
+}
 
-/* Card */
-.bs_card{
-  width:100%; max-width:var(--card-width); background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
-  border-radius:14px; padding:28px; box-shadow:0 6px 30px rgba(2,6,23,0.35); border:1px solid var(--border);
+.sign-up{
+    display: none;
+}
+.login{
+    display: block;
 }
 
 /* Tabs */
-.bs_tabs{ display:flex; gap:20px; align-items:center; margin-bottom:8px; }
-.bs_tab{ background:transparent; border:0; color:var(--muted); font-weight:600; font-size:15px; padding:8px 4px; cursor:pointer; transition:color var(--dur-fast) }
-.bs_tab:hover{ color:var(--text) }
-.bs_tab.active{ color:var(--brand-blue) }
-
-/* Tab indicator uses CSS vars set by JS */
-.bs_tab_indicator{ height:3px; width:100%; background:transparent; border-radius:3px; margin-bottom:14px; position:relative; }
-.bs_tab_indicator::after{
-  content:""; position:absolute; height:3px; left:var(--indicator-left,0); width:var(--indicator-width,120px);
-  background:var(--brand-blue); border-radius:3px;
-  transition:left var(--dur-medium) cubic-bezier(.2,.8,.2,1), width var(--dur-medium) ease;
+.tabs {
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 8px;
+  display: flex;
+}
+.tab {
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 8px 4px;
+  cursor: pointer;
+  transition: color var(--dur-fast);
+   display: inline-block;
+   width:270px;
+   border-bottom: 5px solid var(--brand-blue);
+   border-top: 0px solid;
+   border-left: 0px solid;
+   border-right: 0px solid;
 }
 
-/* Forms container (sliding) */
-.bs_forms_outer{ overflow:hidden; width:100%; border-radius:10px; margin-top:6px; }
-.bs_forms_inner{ display:flex; width:200%; transition:transform var(--dur-medium) cubic-bezier(.22,.9,.34,1); transform:translateX(0); }
-.bs_form{ width:50%; padding:18px 6px 6px 6px; min-height:260px; }
-
-/* Fields */
-.bs_field{ margin-bottom:14px; }
-.bs_input{ width:100%; padding:12px 14px; background:var(--input-bg); border-radius:8px; border:1px solid var(--border); color:var(--text); font-size:14px; outline:none; transition:box-shadow var(--dur-fast), border-color var(--dur-fast) }
-.bs_input::placeholder{ color:var(--muted); opacity:0.9 }
-
-/* Password wrapper & toggles */
-.bs_password_wrapper{ position:relative; display:flex; align-items:center; }
-.bs_toggle_password, .fp_toggle_password{ position:absolute; right:8px; top:50%; transform:translateY(-50%); height:32px; width:32px; border-radius:8px; border:0; background:transparent; cursor:pointer; opacity:0.8 }
-.bs_toggle_password:hover{ opacity:1 }
-.bs_eye_icon{ display:block; color:var(--muted) }
-.bs_eye_open{ display:none }
-.bs_toggle_show .bs_eye_open{ display:block }
-.bs_toggle_show .bs_eye_closed{ display:none }
-
-/* Focus state */
-.bs_input:focus{ border-color: rgba(14,165,233,0.9); box-shadow:0 6px 30px rgba(14,165,233,0.06) }
-
-/* Error */
-.bs_error{ color:var(--danger); font-size:13px; margin-top:6px; min-height:18px; visibility:hidden; opacity:0; transition:opacity var(--dur-fast) }
-.bs_error.active{ visibility:visible; opacity:1 }
-
-/* Row options */
-.bs_row_options{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px }
-.bs_link{ color:var(--brand-blue); text-decoration:none; font-size:13px }
-.bs_link:hover{ color:var(--text); text-decoration:underline }
-
-/* checkbox */
-.bs_checkbox_label{ display:flex; align-items:center; gap:8px; font-size:14px; color:var(--muted) }
-.bs_checkbox{ width:16px; height:16px }
-
-/* Buttons */
-.bs_btn{ display:inline-flex; align-items:center; justify-content:center; gap:10px; border-radius:10px; padding:10px 14px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--text); transition:all var(--dur-fast); }
-.bs_btn_primary{ background:var(--brand-blue); color:#fff; width:100%; border:1px solid rgba(255,255,255,0.06); box-shadow:0 6px 18px rgba(14,165,233,0.12) }
-.bs_btn_primary:hover{ transform:translateY(-2px); box-shadow:0 12px 28px rgba(14,165,233,0.15) }
-.bs_btn:active{ transform:scale(0.995) }
-
-/* divider */
-.bs_divider{ display:flex; align-items:center; justify-content:center; gap:12px; color:var(--muted); font-size:13px; margin:18px 0 12px 0 }
-.bs_divider::before, .bs_divider::after{ content:""; height:1px; flex:1; background:var(--border); border-radius:8px }
-
-/* socials */
-.bs_socials{ display:flex; gap:12px; margin-top:6px; }
-.bs_btn_social{ border-radius:10px; border:1px solid var(--border); padding:10px 14px; background:transparent; min-width:145px; transition:all var(--dur-fast); cursor:pointer; color:var(--text) }
-.bs_btn_social:hover{ background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02)); border-color: rgba(255,255,255,0.06) }
-
-/* modal */
-.bs_modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(2,6,23,0.6); z-index:9999; padding:20px; opacity:0; pointer-events:none; transition:opacity var(--dur-fast) }
-.bs_modal[aria-hidden="false"]{ opacity:1; pointer-events:auto }
-.forgot_password_body[aria-hidden="false"]{ opacity:1; pointer-events:auto }
-.bs_modal_panel{ background:var(--card); width:100%; max-width:520px; border-radius:12px; padding:18px; position:relative; border:1px solid var(--border) }
-.bs_modal_close { position:absolute; right:12px; top:12px; border:0; background:transparent; cursor:pointer; font-size:16px; color:var(--muted) }
-.bs_modal_title{ margin:0 0 8px 0; font-size:18px }
-.bs_modal_tabs{ display:flex; gap:10px; margin-bottom:10px }
-.bs_modal_tab{ background:transparent; border:0; padding:8px 10px; cursor:pointer; color:var(--muted); font-weight:600 }
-.bs_modal_tab.active{ color:var(--brand-blue) }
-.bs_modal_body .bs_modal_panel_item{ display:block }
-.bs_modal_panel_item[aria-hidden="true"]{ display:none }
-.bs_modal_actions{ display:flex; gap:8px; align-items:center; }
-
-/* small text */
-.bs_small{ color:var(--muted); font-size:13px }
+.tab:hover {
+  color: var(--text);
+}
+.tab:active {
+  color: var(--brand-blue);
+}
 
 /* toast */
-.bs_toast{ position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(8,8,8,0.85); color:#fff; padding:10px 14px; border-radius:8px; box-shadow:0 6px 22px rgba(2,6,23,0.6); z-index:10000 }
+.toast{
+    position:fixed;
+    top:20px; 
+    left:50%; 
+    transform:translateX(-50%); 
+    background:rgba(8,8,8,0.85); 
+    color:#fff;
+    padding:10px 14px; 
+    border-radius:8px; 
+    box-shadow:0 6px 22px rgba(2,6,23,0.6);  }
 
 /* Forgot Password*/
 .forgot_modal{
@@ -187,13 +149,187 @@ h3{
     font-size: 12px;
 }
 
-/* responsive adjustments */
-@media (max-width:900px){
-  .bs_card{ padding:18px; margin:0 8px }
-  :root{ --card-width:560px }
+
+/* google button*/
+
+.gsi-material-button{
+    display: inline-flex;
+    width: 100%;
+    background:transparent;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 10px;
+  height:30px ;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  transition: all var(--dur-fast);
 }
-@media (max-width:640px){
-  /* Keep sliding behavior but stacked forms require JS to compute transform via element widths */
-  .bs_forms_inner{ flex-direction:row; width:200%; }
-  .bs_form{ width:200%; padding:12px 6px }
+.gsi-material-button svg{
+    height:25px;
+}
+/* Fields */
+.field {
+  margin-bottom: 14px;
+}
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--input-bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: box-shadow var(--dur-fast), border-color var(--dur-fast);
+}
+.input::placeholder {
+  color: var(--muted);
+  opacity: 0.9;
+}
+
+/* Password wrapper & toggles */
+.password_wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.toggle_password,
+.fp_toggle_password {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  width: 32px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.8;
+}
+.toggle_password:hover {
+  opacity: 1;
+}
+.eye_icon {
+  display: block;
+  color: var(--muted);
+}
+.eye_open {
+  display: none;
+}
+.toggle_show .eye_open {
+  display: block;
+}
+.toggle_show .eye_closed {
+  display: none;
+}
+
+/* Focus state */
+.input:focus {
+  border-color: rgba(14, 165, 233, 0.9);
+  box-shadow: 0 6px 30px rgba(14, 165, 233, 0.06);
+}
+
+/* Error */
+.error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 6px;
+  min-height: 18px;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity var(--dur-fast);
+}
+.error.active {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Row options */
+.row_options {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  display: inline-flex;
+  width: 100%;
+}
+.link {
+  color: var(--brand-blue);
+  text-decoration: none;
+  font-size: 13px;
+}
+.link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+/* checkbox */
+.checkbox_label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.checkbox {
+  width: 16px;
+  height: 16px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  transition: all var(--dur-fast);
+}
+.btn_primary {
+  background: var(--brand-blue);
+  color: #fff;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.12);
+}
+.btn_primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(14, 165, 233, 0.15);
+}
+.btn:active {
+  transform: scale(0.995);
+}
+
+/* divider */
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 18px 0 12px 0;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--border);
+  border-radius: 8px;
+}
+
+/* small text */
+.small {
+  color: var(--muted);
+  font-size: 13px;
 }

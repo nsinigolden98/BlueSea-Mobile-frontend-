@@ -52,7 +52,7 @@
 
 
   function showToast(msg, ms = 8200) {
-    const t = $("#bs_toast");
+    const t = $("#toast");
     if (!t) { alert(msg); return; }
     t.textContent = msg;
     t.hidden = false;
@@ -63,8 +63,8 @@
 
   function setError(inputEl, message) {
     if (!inputEl) return;
-    const field = inputEl.closest(".bs_field");
-    const err = field ? field.querySelector(".bs_error") : null;
+    const field = inputEl.closest(".field");
+    const err = field ? field.querySelector(".error") : null;
     if (err) {
       err.textContent = message || "";
       if (message) err.classList.add("active");
@@ -73,7 +73,7 @@
   }
 
   function clearAllErrors(container = document) {
-    $$(".bs_error", container).forEach(e => { e.textContent = ""; e.classList.remove("active"); });
+    $$(".error", container).forEach(e => { e.textContent = ""; e.classList.remove("active"); });
   }
 
   /* Normalize phone to E.164 for Nigeria:
@@ -122,7 +122,7 @@
   }
 
   /* OTP attempt/block storage in localStorage keyed by target+purpose */
-  function _otpKey(target, purpose) { return `bs_otp_${purpose}_${target}`; }
+  function _otpKey(target, purpose) { return `otp_${purpose}_${target}`; }
   function getOtpState(target, purpose) {
     try {
       const raw = localStorage.getItem(_otpKey(target, purpose));
@@ -134,29 +134,29 @@
   }
 
   /* -------------- DOM references -------------- */
-  const el_tab_login = $("#bs_tab_login");
-  const el_tab_signup = $("#bs_tab_signup");
-  const el_indicator = $("#bs_tab_indicator");
-  const el_forms_inner = $("#bs_forms_inner");
+  const el_tab_login = $("#tab_login");
+  const el_tab_signup = $("#tab_signup");
+  const el_indicator = $("#tab_indicator");
+  const el_forms_inner = $("#forms_inner");
   const htmlEl = document.documentElement;
-  const theme_toggle = $("#bs_theme_toggle");
+  const theme_toggle = $("#theme_toggle");
 
-  const form_login = $("#bs_form_login");
-  const form_signup = $("#bs_form_signup");
+  const form_login = $("#form_login");
+  const form_signup = $("#form_signup");
 
-  const btn_google = $("#bs_google");
-  const btn_apple = $("#bs_apple");
+  const btn_google = $("#google");
+  const btn_apple = $("#apple");
 
-  const modal = $("#bs_modal");
-  const modal_close = $("#bs_modal_close");
-  const modal_tabs = $$(".bs_modal_tab", modal);
-  const modal_panels = $$(".bs_modal_panel_item", modal);
-  const modal_timer_email = $("#bs_modal_timer_email");
-  const modal_timer_phone = $("#bs_modal_timer_phone");
-  const modal_resend_email = $("#bs_modal_resend_email");
-  const modal_resend_phone = $("#bs_modal_resend_phone");
-  const modal_verify_email = $("#bs_modal_verify_email");
-  const modal_verify_phone = $("#bs_modal_verify_phone");
+  const modal = $("#modal");
+  const modal_close = $("#modal_close");
+  const modal_tabs = $$(".modal_tab", modal);
+  const modal_panels = $$(".modal_panel_item", modal);
+  const modal_timer_email = $("#modal_timer_email");
+  const modal_timer_phone = $("#modal_timer_phone");
+  const modal_resend_email = $("#modal_resend_email");
+  const modal_resend_phone = $("#modal_resend_phone");
+  const modal_verify_email = $("#modal_verify_email");
+  const modal_verify_phone = $("#modal_verify_phone");
   const modal_email_input = $("#modal_email_otp");
   const modal_phone_input = $("#modal_phone_otp");
 
@@ -167,14 +167,14 @@
 
   // If user has previously chosen remember-me (flag only) pre-check:
   try {
-    const remembered = localStorage.getItem("bs_remember_me") === "true";
+    const remembered = localStorage.getItem("remember_me") === "true";
     if (remembered && rememberChk) rememberChk.checked = true;
   } catch (e) {}
 
   /* -------------- Tab indicator: measure active tab and set CSS vars -------------- */
   function updateTabIndicator() {
     if (!el_indicator) return;
-    const active = document.querySelector(".bs_tab.active");
+    const active = document.querySelector(".tab.active");
     if (!active) return;
     const parentRect = el_indicator.getBoundingClientRect();
     const tabRect = active.getBoundingClientRect();
@@ -188,7 +188,7 @@
   function computeAndSetSlide(index /* 0 or 1 */) {
     // index 0 -> login, 1 -> signup
     if (!el_forms_inner) return;
-    const forms = $$(".bs_form", el_forms_inner);
+    const forms = $$(".form", el_forms_inner);
     if (!forms.length) return;
     // calculate offset as sum of widths of preceding forms
     let offset = 0;
@@ -231,11 +231,11 @@
   safeAdd(el_tab_signup, "click", (e) => { e.preventDefault(); setActiveTab("signup"); });
 
   // keyboard navigation for tabs
-  safeAdd(document.querySelector(".bs_tabs"), "keydown", (e) => {
+  safeAdd(document.querySelector(".tabs"), "keydown", (e) => {
     const keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
     if (!keys.includes(e.key)) return;
     e.preventDefault();
-    const tabs = Array.from(document.querySelectorAll(".bs_tab"));
+    const tabs = Array.from(document.querySelectorAll(".tab"));
     const currentIndex = tabs.findIndex(t => t.classList.contains("active"));
     let nextIndex = currentIndex;
     if (e.key === "ArrowLeft") nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
@@ -252,7 +252,7 @@
   setTimeout(() => { updateTabIndicator(); computeAndSetSlide(0); }, 160);
 
   /* -------------- Password toggle behaviour (eye icon) -------------- */
-  $$(".bs_toggle_password").forEach(btn => {
+  $$(".toggle_password").forEach(btn => {
     safeAdd(btn, "click", () => {
         
       const targetId = btn.getAttribute("data-target");
@@ -263,7 +263,7 @@
       const isPwd = input.type === "password";
       input.type = isPwd ? "text" : "password";
       // toggle class on button to switch SVGs
-      if (isPwd) btn.classList.add("bs_toggle_show"); else btn.classList.remove("bs_toggle_show");
+      if (isPwd) btn.classList.add("toggle_show"); else btn.classList.remove("toggle_show");
       btn.setAttribute("aria-pressed", isPwd ? "true" : "false");
     });
   });
@@ -304,7 +304,7 @@
   safeAdd(btn_google, "click", (e) => {
     e.preventDefault();
     // Open OAuth popup to our backend endpoint which starts Google flow.
-    openOAuthPopup(ENDPOINTS.oauthGoogle, "bs_google_oauth");
+    openOAuthPopup(ENDPOINTS.oauthGoogle, "google_oauth");
   });
 
   /* -------------- Modal: open/close and tabs -------------- */
@@ -568,7 +568,7 @@
   });
 
   /* -------------- Forgot password flow (trigger modal for email) -------------- */
-  safeAdd($("#bs_forgot"), "click", (ev) => {
+  safeAdd($("#forgot"), "click", (ev) => {
     ev.preventDefault();
     // Show modal purpose forgot_password (default to email)
     document.getElementById("FP").style.display = "block";
@@ -577,7 +577,7 @@
     document.getElementById("Reset_password").style.display = "none";
   });
   // Send otp button
-  safeAdd($("#bs_modal_FP"), "click", async(ev) => {
+  safeAdd($("#modal_FP"), "click", async(ev) => {
     //ev.preventDefault();
     const email = $("#modal_email_FP").value.trim();
     let valid = true;
