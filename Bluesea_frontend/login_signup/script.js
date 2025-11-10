@@ -42,6 +42,7 @@ function emailSwitch(){
     document.getElementById("modal_tab_email").style.borderBottomColor = "#0ea5e9";
     document.getElementById("modal_tab_email").style.color = "#0ea5e9";
     document.getElementById("modal_tab_phone").style.color = "black";
+    resetModalTimers("signup");
 };
 
 // phone number switch tab for verifying user account 
@@ -53,12 +54,16 @@ function phoneSwitch(){
     document.getElementById("modal_tab_phone").style.borderBottomColor = "#0ea5e9";
     document.getElementById("modal_tab_phone").style.color = "#0ea5e9";
     document.getElementById("modal_tab_email").style.color = "black";
+    resetModalTimers("signup");
 };
 
 function closeModal(){
     document.getElementById("FP").style.display= "none";
     document.getElementById("modal_panel").style.display= "none";
+    resetModalTimers("signup");
+    resetModalTimers("forgot_password");
 };
+
  // Domain base; update if your API is at another subdomain
  //const API_BASE = "https://blueseamobile.com.ng"; // <--- change if needed
 const API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
@@ -89,8 +94,42 @@ const ENDPOINTS = {
   const $ = (sel, ctx = document) => ctx.querySelector(sel);
   const $$ = (sel, ctx = document) => Array.from((ctx || document).querySelectorAll(sel));
   const safeAdd = (el, ev, cb) => { if (el) el.addEventListener(ev, cb); };
+const   modal_resend_email = $("#modal_resend_email");
+const   modal_resend_phone = $("#modal_resend_phone");
+const modal_timer_email  = $("#modal_timer_email");
+const modal_timer_phone = $("#modal_timer_phone");
+const modal_email_input = $("#modal_email_input");
 
- 
+function resetModalTimers(purpose = "signup") {
+    if(purpose === "signup"){
+    modal_timer_email.textContent = OTP_RESEND_SECONDS;
+    modal_timer_phone.textContent = OTP_RESEND_SECONDS;
+    modal_resend_email.disabled = true;
+    modal_resend_phone.disabled = true;
+    }
+    else if(purpose === "forgot_password"){
+     $("#fp_modal_timer_email").textContent =OTP_RESEND_SECONDS;
+     $("#reset_resend").disabled = true;
+    }
+    
+  }
+
+$$(".toggle_password").forEach(btn => {
+    safeAdd(btn, "click", () => {
+        
+      const targetId = btn.getAttribute("data-target");
+      console.log(targetId);
+      if (!targetId) return;
+      const input = document.getElementById(targetId);
+      if (!input) return;
+      const isPwd = input.type === "password";
+      input.type = isPwd ? "text" : "password";
+      // toggle class on button to switch SVGs
+      if (isPwd) btn.classList.add("toggle_show"); else btn.classList.remove("toggle_show");
+      btn.setAttribute("aria-pressed", isPwd ? "true" : "false");
+    });
+  }); 
+  
  // Important Functions
  
  function showToast(msg, ms = 8200) {
@@ -200,46 +239,41 @@ function validateEmail(email) {
     }
 }
 
-async function sendOtp(email) {
-    //const payload = { purpose, target };
-    const res = await apiPost(ENDPOINTS.sendOtp, {email: email});
-    return res.data;
-  }
-  
-async function verifyOtp(otp, mail) {
-    let verifyOtp_payload = {
-        otp: Number(otp),
-        email: mail
-    };
-    // call backend
-    let res = await apiPost(ENDPOINTS.verifyOtp, verifyOtp_payload);
-    return res.data;
-  };
+// Buttons Functions when they are clicked 
 
-// Buttons Functions when  they are clicked 
-
-safeAdd(modal_resend_email, "click", async () => {
-    
+async function resendEmailSignUp(){
     const userEmail = $("#signup_email").value.trim();
     modal_resend_email.disabled = true;
-    const r = await sendOtp(userEmail);
+    
+    const res = await apiPost(ENDPOINTS.sendOtp, {email: userEmail});
+    const r = res.data;
+    resetModalTimers("signup"); 
     if (r.state) {
       showToast("OTP sent to email.");
       startCountdown(modal_timer_email, modal_resend_email);
     } else {
       showToast(r.message);
+      showToast(res.error);
       modal_resend_email.disabled = false;
     }
-  });
+  };
 
-safeAdd(modal_verify_email, "click", async() =>{
+async function verifyEmailSignUp(){
     const userEmail = $("#signup_email").value.trim();
     const code = $("#modal_email_otp").value;
     if (!/^\d{6}$/.test(code)) { setError(modal_email_input, "Enter 6-digit code"); return; }
     else{
     setError(modal_email_input, "")
     }; 
-    let r = await verifyOtp(Number(code), userEmail);
+    
+    let verifyOtp_payload = {
+        otp: Number(code),
+        email: userEmail
+    };
+    // call backend
+    let res = await apiPost(ENDPOINTS.verifyOtp, verifyOtp_payload);
+    let r = res.data;
+    
     //console.log(r.message);
      if (r.state) {
       showToast("Email verified.");
@@ -248,8 +282,9 @@ safeAdd(modal_verify_email, "click", async() =>{
 
     } else {
       setError(modal_email_input, r.message);
+      showToast(res.error);
     } 
- });
+ };
 
 
 safeAdd(form_login, "submit", async (ev) => {
@@ -320,21 +355,21 @@ async  function SignUpButton() {
         surname : surname, 
         password : password 
          };
-   const res = await apiPost(ENDPOINTS.signup, signup_payload);
+    const res = await apiPost(ENDPOINTS.signup, signup_payload);
     showToast(res.data.message);
     console.log(res);
-    //startCountdown(modal_timer_email, modal_resend_email);
+    startCountdown(modal_timer_email, modal_resend_email);
   };
 
   /* -------------- Forgot password flow (trigger modal for email) -------------- */
-  safeAdd($("#forgot"), "click", (ev) => {
-    ev.preventDefault();
+ function forgotPassword(){
+    event.preventDefault();
     // Show modal purpose forgot_password (default to email)
     document.getElementById("FP").style.display = "block";
     document.getElementById("FP_email_field").style.display = "block";
     document.getElementById("OTP_field").style.display = "none";
     document.getElementById("Reset_password").style.display = "none";
-  });
+  };
   // Send otp button
   safeAdd($("#modal_FP"), "click", async(ev) => {
     //ev.preventDefault();

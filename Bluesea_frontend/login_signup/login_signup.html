@@ -73,7 +73,7 @@
                 <input type="checkbox" id="login_remember" class="checkbox" />
                 <span>Remember me</span>
               </label>
-              <button type="button" class="link forgot" id="forgot">Forgot password?</button>
+              <button type="button" class="link forgot" id="forgot" onclick="forgotPassword()">Forgot password?</button>
             </div>
 
             <button class="btn btn_primary" id="btn_login" type="submit">Log in</button>
@@ -88,7 +88,7 @@
             <input id="modal_email_FP" class="input" type="email" inputmode="email " placeholder="Enter email " />
             <h3 id="fp_email_error" class="error" aria-live="polite">
             </h3>
-               <button id="modal_FP" class="btn">Request OTP</button>  
+               <button id="modal_FP" class="btn" onclick="sendOTP_FP()">Request OTP</button>  
             
           </div>
          <!-- Enter OTP -->
@@ -253,8 +253,8 @@
             <div id="modal_email_error" class="error" aria-live="polite"></div>
           </div>
           <div class="row modal_actions">
-            <button id="modal_verify_email" class="btn">Verify Email OTP</button>
-            <button id="modal_resend_email" class="btn">Resend (<span id="modal_timer_email">50</span>s)</button>
+            <button id="modal_verify_email" class="btn" onclick="verifyEmailSignUp()">Verify Email OTP</button>
+            <button id="modal_resend_email" class="btn" onclick="resendEmailSignUp()">Resend (<span id="modal_timer_email">50</span>s)</button>
           </div>
         </div>
 
