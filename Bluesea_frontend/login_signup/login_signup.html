@@ -9,7 +9,7 @@
   <link rel="icon" href="../basic_imgs/logo.png" />
   <script src="script.js" defer></script>
   
-<!--   <script src="logic.js" defer></script> -->
+
 </head>
 <body class="page" >
 
@@ -109,15 +109,15 @@
                     <p> Enter a new password</p>
               <label for="reset_password" class="sr_only">Password</label>
               <div class="password_wrapper">
-                <input id="reset_password" name="signup_password" class="input input_password"
+                <input id="reset_password" name="reset_password" class="input input_password"
                        type="password" placeholder="Password (min 8 chars, letters+digit, allowed #$@)"
-                       aria-describedby="signup_password_error" required />
+                       aria-describedby="reset_password_error" required />
                 <button type="button" id="reset_show" class="fp_toggle_password" data-target="signup_password" aria-label="Show password" title="Show/hide password">
-                  <svg class="eye_icon eye_closed" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <svg class="eye_icon eye_closed" id ="close_fp" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                     <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/>
                     <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="1.6" />
                   </svg>
-                  <svg class="eye_icon eye_open" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <svg class="eye_icon eye_open" id ="open_fp" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                     <path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" fill="none" stroke="currentColor" stroke-width="1.6"/>
                     <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.6"/>
                   </svg>
@@ -129,7 +129,7 @@
             <div class="confirm_reset">
               <label for="reset_confirm" class="sr_only">Confirm Password</label>
               <div class="password_wrapper">
-                <input id="reset_confirm" name="signup_confirm" class="input input_password"
+                <input id="reset_confirm" name="reset_confirm" class="input input_password"
                        type="password" placeholder="Confirm password" aria-describedby="signup_confirm_error" required />
                 <button type="button" id="confirm_show" class="fp_toggle_password" data-target="signup_confirm" aria-label="Show password" title="Show/hide password">
                   <svg class="eye_icon eye_closed" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">

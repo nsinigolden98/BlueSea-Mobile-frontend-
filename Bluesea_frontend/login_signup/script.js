@@ -447,14 +447,13 @@ async  function SignUpButton() {
   
   // Toggle effects to view password 
   function  resetToggle(id){
-    target = document.getElementById(id);
-    target.type = "text";
-    //target.type = target.type !== "text" ? "text" : "password";
+    const target = document.getElementById(id);
+     target.type = target.type === "password" ? "text" : "password";
   };
   safeAdd($("#reset_show"), "click", function (){
     resetToggle("reset_password") ;
   });
   safeAdd($("#confirm_show"), "click", function (){
-    resetToggle("confirm_password") ;
+    resetToggle("reset _confirm") ;
   });
   
