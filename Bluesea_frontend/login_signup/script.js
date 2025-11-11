@@ -442,7 +442,7 @@ async  function SignUpButton() {
     };
     const send = await apiPost(ENDPOINTS.confirm_FP,payload);
     showToast(send.data.message);
-    reset_closeModal();
+    closeModal();
   });
   
   // Toggle effects to view password 
@@ -454,6 +454,6 @@ async  function SignUpButton() {
     resetToggle("reset_password") ;
   });
   safeAdd($("#confirm_show"), "click", function (){
-    resetToggle("reset _confirm") ;
+    resetToggle("reset_confirm") ;
   });
   
