@@ -1,0 +1,153 @@
+/* Basic Reset and Variables */
+:root {
+    --primary-color: #008000;
+    --text-color: #333;
+    --secondary-text-color: #666;
+    --border-color: #eee;
+    --background-color: #f7f7f7;
+    --card-background: #fff;
+    --red-alert: #ff4d4f;
+    --yellow-status: #ffc107;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.5;
+}
+
+/* Header Styling */
+.settings-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.back-icon {
+    font-size: 24px;
+    margin-right: 15px;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.settings-header h1 {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+/* Settings List */
+.settings-list {
+    padding: 10px 15px 40px;
+}
+
+/* Settings Groups (Cards) */
+.settings-group {
+    background-color: var(--card-background);
+    border-radius: 10px;
+    margin-top: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    text-decoration: none;
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-item:active {
+    background-color: var(--background-color);
+}
+
+.icon-left {
+    font-size: 20px;
+    margin-right: 15px;
+    /* Default icon color - subtle grey, similar to the image */
+    color: #9e9e9e; 
+}
+
+/* Icon colors based on the screenshot */
+.icon-left.green { color: #4caf50; }
+.icon-left.teal { color: #00bcd4; }
+.icon-left.light-green { color: #8bc34a; }
+.icon-left.home { color: #42a5f5; }
+.icon-left.question { color: #ff9800; }
+.icon-left.message { color: #03a9f4; }
+.icon-left.clipboard { color: #7e57c2; }
+.icon-left.themes { color: #f06292; }
+.icon-left.security-center { color: #4caf50; }
+.icon-left.feedback { color: #42a5f5; }
+.icon-left.close-account { color: #f44336; }
+.icon-left.about { color: #03a9f4; }
+
+
+.label {
+    flex-grow: 1;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Alert and Status */
+.icon-alert {
+    font-size: 10px;
+    margin-right: 5px;
+}
+
+.icon-alert.red {
+    color: var(--red-alert);
+}
+
+.status {
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.status.yellow {
+    color: var(--yellow-status);
+}
+
+.icon-arrow {
+    font-size: 20px;
+    color: #ccc;
+    margin-left: 5px;
+}
+
+/* Sign Out Button */
+.sign-out-button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 20px;
+    background-color: var(--card-background);
+    color: var(--text-color);
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    -webkit-appearance: none; /* For better mobile appearance */
+}
+
+.sign-out-button:active {
+    background-color: var(--background-color);
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile</title>
+    <link rel="stylesheet" href="my_profile.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="profile-container">
+        <header class="profile-header">
+            <span class="material-icons back-icon">chevron_left</span>
+            <h1>My Profile</h1>
+        </header>
+
+        <main class="profile-card">
+            <div class="profile-image-section">
+                <div class="profile-image-placeholder">
+                    <img src="placeholder_image.jpg" alt="Profile Picture" class="profile-pic">
+                    <span class="material-icons camera-icon">photo_camera</span>
+                </div>
+                <h2>RIGHTEOUSNESS</h2>
+            </div>
+
+            <div class="info-group">
+                <div class="info-item static">
+                    <span class="label">OPay Account Number</span>
+                    <span class="value static-value">8125690759</span>
+                    <span class="material-icons icon-button">content_copy</span>
+                </div>
+                <div class="info-item tier-item">
+                    <span class="label">Account Tier</span>
+                    <span class="value tier-value">Tier 3</span>
+                    <span class="material-icons icon-button gold">military_tech</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </div>
+            </div>
+
+            <div class="info-group">
+                <div class="info-item static">
+                    <span class="label">Full Name</span>
+                    <span class="value static-value">RIGHTEOUSNESS NWANNENNAYA UDE</span>
+                </div>
+                <div class="info-item clickable">
+                    <span class="label">Mobile Number</span>
+                    <span class="value">+2348125690759</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </div>
+                <div class="info-item clickable">
+                    <span class="label">Nickname</span>
+                    <span class="value placeholder-value">Enter Nickname</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </div>
+                <div class="info-item static">
+                    <span class="label">Gender</span>
+                    <span class="value static-value">Male</span>
+                </div>
+                <div class="info-item static">
+                    <span class="label">Date of Birth</span>
+                    <span class="value static-value">**.**-**-23</span>
+                </div>
+                <div class="info-item clickable">
+                    <span class="label">Email</span>
+                    <span class="value">r*@gmail.com</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </div>
+                <div class="info-item clickable address-item">
+                    <span class="label">Address</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        // Simple script to simulate the back button, if running locally
+        document.querySelector('.back-icon').addEventListener('click', () => {
+            alert('Back functionality not implemented in this demo.');
+        });
+        // You would need to replace the 'placeholder_image.jpg' with a real image or use a base64 string
+        // For a more complete replication, you'd add event listeners for the clickable items.
+    </script>
+</body>
+</html>

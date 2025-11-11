@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <link rel="stylesheet" href="settings.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="settings-container">
+        <header class="settings-header">
+            <span class="material-icons back-icon">chevron_left</span>
+            <h1>Settings</h1>
+        </header>
+
+        <main class="settings-list">
+            <div class="settings-group">
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left green">lock</span>
+                    <span class="label">Payment Settings</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left teal">vpn_key</span>
+                    <span class="label">Login Settings</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left light-green">savings</span>
+                    <span class="label">Saving Settings</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+            </div>
+
+            <div class="settings-group">
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left home">home</span>
+                    <span class="label">Homepage Settings</span>
+                    <span class="material-icons icon-alert red">fiber_manual_record</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+                <a href="#" class="setting-item security-questions">
+                    <span class="material-icons icon-left question">help_outline</span>
+                    <span class="label">Security Questions</span>
+                    <span class="status yellow">Not Set</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left message">sms</span>
+                    <span class="label">SMS Alert Settings</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left clipboard">content_paste</span>
+                    <span class="label">Access to Clipboard</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left themes">palette</span>
+                    <span class="label">Themes</span>
+                    <span class="material-icons icon-alert red">fiber_manual_record</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+            </div>
+
+            <div class="settings-group">
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left security-center">verified_user</span>
+                    <span class="label">Security Center</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left feedback">edit_note</span>
+                    <span class="label">Feedback and Suggestions</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+            </div>
+
+            <div class="settings-group">
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left close-account">power_settings_new</span>
+                    <span class="label">Close Account</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+            </div>
+
+            <div class="settings-group">
+                <a href="#" class="setting-item">
+                    <span class="material-icons icon-left about">info_outline</span>
+                    <span class="label">About</span>
+                    <span class="material-icons icon-arrow">chevron_right</span>
+                </a>
+            </div>
+
+            <button class="sign-out-button">Sign Out</button>
+        </main>
+    </div>
+    <script>
+        // Simple script to simulate the back button and sign out, if running locally
+        document.querySelector('.back-icon').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Back functionality not implemented in this demo.');
+        });
+
+        document.querySelector('.sign-out-button').addEventListener('click', () => {
+            alert('Signing out...');
+            // In a real application, this would redirect to the login page
+        });
+
+        // Add event listeners for all setting-items for hover/active feedback
+        document.querySelectorAll('.setting-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log(`Clicked: ${item.querySelector('.label').textContent}`);
+                // In a real app, this would navigate to the respective screen
+            });
+        });
+    </script>
+</body>
+</html>
