@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BlueSea · Loyalty Marketplace</title>
+  <link rel="stylesheet" href="loyalty_marketplace/style.css" />
+</head>
+<body class="lp_page" data-theme="light">
+  <header class="lp_header" role="banner">
+    <div class="lp_header_inner">
+      <a class="lp_logo" href="/" aria-label="BlueSea Home">
+        <span class="lp_logo_icon" aria-hidden="true">BS</span>
+        <span class="lp_logo_text">BlueSea</span>
+      </a>
+
+      <div class="lp_header_right">
+        <!-- Points display only (no profile/signout) -->
+        <div class="lp_points_display" id="lp_points_display" aria-live="polite">Points: <strong id="lp_points_amount">2,500</strong></div>
+        <button id="lp_theme_toggle" class="lp_btn lp_theme_toggle" aria-pressed="false" aria-label="Toggle dark mode">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="lp_main" role="main" aria-label="Loyalty marketplace">
+    <section class="lp_hero">
+      <h1 class="lp_title">Loyalty Marketplace</h1>
+      <p class="lp_subtitle">Browse and redeem your points for exciting rewards</p>
+
+      <!-- Search full-width on top -->
+      <div class="lp_search_wrap">
+        <label for="lp_search" class="lp_visually_hidden">Search rewards</label>
+        <div class="lp_search_control">
+          <!-- SVG search icon inline -->
+          <span class="lp_search_icon" aria-hidden="true">
+            <!-- simple magnifier SVG -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+
+          <input id="lp_search" class="lp_search_input" type="search" inputmode="search"
+                 placeholder="Search for products or services…" aria-label="Search rewards" autocomplete="off" />
+        </div>
+
+        <!-- Filters row: directly under search (single row) -->
+        <div class="lp_filters_row" role="region" aria-label="Filters">
+          <!-- VISIBLE label added here -->
+          <div class="lp_filters_label">Filter by:</div>
+
+          <div class="lp_filter">
+            <button class="lp_filter_btn" data-filter-type="category" aria-haspopup="listbox" aria-expanded="false">Category ▾</button>
+            <ul class="lp_filter_list" data-filter-list="category" role="listbox" aria-hidden="true" tabindex="-1">
+              <li role="option" data-value="">All</li>
+              <li role="option" data-value="data">Data</li>
+              <li role="option" data-value="airtime">Airtime</li>
+              <li role="option" data-value="voucher">Voucher</li>
+              <li role="option" data-value="entertainment">Entertainment</li>
+            </ul>
+          </div>
+
+          <div class="lp_filter">
+            <button class="lp_filter_btn" data-filter-type="points" aria-haspopup="listbox" aria-expanded="false">Points Range ▾</button>
+            <ul class="lp_filter_list" data-filter-list="points" role="listbox" aria-hidden="true" tabindex="-1">
+              <li role="option" data-min="0" data-max="499">0 - 499</li>
+              <li role="option" data-min="500" data-max="999">500 - 999</li>
+              <li role="option" data-min="1000" data-max="2499">1,000 - 2,499</li>
+              <li role="option" data-min="2500" data-max="999999">2,500+</li>
+            </ul>
+          </div>
+
+          <div class="lp_filter">
+            <button class="lp_filter_btn" data-filter-type="sort" aria-haspopup="listbox" aria-expanded="false">Popularity ▾</button>
+            <ul class="lp_filter_list" data-filter-list="sort" role="listbox" aria-hidden="true" tabindex="-1">
+              <li role="option" data-value="popularity">Popularity</li>
+              <li role="option" data-value="points_asc">Low → High</li>
+              <li role="option" data-value="points_desc">High → Low</li>
+              <li role="option" data-value="newest">Newest</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Active filter chips (single line below filters) -->
+        <div id="lp_active_filters" class="lp_active_filters" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="lp_catalog_section" aria-label="Rewards catalog">
+      <!-- Catalog grid: 3 columns (desktop), 2 columns (tablet/mobile) -->
+      <ul id="lp_catalog_grid" class="lp_catalog_grid" role="list">
+        <!-- Cards rendered here via JS -->
+      </ul>
+
+      <div class="lp_pagination_row" id="lp_pagination_row">
+        <button id="lp_load_more" class="lp_btn lp_load_more">Load more</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Redeem Confirm -->
+  <div id="lp_modal" class="lp_modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="lp_modal_inner" role="document" tabindex="-1">
+      <button id="lp_modal_close" class="lp_btn lp_modal_close" aria-label="Close dialog">✕</button>
+      <div id="lp_modal_content"></div>
+    </div>
+  </div>
+
+  <!-- Toasts / Live region -->
+  <div id="lp_toast" class="lp_toast" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="loyalty_marketplace/script.js" defer></script>
+</body>
+</html>

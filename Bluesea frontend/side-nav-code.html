@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <title>Hello, World!</title>
+  <style> 
+  /* Sidebar exact CSS (copy-paste) */
+:root{
+  --dash-panel-width: 260px;
+  --dash-panel: #11161a;
+  --dash-bg: #0d1316;
+  --dash-accent: #2dc7ff;
+  --dash-accent-2: #22a6e0;
+  --dash-text: #e6eef3;
+  --dash-text-muted: #99a3a9;
+  --dash-muted-2: #1b2326;
+  --dash-ease: cubic-bezier(.2,.9,.2,1);
+  --dash-font: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Basic body/font (ensure body uses same font) */
+body { font-family: var(--dash-font); margin:0; background:var(--dash-bg); color:var(--dash-text); }
+
+/* Fixed sidebar */
+.data_side_nav{
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  width:var(--dash-panel-width);
+  background:linear-gradient(90deg,var(--dash-panel), var(--dash-bg));
+  padding:28px 20px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:18px;
+  border-right:1px solid rgba(0,0,0,0.04);
+  z-index:50;
+}
+
+/* brand */
+.data_brand{display:flex;gap:10px;align-items:center;padding-bottom:6px}
+.data_brand_logo{border-radius:8px;color:var(--dash-accent)}
+.data_brand_name{font-weight:700;color:var(--dash-text)}
+
+/* nav list */
+.data_nav_list{list-style:none;padding:0;margin:12px 0;display:flex;flex-direction:column;gap:12px}
+.data_nav_item{}
+.data_nav_button,
+.data_buy_data_button{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:transparent;
+  border:none;
+  color:var(--dash-text-muted);
+  text-align:left;
+  cursor:pointer;
+  transition:transform .14s var(--dash-ease), background .14s var(--dash-ease);
+  font-weight:600;
+  letter-spacing:0.01em;
+  font-size:15px;
+}
+.data_nav_button:hover{background:rgba(0,0,0,0.04); transform:translateX(2px)}
+.data_nav_item--active .data_buy_data_button{
+  background:var(--dash-accent);
+  color:#04202a;
+  box-shadow:0 6px 30px rgba(45,199,255,0.08);
+  justify-content:space-between;
+}
+.data_nav_button svg,
+.data_buy_data_button svg{display:block; width:20px; height:20px; color:inherit}
+
+/* theme area */
+.data_theme_area{margin-top:8px;padding-left:2px}
+.data_theme_label{font-size:13px;color:var(--dash-text-muted);font-weight:700}
+.data_theme_btn{padding:6px 10px;border-radius:10px;border:none;background:transparent;color:var(--dash-text);cursor:pointer;font-weight:700}
+.data_theme_btn[aria-pressed="true"]{ background:var(--dash-accent-2); color:#fff }
+
+/* profile block */
+.data_user{display:flex;gap:12px;align-items:center;padding-top:8px;border-top:1px solid rgba(255,255,255,0.02);margin-top:auto}
+.data_user_avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--dash-muted-2),#0b1214);display:flex;align-items:center;justify-content:center;color:var(--dash-text);font-weight:700;overflow:hidden}
+.data_user_meta .data_user_name{font-weight:700}
+.data_user_meta .data_user_email{font-size:12px;color:var(--dash-text-muted)}
+    </style>
+</head>
+<body>
+  <!-- Sidebar (copy-paste this exact block) -->
+<aside class="data_side_nav" aria-label="Main navigation">
+  <div class="data_brand">
+    <svg class="data_brand_logo" width="36" height="36" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5" fill="currentColor"/>
+      <path d="M6 12h12M6 8h12M6 16h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <span class="data_brand_name">BlueSuite</span>
+  </div>
+
+  <nav class="data_nav" role="navigation" aria-label="Sidebar">
+    <ul class="data_nav_list">
+      <li class="data_nav_item">
+        <button class="data_nav_button" type="button" data-page="dashboard">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="8" height="8" rx="1.2"></rect>
+            <rect x="13" y="3" width="8" height="8" rx="1.2"></rect>
+            <rect x="3" y="13" width="8" height="8" rx="1.2"></rect>
+            <rect x="13" y="13" width="8" height="8" rx="1.2"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+      </li>
+
+      <li class="data_nav_item">
+        <button class="data_nav_button" type="button" data-page="wallet">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 7h14v11H3z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+          </svg>
+          <span>Wallet</span>
+        </button>
+      </li>
+
+      <li class="data_nav_item">
+        <button class="data_nav_button" type="button" data-page="airtime">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+            <path d="M11 5l7 7-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <span>Buy Airtime</span>
+        </button>
+      </li>
+
+      <li class="data_nav_item data_nav_item--active">
+        <button class="data_buy_data_button" type="button" aria-current="page" data-page="data">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2v20" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M4 12h16" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+          <span>Buy Data</span>
+          <svg class="data_nav_arrow" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </button>
+      </li>
+
+      <li class="data_nav_item">
+        <button class="data_nav_button" type="button" data-page="loyalty">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 21s-6-4.35-8-7a5 5 0 1 1 8-6 5 5 0 1 1 8 6c-2 2.65-8 7-8 7z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+          </svg>
+          <span>Loyalties</span>
+        </button>
+      </li>
+
+      <li class="data_nav_item">
+        <button class="data_nav_button" type="button" data-page="group">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path>
+            <path d="M21 21v-2a4 4 0 0 0-4-4h-6"></path>
+          </svg>
+          <span>Group Payments</span>
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- theme area (optional) -->
+  <div class="data_theme_area">
+    <label class="data_theme_label">Theme</label>
+    <div class="data_theme_controls">
+      <button id="data_theme_toggle" class="data_theme_btn" aria-pressed="false" title="Toggle light / dark">Light</button>
+    </div>
+  </div>
+
+  <!-- profile block at bottom -->
+  <div class="data_user">
+    <div class="data_user_avatar" aria-hidden="true">
+      <svg width="48" height="48" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="3.2" fill="#dfeefe"/>
+        <rect x="3" y="15" rx="3" width="18" height="6" fill="#c8e7fb"/>
+      </svg>
+    </div>
+    <div class="data_user_meta">
+      <div class="data_user_name">Okon John</div>
+      <div class="data_user_email">okonjohn@gmail.com</div>
+    </div>
+  </div>
+</aside>
+  <script>
+  /* optional: set active nav item by matching data-page to a string */
+(function () {
+  const pageKey = (location.hash || '').replace('#','') || document.body.dataset.page || 'data'; // adapt as appropriate
+  document.querySelectorAll('.data_nav_list .data_nav_item').forEach(li => li.classList.remove('data_nav_item--active'));
+  const btn = document.querySelector(`.data_nav_list [data-page="${pageKey}"]`);
+  if (btn && btn.closest('.data_nav_item')) btn.closest('.data_nav_item').classList.add('data_nav_item--active');
+})();
+  </script>
+</body>
+</html>

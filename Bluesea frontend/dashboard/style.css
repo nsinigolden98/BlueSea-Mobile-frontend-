@@ -1,0 +1,276 @@
+/* style.css - updated to mirror Data page nav behavior (desktop-only) */
+
+/* base tokens */
+:root{
+  --dash-bg: #0d1316;
+  --dash-panel: #11161a;
+  --dash-card-muted: #0f1417;
+  --dash_muted_card: #0f1417; /* surface token used by quick-action tiles */
+  --dash-accent: #2dc7ff;
+  --dash-accent-2: #22a6e0;
+  --dash-text: #e6eef3;
+  --dash-text-muted: #99a3a9;
+  --dash-action-text: var(--dash-text); /* tile label/icon color token */
+  --dash-muted-2: #1b2326;
+  --dash-red: #ff5151;
+  --dash-radius: 14px;
+  --dash-font: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --dash-loader-bg: rgba(3,8,10,0.6);
+  --dash-loader-panel: #091116;
+  --dash-loader-text: #dff7ff;
+  --dash-error-panel: #12171a;
+  --dash-error-accent: #ffb4b4;
+
+  /* Panel width token (mirrors data page width) */
+  --dash-panel-width: 260px;
+}
+
+/* Light theme overrides */
+.dash-theme-light {
+  --dash-bg: #f6f8fa;
+  --dash-panel: #ffffff;
+  --dash-card-muted: #ffffff;
+  --dash_muted_card: #f4f7f9;   /* light tile background override */
+  --dash-accent: #0b84ff;
+  --dash-accent-2: #066fb7;
+  --dash-text: #0b2130;
+  --dash-text-muted: #6b7b84;
+  --dash-action-text: var(--dash-text);
+  --dash-muted-2: #e6edf0;
+  --dash-red: #c62828;
+  --dash-loader-bg: rgba(255,255,255,0.6);
+  --dash-loader-panel: #ffffff;
+  --dash-loader-text: #024156;
+  --dash-error-panel: #fff0f0;
+  --dash-error-accent: #c62828;
+}
+
+/* Reset */
+*{box-sizing:border-box;}
+html,body,#dash_app{min-height:100vh}
+body{
+  margin:0;
+  font-family:var(--dash-font);
+  background:var(--dash-bg);
+  color:var(--dash-text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  font-size:14px;
+  min-height:100vh
+}
+
+/* Layout */
+/* Keep dash_app full viewport but allow main scroll (mirrors data page approach) */
+.dash_app{display:block;width:100vw;min-height:100vh;overflow:visible}
+
+/* NAV */
+/* Use token for width so it's identical to Data page */
+.dash_nav{
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  width:var(--dash-panel-width);
+  background:linear-gradient(90deg,var(--dash-panel), var(--dash-bg));
+  padding:28px 20px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:18px;
+  border-right:1px solid rgba(0,0,0,0.04);
+  z-index:50;
+}
+
+/* Important: inner container should fill height and space its children top/middle/bottom */
+.dash_nav_inner{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  gap:18px;
+  /* Mirror data page layout: explicitly distribute space so profile sticks to bottom */
+  justify-content:space-between;
+}
+
+/* Logo area */
+.dash_logo_area{height:44px;display:flex;align-items:center}
+.dash_logo_img{width:42px;height:42px;object-fit:contain;border-radius:8px}
+
+/* Menu */
+.dash_menu{
+  display:flex;
+  padding:0;
+  flex-direction:column;
+  gap:12px;
+  margin:12px 0;
+}
+.dash_menu_item{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:transparent;
+  color:var(--dash-text);
+  border:none;
+  cursor:pointer;
+  text-align:left;
+  transition:all .14s ease;
+  font-weight:600;
+  letter-spacing:0.01em;
+  font-size:15px;
+}
+.dash_menu_item:hover{background:rgba(0,0,0,0.04);transform:translateX(2px)}
+.dash_menu_item--active{background:var(--dash-accent);color:#04202a;box-shadow:0 6px 30px rgba(45,199,255,0.1)}
+.dash_icon{display:inline-flex;width:px;height:px;align-items:center;justify-content:center;color:var(--dash-text-muted)}
+.dash_menu_item--active .dash_icon{color:#00353f}
+.dash_menu_label{flex:1;font-size:15px}
+.dash_chev{font-weight:700;color:inherit;opacity:0.9;transform:scaleX(1.1)}
+
+/*Settings */
+.dash_settings{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  border-radius:12px;
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  transition:all .14s ease;
+}
+.dash_settings:hover{background:rgba(0,0,0,0.04);transform:translateX(2px)}
+.dash_settings--active{background:var(--dash-accent);color:#04202a;box-shadow:0 6px 30px rgba(45,199,255,0.1)}
+.dash_settings_icon{display:inline-flex;width:px;height:px;align-items:center;justify-content:center;color:var(--dash-text-muted)}
+
+/* Theme area (under Settings) */
+.dash_theme_area{margin-top:8px;padding-left:2px}
+.dash_theme_row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dash_theme_label{font-size:13px;color:var(--dash-text-muted);font-weight:700}
+.dash_theme_btn{padding:6px 10px;border-radius:10px;border:none;background:transparent;color:var(--dash-text);cursor:pointer;font-weight:700}
+.dash_theme_btn[aria-pressed="true"]{ background:var(--dash-accent-2); color:#fff }
+
+/* Profile at bottom of nav */
+/* NOTE: we removed margin-top:auto dependency and use justify-content:space-between to pin this block naturally */
+.dash_profile{display:flex;gap:12px;align-items:center;padding-top:8px;border-top:1px solid rgba(255,255,255,0.02)}
+.dash_avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--dash-muted-2),#0b1214);display:flex;align-items:center;justify-content:center;color:var(--dash-text);font-weight:700;position:relative;overflow:hidden}
+.dash_avatar_img{width:100%;height:100%;object-fit:cover;display:block}
+.dash_avatar_initials{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700}
+.dash_profile_text{line-height:1}
+.dash_profile_name{font-weight:700}
+.dash_profile_email{font-size:12px;color:var(--dash-text-muted)}
+
+/* MAIN */
+/* Mirror data page behavior: main content positioned to the right of fixed sidebar using margin-left = panel width */
+.dash_main{
+  margin-left:var(--dash-panel-width);
+  padding:36px 48px;
+  overflow:auto;
+  min-height:100vh;
+  box-sizing:border-box;
+}
+
+/* small tweak: ensure header stays visible and top spacing matches data page feel */
+.dash_header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.dash_bell{width:44px;height:44px;border-radius:10px;background:transparent;border:none;display:inline-flex;align-items:center;justify-content:center;color:var(--dash-text-muted);cursor:pointer}
+.dash_bell:hover{color:var(--dash-accent)}
+
+/* CARD */
+.dash_card{background:var(--dash-card-muted);border-radius:var(--dash-radius);padding:28px;display:flex;gap:24px;align-items:center}
+.dash_card--balance{background:linear-gradient(90deg,var(--dash-accent), rgba(45,199,255,0.9));color:#001e24;align-items:center;justify-content:space-between;padding:28px 36px;border-radius:18px;box-shadow:0 10px 40px rgba(45,199,255,0.06)}
+.dash_balance_left{flex:1}
+.dash_balance_label{font-size:14px;color:rgba(0,30,36,0.6);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.dash_balance_value{font-size:56px;font-weight:800;line-height:1;letter-spacing:0.01em}
+.dash_balance_middle,.dash_balance_right{width:220px;text-align:left}
+.dash_balance_sublabel{font-size:13px;color:rgba(0,30,36,0.6);font-weight:600}
+.dash_balance_subvalue{font-size:36px;font-weight:800;margin-top:6px}
+.dash_balance_network,.dash_balance_plan{font-size:12px;margin-top:6px;color:rgba(0,30,36,0.65)}
+
+/* Eye toggle */
+.dash_eye_btn{background:transparent;border:none;padding:6px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#003b45}
+.dash_eye_btn[aria-pressed="true"]{ color: #04202a }
+.dash_eye_btn svg{display:block}
+
+/* Quick actions */
+.dash_quick_actions{margin-top:12px;margin-bottom:26px}
+.dash_section_title{color:var(--dash-text);font-weight:700;margin:8px 0 16px 0;font-size:18px}
+.dash_actions_row{display:flex;gap:18px}
+
+/* Make quick-action tiles theme-aware */
+.dash_action_tile{
+  background: var(--dash_muted_card, #0f1416);
+  color: var(--dash-action-text, var(--dash-text));
+  border-radius:12px;
+  padding:20px;
+  min-width:190px;
+  min-height:96px;
+  border:none;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+}
+.dash_action_tile:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.12)}
+/* label inherits color so theme changes take effect */
+.dash_action_label{font-weight:600;color:inherit;font-size:14px}
+/* icons inherit color (SVGs should use stroke="currentColor" already) */
+.dash_action_icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;color:var(--dash-action-text, var(--dash-text))}
+
+/* light-mode subtle elevation for tiles */
+.dash-theme-light .dash_action_tile { box-shadow: 0 6px 18px rgba(14,35,50,0.06); }
+
+/* Transactions */
+.dash_transactions_card{margin-top:12px;background:var(--dash-card-muted);padding:22px;border-radius:18px}
+.dash_transactions_header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.dash_transactions_title{margin:0;font-size:18px;font-weight:700}
+.dash_transactions_viewall{color:var(--dash-accent-2);font-size:13px;text-decoration:none;font-weight:600}
+.dash_transactions_table{width:100%;border-collapse:collapse;table-layout:fixed}
+.dash_transactions_table thead th{text-align:left;font-size:12px;color:var(--dash-text-muted);padding:12px 8px;font-weight:600}
+.dash_transactions_table tbody tr{border-top:1px solid rgba(255,255,255,0.03)}
+.dash_transactions_table tbody td{padding:14px 8px;font-size:14px;color:var(--dash-text)}
+.dash_th_desc{width:48%}
+.dash_th_date{width:20%}
+.dash_th_type{width:20%}
+.dash_th_amount{width:12%;text-align:right}
+.dash_amount--debit{color:var(--dash-red);font-weight:700;text-align:right}
+
+/* Fragment animation system */
+.dash_main_inner{position:relative;width:100%;min: height 100vh;overflow:visible; box-sizing: content-box;}
+.dash_page{position:absolute;top:0;left:0;width:100%;opacity:0;transform:translateX(-40px) scale(.995);transition:transform 360ms cubic-bezier(.2,.9,.2,1),opacity 320ms ease;pointer-events:none;padding:0}
+
+/* Modifier: when a panel should animate from the RIGHT (used for initial load and dashboard-specific entry) */
+.dash_page--from-right { transform: translateX(40px) scale(.995); }
+
+/* Enter/Exit classes (existing) */
+.dash_page--enter{opacity:1;transform:translateX(0) scale(1);pointer-events:auto;z-index:30}
+.dash_page--exit{opacity:0;transform:translateX(40px) scale(.995);transition:transform 300ms cubic-bezier(.2,.9,.2,1),opacity 260ms ease;pointer-events:none;z-index:10}
+.dash_page.is-animating{will-change:transform,opacity}
+
+/* make the inline dashboard content behave like standard fragments */
+.dash_page .dash_page_inner{padding:0 0 24px 0}
+
+/* Loader overlay and error panel */
+.dash_loader{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:var(--dash-loader-bg);z-index:2000;pointer-events:none}
+.dash_loader[aria-hidden="false"]{ display:flex; pointer-events:auto; }
+.dash_loader_inner{background:linear-gradient(180deg,var(--dash-loader-panel), #0c1316);padding:18px 22px;border-radius:12px;display:flex;gap:14px;align-items:center;box-shadow:0 18px 60px rgba(0,0,0,0.6);min-width:220px}
+.dash_spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,0.06);border-top-color:var(--dash-accent);animation:dash_spin 900ms linear infinite}
+@keyframes dash_spin{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
+.dash_loader_text{ color:var(--dash-loader-text); font-weight:700; }
+
+.dash_error{position:fixed;left:50%;top:18%;transform:translateX(-50%) translateY(-6px);display:none;z-index:2100;pointer-events:none}
+.dash_error[aria-hidden="false"]{ display:block; pointer-events:auto; }
+.dash_error_inner{background:var(--dash-error-panel);color:var(--dash-text);padding:18px 20px;border-radius:12px;width:420px;box-shadow:0 20px 70px rgba(0,0,0,0.6)}
+.dash_error_title{ font-weight:800; margin-bottom:6px; color:var(--dash-error-accent) }
+.dash_error_message{ font-size:13px; color:var(--dash-text-muted); margin-bottom:12px }
+.dash_error_actions{ display:flex; gap:10px; justify-content:flex-end }
+.dash_btn{ padding:8px 12px; border-radius:10px; border:none; cursor:pointer; background:var(--dash-accent); color:#002426; font-weight:700 }
+.dash_btn--ghost{ background:transparent; color:var(--dash-text-muted); border:1px solid rgba(255,255,255,0.03) }
+
+/* Hidden-amount style */
+.dash-hidden { font-family: monospace; letter-spacing: 4px; }
+
+/* small responsive adjustment for error panel */
+@media (max-width:1100px) {
+  .dash_error_inner{ width:88vw }
+}
