@@ -1,330 +1,229 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // ----------------------------------------------------------------------
-    // 1. DATA (Original Data Structure)
-    // ----------------------------------------------------------------------
-    const DATA_PLANS = {
-        "MTN": {
-            "N100 100MB - 24 hrs": {id: "mtn-100mb-100", price: 100, volume: "100MB", validity: "1 Day", type: "Daily"},
-            "N200 200MB - 2 days": {id: "mtn-200mb-200", price: 200, volume: "200MB", validity: "2 Days", type: "Daily"},
-            "N600 2.5GB - 2 days": {id: "mtn-2-5gb-600", price: 600, volume: "2.5GB", validity: "2 Days", type: "Daily"},
-            "N800 3GB - 2 days": {id: "mtn-3gb-800", price: 800, volume: "3GB", validity: "2 Days", type: "Daily"},
-            "N1500 6GB - 7 days": {id: "mtn-6gb-1500", price: 1500, volume: "6GB", validity: "7 Days", type: "Weekly"},
-            "N1000 1.5GB - 30 days": {id: "mtn-1-5gb-1000", price: 1000, volume: "1.5GB", validity: "30 Days", type: "Monthly"},
-            "N5000 15GB - 30 days": {id: "mtn-15gb-5000", price: 5000, volume: "15GB", validity: "30 Days", type: "Monthly"},
-            "MTN N300 Xtratalk": {id: "mtn-xtratalk-300", price: 300, volume: "Talk", validity: "7 Days", type: "ExtraValue"},
-        },
-        "Glo": {
-            "N100 105MB - 2 day": {id: "glo100", price: 100, volume: "105MB", validity: "2 Days", type: "Daily"},
-            "N1000 2.5GB - 30 days": {id: "glo1000", price: 1000, volume: "2.5GB", validity: "30 Days", type: "Monthly"},
-        },
-        "Airtel": {
-            "N100 75MB - 1Day": {id: "airt-100", price: 99, volume: "75MB", validity: "1 Day", type: "Daily"},
-            "N1500 6GB (7 Days)": {id: "airt-1500-7", price: 1499, volume: "6GB", validity: "7 Days", type: "Weekly"},
-        },
-        "9mobile": {
-            "N100 100MB - 1 day": {id: "eti-100", price: 100, volume: "100MB", validity: "1 Day", type: "Daily"},
-            "N1000 1.5GB - 30 days": {id: "eti-1-5gb-1000", price: 1000, volume: "1.5GB", validity: "30 Days", type: "Monthly"},
-        }
-    };
-    
-    // ----------------------------------------------------------------------
-    // 2. DOM Elements and State Variables (New Modal Elements)
-    // ----------------------------------------------------------------------
+/* data/script.js
+   - Renders plans (8 per tab)
+   - Keeps constant 4-column grid (CSS)
+   - Theme toggle (sync key dash.theme)
+   - Tab underline positioning & interactions
+   - Phone input: digits-only enforcement + maxlength=11
+   - SVG badge is decorative (no click behavior)
+*/
+
+(function () {
+  'use strict';
+
+  const THEME_KEY = 'dash.theme';
+
+  // DOM refs
+  const panel = document.getElementById('data_panel');
+  const planGrid = document.getElementById('plan_grid');
+  const tabs = Array.from(document.querySelectorAll('.data_tab'));
+  const tabUnderline = document.getElementById('tab_underline');
+  const networkBtns = Array.from(document.querySelectorAll('.data_network_btn'));
+  const summaryNetwork = document.getElementById('summary_network');
+  const summaryPlan = document.getElementById('summary_plan');
+  const summaryRecipient = document.getElementById('summary_recipient');
+  const recipientInput = document.getElementById('recipient_phone');
+  const buyNow = document.getElementById('buy_now');
+  const smartTopup = document.getElementById('smart_topup');
+  const themeToggleBtn = document.getElementById('data_theme_toggle');
+  const notificationsBtn = document.getElementById('notifications_btn');
+
+  const state = {
+    network: 'MTN',
+    planTab: 'Daily',
+    selectedPlanId: null,
+    phone: ''
+  };
+
+  const PLANS = {
+    Daily: [
+      { id: 'd1', size: '100MB', desc: '100MB data + 30s call', price: 50, validity: '1 Day' },
+      { id: 'd2', size: '200MB', desc: '200MB data + 1 min call', price: 100, validity: '1 Day' },
+      { id: 'd3', size: '500MB', desc: '500MB data + 2 mins call', price: 200, validity: '1 Day' },
+      { id: 'd4', size: '1GB', desc: '1GB data + 1.5 mins talktime', price: 500, validity: '1 Day' },
+      { id: 'd5', size: '1.5GB', desc: '1.5GB data', price: 700, validity: '1 Day' },
+      { id: 'd6', size: '2GB', desc: '2GB data', price: 900, validity: '1 Day' },
+      { id: 'd7', size: '3GB', desc: '3GB data', price: 1200, validity: '1 Day' },
+      { id: 'd8', size: '5GB', desc: '5GB data', price: 1800, validity: '1 Day' }
+    ],
+    Weekly: [
+      { id: 'w1', size: '500MB', desc: 'Weekly 500MB', price: 250, validity: '7 Days' },
+      { id: 'w2', size: '1GB', desc: 'Weekly 1GB', price: 500, validity: '7 Days' },
+      { id: 'w3', size: '2GB', desc: 'Weekly 2GB', price: 900, validity: '7 Days' },
+      { id: 'w4', size: '3GB', desc: 'Weekly 3GB', price: 1300, validity: '7 Days' },
+      { id: 'w5', size: '5GB', desc: 'Weekly 5GB', price: 2000, validity: '7 Days' },
+      { id: 'w6', size: '7GB', desc: 'Weekly 7GB', price: 2600, validity: '7 Days' },
+      { id: 'w7', size: '10GB', desc: 'Weekly 10GB', price: 3500, validity: '7 Days' },
+      { id: 'w8', size: '15GB', desc: 'Weekly 15GB', price: 4500, validity: '7 Days' }
+    ],
+    Monthly: [
+      { id: 'm1', size: '1GB', desc: 'Monthly 1GB', price: 800, validity: '30 Days' },
+      { id: 'm2', size: '3GB', desc: 'Monthly 3GB', price: 2000, validity: '30 Days' },
+      { id: 'm3', size: '5GB', desc: 'Monthly 5GB', price: 3000, validity: '30 Days' },
+      { id: 'm4', size: '10GB', desc: 'Monthly 10GB', price: 5500, validity: '30 Days' },
+      { id: 'm5', size: '15GB', desc: 'Monthly 15GB', price: 8000, validity: '30 Days' },
+      { id: 'm6', size: '20GB', desc: 'Monthly 20GB', price: 10000, validity: '30 Days' },
+      { id: 'm7', size: '30GB', desc: 'Monthly 30GB', price: 14000, validity: '30 Days' },
+      { id: 'm8', size: '50GB', desc: 'Monthly 50GB', price: 22000, validity: '30 Days' }
+    ],
+    XtraValue: [
+      { id: 'x1', size: '350MB', desc: '350MB + Bonus', price: 150, validity: '7 Days' },
+      { id: 'x2', size: '750MB', desc: '750MB + Bonus', price: 300, validity: '7 Days' },
+      { id: 'x3', size: '1.25GB', desc: '1.25GB + Bonus', price: 550, validity: '7 Days' },
+      { id: 'x4', size: '2.5GB', desc: '2.5GB + Bonus', price: 1000, validity: '14 Days' },
+      { id: 'x5', size: '4GB', desc: '4GB + Bonus', price: 1600, validity: '30 Days' },
+      { id: 'x6', size: '6GB', desc: '6GB + Bonus', price: 2200, validity: '30 Days' },
+      { id: 'x7', size: '8GB', desc: '8GB + Bonus', price: 2800, validity: '30 Days' },
+      { id: 'x8', size: '12GB', desc: '12GB + Bonus', price: 3800, validity: '30 Days' }
+    ]
+  };
+
+  /* Theme helpers */
+  function getSavedTheme() {
+    const v = localStorage.getItem(THEME_KEY);
+    if (v === 'light' || v === 'dark') return v;
+    return 'dark';
+  }
+  function applyTheme(theme) {
     const body = document.body;
-    const themeToggle = document.getElementById('theme-toggle');
-    const networkTabsContainer = document.querySelector('.network-tabs');
-    const planTypeTabsContainer = document.querySelector('.plan-tabs');
-    const dataPlansGrid = document.querySelector('.data-plans-grid');
-    const recipientNumberInput = document.getElementById('recipient-number');
-    const useMyNumberCheckbox = document.getElementById('use-my-number');
-    const proceedToPaymentBtn = document.getElementById('proceed-to-payment-btn');
+    if (theme === 'light') body.classList.add('dash-theme-light');
+    else body.classList.remove('dash-theme-light');
 
-    // Modal Elements
-    const pinModal = document.getElementById('pin-modal');
-    const closeModalBtn = document.querySelector('.close-btn');
-    const pinDigits = document.querySelectorAll('.pin-digit');
-    const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
-    const pinMessage = document.getElementById('pin-message');
+    if (themeToggleBtn) {
+      themeToggleBtn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+      themeToggleBtn.textContent = theme === 'light' ? 'Light' : 'Dark';
+    }
+    localStorage.setItem(THEME_KEY, theme);
+  }
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      const current = getSavedTheme();
+      const next = current === 'light' ? 'dark' : 'light';
+      applyTheme(next);
+    });
+  }
+  applyTheme(getSavedTheme());
 
-    const myPhoneNumber = '08091234567'; 
-    const correctPin = '1234'; // Simulated correct PIN for demo
-
-    let currentNetwork = 'MTN';
-    let currentPlanType = 'Daily';
-    let currentRecipient = '12345678900'; 
-    let currentPlan = { amount: 0, volume: '0MB', id: '' };
-    
-    // ----------------------------------------------------------------------
-    // 3. CORE LOGIC FUNCTIONS
-    // ----------------------------------------------------------------------
-
-    /**
-     * Dynamically generates and renders data plan cards.
-     */
-    function renderDataPlans() {
-        const plans = DATA_PLANS[currentNetwork];
-        // ... (Plan filtering logic) ... 
-        const filteredPlans = Object.keys(plans).filter(key => plans[key].type === currentPlanType);
-
-        if (filteredPlans.length === 0) {
-            dataPlansGrid.innerHTML = `<p style="color:var(--text-muted-color); padding: 1rem;">No ${currentPlanType} plans available for ${currentNetwork}. Try another plan type.</p>`;
-            updatePlanSummary(null);
-            return;
-        }
-
-        let plansHTML = '';
-        let firstPlan = null;
-
-        filteredPlans.forEach((key, index) => {
-            const plan = plans[key];
-            const isActive = index === 0; 
-            if (isActive) {
-                firstPlan = plan;
-            }
-            
-            const headerVolume = plan.volume.split('(')[0].trim();
-            
-            // --- PLACEHOLDER LOGIC FOR STYLING ONLY ---
-            const showSlashedPrice = index % 3 === 0; 
-            const showCashback = index % 2 === 0;    
-            const showTag = index % 4 === 0 || index === 1; 
-            const tagValue = (index === 1) ? "%" : "HOT"; 
-            const placeholderSlashedPrice = plan.price + 50; 
-            const placeholderCashback = (plan.price * 0.05).toFixed(2); 
-
-            const slashedPriceHtml = showSlashedPrice ? `<span class="plan-slashed-price">₦${placeholderSlashedPrice.toLocaleString()}</span>` : '';
-            const tagHtml = showTag ? `<div class="plan-tag">${tagValue}</div>` : '';
-            const cashbackHtml = showCashback ? `<div class="plan-cashback-row">₦${placeholderCashback} Cashback</div>` : '';
-            
-            plansHTML += `
-                <div class="data-plan-card ${isActive ? 'active' : ''}" 
-                     data-plan-id="${plan.id}" 
-                     data-price="${plan.price}" 
-                     data-volume="${plan.volume}" 
-                     data-validity="${plan.validity}">
-                    
-                    ${tagHtml}
-
-                    <div class="plan-content">
-                        <div class="plan-header">${headerVolume}</div>
-                        <div class="plan-validity">${plan.validity}</div>
-                        
-                        <div class="plan-price-row">
-                            ${slashedPriceHtml}
-                            <span class="plan-price">₦${plan.price.toLocaleString()}</span>
-                        </div>
-                    </div>
-                    
-                    ${cashbackHtml}
-                </div>
-            `;
-        });
-
-        dataPlansGrid.innerHTML = plansHTML;
-
-        // Set the first plan as the active summary plan
-        if (firstPlan) {
-            currentPlan = {
-                amount: firstPlan.price,
-                volume: firstPlan.volume,
-                id: firstPlan.id
-            };
-        } else {
-            currentPlan = { amount: 0, volume: '0MB', id: '' };
-        }
+  /* Render plan cards */
+  function renderPlans() {
+    const list = PLANS[state.planTab] || [];
+    planGrid.innerHTML = '';
+    list.forEach(plan => {
+      const card = document.createElement('button');
+      card.className = 'data_plan_card';
+      card.type = 'button';
+      card.dataset.planId = plan.id;
+      card.innerHTML = `
+        <div class="data_plan_size">${plan.size}</div>
+        <div class="data_plan_desc">${plan.desc}</div>
+        <div class="data_plan_bottom">
+          <div>₦${plan.price.toLocaleString()}</div>
+          <div>${plan.validity}</div>
+        </div>
+      `;
+      card.addEventListener('click', () => {
+        state.selectedPlanId = plan.id;
+        document.querySelectorAll('.data_plan_card').forEach(c => c.classList.remove('data_plan_card--selected'));
+        card.classList.add('data_plan_card--selected');
         updateSummary();
-    }
-
-    /**
-     * Updates the global currentPlan state and calls the summary update.
-     */
-    function updatePlanSummary(activeCard) {
-        if (!activeCard) {
-            currentPlan = { amount: 0, volume: '0MB', id: '' };
-        } else {
-            const newAmount = activeCard.getAttribute('data-price');
-            const newVolume = activeCard.getAttribute('data-volume');
-            const newId = activeCard.getAttribute('data-plan-id');
-            
-            currentPlan = {
-                amount: parseFloat(newAmount),
-                volume: newVolume,
-                id: newId
-            };
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          card.click();
         }
-        updateSummary();
-    }
-
-    /**
-     * Updates the recommendation banner and button status based on the current state.
-     */
-    function updateSummary() {
-        const hasValidPlan = currentPlan.amount > 0;
-        const recipientValue = recipientNumberInput.value.trim();
-        const isValidRecipient = recipientValue.length === 11 || useMyNumberCheckbox.checked;
-
-        if (isValidRecipient) {
-            currentRecipient = recipientValue.length === 11 ? recipientValue : myPhoneNumber;
-        } else {
-            currentRecipient = '';
-        }
-
-        // Update Banner Text
-        let bannerText = "Select a plan to proceed with your purchase.";
-        if (hasValidPlan && isValidRecipient) {
-            bannerText = `Ready to buy ${currentPlan.volume} on ${currentNetwork} for ₦${currentPlan.amount.toLocaleString()} for ${currentRecipient}.`;
-        } else if (hasValidPlan) {
-            bannerText = `Plan selected! Please enter a valid 11-digit phone number.`;
-        } else if (isValidRecipient) {
-            bannerText = `Recipient set! Now, select a plan.`;
-        }
-            
-        document.querySelector('.recommendation-banner p').textContent = bannerText;
-        
-        // Enable/Disable main button
-        proceedToPaymentBtn.disabled = !(hasValidPlan && isValidRecipient);
-    }
-    
-    // ----------------------------------------------------------------------
-    // 4. MODAL & PIN LOGIC (New)
-    // ----------------------------------------------------------------------
-
-    function showModal() {
-        pinModal.style.display = 'flex';
-        pinMessage.textContent = '';
-        pinDigits.forEach(input => input.value = ''); // Clear old pin
-        pinDigits[0].focus();
-    }
-
-    function hideModal() {
-        pinModal.style.display = 'none';
-    }
-
-    function getPinValue() {
-        let pin = '';
-        pinDigits.forEach(input => {
-            pin += input.value;
-        });
-        return pin;
-    }
-
-    // PIN input auto-focus/navigation
-    pinDigits.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
-            if (e.data && /^\d$/.test(e.data) && index < pinDigits.length - 1) {
-                pinDigits[index + 1].focus();
-            }
-            if (getPinValue().length === 4) {
-                confirmPaymentBtn.focus();
-            }
-        });
-
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && input.value === '' && index > 0) {
-                pinDigits[index - 1].focus();
-            }
-        });
+      });
+      planGrid.appendChild(card);
     });
 
-    // Handle payment confirmation
-    confirmPaymentBtn.addEventListener('click', () => {
-        const pin = getPinValue();
-        if (pin.length !== 4) {
-            pinMessage.textContent = "PIN must be 4 digits.";
-            return;
-        }
-
-        if (pin === correctPin) {
-            pinMessage.textContent = 'Transaction Successful! Redirecting...';
-            pinMessage.style.color = 'var(--plan-cashback-color)';
-            confirmPaymentBtn.disabled = true;
-
-            setTimeout(() => {
-                hideModal();
-                alert(`SUCCESS! Bought ${currentPlan.volume} on ${currentNetwork} for ₦${currentPlan.amount} for ${currentRecipient}.`);
-                // In a real application, you would redirect the user here.
-            }, 1500);
-
-        } else {
-            pinMessage.textContent = "Invalid PIN. Please try again.";
-            pinMessage.style.color = 'var(--error-color)';
-        }
-    });
-
-    // ----------------------------------------------------------------------
-    // 5. EVENT HANDLERS
-    // ----------------------------------------------------------------------
-    
-    // Global Event Listeners for Modal
-    closeModalBtn.addEventListener('click', hideModal);
-    window.addEventListener('click', (event) => {
-        if (event.target === pinModal) {
-            hideModal();
-        }
-    });
-
-    // Main Button Click
-    proceedToPaymentBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (!proceedToPaymentBtn.disabled) {
-            showModal();
-        }
-    });
-
-    // Active State Management setup
-    function setupActiveToggle(container, selector) {
-        container.addEventListener('click', (event) => {
-            const target = event.target.closest(selector);
-            if (target && !target.classList.contains('active')) {
-                container.querySelectorAll(selector).forEach(el => el.classList.remove('active'));
-                target.classList.add('active');
-
-                if (container === networkTabsContainer || container === planTypeTabsContainer) {
-                    currentNetwork = target.getAttribute('data-network') || currentNetwork;
-                    currentPlanType = target.getAttribute('data-plan-type') || currentPlanType;
-                    renderDataPlans(); 
-                } else if (target.classList.contains('data-plan-card')) {
-                    updatePlanSummary(target);
-                }
-            }
-        });
+    if (state.selectedPlanId) {
+      const found = planGrid.querySelector(`[data-plan-id="${state.selectedPlanId}"]`);
+      if (found) found.classList.add('data_plan_card--selected');
+      else state.selectedPlanId = null;
     }
-    
-    // Theme Toggle 
-    themeToggle.addEventListener('click', () => {
-        const isDarkMode = body.classList.toggle('dark-mode');
-        body.classList.toggle('light-mode', !isDarkMode); 
-        themeToggle.setAttribute('data-mode', isDarkMode ? 'dark' : 'light');
-        const icon = themeToggle.querySelector('svg');
-        // Simplified icon switch
-        icon.innerHTML = isDarkMode ? 
-            '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>' : 
-            '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+  }
+
+  function updateSummary() {
+    summaryNetwork.textContent = state.network;
+    summaryRecipient.textContent = recipientInput.value || '—';
+    if (state.selectedPlanId) {
+      const all = PLANS[state.planTab] || [];
+      const p = all.find(x => x.id === state.selectedPlanId) || null;
+      summaryPlan.textContent = p ? `${p.size} • ₦${p.price} • ${p.validity}` : '—';
+    } else {
+      summaryPlan.textContent = '—';
+    }
+  }
+
+  /* Tab underline and behavior */
+  function positionTabUnderline() {
+    const active = document.querySelector('.data_tab[aria-selected="true"]');
+    if (!active || !tabUnderline) return;
+    const rect = active.getBoundingClientRect();
+    const containerRect = active.parentElement.getBoundingClientRect();
+    const left = rect.left - containerRect.left;
+    tabUnderline.style.width = `${rect.width}px`;
+    tabUnderline.style.left = `${left}px`;
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+      tab.setAttribute('aria-selected', 'true');
+      state.planTab = tab.dataset.tab;
+      renderPlans();
+      positionTabUnderline();
+      updateSummary();
     });
+  });
 
-    // 2. Active State Management setup
-    setupActiveToggle(networkTabsContainer, '.tab-button');
-    setupActiveToggle(planTypeTabsContainer, '.tab-button');
-    setupActiveToggle(dataPlansGrid, '.data-plan-card');
+  // initial paint
+  requestAnimationFrame(() => {
+    panel.classList.add('data_panel--enter');
+    renderPlans();
+    updateSummary();
+    positionTabUnderline();
+  });
 
-    // 3. Recipient Number Logic
-    useMyNumberCheckbox.addEventListener('change', () => {
-        if (useMyNumberCheckbox.checked) {
-            recipientNumberInput.value = myPhoneNumber;
-            recipientNumberInput.disabled = true;
-        } else {
-            recipientNumberInput.value = '';
-            recipientNumberInput.disabled = false;
-        }
-        updateSummary();
+  // network buttons
+  networkBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      networkBtns.forEach(b => b.setAttribute('aria-checked', 'false'));
+      btn.setAttribute('aria-checked', 'true');
+      state.network = btn.dataset.network;
+      updateSummary();
     });
+  });
 
-    recipientNumberInput.addEventListener('input', () => {
-        const value = recipientNumberInput.value.replace(/\D/g, ''); 
-        recipientNumberInput.value = value.substring(0, 11);
-        updateSummary();
+  // phone input: digits only and maxlength already set on input element.
+  recipientInput.addEventListener('input', (e) => {
+    // strip non-digits
+    const cleaned = (e.target.value || '').replace(/\D/g, '').slice(0, 11);
+    if (cleaned !== e.target.value) {
+      e.target.value = cleaned;
+    }
+    state.phone = cleaned;
+    updateSummary();
+  });
+
+  // buy now simple interaction (UI-only)
+  if (buyNow) {
+    buyNow.addEventListener('click', () => {
+      buyNow.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-3px)' }, { transform: 'translateY(0)' }], { duration: 240, easing: 'ease-out' });
+      // placeholder for integration later
     });
+  }
 
-    // 4. Initial Render and Summary Display
-    renderDataPlans(); 
-});
+  // notifications simple animation
+  if (notificationsBtn) {
+    notificationsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      notificationsBtn.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(-12deg)' }, { transform: 'rotate(0deg)' }], { duration: 360, easing: 'ease-out' });
+    });
+  }
+
+  // recalc underline on resize
+  window.addEventListener('resize', positionTabUnderline);
+
+  // debug
+  window.__blueSuiteState = state;
+})();
