@@ -1,0 +1,226 @@
+/* styles.css
+   Unique class prefix: lp_
+   Light-mode default. Dark-mode applied with [data-theme="dark"] on body.
+*/
+
+/* Reset (minimal) */
+* { box-sizing: border-box; }
+html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+.lp_visually_hidden { position: absolute !important; left: -99999px; top:auto; width:1px; height:1px; overflow:hidden; }
+
+/* Theme colors (light defaults) */
+:root{
+  --lp-bg: #f6f7f9;
+  --lp-surface: #ffffff;
+  --lp-muted: #6b7280;
+  --lp-text: #0f1722;
+  --lp-accent: #00baff; /* BlueSea primary adapted for light theme */
+  --lp-card-shadow: 0 6px 14px rgba(16,24,40,0.06);
+  --lp-radius: 10px;
+  --lp-gap: 18px;
+}
+
+/* Dark theme overrides */
+body[data-theme="dark"]{
+  --lp-bg: #0c0f12;
+  --lp-surface: #0f1720;
+  --lp-muted: #9aa0a6;
+  --lp-text: #dbe6ea;
+  --lp-accent: #2f9efc;
+  --lp-card-shadow: 0 6px 18px rgba(0,0,0,0.6);
+}
+
+/* Page */
+.lp_page { background: var(--lp-bg); color: var(--lp-text); min-height:100vh; }
+
+/* Header */
+.lp_header { background: transparent; padding: 18px 20px; position: relative; top:0; z-index:30; }
+.lp_header_inner { display:flex; align-items:center; justify-content:space-between; gap:16px; max-width:1200px; margin:0 auto; }
+.lp_logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--lp-text); font-weight:700; font-size:18px; }
+.lp_logo_icon { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; background:var(--lp-accent); color:white; border-radius:8px; font-weight:700; font-size:13px; }
+.lp_header_right { display:flex; gap:12px; align-items:center; }
+.lp_btn { cursor:pointer; border:0; background:transparent; padding:8px 12px; border-radius:8px; font-size:14px; color:var(--lp-text); }
+.lp_btn:focus { outline:3px solid rgba(0,123,255,0.12); outline-offset:2px; }
+
+/* Points */
+.lp_points_display { font-size:14px; color:var(--lp-text); padding:6px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.04); background:var(--lp-surface); }
+
+/* Main container */
+.lp_main { max-width:1200px; margin:20px auto; padding:0 20px 80px; }
+.lp_hero { margin-bottom:12px; }
+.lp_title { font-size:26px; margin:0 0 6px 0; }
+.lp_subtitle { margin:0 0 12px 0; color:var(--lp-muted); font-size:14px; }
+
+/* Search wrap */
+.lp_search_wrap { display:flex; flex-direction:column; gap:10px; margin-bottom:8px; }
+
+/* Search control with icon */
+.lp_search_control { position:relative; display:flex; align-items:center; width:100%; }
+.lp_search_icon { position:absolute; left:12px; display:flex; align-items:center; justify-content:center; color:var(--lp-muted); pointer-events:none; }
+.lp_search_input { width:100%; padding:12px 16px 12px 44px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); background:var(--lp-surface); color:var(--lp-text); font-size:15px; box-shadow:var(--lp-card-shadow); }
+/* === Search input focus / active visual enhancement === */
+.lp_search_input {
+  transition: box-shadow .18s ease, border-color .18s ease;
+  border: 1px solid rgba(0,0,0,0.06);
+  outline: none;
+}
+
+/* When input is focused */
+.lp_search_input:focus,
+.lp_search_input:focus-visible {
+  border-color: var(--lp-accent);
+  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.12);
+  outline: none;
+}
+
+/* When input contains text (set by JS) */
+.lp_search_input.has-value {
+  border-color: var(--lp-accent);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+
+/* Filters row (buttons inline) */
+.lp_filters_row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px; }
+.lp_filters_label { font-weight:600; color:var(--lp-text); margin-right:6px; font-size:14px; align-self:center; }
+
+/* Filter button/list */
+.lp_filter { position:relative; }
+.lp_filter_btn { background:var(--lp-surface); border:1px solid rgba(0,0,0,0.06); padding:8px 12px; border-radius:10px; box-shadow:var(--lp-card-shadow); font-size:14px; }
+.lp_filter_list { display:none; position:absolute; left:0; top:42px; background:var(--lp-surface); box-shadow:var(--lp-card-shadow); border-radius:8px; padding:6px; min-width:180px; z-index:1200; list-style:none; margin:0; max-height:280px; overflow:auto; }
+.lp_filter_list li { padding:8px 12px; cursor:pointer; border-radius:6px; color:var(--lp-text); }
+.lp_filter_list li:focus, .lp_filter_list li:hover { background: rgba(0,0,0,0.04); outline:none; }
+
+/* Active filters chips */
+.lp_active_filters { margin-top:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; min-height:28px; }
+
+/* Chip */
+.lp_chip { background: var(--lp-surface); padding:6px 10px; border-radius:999px; border:1px solid rgba(0,0,0,0.06); display:flex; align-items:center; gap:8px; font-size:13px; }
+.lp_chip button { background:transparent; border:0; cursor:pointer; font-size:13px; }
+
+/* Catalog grid */
+.lp_catalog_section { margin-top:16px; }
+.lp_catalog_grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:18px; align-items:start; list-style:none; padding:0; margin:0; }
+
+/* Card - ensure it can shrink and wrap content */
+.lp_card { background:var(--lp-surface); border-radius:12px; box-shadow:var(--lp-card-shadow); padding:14px; display:flex; flex-direction:column; gap:12px; min-height:200px; position:relative; border:1px solid rgba(0,0,0,0.04); min-width:0; word-wrap:break-word; overflow-wrap:break-word; }
+.lp_picture_frame { width:100%; height:96px; border-radius:8px; background:linear-gradient(90deg,#f2f4f7,#e9eef5); display:block; overflow:hidden; }
+.lp_card img { width:100%; height:100%; object-fit:cover; display:block; }
+.lp_card_title { font-weight:700; margin:0; font-size:16px; color:var(--lp-text); white-space:normal; word-break:break-word; }
+.lp_card_desc { margin:0; color:var(--lp-muted); font-size:13px; line-height:1.35; overflow-wrap:break-word; }
+.lp_card_points { font-weight:700; font-size:13px; color:var(--lp-muted); }
+
+/* Footer + actions wrapper */
+.lp_card_footer { margin-top:auto; display:flex; gap:12px; align-items:center; justify-content:flex-start; min-width:0; }
+
+/* NEW: actions helper to replace inline margin-left */
+.lp_actions {
+  margin-left: auto;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  min-width:0;
+}
+
+/* Redeem button: remove hard min-width, allow shrink */
+.lp_redeem_btn {
+  background:var(--lp-accent);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:8px;
+  border:0;
+  font-weight:600;
+  /* removed fixed min-width to avoid overflow */
+  min-width: 0;
+  width: auto;
+  max-width: 100%;
+  flex: 0 1 auto;            /* allow shrinking */
+  box-sizing: border-box;
+  white-space: nowrap;       /* don't wrap on larger screens */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp_redeem_btn[disabled] { opacity:0.5; cursor:not-allowed; }
+
+/* Card badge */
+.lp_badge { position:absolute; left:14px; top:12px; background:var(--lp-accent); color:white; padding:6px 8px; font-size:12px; border-radius:8px; }
+
+/* Pagination/load more */
+.lp_pagination_row { display:flex; justify-content:center; margin-top:18px; }
+
+/* Modal */
+.lp_modal { position:fixed; inset:0; display:none; background: rgba(2,6,23,0.6); align-items:center; justify-content:center; padding:20px; z-index:1400; }
+.lp_modal_inner { background:var(--lp-surface); width:100%; max-width:520px; border-radius:12px; padding:18px; box-shadow:var(--lp-card-shadow); position:relative; outline:none; }
+.lp_modal_close { position:absolute; right:12px; top:12px; }
+
+/* Toast */
+.lp_toast { position:fixed; right:20px; bottom:20px; z-index:1500; }
+
+/* Skeleton helpers */
+.lp_skeleton { animation: lp_pulse 1.1s infinite linear; background: linear-gradient(90deg, rgba(0,0,0,0.03), rgba(0,0,0,0.06), rgba(0,0,0,0.03)); border-radius:6px; }
+.w-30 { width:30%; height:12px; display:block; }
+.w-70 { width:70%; height:10px; display:block; }
+.w-25 { width:25%; height:10px; display:block; }
+
+/* Small utility */
+.hidden { display:none !important; }
+
+/* Responsive rules:
+   Desktop (>=1025px): 3 columns
+   Tablet and Mobile (<1025px): 2 columns (user requested)
+*/
+@media (max-width: 1024px) {
+  .lp_catalog_grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Make mobile same 2 cols as requested */
+@media (max-width: 680px) {
+  .lp_catalog_grid { grid-template-columns: repeat(2, 1fr); gap:12px; }
+  .lp_search_control { width:100%; }
+  .lp_search_input { padding:10px 12px 10px 40px; }
+  .lp_filters_row { gap:8px; }
+  .lp_filters_label { width:100%; margin-bottom:4px; }
+  /* mobile: actions stack */
+  .lp_card_footer { flex-direction: column; align-items: stretch; gap:10px; }
+  .lp_actions { margin-left: 0; width:100%; justify-content:flex-end; }
+  .lp_redeem_btn { width:100%; flex: 0 0 auto; white-space: normal; }
+}
+
+/* Prevent horizontal overflow */
+html, body { overflow-x: hidden; }
+
+/* pulse keyframes */
+@keyframes lp_pulse {
+  0% { opacity: 0.85 }
+  50% { opacity: 0.6 }
+  100% { opacity: 0.85 }
+}
+
+/* Smooth dropdown animation for filter lists */
+.lp_filter_list {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 42px;
+  background: var(--lp-surface);
+  box-shadow: var(--lp-card-shadow);
+  border-radius: 8px;
+  padding: 6px;
+  min-width: 180px;
+  z-index: 1200;
+  list-style: none;
+  margin: 0;
+  max-height: 280px;
+  overflow: auto;
+
+  /* animation base */
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* When list is open (handled by JS) */
+.lp_filter_list[data-open="true"] {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}

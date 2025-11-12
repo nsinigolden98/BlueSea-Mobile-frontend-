@@ -1,0 +1,183 @@
+/* style.css - simple mobile-first BlueSea styling
+   Drop in next to your privacy.html / terms.html / legal.html
+*/
+
+/* --- theme variables --- */
+:root{
+  --blue-500: #0b72d1;   /* primary header blue */
+  --blue-400: #1a8bf0;
+  --muted: #6b7280;
+  --bg: #ffffff;
+  --card: #f8fbff;
+  --max-width: 1000px;
+  --radius: 10px;
+  --gutter: 18px;
+  --text: #0f1724;
+  --footer-bg: #f3f7fb;
+  --accent: #0b72d1;
+  --shadow: 0 6px 18px rgba(11,114,209,0.08);
+  --safe-pad-top: env(safe-area-inset-top, 0px);
+}
+
+/* --- base reset / layout --- */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color:var(--text);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.45;
+  font-size:15px;
+  -webkit-text-size-adjust:100%;
+}
+
+/* container used in pages */
+.container{
+  width:100%;
+  max-width:var(--max-width);
+  margin:0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* --- topbar / header --- */
+.topbar{
+  background: linear-gradient(180deg, var(--blue-500), var(--blue-400));
+  color: #fff;
+  border-radius: 12px;
+  padding: calc(12px + var(--safe-pad-top)) var(--gutter);
+  box-shadow: var(--shadow);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:relative;
+}
+
+/* left group */
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+/* logo */
+.logo-box{
+  width:46px;
+  height:46px;
+  min-width:46px;
+  background: rgba(255,255,255,0.08);
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.logo-img{
+  max-width:38px;
+  max-height:38px;
+  display:block;
+}
+
+/* title / slogan */
+.header-meta .brand-title{
+  font-weight:700;
+  font-size:16px;
+  letter-spacing:0.2px;
+}
+.header-meta .brand-slogan{
+  font-size:12px;
+  color: rgba(255,255,255,0.9);
+  margin-top:2px;
+}
+
+/* back link on the right (keeps inline with header) */
+.btn-link{
+  color:#fff;
+  text-decoration:none;
+  font-weight:600;
+  padding:8px 10px;
+  border-radius:8px;
+  background: rgba(0,0,0,0.12);
+  display:inline-block;
+}
+.btn-link:active,
+.btn-link:focus{outline:2px solid rgba(255,255,255,0.12)}
+
+/* --- main article --- */
+main.container{
+  padding:28px var(--gutter) 80px;
+}
+
+article{
+  background: var(--card);
+  border-radius: 12px;
+  padding:18px;
+  box-shadow: 0 6px 18px rgba(10, 10, 10, 0.02);
+}
+
+/* headings and typographic scale */
+h1{font-size:20px;margin:0 0 8px}
+h2{font-size:16px;margin:18px 0 8px;color:var(--accent)}
+p{margin:10px 0;color:#25303b}
+strong{color:#0f1724}
+
+/* lists */
+ul,ol{margin:8px 0 12px 20px}
+
+/* hr */
+hr{border:none;height:1px;background:rgba(11,114,209,0.08);margin:18px 0;border-radius:2px}
+
+/* links inside content */
+a{color:var(--accent);text-decoration:underline}
+a:hover{text-decoration:none}
+
+/* --- footer --- */
+footer.container{
+  margin-top:18px;
+  padding:20px var(--gutter) 36px;
+  background:var(--footer-bg);
+  border-top-left-radius:12px;
+  border-top-right-radius:12px;
+}
+
+#panel-contact .footer-title{font-size:16px;margin:0 0 6px}
+#panel-contact p{margin:4px 0;color:var(--muted)}
+#panel-contact .line5 a{margin-right:12px;display:inline-block;vertical-align:middle}
+#panel-contact .line6{margin-top:12px;color:var(--muted);font-size:13px}
+
+/* small copyright */
+.line7{margin-top:12px;font-size:12px;color:var(--muted)}
+
+/* social icons (svg) - keep them tidy */
+footer svg{vertical-align:middle;fill:currentColor;opacity:0.95}
+footer a svg{color:#0b72d1}
+
+/* --- responsive tweaks --- */
+/* keep the layout compact on narrow screens */
+@media (max-width:520px){
+  .header-meta .brand-title{font-size:15px}
+  .header-meta .brand-slogan{font-size:11px}
+  .logo-box{width:42px;height:42px;min-width:42px}
+  .logo-img{max-width:36px}
+  article{padding:14px}
+  h1{font-size:18px}
+}
+
+/* ensure long content fits comfortably */
+@media (min-width:900px){
+  main.container{padding:38px 24px 90px}
+  .topbar{margin:18px auto;max-width:var(--max-width)}
+  footer.container{max-width:var(--max-width);margin:14px auto}
+}
+
+/* small utility classes you may find useful */
+.text-muted{color:var(--muted)}
+.kv{display:flex;gap:8px;align-items:center}
+
+/* accessibility: focus ring for keyboard users */
+a:focus, button:focus{outline:3px solid rgba(11,114,209,0.18);outline-offset:2px}
+
+/* end */
+
