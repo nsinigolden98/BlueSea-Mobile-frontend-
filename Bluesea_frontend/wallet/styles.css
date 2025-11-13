@@ -28,7 +28,7 @@
   
   /* Reset */
   *{box-sizing:border-box}
-  html,body,#wallet_app{
+  html,body{
     height: 100%;
     position: relative;
   }
@@ -40,10 +40,8 @@
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
     font-size:14px;
+    display: inline-flex;
   }
-  
-  /* Layout */
-  .wallet_app{width:100vw;height:100vh;overflow:hidden; padding:24px; box-sizing:border-box}
   
   
   /* MAIN */

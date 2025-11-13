@@ -1,3 +1,20 @@
 iframe{
     height: 100%;
   }
+.menu-btn{
+    display: none;
+}
+@media (max-width: 768px) {
+    /* styles */
+    #side-bar{
+        display: none;
+        position:absolute;
+    }
+    
+    .menu-btn{
+        color:black;
+        background: transparent;
+        border:none;
+        display: inline;
+    }
+}

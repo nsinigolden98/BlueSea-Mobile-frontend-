@@ -3,18 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=1440,initial-scale=1" />
-  <title>Wallet - Dashboard Replication</title>
+  <title>Wallet </title>
 
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <!-- styles are inside wallet/ -->
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../side-nav.css">
 </head>
 <body>
-  <div class="wallet_app" id="wallet_app">
-
     <!-- Left navigation -->
-   
+    <nav>
+      <iframe src="../side-nav.html" id ="side-bar" class></iframe>
+    </nav>
 
     <!-- Main content -->
     <main class="wallet_main" id="wallet_main" role="main" aria-live="polite">
@@ -223,7 +224,7 @@
       </div>
 
     </main>
-  </div>
+  
 
   <!-- script is inside wallet/ -->
   <script src="tscript.js"></script>

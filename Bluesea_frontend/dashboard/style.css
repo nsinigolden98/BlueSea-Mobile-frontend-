@@ -64,10 +64,6 @@ body{
 /*.dash_balance_left{}*/
 .dash_balance_label{font-size:14px;color:rgba(0,30,36,0.6);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .dash_balance_value{font-size:56px;font-weight:800;line-height:1;letter-spacing:0.01em}
-.dash_balance_middle,.dash_balance_right{width:220px;text-align:left}
-.dash_balance_sublabel{font-size:13px;color:rgba(0,30,36,0.6);font-weight:600}
-.dash_balance_subvalue{font-size:36px;font-weight:800;margin-top:6px}
-.dash_balance_network,.dash_balance_plan{font-size:12px;margin-top:6px;color:rgba(0,30,36,0.65)}
 
 /* Eye toggle */
 .dash_eye_btn{background:transparent;border:none;padding:6px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#003b45}
