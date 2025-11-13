@@ -1,0 +1,55 @@
+/* style.css - tokens and full page styling for wallet page (updated with modal styles + right-side animation) */
+/* All classes/IDs prefixed with wallet_ */
+
+/* base tokens */
+:root{
+    --wallet-radius: 14px;
+    --wallet-font: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    --wallet-modal-blue: rgba(0,198,255,0.12);
+    --wallet-bg: #f6f8fa;
+    --wallet-panel: #ffffff;
+    --wallet-card-muted: #ffffff;
+    --wallet_muted_card: #f4f7f9;
+    --wallet-accent: #00C6FF;
+    --wallet-accent-2: #0072FF;
+    --wallet-text: #0b2130;
+    --wallet-text-muted: #6b7b84;
+    --wallet-action-text: var(--wallet-text);
+    --wallet-muted-2: #e6edf0;
+    --wallet-red: #c62828;
+    --wallet-loader-bg: rgba(255,255,255,0.6);
+    --wallet-loader-panel: #ffffff;
+    --wallet-loader-text: #024156;
+    --wallet-error-panel: #fff0f0;
+    --wallet-error-accent: #c62828;
+    --wallet-input-border: rgba(15,20,22,0.12);
+    --wallet-bank-list-bg: #ffffff;
+  }
+  
+  /* Reset */
+  *{box-sizing:border-box}
+  html,body,#wallet_app{
+    height: 100%;
+    position: relative;
+  }
+  body{
+    margin:0;
+    font-family:var(--wallet-font);
+    background:var(--wallet-bg);
+    color:var(--wallet-text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    font-size:14px;
+  }
+  
+  /* Layout */
+  .wallet_app{width:100vw;height:100vh;overflow:hidden; padding:24px; box-sizing:border-box}
+  
+  
+  /* MAIN */
+  .wallet_main{padding:18px;overflow:auto;min-height:520px}
+  .wallet_header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .wallet_bell{width:44px;height:44px;border-radius:10px;background:transparent;border:none;display:inline-flex;align-items:center;justify-content:center;color:var(--wallet-text-muted);cursor:pointer}
+  .wallet_bell:hover{color:var(--wallet-accent)}
+  
+  

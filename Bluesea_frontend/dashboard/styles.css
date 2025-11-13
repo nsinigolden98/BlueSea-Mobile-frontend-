@@ -1,0 +1,37 @@
+/* style.css - updated to mirror Data page nav behavior (desktop-only) */
+
+/* base tokens */
+:root{
+    --dash-bg: #ffffff;
+    --dash-text:black;
+    --dash-font: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  
+  /* Reset */
+  *{box-sizing:border-box;}
+  
+  body{
+    margin:0;
+    font-family:var(--dash-font);
+    background:var(--dash-bg);
+    color:var(--dash-text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    font-size:14px;
+    display:inline-flex;
+    width:100%;
+    overflow:visible
+  }
+  
+  
+  /* MAIN */
+  .dash_main{
+    padding:36px 48px;
+    overflow:auto;
+    box-sizing:border-box;
+  }
+  
+  /* small tweak: ensure header stays visible and top spacing matches data page feel */
+.dash_header{justify-content:space-between;align-items:center;margin-bottom:18px}
+.dash_bell{width:44px;height:44px;border-radius:10px;background:transparent;border:none;align-items:center;justify-content:center;color:var(--dash-text-muted);cursor:pointer}
+.dash_bell:hover{color:var(--dash-accent)}

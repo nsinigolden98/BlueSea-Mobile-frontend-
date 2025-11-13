@@ -2,7 +2,6 @@
 // Notes: initial page loads now animate from right to left. When router loads a fragment
 // and page === 'dashboard', that panel will animate from the right as well.
 
-(function () {
   'use strict';
 
   /* ---------------------------
@@ -66,7 +65,7 @@
   /* ---------------------------
      Theme helpers
   --------------------------- */
-  function getSavedTheme() {
+ /* function getSavedTheme() {
     const v = localStorage.getItem(THEME_KEY);
     if (v === 'light' || v === 'dark') return v;
     return 'light';
@@ -90,7 +89,7 @@
     });
   }
   // apply initial theme early
-  applyTheme(getSavedTheme());
+  applyTheme(getSavedTheme());*/
 
   /* ---------------------------
      Loader & error helpers
@@ -519,4 +518,3 @@
     addUserError: addUserError
   };
 
-})();

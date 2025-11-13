@@ -2,13 +2,13 @@
 
 /* base tokens */
 :root{
-  --dash-bg: #0d1316;
-  --dash-panel: #11161a;
-  --dash-card-muted: #0f1417;
-  --dash_muted_card: #0f1417; /* surface token used by quick-action tiles */
+  --dash-bg: #ffffff;
+  --dash-panel: #ffffff ;
+  --dash-card-muted: #ffffff ;
+  --dash_muted_card: #ffffff; /* surface token used by quick-action tiles */
   --dash-accent: #2dc7ff;
   --dash-accent-2: #22a6e0;
-  --dash-text: #e6eef3;
+  --dash-text: #1b2326;
   --dash-text-muted: #99a3a9;
   --dash-action-text: var(--dash-text); /* tile label/icon color token */
   --dash-muted-2: #1b2326;
@@ -21,33 +21,11 @@
   --dash-error-panel: #12171a;
   --dash-error-accent: #ffb4b4;
 
-  /* Panel width token (mirrors data page width) */
-  --dash-panel-width: 260px;
-}
-
-/* Light theme overrides */
-.dash-theme-light {
-  --dash-bg: #f6f8fa;
-  --dash-panel: #ffffff;
-  --dash-card-muted: #ffffff;
-  --dash_muted_card: #f4f7f9;   /* light tile background override */
-  --dash-accent: #0b84ff;
-  --dash-accent-2: #066fb7;
-  --dash-text: #0b2130;
-  --dash-text-muted: #6b7b84;
-  --dash-action-text: var(--dash-text);
-  --dash-muted-2: #e6edf0;
-  --dash-red: #c62828;
-  --dash-loader-bg: rgba(255,255,255,0.6);
-  --dash-loader-panel: #ffffff;
-  --dash-loader-text: #024156;
-  --dash-error-panel: #fff0f0;
-  --dash-error-accent: #c62828;
 }
 
 /* Reset */
 *{box-sizing:border-box;}
-html,body,#dash_app{min-height:100vh}
+
 body{
   margin:0;
   font-family:var(--dash-font);
@@ -56,112 +34,19 @@ body{
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
   font-size:14px;
-  min-height:100vh
 }
 
 /* Layout */
 /* Keep dash_app full viewport but allow main scroll (mirrors data page approach) */
-.dash_app{display:block;width:100vw;min-height:100vh;overflow:visible}
-
-/* NAV */
-/* Use token for width so it's identical to Data page */
-.dash_nav{
-  position:fixed;
-  left:0;
-  top:0;
-  bottom:0;
-  width:var(--dash-panel-width);
-  background:linear-gradient(90deg,var(--dash-panel), var(--dash-bg));
-  padding:28px 20px;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  gap:18px;
-  border-right:1px solid rgba(0,0,0,0.04);
-  z-index:50;
+.dash_app{
+  display:inline-flex;
+  width:100%;
+  overflow:visible
 }
-
-/* Important: inner container should fill height and space its children top/middle/bottom */
-.dash_nav_inner{
-  display:flex;
-  flex-direction:column;
-  height:100%;
-  gap:18px;
-  /* Mirror data page layout: explicitly distribute space so profile sticks to bottom */
-  justify-content:space-between;
-}
-
-/* Logo area */
-.dash_logo_area{height:44px;display:flex;align-items:center}
-.dash_logo_img{width:42px;height:42px;object-fit:contain;border-radius:8px}
-
-/* Menu */
-.dash_menu{
-  display:flex;
-  padding:0;
-  flex-direction:column;
-  gap:12px;
-  margin:12px 0;
-}
-.dash_menu_item{
-  display:flex;
-  align-items:center;
-  gap: 12px;
-  padding:12px 14px;
-  border-radius:12px;
-  background:transparent;
-  color:var(--dash-text);
-  border:none;
-  cursor:pointer;
-  text-align:left;
-  transition:all .14s ease;
-  font-weight:600;
-  letter-spacing:0.01em;
-  font-size:15px;
-}
-.dash_menu_item:hover{background:rgba(0,0,0,0.04);transform:translateX(2px)}
-.dash_menu_item--active{background:var(--dash-accent);color:#04202a;box-shadow:0 6px 30px rgba(45,199,255,0.1)}
-.dash_icon{display:inline-flex;width:px;height:px;align-items:center;justify-content:center;color:var(--dash-text-muted)}
-.dash_menu_item--active .dash_icon{color:#00353f}
-.dash_menu_label{flex:1;font-size:15px}
-.dash_chev{font-weight:700;color:inherit;opacity:0.9;transform:scaleX(1.1)}
-
-/*Settings */
-.dash_settings{
-  display:flex;
-  align-items:center;
-  gap: 12px;
-  border-radius:12px;
-  background:transparent;
-  border:none;
-  cursor:pointer;
-  transition:all .14s ease;
-}
-.dash_settings:hover{background:rgba(0,0,0,0.04);transform:translateX(2px)}
-.dash_settings--active{background:var(--dash-accent);color:#04202a;box-shadow:0 6px 30px rgba(45,199,255,0.1)}
-.dash_settings_icon{display:inline-flex;width:px;height:px;align-items:center;justify-content:center;color:var(--dash-text-muted)}
-
-/* Theme area (under Settings) */
-.dash_theme_area{margin-top:8px;padding-left:2px}
-.dash_theme_row{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.dash_theme_label{font-size:13px;color:var(--dash-text-muted);font-weight:700}
-.dash_theme_btn{padding:6px 10px;border-radius:10px;border:none;background:transparent;color:var(--dash-text);cursor:pointer;font-weight:700}
-.dash_theme_btn[aria-pressed="true"]{ background:var(--dash-accent-2); color:#fff }
-
-/* Profile at bottom of nav */
-/* NOTE: we removed margin-top:auto dependency and use justify-content:space-between to pin this block naturally */
-.dash_profile{display:flex;gap:12px;align-items:center;padding-top:8px;border-top:1px solid rgba(255,255,255,0.02)}
-.dash_avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--dash-muted-2),#0b1214);display:flex;align-items:center;justify-content:center;color:var(--dash-text);font-weight:700;position:relative;overflow:hidden}
-.dash_avatar_img{width:100%;height:100%;object-fit:cover;display:block}
-.dash_avatar_initials{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700}
-.dash_profile_text{line-height:1}
-.dash_profile_name{font-weight:700}
-.dash_profile_email{font-size:12px;color:var(--dash-text-muted)}
 
 /* MAIN */
 /* Mirror data page behavior: main content positioned to the right of fixed sidebar using margin-left = panel width */
 .dash_main{
-  margin-left:var(--dash-panel-width);
   padding:36px 48px;
   overflow:auto;
   min-height:100vh;
@@ -169,14 +54,14 @@ body{
 }
 
 /* small tweak: ensure header stays visible and top spacing matches data page feel */
-.dash_header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.dash_header{justify-content:space-between;align-items:center;margin-bottom:18px}
 .dash_bell{width:44px;height:44px;border-radius:10px;background:transparent;border:none;display:inline-flex;align-items:center;justify-content:center;color:var(--dash-text-muted);cursor:pointer}
 .dash_bell:hover{color:var(--dash-accent)}
 
 /* CARD */
 .dash_card{background:var(--dash-card-muted);border-radius:var(--dash-radius);padding:28px;display:flex;gap:24px;align-items:center}
 .dash_card--balance{background:linear-gradient(90deg,var(--dash-accent), rgba(45,199,255,0.9));color:#001e24;align-items:center;justify-content:space-between;padding:28px 36px;border-radius:18px;box-shadow:0 10px 40px rgba(45,199,255,0.06)}
-.dash_balance_left{flex:1}
+/*.dash_balance_left{}*/
 .dash_balance_label{font-size:14px;color:rgba(0,30,36,0.6);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .dash_balance_value{font-size:56px;font-weight:800;line-height:1;letter-spacing:0.01em}
 .dash_balance_middle,.dash_balance_right{width:220px;text-align:left}
@@ -236,7 +121,7 @@ body{
 .dash_amount--debit{color:var(--dash-red);font-weight:700;text-align:right}
 
 /* Fragment animation system */
-.dash_main_inner{position:relative;width:100%;min: height 100vh;overflow:visible; box-sizing: content-box;}
+.dash_main_inner{position:relative;width:100%;min-height:100vh;overflow:visible; box-sizing: content-box;}
 .dash_page{position:absolute;top:0;left:0;width:100%;opacity:0;transform:translateX(-40px) scale(.995);transition:transform 360ms cubic-bezier(.2,.9,.2,1),opacity 320ms ease;pointer-events:none;padding:0}
 
 /* Modifier: when a panel should animate from the RIGHT (used for initial load and dashboard-specific entry) */
