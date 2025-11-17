@@ -1,5 +1,6 @@
-iframe{
+#side-bar{
     height: 100%;
+    border: none;
   }
 .menu-btn{
     display: none;
@@ -15,6 +16,6 @@ iframe{
         color:black;
         background: transparent;
         border:none;
-        display: inline;
+        display: inline-block;
     }
 }

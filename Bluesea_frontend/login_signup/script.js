@@ -66,9 +66,9 @@ function closeModal(){
 
  // Domain base; update if your API is at another subdomain
  //const API_BASE = "https://blueseamobile.com.ng"; // <--- change if needed
-const API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
+let API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
 
-const ENDPOINTS = {
+let ENDPOINTS = {
     login: `${API_BASE}/accounts/login/`,
     signup: `${API_BASE}/accounts/sign-up/`,
     sendOtp: `${API_BASE}/accounts/resend-otp/`,
@@ -76,8 +76,8 @@ const ENDPOINTS = {
     verify_FP: `${API_BASE}/accounts/password/reset/verify-otp/`, 
     confirm_FP: `${API_BASE}/accounts/password/reset/confirm/`,
     verifyOtp: `${API_BASE}/accounts/verify-email/`, 
-    forgotReset: `${API_BASE}/accounts/auth/forgot-reset`,
-    oauthGoogle: `${API_BASE}/accounts/auth/google`
+    forgotReset: `${API_BASE}/accounts/auth/forgot-reset/`,
+    oauthGoogle: `${API_BASE}/accounts/auth/google/`
   };
   
 

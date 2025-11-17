@@ -1,0 +1,387 @@
+/* --- Root Variables (Now strictly Light Mode) --- */
+:root {
+    /* Primary Color Update */
+    --primary-color: #0b84ff;         /* Main Blue */
+    --primary-hover-color: #0869cc;   /* Darker shade for hover */
+    
+    /* Light Mode Defaults */
+    --background-color: #f4f7f9;
+    --card-background-color: #ffffff;
+    --text-color: #1a1a1a;
+    --text-muted-color: #6c757d;
+    --border-color: #dee2e6;
+    --input-background-color: #ffffff;
+    --summary-background-color: #f4f7f9;
+    --card-border-radius: 8px;
+    
+    /* Simplified Plan Colors */
+    --plan-price-background: var(--primary-color); 
+    --plan-price-text: #ffffff;
+    --summary-text-color: #2c2c2c;
+}
+
+/* Base Styles */
+* {
+    box-sizing: border-box;
+}
+html,body{
+    height: 100%;
+    position: relative;
+    
+}
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: inline-flex; 
+    width: 100%;
+    min-height: 100%; 
+    overflow:visible;
+    
+}
+
+.container {
+    width: 100%; 
+    padding: 10px; 
+    display: flex;
+    justify-content: center;
+}
+
+.menu-btn{
+    margin: 2%; 
+}
+
+/* --- Main Form Container --- */
+.buy-data-form {
+    background-color: var(--card-background-color);
+    padding: 24px; 
+    margin: 2%; 
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    
+    max-width: 800px; 
+    width: 96%; 
+}
+
+.header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 0 0 16px 0; 
+}
+
+
+h2 {
+    margin-bottom: 24px;
+    font-size: 24px;
+}
+
+/* Section Styling */
+section {
+    margin-bottom: 24px;
+}
+
+.section-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: var(--text-color);
+}
+
+/* Tabs Styling (Network & Plan) */
+.network-tabs, .plan-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; 
+    margin-bottom: 16px;
+}
+
+.tab-button {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 10px 16px; 
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    flex-grow: 1; 
+    text-align: center;
+    font-size: 14px; 
+}
+
+/* Updated Blue */
+.tab-button.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* --- Input Group (Recipient Section and Manual Amount) --- */
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px; 
+}
+
+#recipient-number, #airtime-amount {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+    transition: border-color 0.2s;
+}
+
+/* ------------------------------------------- */
+/* --- Data Plans Grid (Used by data.html) --- */
+/* ------------------------------------------- */
+.data-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+    gap: 16px; 
+    margin-bottom: 24px;
+}
+
+/* Data Plan Card Styles */
+.data-plan-card {
+    background-color: var(--card-background-color); 
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    text-align: center;
+    min-height: 180px; 
+    justify-content: space-between; 
+    padding-top: 16px;
+    overflow: hidden; 
+}
+
+.data-plan-card.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.plan-content {
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 8px;
+}
+
+.plan-header {
+    font-size: 21px; 
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 3px;
+    line-height: 1.2;
+}
+
+.plan-description {
+    font-size: 12px; 
+    color: var(--text-muted-color);
+    margin-bottom: 8px;
+}
+
+.plan-info-bar {
+    width: 100%;
+    background-color: var(--plan-price-background);
+    color: var(--plan-price-text);
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns for Price and Validity/Info */
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.price-column, .validity-column {
+    padding: 11px 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.price-column {
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* --------------------------------------------- */
+/* --- Airtime Amount Quick Select Grid (NEW)--- */
+/* --------------------------------------------- */
+.amount-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Use same min size as data cards */
+    gap: 16px; /* Use same gap as data cards */
+    margin-bottom: 8px; 
+}
+
+.airtime-card {
+    /* Copying data-plan-card appearance */
+    background-color: var(--card-background-color); 
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    text-align: center;
+    min-height: 120px; /* Smaller min-height than data plan */
+    justify-content: space-between; 
+    padding: 0; /* Remove top padding as content will fill space */
+    overflow: hidden; 
+}
+
+/* Content wrapper inside the airtime card */
+.airtime-card-content {
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 10px 8px;
+}
+
+.airtime-card-content .amount-text {
+    font-size: 21px; /* Same as .plan-header */
+    font-weight: 700;
+    color: var(--text-color);
+    line-height: 1.2;
+    margin-bottom: 3px;
+}
+
+.airtime-card-content .info-text {
+    font-size: 12px; 
+    color: var(--text-muted-color);
+}
+
+.airtime-card.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+/* Airtime Info Bar (Mimicking plan-info-bar) */
+.airtime-info-bar {
+    width: 100%;
+    background-color: var(--plan-price-background);
+    color: var(--plan-price-text);
+    display: grid;
+    grid-template-columns: 1fr; /* Single column, since no Validity is needed */
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.airtime-info-bar-price {
+    padding: 11px 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* --------------------------------------------- */
+
+
+/* Summary Section (Unchanged) */
+.summary-section {
+    background-color: var(--summary-background-color);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-top: 16px;
+}
+
+.summary-details {
+    padding: 8px 0;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 15px;
+}
+
+.summary-label {
+    color: var(--text-muted-color);
+}
+
+.summary-value {
+    font-weight: bold;
+    color: var(--summary-text-color);
+}
+
+/* Main Buy Now Button (Unchanged) */
+.buy-now-button {
+    width: 100%;
+    padding: 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 24px;
+}
+
+.buy-now-button:hover:not(:disabled) {
+    background-color: var(--primary-hover-color);
+}
+
+.buy-now-button:disabled {
+    background-color: var(--text-muted-color);
+    cursor: not-allowed;
+}
+
+/* --- Mobile Responsiveness (Max Width 600px) --- */
+@media (max-width: 600px) {
+
+    .buy-data-form {
+        padding: 16px; 
+        margin: 0; 
+        border-radius: 0; 
+        max-width: 100%; 
+        width: 100%; 
+    }
+
+    .data-plans-grid, .amount-select-grid {
+        /* Switch to 2 columns on small screens */
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 8px; 
+    }
+    
+    .data-plan-card, .airtime-card {
+        min-height: 120px; /* Standardize card height on mobile */
+    }
+    
+    .data-plan-card {
+        padding-top: 12px;
+    }
+
+    .plan-header, .airtime-card-content .amount-text {
+        font-size: 18px;
+    }
+
+    .plan-description, .airtime-card-content .info-text {
+        font-size: 10px;
+    }
+
+    .plan-info-bar, .airtime-info-bar {
+        font-size: 11px;
+    }
+    
+    .price-column, .validity-column, .airtime-info-bar-price {
+        padding: 8px 3px;
+    }
+}

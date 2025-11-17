@@ -1,0 +1,314 @@
+/* --- Root Variables (Unchanged) --- */
+:root {
+    /* Primary Color Update */
+    --primary-color: #0b84ff;         /* Main Blue */
+    --primary-hover-color: #0869cc;   /* Darker shade for hover */
+    
+    /* Light Mode Defaults */
+    --background-color: #f4f7f9;
+    --card-background-color: #ffffff;
+    --text-color: #1a1a1a;
+    --text-muted-color: #6c757d;
+    --border-color: #dee2e6;
+    --input-background-color: #ffffff;
+    --summary-background-color: #f4f7f9;
+    --card-border-radius: 8px;
+    
+    /* Simplified Plan Colors */
+    --plan-price-background: var(--primary-color); 
+    --plan-price-text: #ffffff;
+    --summary-text-color: #2c2c2c;
+}
+
+/* Base Styles */
+* {
+    box-sizing: border-box;
+    /* Removed margin and padding reset here to control it specifically on body/html */
+}
+html,body{
+    height: 100%;
+    position: relative;
+    /* Ensure no default margin/padding interferes with 100% height/width */
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    /* Retaining inline-flex for iframe compatibility, but forcing 100% width on the document itself */
+    display: inline-flex; 
+    width: 100%;
+    min-height: 100%; /* Use min-height to allow content growth */
+    overflow-x: hidden; /* Prevent horizontal scroll on small devices */
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    /* Container to hold the form, takes up 100% of body width */
+    width: 100%; 
+    padding: 10px; /* Small base padding in pixels */
+    justify-content: center;
+}
+
+.menu-btn{
+    /* Convert percentage margin to pixel for consistent spacing or keep % */
+    margin: 2%; /* 2% margin around the button */
+}
+
+/* --- Main Form Container --- */
+.buy-data-form {
+    background-color: var(--card-background-color);
+    padding: 24px; /* Convert 1.5rem to 24px for pixel unit */
+    margin: 2%; /* Retaining 2% margin */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    
+    /* Max width helps keep layout clean on large screens */
+    max-width: 800px; 
+    /* Use percentage for fluid width, combined with max-width */
+    width: 96%; /* 100% minus 2% margin on each side (approx) */
+}
+
+h2 {
+    margin-bottom: 24px;
+    font-size: 24px;
+}
+
+/* Section Styling */
+section {
+    margin-bottom: 24px;
+}
+
+.section-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: var(--text-color);
+}
+
+/* Tabs Styling (Network & Plan) */
+.network-tabs, .plan-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* Pixel gap */
+    margin-bottom: 16px;
+}
+
+.tab-button {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 10px 16px; /* Pixel padding */
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    flex-grow: 1; 
+    text-align: center;
+    font-size: 14px; /* Pixel font size */
+}
+
+.tab-button.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Input Group (Recipient Section) */
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+#recipient-number {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+    transition: border-color 0.2s;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+/* Data Plans Grid */
+.data-plans-grid {
+    display: grid;
+    /* Use fixed min width for cards, auto-fit handles responsiveness */
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+    gap: 16px; 
+    margin-bottom: 24px;
+}
+
+/* Data Plan Card Styles (Simplified look) */
+.data-plan-card {
+    background-color: var(--card-background-color); 
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-border-radius);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    text-align: center;
+    min-height: 180px; 
+    justify-content: space-between; 
+    padding-top: 16px;
+    overflow: hidden; 
+}
+
+.data-plan-card.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+/* Main Content */
+.plan-content {
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 8px;
+}
+
+.plan-header {
+    font-size: 21px; 
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 3px;
+    line-height: 1.2;
+}
+
+/* Plan description text */
+.plan-description {
+    font-size: 12px; 
+    color: var(--text-muted-color);
+    margin-bottom: 8px;
+}
+
+
+/* Price and Validity Bar (Strip at the bottom) */
+.plan-info-bar {
+    width: 100%;
+    background-color: var(--plan-price-background);
+    color: var(--plan-price-text);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.price-column, .validity-column {
+    padding: 11px 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.price-column {
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Summary Section */
+.summary-section {
+    background-color: var(--summary-background-color);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-top: 16px;
+}
+
+.summary-details {
+    padding: 8px 0;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 15px;
+}
+
+.summary-label {
+    color: var(--text-muted-color);
+}
+
+.summary-value {
+    font-weight: bold;
+    color: var(--summary-text-color);
+}
+
+/* Main Buy Now Button */
+.buy-now-button {
+    width: 100%;
+    padding: 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 24px;
+}
+
+.buy-now-button:hover:not(:disabled) {
+    background-color: var(--primary-hover-color);
+}
+
+.buy-now-button:disabled {
+    background-color: var(--text-muted-color);
+    cursor: not-allowed;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 600px) {
+
+    .buy-data-form {
+        padding: 16px; /* Reduced padding */
+        margin: 0; /* Remove margin on small screens for full width */
+        border-radius: 0; /* Full width form */
+        max-width: 100%; /* Force full width */
+        width: 100%; /* Force full width */
+    }
+
+    .data-plans-grid {
+        /* Adjusted min card width for smaller screens */
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+        gap: 8px; /* Reduced gap */
+    }
+    
+    .data-plan-card {
+        min-height: 150px;
+        padding-top: 12px;
+    }
+
+    .plan-header {
+        font-size: 18px;
+    }
+
+    .plan-description {
+        font-size: 10px;
+    }
+
+    .plan-info-bar {
+        font-size: 11px;
+    }
+    
+    .price-column, .validity-column {
+        padding: 8px 3px;
+    }
+}
