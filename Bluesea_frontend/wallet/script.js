@@ -5,17 +5,25 @@ function deposit() {
     document.getElementById("page_inner").style.opacity = "0.3";
 }
 
+let error =  document.getElementById("error-amount");
+
 function cancel() {
     document.getElementById("page_inner").style.opacity = "1";
     document.getElementById("deposit-modal").style.display = "none";
-    document.getElementById("deposit-input").textContent = "";   
+    document.getElementById("deposit-input").value = "";   
 }
 
 async function fund(){
-    let amount = document.getElementById("deposit-input").textContent.trim();
-    if (amount < 0){
-        
+    let amount = document.getElementById("deposit-input").value;
+    console.log(amount)
+    let valid = true;
+    if (Number(amount) < 100){
+        error.textContent = "Amount must be more than ₦100.00";
+        valid = false;
     }
+    if (!valid) return;
+    
+    error.textContent = "";
     const response = await postRequest(ENDPOINTS.fund, {amount: Number(amount)});
     console.log(response);
     window.location.href = response.authorization_url;

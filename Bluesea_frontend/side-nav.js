@@ -11,6 +11,7 @@ let ENDPOINTS = {
     fund: `${API_BASE}/transactions/fund-wallet/`,
     webhook: `${API_BASE}/transactions/webhook/paystack/`,
     history: `${API_BASE}/transactions/history/`,
+    user: `${API_BASE}/user_preference/user/`,
   };
   
   
@@ -72,5 +73,8 @@ async function getBalanace(id){
 
 async function getTansactionHistory() {
     const history = await getRequest(ENDPOINTS.history);
+    const user = await getRequest(ENDPOINTS.user);
+    
+    console.log(user);
     console.log(history);
 }

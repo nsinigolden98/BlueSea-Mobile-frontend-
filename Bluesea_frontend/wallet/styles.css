@@ -135,6 +135,12 @@
 .deposit-modal-btn{
     margin:2%;
 }
+
+.error-amount{
+    color: red;
+    font-weight: 100;
+    font-size: 12px;
+}
 @media (max-width: 768px) {
     /* styles */
     .deposit-modal{
