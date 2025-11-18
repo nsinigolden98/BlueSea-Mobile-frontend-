@@ -1,7 +1,10 @@
 'use strict';
+  
+  
 document.addEventListener('DOMContentLoaded', function() {
-   getBalanace("balance_value");
+   getBalanace();
    getTansactionHistory();
+   getUser();
 });
 
 let API_BASE = 'http://127.0.0.1:8000'; // from Postman collection
@@ -53,7 +56,8 @@ async function postRequest(url,payload){
   
 function showNav(){
     document.getElementById("side-bar").style.display = 'block';
-    document.getElementsByTagName("main").style.opacity = '1';
+    
+   // document.getElementsByTagName("main").style.opacity = '1';
 };
 
 function hideBalance(){
@@ -66,15 +70,24 @@ function hideBalance(){
         value.textContent = "******";
     };
 }
-async function getBalanace(id){
+async function getBalanace(){
     const balance = await getRequest(ENDPOINTS.balance);
-   document.getElementById(id).textContent = balance.balance;
+   document.getElementById("balance_value").textContent = balance.balance;
 };
 
 async function getTansactionHistory() {
     const history = await getRequest(ENDPOINTS.history);
-    const user = await getRequest(ENDPOINTS.user);
-    
-    console.log(user);
     console.log(history);
+}
+
+async function getUser() {
+    const user = await getRequest(ENDPOINTS.user);
+    //console.log(user);
+    document.getElementById("profile_name").textContent = user.other_names;
+    document.getElementById("profile_email").textContent = user.email;
+}
+
+function closeNav() {
+    document.getElementById("nav_html").style.display = "none";
+    // location.close()
 }

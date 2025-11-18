@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="nav_html">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -126,6 +126,14 @@ body{
 .profile_text{line-height:1}
 .profile_name{font-weight:700}
 .profile_email{font-size:12px;color:var(--dash-text-muted)}
+.close_nav_btn{
+    border:none;
+    background:transparent;
+    position: absolute;
+    left:85%;
+    top:25px;
+}
+
 
   </style>
 
@@ -137,6 +145,12 @@ body{
         <div class="logo_area">
           <!-- logo from basic_imgs/logo.png -->
           <img src="basic_imgs/logo.png" alt="Logo" class="logo_img" id="logo_img" />
+          
+          <div id="close_nav" class="close_nav">
+              <button id="close_nav_btn" class="close_nav_btn" type="submit" onclick="closeNav()">
+                  <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" height="1.5em" width="1.5em"><path fill="currentColor" d="M24 26.1 13.5 36.6q-.45.45-1.05.45-.6 0-1.05-.45-.45-.45-.45-1.05 0-.6.45-1.05L21.9 24 11.4 13.5q-.45-.45-.45-1.05 0-.6.45-1.05.45-.45 1.05-.45.6 0 1.05.45L24 21.9l10.5-10.5q.45-.45 1.05-.45.6 0 1.05.45.45.45.45 1.05 0 .6-.45 1.05L26.1 24l10.5 10.5q.45.45.45 1.05 0 .6-.45 1.05-.45.45-1.05.45-.6 0-1.05-.45Z"/></svg>
+              </button>
+          </div>
         </div>
 
         <nav class="menu" aria-label="Primary">
@@ -197,12 +211,12 @@ body{
        
 
         <div class="profile" id="profile_block">
-          <div class="avatar" id="avatar">
-            <img src="" alt="Profile" class="avatar_img" id="avatar_img" />
+          <div class="avatar" id="avatar" onclick="window.parent.location.href= '../profile/profile.html'">
+            <img alt="Profile" class="avatar_img" id="avatar_img" />
             <div class="avatar_initials" id="avatar_initials" aria-hidden="true">OJ</div>
           </div>
           <div class="profile_text">
-            <div class="profile_name" id="profile_name">First Last</div>
+            <div class="profile_name" id="profile_name">Name</div>
             <div class="profile_email" id="profile_email">email@example.com</div>
           </div>
           <!--settings button -->
@@ -215,6 +229,7 @@ body{
         </div>
       </div>
     </aside>
-
+    <script src="side-nav.js">
+    </script>
 </body>
 </html>

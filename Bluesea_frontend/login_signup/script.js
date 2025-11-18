@@ -229,7 +229,7 @@ function validateEmail(email) {
             body: JSON.stringify(body)
         });
         const json = await response.json().catch(() => ({})); 
-        console.log(json);
+        //console.log(json);
         // Return the structured response
         return { data: json };
     }
@@ -457,3 +457,15 @@ async  function SignUpButton() {
     resetToggle("reset_confirm") ;
   });
   
+
+// Sign in with Google 
+
+async function loginGoogle(){
+    
+    const payload = {
+        id_token: "781810870714-2048bjupsj0mh1ojafjquf4v613n0gb0.apps.googleusercontent.com"
+    }
+    
+    const res = await apiPost(ENDPOINTS.oauthGoogle, payload)
+    console.log(res)
+}
