@@ -304,7 +304,7 @@ safeAdd(form_login, "submit", async (ev) => {
     if(res.data.access_token){
          showToast("Login successful. Redirecting...");
          localStorage.setItem("access_token",res.data.access_token);
-    setTimeout(() => { window.location.replace("../dashboard/dashboard.html"); });
+    setTimeout(() => { window.location.replace("Bluesea_frontend/dashboard/dashboard.html"); });
       }  
       else{
           showToast(res.data.detail);
@@ -458,14 +458,3 @@ async  function SignUpButton() {
   });
   
 
-// Sign in with Google 
-
-async function loginGoogle(){
-    
-    const payload = {
-        id_token: "781810870714-2048bjupsj0mh1ojafjquf4v613n0gb0.apps.googleusercontent.com"
-    }
-    
-    const res = await apiPost(ENDPOINTS.oauthGoogle, payload)
-    console.log(res)
-}
