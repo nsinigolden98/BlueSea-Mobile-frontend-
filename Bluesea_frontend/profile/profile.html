@@ -10,7 +10,7 @@
 <body>
     <div class="profile-container">
         <header class="profile-header">
-            <span class="material-icons back-icon" onclick="window.location.href= '../dashboard/dashboard.html'">chevron_left</span>
+            <span class="material-icons back-icon" onclick="window.parent.location.href= '../dashboard/dashboard.html'">chevron_left</span>
             <h1>My Profile</h1>
         </header>
 
@@ -20,10 +20,10 @@
                     <img src="placeholder_image.jpg" alt="Profile Picture" class="profile-pic">
                     <span class="material-icons camera-icon">photo_camera</span>
                 </div>
-                <h2>RIGHTEOUSNESS</h2>
+                <h2 id="name">RIGHTEOUSNESS</h2>
             </div>
 
-            <div class="info-group">
+        <!--     <div class="info-group">
                 <div class="info-item static">
                     <span class="label">OPay Account Number</span>
                     <span class="value static-value">8125690759</span>
@@ -35,43 +35,44 @@
                     <span class="material-icons icon-button gold">military_tech</span>
                     <span class="material-icons icon-arrow">chevron_right</span>
                 </div>
-            </div>
+            </div> -->
 
             <div class="info-group">
                 <div class="info-item static">
-                    <span class="label">Full Name</span>
-                    <span class="value static-value">RIGHTEOUSNESS NWANNENNAYA UDE</span>
+                    <span class="label" >Full Name</span>
+                    <span class="value static-value" id="full_name">RIGHTEOUSNESS NWANNENNAYA UDE</span>
                 </div>
                 <div class="info-item clickable">
                     <span class="label">Mobile Number</span>
-                    <span class="value">+2348125690759</span>
+                    <span class="value" id="phone_number">+2348125690759</span>
                     <span class="material-icons icon-arrow">chevron_right</span>
                 </div>
-                <div class="info-item clickable">
+<!--                 <div class="info-item clickable">
                     <span class="label">Nickname</span>
                     <span class="value placeholder-value">Enter Nickname</span>
                     <span class="material-icons icon-arrow">chevron_right</span>
-                </div>
-                <div class="info-item static">
+                </div> -->
+<!--                 <div class="info-item static">
                     <span class="label">Gender</span>
                     <span class="value static-value">Male</span>
-                </div>
-                <div class="info-item static">
+                </div> -->
+<!--                 <div class="info-item static">
                     <span class="label">Date of Birth</span>
                     <span class="value static-value">**.**-**-23</span>
-                </div>
+                </div> -->
                 <div class="info-item clickable">
                     <span class="label">Email</span>
-                    <span class="value">r*@gmail.com</span>
+                    <span class="value" id="email">r*@gmail.com</span>
                     <span class="material-icons icon-arrow">chevron_right</span>
                 </div>
-                <div class="info-item clickable address-item">
+<!--                 <div class="info-item clickable address-item">
                     <span class="label">Address</span>
                     <span class="material-icons icon-arrow">chevron_right</span>
-                </div>
+                </div> -->
             </div>
         </main>
     </div>
-   
+     <script src="../side-nav.js"></script>
+     <script src="script.js"></script>
 </body>
 </html>

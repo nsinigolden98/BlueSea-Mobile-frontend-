@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create PIN and Verify</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        
+        <div id="pin-creation-step" class="form-card active-step">
+            <h2>🔐 Create Your 4-Digit PIN</h2>
+            <p>This PIN will be used for future secure transactions.</p>
+
+            <form id="create-pin-form">
+                <div class="input-group">
+                    <label for="new-pin">Enter PIN</label>
+                    <input type="password" id="new-pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="confirm-pin">Confirm PIN</label>
+                    <input type="password" id="confirm-pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please re-enter exactly 4 digits" required>
+                </div>
+
+                <p id="pin-error-message" class="error-message"></p>
+                
+                <button type="submit" class="btn btn-primary">Create Pin</button>
+            </form>
+        </div>
+
+        <div id="otp-verification-step" class="form-card hidden-step">
+            <h2>✉️ Verify Your Account</h2>
+            <p>A 6-digit OTP has been sent to your registered number/email.</p>
+            
+            <form id="otp-form">
+                <div class="input-group otp-group">
+                    <label for="otp-code">Enter 6-Digit Code</label>
+                    <input type="text" id="otp-code" placeholder="------" maxlength="6" pattern="\d{6}" title="Please enter the 6-digit code" required>
+                </div>
+                
+                <p id="otp-error-message" class="error-message"></p>
+
+                <button type="submit" class="btn btn-primary">Verify PIN</button>
+            </form>
+            <button type="button" id="resend-otp" class="btn btn-secondary">Resend OTP</button>
+        </div>
+               <div id="toast" class="toast" aria-live="assertive" hidden></div>
+    </div>
+    <script src="script.js"></script>
+    <script src="../../side-nav.js"></script>
+</body>
+</html>

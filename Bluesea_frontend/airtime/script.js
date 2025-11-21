@@ -1,5 +1,23 @@
-document.addEventListener('DOMContentLoaded', () => {
+function showToast(msg, ms = 8200) {
+    const t = document.getElementById("toast");
+    if (!t) { alert(msg); return; }
+    t.textContent = msg;
+    t.hidden = false;
+    t.style.opacity = 1;
+    clearTimeout(t._hideTO);
+    t._hideTO = setTimeout(() => { t.hidden = true; }, ms);
+  }
+//document.addEventListener('DOMContentLoaded', async() => {
+    async function user(){
+    const user = await getRequest(ENDPOINTS.user);
+    const removeZero = user.phone.slice(4,)
+    const numberp = document.getElementById("recipient-number")
+    numberp.value = "0" + String(removeZero);
+    updateSummary()
+    }
     
+    
+    user()
     // ----------------------------------------------------------------------
     // 1. DOM Elements and State Variables
     // ----------------------------------------------------------------------
@@ -17,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     let currentNetwork = 'MTN';
-    let currentRecipient = '12345678900'; 
+    let currentRecipient = recipientNumberInput.value; 
     let currentAmount = 0;
     
     const MIN_AIRTIME_AMOUNT = 50;
@@ -46,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hasValidRecipient) {
             currentRecipient = recipientValue;
         } else {
-            currentRecipient = 'Invalid/Missing'; 
+            currentRecipient = recipientNumberInput.value ; 
         }
         summaryRecipientId.textContent = currentRecipient;
 
@@ -98,11 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Recipient Number Input Handler
-    recipientNumberInput.addEventListener('input', () => {
+     recipientNumberInput.addEventListener('input', () => {
         const value = recipientNumberInput.value.replace(/\D/g, ''); 
         recipientNumberInput.value = value.substring(0, 11);
         updateSummary();
-    });
+    }); 
     
     // Amount Card Selection Handler (UPDATED TARGET CLASS)
     amountSelectGrid.addEventListener('click', (event) => {
@@ -137,21 +155,50 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Buy Now Button Click Handler
-    buyNowBtn.addEventListener('click', () => {
-        if (!buyNowBtn.disabled) {
-            alert(`
-                BUYING AIRTIME CONFIRMATION:
-                Network: ${currentNetwork}
-                Amount: ₦${currentAmount.toLocaleString()}
-                Recipient: ${currentRecipient}
-
-                (Airtime recharge successful!)
-            `);
-        } else {
-            alert('Please select a network, enter a valid 11-digit number, and an amount of at least ₦50.');
+    buyNowBtn.addEventListener('click', async() => {
+        
+        let valid = true;
+        const user = await getRequest(ENDPOINTS.user)
+        if (user.pin_is_set === false){
+            window.parent.location.href = "../settings/pin/pin.html";
+            return valid = false;
         }
+        if (!buyNowBtn.disabled) {
+            document.getElementById("pin-creation-step").style.display = 'block';
+            document.getElementById("buy-data-form").style.opacity = '0.3';
+            
+        } else {
+            showToast('Please select a network, enter a valid 11-digit number, and an amount of at least ₦50.');
+        } 
     });
+    
+   function cancelPayment(){
+        document.getElementById("pin-creation-step").style.display = 'none';
+        document.getElementById("buy-data-form").style.opacity = '1';
+    }
 
     // 4. Initialisation
     updateSummary(); 
-});
+//});
+  async function makePayment(){
+        event.preventDefault()
+        const pin =document.getElementById("pin").value.trim()
+        
+
+           const payload ={
+                amount: String(currentAmount),
+                network: currentNetwork.toLowerCase(),
+                phone_number: String(currentRecipient),
+                transaction_pin: pin
+            }
+          const buy_airtime = await postRequest(ENDPOINTS.buy_airtime, payload)
+          console.log(buy_airtime)
+        if(buy_airtime.state === false){
+            showToast(buy_airtime.error)
+        }
+        else{
+            console.log(buy_airtime)
+            showToast(buy_airtime.response_description)
+            cancelPayment()
+    }
+  }

@@ -35,7 +35,6 @@ body {
     color: var(--text-color);
     display: inline-flex; 
     width: 100%;
-    min-height: 100%; 
     overflow:visible;
     
 }
@@ -43,7 +42,6 @@ body {
 .container {
     width: 100%; 
     padding: 10px; 
-    display: flex;
     justify-content: center;
 }
 
@@ -58,7 +56,7 @@ body {
     margin: 2%; 
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    
+   
     max-width: 800px; 
     width: 96%; 
 }
@@ -385,3 +383,109 @@ section {
         padding: 8px 3px;
     }
 }
+
+
+.btn {
+    width: 30%;
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #e9ecef;
+    color: #495057;
+    margin-top: 15px;
+}
+
+.btn-secondary:hover {
+    background-color: #dae0e5;
+}
+
+
+/* --- Form Card Styling --- */
+.form-card {
+    background-color: #ffffff;
+    width:85%;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: none ;
+    position:fixed;
+    top:300px;
+}
+
+.form-card h2 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.form-card p {
+    margin-bottom: 25px;
+    color: #666;
+    font-size: 0.95em;
+}
+
+/* --- Input Groups --- */
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+input[type="password"],
+input[type="text"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-align: center;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* Specific styling for the 4-digit PIN fields */
+#pin {
+    font-size: 24px;
+    letter-spacing: 8px; /* Wider spacing for 4 digits */
+}
+
+
+.toast{
+    position:fixed;
+    top:20px; 
+    left:50%; 
+    transform:translateX(-50%); 
+    background:rgba(8,8,8,0.85); 
+    color:#fff;
+    padding:10px 14px; 
+    border-radius:8px; 
+    box-shadow:0 6px 22px rgba(2,6,23,0.6);  }
+    

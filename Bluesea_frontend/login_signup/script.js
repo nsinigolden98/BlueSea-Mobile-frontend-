@@ -60,6 +60,8 @@ function phoneSwitch(){
 function closeModal(){
     document.getElementById("FP").style.display= "none";
     document.getElementById("modal_panel").style.display= "none";
+    document.getElementById("form_signup").style.opacity = "1";
+    document.getElementById("form_login").style.opacity = "1";
     resetModalTimers("signup");
     resetModalTimers("forgot_password");
 };
@@ -347,6 +349,7 @@ async  function SignUpButton() {
     if (password !== confirm) { setError($("#signup_confirm"), "Passwords do not match."); return; }
     
     document.getElementById("modal_panel").style.display = "block";
+    document.getElementById("form_signup").style.opacity = "0.3";
     // POST to signup
     let signup_payload = {
         email: email, 
@@ -369,6 +372,7 @@ async  function SignUpButton() {
     document.getElementById("FP_email_field").style.display = "block";
     document.getElementById("OTP_field").style.display = "none";
     document.getElementById("Reset_password").style.display = "none";
+    document.getElementById("form_login").style.opacity = "0.3";
   };
   // Send otp button
   safeAdd($("#modal_FP"), "click", async(ev) => {
