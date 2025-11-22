@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+//document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------------------------------------
     // 1. RAW DATA (Provided Python Dictionaries)
     // ----------------------------------------------------------------------
@@ -190,7 +190,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------------------------------------
     // 2. DATA PROCESSING FUNCTION
     // ----------------------------------------------------------------------
-
+    function showToast(msg, ms = 8200) {
+    const t = document.getElementById("toast");
+    if (!t) { alert(msg); return; }
+    t.textContent = msg;
+    t.hidden = false;
+    t.style.opacity = 1;
+    clearTimeout(t._hideTO);
+    t._hideTO = setTimeout(() => { t.hidden = true; }, ms);
+  }
     /**
      * Attempts to extract volume and validity from the plan name string.
      * @param {string} planName 
@@ -294,6 +302,13 @@ document.addEventListener('DOMContentLoaded', () => {
         "9mobile": processPlans(etisalat_dict)
     };
     
+    async function user(){
+    const user = await getRequest(ENDPOINTS.user);
+    const removeZero = user.phone.slice(4,)
+    document.getElementById("recipient-number").value = "0" + String(removeZero);
+    updateSummary();
+    }
+    user()
     // ----------------------------------------------------------------------
     // 4. DOM Elements and State Variables
     // ----------------------------------------------------------------------
@@ -312,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Removed: const myPhoneNumber = '08091234567'; 
     let currentNetwork = 'MTN';
     let currentPlanType = 'Daily';
-    let currentRecipient = '12345678900'; 
+    let currentRecipient = recipientNumberInput.value; 
     let currentPlan = { amount: 0, volume: 'N/A', id: '', name: 'N/A' };
     
     // ----------------------------------------------------------------------
@@ -427,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentRecipient = recipientValue;
         } else {
             // Set a placeholder or clear if invalid
-            currentRecipient = 'Invalid/Missing'; 
+            currentRecipient = recipientValue; 
         }
         summaryRecipientId.textContent = currentRecipient;
 
@@ -464,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 7. Initialisation
     
     // 1. Main Button Click Handler (Simple Alert)
-    buyNowBtn.addEventListener('click', () => {
+    /* buyNowBtn.addEventListener('click', () => {
         if (!buyNowBtn.disabled) {
             alert(`
                 BUYING DATA CONFIRMATION:
@@ -477,8 +492,32 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             alert('Please select a plan and enter a valid 11-digit recipient number to proceed.');
         }
+    }); */
+    
+        // Buy Now Button Click Handler
+    buyNowBtn.addEventListener('click', async() => {
+        
+        let valid = true;
+        const user = await getRequest(ENDPOINTS.user)
+        if (user.pin_is_set === false){
+            window.parent.location.href = "../settings/pin/pin.html";
+            return valid = false;
+        }
+        if (!buyNowBtn.disabled) {
+            document.getElementById("pin-creation-step").style.display = 'block';
+            document.getElementById("buy-data-form").style.opacity = '0.3';
+        
+            
+        } else {
+            showToast('Please select a network, enter a valid 11-digit number, and an amount of at least ₦50.');
+        } 
     });
-
+    
+   function cancelPayment(){
+        document.getElementById("pin-creation-step").style.display = 'none';
+        document.getElementById("buy-data-form").style.opacity = '1';
+        document.getElementById("pin").value = "";
+    }
     // 2. Active State Management setup
     setupActiveToggle(networkTabsContainer, '.tab-button');
     setupActiveToggle(planTypeTabsContainer, '.tab-button');
@@ -495,4 +534,82 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Initial Render and Summary Display
     renderDataPlans(); 
-});
+//});
+
+        // Function to SHOW the loader
+    function showLoader() {
+                document.getElementById('loader').classList.remove('loader-hidden');
+                document.getElementById('loader').classList.add('loader-visible');
+            
+                }
+
+            // Function to HIDE the loader
+    function hideLoader() {
+            document.getElementById('loader').classList.remove('loader-visible');
+            document.getElementById('loader').classList.add('loader-hidden');
+                }
+                
+                
+async function makePayment(){
+        event.preventDefault()
+
+        const pin =document.getElementById("pin").value.trim()
+        const userPhoneNum = await getRequest(ENDPOINTS.user);
+        const removeZero = userPhoneNum.phone.slice(4,)
+         let  newNum = "0" + String(removeZero);
+         const payload ={
+                plan: currentPlan.name,
+                billersCode: recipientNumberInput.value,
+                phone_number: "08011111111", //newNum
+                transaction_pin: pin
+            }
+        function paymentFeedback(buy_data){
+         console.log(buy_data) 
+        if(buy_data.state === false){
+            showToast(buy_data.error)
+        }
+        else{
+            console.log(buy_data)
+            showToast(buy_data.response_description)
+            cancelPayment()
+      }
+        }
+        
+        showLoader();
+        console.log(payload);
+        if(currentNetwork === "MTN"){
+            
+          const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload)
+          paymentFeedback(buy_data)
+          hideLoader();
+        
+        }
+        else if (currentNetwork === "Glo"){
+            
+          const buy_data = await postRequest(ENDPOINTS.buy_glo, payload)
+          paymentFeedback(buy_data)
+          hideLoader();
+
+        }
+        else if(currentNetwork === "9mobile"){
+            
+          const buy_data = await postRequest(ENDPOINTS.buy_etisalat, payload)
+          paymentFeedback(buy_data)
+          hideLoader();
+
+        }
+        else if (currentNetwork === "Airtel"){
+            
+          const buy_data = await postRequest(ENDPOINTS.buy_airtel, payload)
+          paymentFeedback(buy_data)
+          hideLoader();
+        
+
+        }
+        else{
+            console.log("Invalid Network")
+            hideLoader();
+
+        };
+ 
+  }

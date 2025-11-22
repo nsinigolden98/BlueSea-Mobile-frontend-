@@ -19,6 +19,10 @@ let ENDPOINTS = {
     pin_verify: `${API_BASE}/accounts/pin/verify/`,
     pin_reset: `${API_BASE}/accounts/pin/reset/`,
     buy_airtime: `${API_BASE}/payments/airtime/`,
+    buy_airtel: `${API_BASE}/payments/airtel-data/`,
+    buy_mtn: `${API_BASE}/payments/mtn-data/`,
+    buy_glo: `${API_BASE}/payments/glo-data/`,
+    buy_etisalat: `${API_BASE}/payments/etisalat-data/`,
     
   };
   

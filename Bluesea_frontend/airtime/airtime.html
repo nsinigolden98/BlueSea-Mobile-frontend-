@@ -141,7 +141,7 @@
             <form id="create-pin-form">
                 <div class="input-group">
                     <label for="new-pin">Enter PIN</label>
-                    <input type="password" id="pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" >
+                    <input type="password" id="pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" inputmode="numeric">
                 </div>
                 
                 
@@ -150,6 +150,12 @@
             </form>
 
     </div>
+    
+            <div id="loader" class="loader-hidden">
+              <div class="spinner"></div>
+              <p>Processing transaction...</p>
+                </div>
+                <div id="result"></div>
     </div>
      <script src="../side-nav.js"></script>
     <script src="script.js"></script>

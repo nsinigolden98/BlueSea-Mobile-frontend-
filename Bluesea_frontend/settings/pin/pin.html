@@ -16,12 +16,12 @@
             <form id="create-pin-form">
                 <div class="input-group">
                     <label for="new-pin">Enter PIN</label>
-                    <input type="password" id="new-pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" required>
+                    <input type="password" id="new-pin" placeholder="••••" maxlength="4" pattern="\d{4}" inputmode="numeric" title="Please enter exactly 4 digits" required>
                 </div>
                 
                 <div class="input-group">
                     <label for="confirm-pin">Confirm PIN</label>
-                    <input type="password" id="confirm-pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please re-enter exactly 4 digits" required>
+                    <input type="password" id="confirm-pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please re-enter exactly 4 digits" inputmode="numeric" required>
                 </div>
 
                 <p id="pin-error-message" class="error-message"></p>

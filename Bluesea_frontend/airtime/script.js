@@ -15,9 +15,8 @@ function showToast(msg, ms = 8200) {
     numberp.value = "0" + String(removeZero);
     updateSummary()
     }
-    
-    
     user()
+    
     // ----------------------------------------------------------------------
     // 1. DOM Elements and State Variables
     // ----------------------------------------------------------------------
@@ -175,11 +174,25 @@ function showToast(msg, ms = 8200) {
    function cancelPayment(){
         document.getElementById("pin-creation-step").style.display = 'none';
         document.getElementById("buy-data-form").style.opacity = '1';
+        document.getElementById("pin").value = "";
     }
 
     // 4. Initialisation
     updateSummary(); 
 //});
+   // Function to SHOW the loader
+    function showLoader() {
+                document.getElementById('loader').classList.remove('loader-hidden');
+                document.getElementById('loader').classList.add('loader-visible');
+            
+                }
+
+            // Function to HIDE the loader
+    function hideLoader() {
+            document.getElementById('loader').classList.remove('loader-visible');
+            document.getElementById('loader').classList.add('loader-hidden');
+                }
+                
   async function makePayment(){
         event.preventDefault()
         const pin =document.getElementById("pin").value.trim()
@@ -187,18 +200,21 @@ function showToast(msg, ms = 8200) {
 
            const payload ={
                 amount: String(currentAmount),
-                network: currentNetwork.toLowerCase(),
+                network: currentNetwork.toLowerCase() !== "9mobile" ? currentNetwork.toLowerCase() : "etisalat",
                 phone_number: String(currentRecipient),
                 transaction_pin: pin
             }
+        showLoader();
           const buy_airtime = await postRequest(ENDPOINTS.buy_airtime, payload)
           console.log(buy_airtime)
         if(buy_airtime.state === false){
             showToast(buy_airtime.error)
+            hideLoader()
         }
         else{
             console.log(buy_airtime)
             showToast(buy_airtime.response_description)
             cancelPayment()
+            hideLoader()
     }
   }

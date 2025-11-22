@@ -13,7 +13,7 @@
       <iframe src="../side-nav.html" id ="side-bar" ></iframe>
     <div class="container">
 
-    <main class="buy-data-form">
+    <main class="buy-data-form" id="buy-data-form">
         <header>
             
           <button  class="menu-btn" id="menu-btn" onclick="showNav()"> 
@@ -35,7 +35,7 @@
             <section class="recipient-section">
                 <label class="section-label">Recipient's Phone Number</label>
                 <div class="input-group">
-                    <input type="tel" id="recipient-number" placeholder="Enter phone number" value="" maxlength="11">
+                    <input type="tel" id="recipient-number" placeholder="Enter phone number" maxlength="11">
                     </div>
             </section>
 
@@ -65,16 +65,38 @@
                     </div>
                     <div class="summary-row">
                         <span class="summary-label">Recipient ID</span>
-                        <span class="summary-value" id="summary-recipient-id">12345678900</span>
+                        <span class="summary-value" id="summary-recipient-id"></span>
                     </div>
                 </div>
             </section>
 
             <button class="buy-now-button" id="buy-now-btn">Buy now</button>
         </main>
+              <div id="toast" class="toast" aria-live="assertive" hidden></div>
+        <div id="pin-creation-step" class="form-card active-step">
+            <h2>🔐 Enter PIN</h2>
+
+            <form id="create-pin-form">
+                <div class="input-group">
+                    <label for="new-pin">Enter PIN</label>
+                    <input type="password" id="pin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="\d{4}" title="Please enter exactly 4 digits" >
+                </div>
+                
+                
+                <button  class="btn btn-primary" id="confirm-btn" onclick="makePayment()">CONFIRM </button>
+                <button class="btn btn-primary" onclick="cancelPayment()">CANCEL </button>
+            </form>
+
+    </div>
+        <div id="loader" class="loader-hidden">
+              <div class="spinner"></div>
+              <p>Processing transaction...</p>
+                </div>
+                <div id="result"></div>
+
     </div>
 
-    <script src="script.js"></script>
      <script src="../side-nav.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
