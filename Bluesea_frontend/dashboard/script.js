@@ -1,7 +1,7 @@
 // script.js - Final version with right->left initial animation
 // Notes: initial page loads now animate from right to left. When router loads a fragment
 // and page === 'dashboard', that panel will animate from the right as well.
-
+    
   'use strict';
 
   /* ---------------------------

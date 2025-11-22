@@ -1,7 +1,6 @@
 'use strict';
-  
-  
 document.addEventListener('DOMContentLoaded', function() {
+
    getTansactionHistory();
    getBalanace();
    getUserNav();
@@ -65,8 +64,6 @@ async function postRequest(url,payload){
   
 function showNav(){
     document.getElementById("side-bar").style.display = 'block';
-    
-   // document.getElementsByTagName("main").style.opacity = '1';
 };
 
 function hideBalance(){
@@ -135,7 +132,8 @@ async function getUserNav() {
 }
 
 function closeNav() {
-    document.getElementById("nav_html").style.display = "none";
-    // location.close()
+    document.getElementById("nav_body").style.display = "none";
+    let path = window.parent.location.href;
+    window.parent.location.href = path;
 }
 
