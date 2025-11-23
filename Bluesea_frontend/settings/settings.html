@@ -10,30 +10,32 @@
 <body>
     <div class="settings-container">
         <header class="settings-header">
-            <span class="material-icons back-icon">chevron_left</span>
+            <span class="material-icons back-icon" onclick="window.parent.location.href= '../dashboard/dashboard.html'">chevron_left</span>
             <h1>Settings</h1>
         </header>
 
         <main class="settings-list">
             <div class="settings-group">
-                <a href="#" class="setting-item">
-                    <span class="material-icons icon-left green">lock</span>
-                    <span class="label">Payment Settings</span>
+                <a href="../profile/profile.html" class="setting-item">
+                    <span class="material-icons icon-left blue material-symbols-rounded">group</span>
+
+                    <span class="label">Profile</span>
                     <span class="material-icons icon-arrow">chevron_right</span>
                 </a>
-                <a href="#" class="setting-item">
-                    <span class="material-icons icon-left teal">vpn_key</span>
-                    <span class="label">Login Settings</span>
+                <a href="../transactions/transactions.html" class="setting-item">
+                    <span class="material-icons icon-left teal material-symbols-rounded">payments</span>
+                    <span class="label">Transactions </span>
                     <span class="material-icons icon-arrow">chevron_right</span>
                 </a>
-                <a href="#" class="setting-item">
-                    <span class="material-icons icon-left light-green">savings</span>
-                    <span class="label">Saving Settings</span>
+                <a onclick="editPin()" class="setting-item">
+                    <span class="material-symbols-rounded material-icons icon-left light-green">password</span>
+                    
+                    <span class="label"> Create / Edit Pin</span>
                     <span class="material-icons icon-arrow">chevron_right</span>
                 </a>
             </div>
 
-            <div class="settings-group">
+     <!-- <div class="settings-group">
                 <a href="#" class="setting-item">
                     <span class="material-icons icon-left home">home</span>
                     <span class="label">Homepage Settings</span>
@@ -91,31 +93,12 @@
                     <span class="label">About</span>
                     <span class="material-icons icon-arrow">chevron_right</span>
                 </a>
-            </div>
+            </div> -->
 
-            <button class="sign-out-button">Sign Out</button>
+            <button class="sign-out-button" onclick="logOut()">Sign Out</button>
         </main>
     </div>
-    <script>
-        // Simple script to simulate the back button and sign out, if running locally
-        document.querySelector('.back-icon').addEventListener('click', (e) => {
-            e.preventDefault();
-            alert('Back functionality not implemented in this demo.');
-        });
-
-        document.querySelector('.sign-out-button').addEventListener('click', () => {
-            alert('Signing out...');
-            // In a real application, this would redirect to the login page
-        });
-
-        // Add event listeners for all setting-items for hover/active feedback
-        document.querySelectorAll('.setting-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log(`Clicked: ${item.querySelector('.label').textContent}`);
-                // In a real app, this would navigate to the respective screen
-            });
-        });
-    </script>
+    <script src="../side-nav.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

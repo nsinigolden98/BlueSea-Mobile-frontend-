@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const otpVerificationStep = document.getElementById('otp-verification-step');
     const createPinForm = document.getElementById('create-pin-form');
     const newPinInput = document.getElementById('new-pin');
+    const pinInput = document.getElementById('pin');
     const confirmPinInput = document.getElementById('confirm-pin');
     const pinErrorMessage = document.getElementById('pin-error-message');
 
@@ -32,9 +33,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         const newPin = newPinInput.value;
         const confirmPin = confirmPinInput.value;
+        const pin = pinInput.value;
 
         // 1. Basic length and digit check (though HTML pattern helps)
-        if (newPin.length !== 4 || isNaN(newPin) || confirmPin.length !== 4 || isNaN(confirmPin)) {
+        if (newPin.length !== 4 || isNaN(newPin) || confirmPin.length !== 4 || isNaN(confirmPin) || pin.length !== 4 || isNaN(pin)) {
             pinErrorMessage.textContent = 'PIN must be exactly 4 digits.';
             return;
         }
@@ -53,11 +55,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         pinErrorMessage.textContent = ''; // Clear error message
         
        const payload= {
-           pin: newPin,
+           old_pin: pin,
+           new_pin: newPin,
            confirm_pin: confirmPin
        }
         
-        const set_pin = await postRequest(ENDPOINTS.pin_set, payload);
+        const set_pin = await postRequest(ENDPOINTS.pin_reset, payload);
         console.log(set_pin)
         showToast(set_pin.message)
         

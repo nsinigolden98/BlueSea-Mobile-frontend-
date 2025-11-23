@@ -113,11 +113,55 @@ function showToast(msg, ms = 8200) {
             updateSummary();
         }
     });
+    
+    const Network_prefixes = {
+        "MTN": ["0803", "0806", "0810", "0813", "0814", "0816", "0703", "0704", "0706", "0903"],
+        "Glo": ["0705", "0805", "0807", "0811", "0815", "0905"],
+        "Airtel": ["0701", "0802", "0808", "0810", "0812", "0902"],
+        "9mobile": ["0809", "0817", "0818", "0909"]
+    };
+        
+    function detectNetwork(number) {
+        if (number.length < 4) return null;
+        
+        const prefix = number.substring(0, 4);
+        
+        for (const network in Network_prefixes) {
+            if (Network_prefixes[network].includes(prefix)) {
+                return network;
+            }
+        }
+        return null;
+    }
+
+    function setActiveNetworkTab(networkName) {
+        const buttonNetworkName = networkName
+
+        networkTabsContainer.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+        
+        const targetButton = networkTabsContainer.querySelector(`[data-network="${buttonNetworkName}"]`);
+        if (targetButton) {
+            targetButton.classList.add('active');
+            currentNetwork = networkName;
+        } else {
+            currentNetwork = networkName;
+        }
+    }
+
 
     // Recipient Number Input Handler
      recipientNumberInput.addEventListener('input', () => {
         const value = recipientNumberInput.value.replace(/\D/g, ''); 
         recipientNumberInput.value = value.substring(0, 11);
+        
+         if (value.length >= 4) {
+            const detected = detectNetwork(value);
+            if (detected && detected !== currentNetwork) {
+                // If a new network is detected, update the visual tabs and state
+                setActiveNetworkTab(detected);
+            }
+        }
+        
         updateSummary();
     }); 
     
