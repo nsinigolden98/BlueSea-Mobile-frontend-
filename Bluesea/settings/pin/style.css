@@ -1,0 +1,153 @@
+/* --- Global Styles & Resets --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f4f6f9;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Aligns content to the top initially */
+    min-height: 100vh;
+    padding: 50px 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 450px;
+}
+
+/* --- Form Card Styling --- */
+.form-card {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.form-card h2 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.form-card p {
+    margin-bottom: 25px;
+    color: #666;
+    font-size: 0.95em;
+}
+
+/* --- Input Groups --- */
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+input[type="password"],
+input[type="text"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-align: center;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* Specific styling for the 4-digit PIN fields */
+#new-pin, #confirm-pin {
+    font-size: 24px;
+    letter-spacing: 8px; /* Wider spacing for 4 digits */
+}
+
+/* Specific styling for the 6-digit OTP field */
+#otp-code {
+    font-size: 28px;
+    letter-spacing: 12px; /* Wider spacing for 6 digits */
+}
+
+
+/* --- Buttons --- */
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #e9ecef;
+    color: #495057;
+    margin-top: 15px;
+}
+
+.btn-secondary:hover {
+    background-color: #dae0e5;
+}
+
+/* --- Error Messages --- */
+.error-message {
+    color: #dc3545;
+    font-size: 0.9em;
+    height: 18px; /* Reserve space to prevent layout shift */
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+/* --- Step Visibility Utility Classes --- */
+.hidden-step {
+    display: none;
+}
+
+.active-step {
+    display: block;
+}
+
+.toast{
+    position:fixed;
+    bottom :150px; 
+    left:50%; 
+    transform:translateX(-50%); 
+    background:#3498db;
+    color:#fff;
+    width:80%;
+    padding:10px 14px; 
+    border-radius:8px; 
+    box-shadow:0 6px 22px rgba(2,6,23,0.6);  }
+    
+/* --- Responsiveness: Center content if screen is tall --- */
+@media (min-height: 700px) {
+    body {
+        align-items: center; /* Center vertically on taller screens */
+    }
+}

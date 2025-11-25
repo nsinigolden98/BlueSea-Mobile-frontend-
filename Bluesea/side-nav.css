@@ -1,0 +1,21 @@
+#side-bar{
+    min-height: 100%;
+    border: none;
+  }
+.menu-btn{
+    display: none;
+}
+@media (max-width: 768px) {
+    /* styles */
+    #side-bar{
+        display: none;
+        position:fixed;
+    }
+    
+    .menu-btn{
+        color:black;
+        background: transparent;
+        border:none;
+        display: inline-block;
+    }
+}

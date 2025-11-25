@@ -1,0 +1,7 @@
+#transaction_list{
+    border:none;
+    width:100%;
+    padding: 1%;
+    height: 500px;
+    overflow: scroll;
+}

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title> Recent Transactions</title>
+    <style>
+    :root{
+    --dash-radius: 14px;
+  --dash-font: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --dash-panel-width: 260px;
+  --dash-bg: #f6f8fa;
+  --dash-panel: #ffffff;
+  --dash-card-muted: #ffffff;
+  --dash_muted_card: #f4f7f9;   
+  --dash-accent: #0b84ff;
+  --dash-accent-2: #066fb7;
+  --dash-text: #0b2130;
+  --dash-text-muted: #6b7b84;
+  --dash-action-text: var(--dash-text);
+  --dash-muted-2: #e6edf0;
+  --dash-red: #c62828;
+  --dash-loader-bg: rgba(255,255,255,0.6);
+  --dash-loader-panel: #ffffff;
+  --dash-loader-text: #024156;
+  --dash-error-panel: #fff0f0;
+  --dash-error-accent: #c62828;
+  }
+        /* Transactions */
+.transactions_card{margin-top:12px;background:var(--dash-card-muted);padding:22px;border-radius:18px}
+.transactions_header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.transactions_title{margin:0;font-size:18px;font-weight:700}
+.transactions_viewall{color:var(--dash-accent-2);font-size:13px;text-decoration:none;font-weight:600}
+.transactions_table{width:100%;border-collapse:collapse;table-layout:fixed}
+.transactions_table thead th{text-align:left;font-size:12px;color:var(--dash-text-muted);padding:12px 8px;font-weight:600}
+.transactions_table tbody tr{border-top:1px solid rgba(255,255,255,0.03)}
+.transactions_table tbody td{padding:14px 8px;font-size:14px;color:var(--dash-text)}
+.th_desc{width:48%}
+.th_date{width:20%}
+.th_amount{width:20%;text-align:right}
+.amount--debit{color:var(--dash-red);font-weight:700;text-align:right}
+
+/* Classes to control visibility */
+.loader-hidden {
+  display: none;
+}
+
+.loader-visible {
+  display: block;
+}
+
+/* Keyframes for the spinning animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Container for the loader */
+#loader {
+  padding: 20px;
+  text-align: center;
+  border: none;
+  background-color: transparent;
+  position: fixed; /* Center the loader on the screen */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000; /* Ensure it's above other content */
+}
+/* Basic styling for the spinner */
+.spinner {
+  border: 4px solid #f3f3f3; /* Light grey */
+  border-top: 4px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite; /* Start the animation */
+  margin: 0 auto 10px auto;
+}
+
+    </style>
+</head>
+<body>
+     <section class="transactions" >
+              <div class="transactions_card">
+                <div class="transactions_header">
+                  <h4 class="transactions_title">Recent Transactions</h4>
+                  <a class="transactions_viewall" onclick="window.parent.location.href='transactions/transactions.html'" id="view_all">View All</a>
+                </div>
+                
+             <div id="loader" class="loader-hidden">
+              <div class="spinner"></div>
+              <p>Loading...</p>
+                </div>
+                <div id="result"></div>
+
+                <table class="transactions_table" role="table" aria-label="Recent transactions">
+                  <thead>
+                    <tr>
+                      <th class="th_desc">Description</th>
+                      <th class="th_date">Date</th>
+                      <th class="th_amount">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody id="transactions_body">
+
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <script src="side-nav.js"></script>
+
+</body>
+</html>
