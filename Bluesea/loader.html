@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlueSea Loader</title>
+
+<style>
+  /* FULL SCREEN LOADER */
+  .loader-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000; /* Black brand color */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    z-index: 9999;
+  }
+
+  /* TEMPORARY LOGO (BS) */
+  .logo {
+    font-size: 50px;
+    font-weight: 650;
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: -8px;
+    animation: pulse 1.4s infinite ease-in-out;
+    user-select: none;
+    background: linear-gradient(
+    to bottom,
+    #4CCBFF 0%,
+    #1A8DFF 50%,
+    #0056FF 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+   display: inline-block;    /* ← Fix #1 */
+  padding-right: 10px;       /* ← Fix #2 */
+}
+  
+
+  /* PULSE ANIMATION */
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.12); opacity: 0.85; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Loading text */
+  .loading-text {
+    color: #fff;
+    font-size: 15px;
+    opacity: 0;
+    animation: fade 1.5s infinite;
+  }
+
+  @keyframes fade {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- LOADER WRAPPER -->
+<div class="loader-screen" id="loader">
+  <div class="logo">B<span style="margin-left:-10px;">S</span></div>
+  <div class="loading-text">Loading...</div>
+</div>
+
+<!-- SAMPLE CONTENT -->
+<div style="padding: 30px; color: white;">
+  <h1>BlueSea App Content</h1>
+  <p>This will show after loading finishes.</p>
+</div>
+
+<script>
+  // Simulated loading (2 seconds)
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      document.getElementById("loader").style.display = "none";
+    }, 2000);
+  });
+</script>
+
+</body>
+</html>
