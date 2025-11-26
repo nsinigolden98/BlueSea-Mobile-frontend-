@@ -409,7 +409,8 @@ input:focus {
 
 .toast{
     position:fixed;
-    bottom :150px; 
+    text-align: center;
+    bottom :100px; 
     left:50%; 
     transform:translateX(-50%); 
     background:#3498db;

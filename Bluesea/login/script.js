@@ -267,7 +267,6 @@ async function resendEmailSignUp(email = $("#signup_email").value.trim()){
       startCountdown(modal_timer_email, modal_resend_email);
     } else {
       showToast(r.message);
-      showToast(res.error);
       modal_resend_email.disabled = false;
     }
   };
@@ -292,11 +291,10 @@ async function verifyEmailSignUp(){
      if (r.state) {
       showToast("Email verified.");
       closeModal();
-     window.location.replace("login_signup.html");
+     window.location.replace("login.html");
     }
     else {
-      setError(modal_email_input, r.message);
-      showToast(res.error);
+      showToast(r.message);
     } 
  };
 
@@ -330,13 +328,13 @@ safeAdd(form_login, "submit", async (ev) => {
          showToast("Login successful. Redirecting...");
          setRefreshToken(res.data.refresh_token, 30);
          setAccessToken(res.data.access_token, 30);
-            window.parent.location.replace("Bluesea/dashboard/dashboard.html"); 
+            window.parent.location.replace("../dashboard/dashboard.html"); 
       }  
       else if (!res.data.user.email_verified){
         await apiPost(ENDPOINT.sendOtp, {email: identifier});
        showToast("Email Already Registered ");
        localStorage.setItem("email",  identifier);
-       window.parent.location.replace("Bluesea/verify_email.html"); 
+       window.parent.location.replace("../verify_email.html"); 
       }
       else{
           showToast(res.data.detail);
@@ -378,8 +376,7 @@ async  function SignUpButton() {
     }
     if (password !== confirm) { setError($("#signup_confirm"), "Passwords do not match."); return; }
     
-    document.getElementById("modal_panel").style.display = "block";
-    document.getElementById("form_signup").style.opacity = "0.3";
+    
     // POST to signup
     let signup_payload = {
         email: email, 
@@ -389,9 +386,15 @@ async  function SignUpButton() {
         password : password 
          };
     const res = await apiPost(ENDPOINT.signup, signup_payload);
+    if(res.data.state){
+    document.getElementById("modal_panel").style.display = "block";
+    document.getElementById("form_signup").style.opacity = "0.3";
     showToast(res.data.message);
-    console.log(res);
-    startCountdown(modal_timer_email, modal_resend_email);
+    startCountdown(modal_timer_email, modal_resend_email);}
+    else{
+         showToast(res.data.message);
+    }
+    
   };
 
   /* -------------- Forgot password flow (trigger modal for email) -------------- */
@@ -493,11 +496,3 @@ async  function SignUpButton() {
   
 
 
-  /* navigation.addEventListener('navigate', (e) => { 
-      window.location.href="test.html"
-  
-   })
-    */
-   // window.addEventListener('popstate', () => { 
-//        window.location.href="test.html"
-//    }) 

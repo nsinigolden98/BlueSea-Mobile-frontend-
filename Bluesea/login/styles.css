@@ -109,7 +109,8 @@ body.page{
 /* toast */
 .toast{
     position:fixed;
-    bottom :150px; 
+    bottom :100px; 
+    text-align: center;
     left:50%; 
     transform:translateX(-50%); 
     background:#3498db;

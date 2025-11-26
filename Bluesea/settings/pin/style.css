@@ -137,6 +137,7 @@ input:focus {
     position:fixed;
     bottom :150px; 
     left:50%; 
+    text-align: center;
     transform:translateX(-50%); 
     background:#3498db;
     color:#fff;

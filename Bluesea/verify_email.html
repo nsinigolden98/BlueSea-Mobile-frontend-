@@ -60,6 +60,7 @@
         .toast{
     position:fixed;
     bottom :150px; 
+    text-align: centre;
     left:50%; 
     transform:translateX(-50%); 
     background:#3498db;
@@ -221,7 +222,7 @@ async function verifyEmailSignUp(code){
     //console.log(r.message);
      if (r.state) {
       showToast("Email verified.");
-         window.location.replace("../index.html");
+         window.location.replace("login/login.html");
     }
     else {
       showToast(r.message);

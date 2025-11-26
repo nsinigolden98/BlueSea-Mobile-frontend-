@@ -208,7 +208,7 @@ function hideLoader() {
 
     function redirectToLogin() {
         // Use replace() so user can't go back to this page
-        window.location.replace("../../index.html");
+        window.location.replace("../login/login.html");
     }
 
     // This fires on EVERY page view — including back/forward button!

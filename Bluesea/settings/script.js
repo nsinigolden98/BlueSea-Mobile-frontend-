@@ -17,13 +17,12 @@ async function logOut() {
        
         const logout = await postRequest(ENDPOINTS.logout, {refresh_token})
         
-        
         // Delete the Access Token cookie
         deleteCookie('accessToken');
 
         // Delete the Refresh Token cookie
         deleteCookie('refreshToken');
         
-        window.parent.location.replace("../../index.html")
+        window.parent.location.replace("../login/login.html")
 }
 
