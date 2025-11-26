@@ -322,23 +322,26 @@ safeAdd(form_login, "submit", async (ev) => {
     if (!validateEmail(identifier)) { setError($("#login_identifier"), "Please enter email"); valid = false; }
     if (!password) { setError($("#login_password"), "Please enter your password."); valid = false; }
     if (!valid) return;
+    document.getElementById("loader").style.display = "block";
    
     const res = await apiPost(ENDPOINT.login, { email: identifier,password: password});
        if(res.data.user.email_verified){
          showToast("Login successful. Redirecting...");
          setRefreshToken(res.data.refresh_token, 30);
          setAccessToken(res.data.access_token, 30);
+        document.getElementById("loader").style.display = "none";
             window.parent.location.replace("../dashboard/dashboard.html"); 
       }  
       else if (!res.data.user.email_verified){
         await apiPost(ENDPOINT.sendOtp, {email: identifier});
        showToast("Email Already Registered ");
        localStorage.setItem("email",  identifier);
+         document.getElementById("loader").style.display = "none";
        window.parent.location.replace("../verify_email.html"); 
       }
       else{
           showToast(res.data.detail);
-          
+          document.getElementById("loader").style.display = "none";
       }
   });
 
@@ -376,6 +379,7 @@ async  function SignUpButton() {
     }
     if (password !== confirm) { setError($("#signup_confirm"), "Passwords do not match."); return; }
     
+    document.getElementById("loader").style.display = "block";
     
     // POST to signup
     let signup_payload = {
@@ -390,9 +394,11 @@ async  function SignUpButton() {
     document.getElementById("modal_panel").style.display = "block";
     document.getElementById("form_signup").style.opacity = "0.3";
     showToast(res.data.message);
+    document.getElementById("loader").style.display = "none";
     startCountdown(modal_timer_email, modal_resend_email);}
     else{
          showToast(res.data.message);
+        document.getElementById("loader").style.display = "none";
     }
     
   };
@@ -418,6 +424,7 @@ async  function SignUpButton() {
     const send = await apiPost(ENDPOINT.sendOtp_FP,payload);
     if (send.data.state){
     $("#reset_text").textContent = `Email: ${email}`;
+    showToast(`OTP sent to ${email}. Check your email`)
     document.getElementById("FP_email_field").style.display = "none";
     document.getElementById("OTP_field").style.display = "block";
     document.getElementById("Reset_password").style.display = "none";
@@ -494,5 +501,6 @@ async  function SignUpButton() {
     resetToggle("reset_confirm") ;
   });
   
+
 
 

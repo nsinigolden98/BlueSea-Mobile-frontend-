@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title> Recent Transactions</title>
+    <link rel="stylesheet" href="../loader.css">
     <style>
     :root{
     --dash-radius: 14px;
@@ -27,6 +28,13 @@
   --dash-error-panel: #fff0f0;
   --dash-error-accent: #c62828;
   }
+  body{
+      margin:50px 5px;
+      font-size: 12px;
+  }
+  tr{
+        border-bottom:2px solid var(--dash-accent-2);
+    }
         /* Transactions */
 .transactions_card{margin-top:12px;background:var(--dash-card-muted);padding:22px;border-radius:18px}
 .transactions_header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
@@ -35,11 +43,10 @@
 .transactions_table{width:100%;border-collapse:collapse;table-layout:fixed}
 .transactions_table thead th{text-align:left;font-size:12px;color:var(--dash-text-muted);padding:12px 8px;font-weight:600}
 .transactions_table tbody tr{border-top:1px solid rgba(255,255,255,0.03)}
-.transactions_table tbody td{padding:14px 8px;font-size:14px;color:var(--dash-text)}
-.th_desc{width:48%}
-.th_date{width:20%}
-.th_type{width:20%}
-.th_amount{width:12%;text-align:right}
+.transactions_table tbody td{padding:14px 8px;color:var(--dash-text)}
+.th_desc{width:40%}
+.th_date{width:35%}
+.th_amount{width:25%;text-align:right}
 .amount--debit{color:var(--dash-red);font-weight:700;text-align:right}
     </style>
 </head>
@@ -65,6 +72,7 @@
                 </table>
               </div>
             </section>
+            <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
             <script src="../side-nav.js"></script>
             <script src="script.js"></script>
 </body>

@@ -224,18 +224,7 @@ function showToast(msg, ms = 8200) {
     // 4. Initialisation
     updateSummary(); 
 //});
-   // Function to SHOW the loader
-    function showLoader() {
-                document.getElementById('loader').classList.remove('loader-hidden');
-                document.getElementById('loader').classList.add('loader-visible');
-            
-                }
 
-            // Function to HIDE the loader
-    function hideLoader() {
-            document.getElementById('loader').classList.remove('loader-visible');
-            document.getElementById('loader').classList.add('loader-hidden');
-                }
                 
   async function makePayment(){
         event.preventDefault()

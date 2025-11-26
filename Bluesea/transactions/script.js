@@ -1,4 +1,5 @@
 async function getFullTansactionHistory() {
+    showLoader()
     const list = await getRequest(ENDPOINTS.history);
     const page_length = Math.round(list.count / 5) + 1;
     
@@ -34,6 +35,8 @@ async function getFullTansactionHistory() {
         row.appendChild(cellThree);
         tbody.appendChild(row);
     }
-    }  
+    
+    hideLoader()
+    } 
 }
 getFullTansactionHistory();

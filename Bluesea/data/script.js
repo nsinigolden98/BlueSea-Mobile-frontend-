@@ -579,18 +579,7 @@
     renderDataPlans(); 
 //});
 
-        // Function to SHOW the loader
-    function showLoader() {
-                document.getElementById('loader').classList.remove('loader-hidden');
-                document.getElementById('loader').classList.add('loader-visible');
-            
-                }
 
-            // Function to HIDE the loader
-    function hideLoader() {
-            document.getElementById('loader').classList.remove('loader-visible');
-            document.getElementById('loader').classList.add('loader-hidden');
-                }
                 
                 
 async function makePayment(){
@@ -606,19 +595,19 @@ async function makePayment(){
                 phone_number: "08011111111", //newNum
                 transaction_pin: pin
             }
+        showLoader();
         function paymentFeedback(buy_data){
-        if(buy_data.state === false){
-            showToast(buy_data.error)
+        if(buy_data.state === false || buy_data.code === "011"){
+          //  showToast(buy_data.error)
+            showToast("Data Plan Not Available At The Moment ")
         }
         else{
-            console.log(buy_data)
+            
             showToast(buy_data.response_description)
             cancelPayment()
       }
         }
         
-        showLoader();
-        console.log(payload);
         if(currentNetwork === "MTN"){
             
           const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload)

@@ -6,6 +6,7 @@
     <title>Buy Data - BlueSea</title>
     <link rel="stylesheet" href="styles.css"> 
       <link rel="stylesheet" href="../side-nav.css">
+      <link rel="stylesheet" href="../loader.css">
 </head>
 <body class="light-mode"> 
         <!-- Side Navigation-->
@@ -73,6 +74,7 @@
             <button class="buy-now-button" id="buy-now-btn">Buy now</button>
         </main>
               <div id="toast" class="toast" aria-live="assertive" hidden></div>
+              <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
         <div id="pin-creation-step" class="form-card active-step">
             <h2>Enter PIN</h2>
 
@@ -88,11 +90,7 @@
             </form>
 
     </div>
-        <div id="loader" class="loader-hidden">
-              <div class="spinner"></div>
-              <p>Processing transaction...</p>
-                </div>
-                <div id="result"></div>
+        
 
     </div>
 

@@ -2,7 +2,6 @@
 document.addEventListener('DOMContentLoaded', function() {
    getBalanace();
    getUserNav();
-  getTansactionHistory();
 
 }); 
 
@@ -117,42 +116,16 @@ function getDate(date ="2025-11-20" ){
     return date_value;
 };
 
-async function getTansactionHistory() {
-    showLoader()
-    const histories = await getRequest(`${ENDPOINTS.history}?page=1`);
-    const history =  histories.results
-    
-    let tbody = document.getElementById("transactions_body");
-    tbody.innerHTML = '';
-    
-    for(let i = 0; i<= 5; i++){
-        let  description = history[i].description
-        let  time = getDate(history[i].created_at.slice(0,10))
-        let  amount =  history[i].formatted_amount
-        if(history[i].transaction_type ==='DEBIT'){
-             amount = "-" + amount;
-        }
-        else{
-             amount = "+" + amount;
-        }
-        
-        const cellOne = document.createElement('td')
-        const cellTwo = document.createElement('td')
-        const cellThree = document.createElement('td')
-        
-        cellOne.textContent = description 
-        cellTwo.textContent = time
-        cellThree.textContent = amount
-        
-        const row = document.createElement('tr')
-        row.appendChild(cellOne);
-        row.appendChild(cellTwo);
-        row.appendChild(cellThree);
-        tbody.appendChild(row);
-        hideLoader()
-    }
-    
+function showLoader(){
+    document.getElementById("loader").style.display = 'block';
 }
+function hideLoader(){
+    document.getElementById("loader").style.display = 'none';
+}
+
+    
+    
+
 async function getUserNav() {
     const user = await getRequest(ENDPOINTS.user);
     // Side nav
@@ -185,17 +158,6 @@ function closeNavBody() {
     }
 }
 
-function showLoader() {
-                document.getElementById('loader').classList.remove('loader-hidden');
-                document.getElementById('loader').classList.add('loader-visible');
-            
-                }
-
-            // Function to HIDE the loader
-function hideLoader() {
-            document.getElementById('loader').classList.remove('loader-visible');
-            document.getElementById('loader').classList.add('loader-hidden');
-                }
                 
 
 // PROTECTED PAGE GUARD – Works perfectly with your cookie setup

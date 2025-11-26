@@ -350,7 +350,7 @@ section {
 /* --- Form Card Styling --- */
 .form-card {
     background-color: #ffffff;
-    width:85%;
+    max-width:85%;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
@@ -358,6 +358,8 @@ section {
     display: none ;
     position:fixed;
     top:300px;
+    margin:5%;
+   
 }
 
 .form-card h2 {
@@ -420,41 +422,3 @@ input:focus {
     border-radius:8px; 
     box-shadow:0 6px 22px rgba(2,6,23,0.6);  }
     
-/* Basic styling for the spinner */
-.spinner {
-  border: 4px solid #f3f3f3; /* Light grey */
-  border-top: 4px solid #3498db; /* Blue */
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  animation: spin 1s linear infinite; /* Start the animation */
-  margin: 0 auto 10px auto;
-}
-
-/* Keyframes for the spinning animation */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Container for the loader */
-#loader {
-  padding: 20px;
-  text-align: center;
-  border: 1px solid #ccc;
-  background-color: #f9f9f9;
-  position: fixed; /* Center the loader on the screen */
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1000; /* Ensure it's above other content */
-}
-
-/* Classes to control visibility */
-.loader-hidden {
-  display: none;
-}
-
-.loader-visible {
-  display: block;
-}
