@@ -6,7 +6,7 @@ getUserNav();
 getBalanace();
  })    
 
-let API_BASE = 'http://127.0.0.1:8000'; // from Postman collection
+let API_BASE = "https://notepad-one-wheat.vercel.app"; // from Postman collection
 
 function getCookie(name) {
   // 1. Prepend '=' to the name to ensure accurate matching (e.g., 'user_id=')
