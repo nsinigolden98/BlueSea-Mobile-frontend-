@@ -22,7 +22,6 @@ async function logOut() {
 
         // Delete the Refresh Token cookie
         deleteCookie('refreshToken');
-        
-        window.parent.location.replace("../login/login.html")
+       window.parent.location.replace("../login/login.html")
 }
 

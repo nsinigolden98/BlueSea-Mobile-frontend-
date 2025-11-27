@@ -514,6 +514,7 @@
     });
     
    function cancelPayment(){
+       event.preventDefault()
         document.getElementById("pin-creation-step").style.display = 'none';
         document.getElementById("buy-data-form").style.opacity = '1';
         document.getElementById("pin").value = "";

@@ -329,7 +329,7 @@ safeAdd(form_login, "submit", async (ev) => {
          showToast("Login successful. Redirecting...");
          setRefreshToken(res.data.refresh_token, 30);
          setAccessToken(res.data.access_token, 30);
-        document.getElementById("loader").style.display = "none";
+          document.getElementById("loader").style.display = "none";
             window.parent.location.replace("../dashboard/dashboard.html"); 
       }  
       else if (!res.data.user.email_verified){
@@ -503,4 +503,7 @@ async  function SignUpButton() {
   
 
 
-
+window.addEventListener('popstate', function(event) {
+history.go(0)
+});
+ 

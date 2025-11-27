@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         showToast(set_pin.message)
         
         if(set_pin.state === true){
-            window.parent.location.replace("../../dashboard/dashboard.html")
+            window.parent.location.href= document.referrer;
         }
         // **Transition to the next step**
         //pinCreationStep.classList.remove('active-step');
