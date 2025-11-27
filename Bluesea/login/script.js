@@ -79,8 +79,8 @@ function closeModal(){
 };
 
  // Domain base; update if your API is at another subdomain
- //const API_BASE = "https://blueseamobile.com.ng"; // <--- change if needed
-let API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
+ const API_BASE = "https://notepad-one-wheat.vercel.app"; // <--- change if needed
+//let API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
 
 let ENDPOINT = {
     login: `${API_BASE}/accounts/login/`,
@@ -505,10 +505,10 @@ async  function SignUpButton() {
   
 
 function handleCredentialResponse(response) {
-            console.log("Encoded JWT ID token: " + response.credential)
+           // console.log("Encoded JWT ID token: " + response.credential)
             
             // Send to your backend
-            fetch('https://blueseamobile-v1-0.onrender.com/accounts/auth/google/', {
+            fetch(ENDPOINT.oauthGoogle, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -520,7 +520,11 @@ function handleCredentialResponse(response) {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    console.log('Login successful')
+                     showToast("Login successful. Redirecting...");
+                     setRefreshToken(data.refresh_token, 30);
+                    setAccessToken(data.access_token, 30);
+                    window.parent.location.replace("../dashboard/dashboard.html"); 
+                   // console.log('Login successful')
                 }
             })
             .catch(error => console.error('Error:', error))
