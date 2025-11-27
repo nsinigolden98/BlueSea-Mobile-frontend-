@@ -362,6 +362,8 @@ async  function SignUpButton() {
     if (!validateEmail(email)) { setError($("#signup_email"), "Please enter a valid email"); valid = false; }
     if (!phoneRaw) { setError($("#signup_phone"), "Please enter your phone."); valid = false; }
     if (!name) { setError($("#signup_name"), "Please enter your name."); valid = false; }
+    if (validateEmail(name)) { setError($("#signup_name"), "Please enter your name."); valid = false; }
+    if (validateEmail(surname)) { setError($("#signup_surname"), "Please enter your surname."); valid = false; }
     if (!surname) { setError($("#signup_surname"), "Please enter you surname."); valid = false; }
     if (!password) { setError($("#signup_password"), "Please enter a password."); valid = false; }
     if (!confirm) { setError($("#signup_confirm"), "Confirm your password."); valid = false; }
@@ -502,6 +504,27 @@ async  function SignUpButton() {
   });
   
 
+function handleCredentialResponse(response) {
+            console.log("Encoded JWT ID token: " + response.credential)
+            
+            // Send to your backend
+            fetch('https://blueseamobile-v1-0.onrender.com/accounts/auth/google/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id_token: response.credential
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Login successful')
+                }
+            })
+            .catch(error => console.error('Error:', error))
+        }
 
 window.addEventListener('popstate', function(event) {
 history.go(0)

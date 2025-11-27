@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="google-signin-client_id" content="781810870714-sdfd8a3ue6k9qgqkt2s02d57aqd4ubh2.apps.googleusercontent.com">
+    <meta name="google-signin-client_id" content="">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   <title>BlueseaMobile — Login / Sign up</title>
   <meta name="description" content="BlueseaMobile — secure login & signup" />
@@ -282,7 +282,7 @@
           <div class="divider"><span>Or continue with</span></div>
       
       <div class="socials"  id="g_id_onload"
-         data-client_id="781810870714-sdfd8a3ue6k9qgqkt2s02d57aqd4ubh2.apps.googleusercontent.com"
+         data-client_id=""
          data-callback="handleCredentialResponse">
       </div>
         
@@ -297,29 +297,5 @@
     
     <script src="script.js" defer></script>
     
-      <script>
-    
-        function handleCredentialResponse(response) {
-            console.log("Encoded JWT ID token: " + response.credential)
-            
-            // Send to your backend
-            fetch('https://blueseamobile-v1-0.onrender.com/accounts/auth/google/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    id_token: response.credential
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('Login successful')
-                }
-            })
-            .catch(error => console.error('Error:', error))
-        }
-    </script>
 </body>
 </html>
