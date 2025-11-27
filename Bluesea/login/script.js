@@ -502,7 +502,7 @@ async  function SignUpButton() {
   });
   
 function handleCredentialResponse(response) {
-            console.log("Encoded JWT ID token: " + response.credential)
+           // console.log("Encoded JWT ID token: " + response.credential)
             
             // Send to your backend
             fetch(ENDPOINT.oauthGoogle, {
@@ -521,7 +521,7 @@ function handleCredentialResponse(response) {
                      setRefreshToken(data.refresh_token, 30);
                     setAccessToken(data.access_token, 30);
                     window.parent.location.replace("../dashboard/dashboard.html"); 
-                    console.log('Login successful')
+                   // console.log('Login successful')
                 }
             })
             .catch(error => console.error('Error:', error))
