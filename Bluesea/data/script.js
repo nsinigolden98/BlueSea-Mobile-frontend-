@@ -584,7 +584,7 @@
                 
                 
 async function makePayment(){
-        event.preventDefault()
+       // event.preventDefault()
 
         const pin =document.getElementById("pin").value.trim()
         const userPhoneNum = await getRequest(ENDPOINTS.user);
@@ -596,6 +596,7 @@ async function makePayment(){
                 phone_number: "08011111111", //newNum
                 transaction_pin: pin
             }
+        showLoader();
         function paymentFeedback(buy_data){
         if(buy_data.state === false || buy_data.code === "011"){
           //  showToast(buy_data.error)
@@ -605,44 +606,38 @@ async function makePayment(){
             
             showToast(buy_data.response_description)
             cancelPayment()
-      };
-        };
+      }
+      hideLoader();
+        }
         
         if(currentNetwork === "MTN"){
-        showLoader();
             
           const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload)
           paymentFeedback(buy_data)
-          hideLoader();
         
         }
         else if (currentNetwork === "Glo"){
             
-        showLoader();
           const buy_data = await postRequest(ENDPOINTS.buy_glo, payload)
-          paymentFeedback(buy_data)
-          hideLoader();
+          paymentFeedback(buy_data);
 
         }
         else if(currentNetwork === "9mobile"){
-        showLoader();
             
           const buy_data = await postRequest(ENDPOINTS.buy_etisalat, payload)
           paymentFeedback(buy_data)
-          hideLoader();
 
         }
         else if (currentNetwork === "Airtel"){
-        showLoader();
             
           const buy_data = await postRequest(ENDPOINTS.buy_airtel, payload)
           paymentFeedback(buy_data)
-          hideLoader();
         
 
         }
         else{
             console.log("Invalid Network")
+            hideLoader();
 
         };
  
