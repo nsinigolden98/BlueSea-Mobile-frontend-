@@ -500,7 +500,7 @@ async  function SignUpButton() {
   safeAdd($("#confirm_show"), "click", function (){
     resetToggle("reset_confirm") ;
   });
-  
+
 
 
 async function handleCredentialResponse(response) {
@@ -512,7 +512,7 @@ async function handleCredentialResponse(response) {
         showToast("Login successful. Redirecting...");
         setRefreshToken(res.data.refresh_token, 30);
         setAccessToken(res.data.access_token, 30);   
-        window.parent.location.href = redirect_uri;
+        window.location.href = redirect_uri;
         }
         else{
         window.parent.location.href  = "https://www.blueseamobile.ng.com";
