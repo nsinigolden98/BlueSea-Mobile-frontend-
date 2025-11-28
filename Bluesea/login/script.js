@@ -506,42 +506,18 @@ window.addEventListener('popstate', function(event) {
 history.go(0)
 });
 
-function handleCredentialResponse(response) {
-    // 'response' contains the JWT ID token in response.credential
+async function handleCredentialResponse(response) {
     const idToken = response.credential;
     
-    // 1. Send the ID token to your backend server for verification and login.
-    fetch('/api/auth/google-login', { // Replace with your actual backend endpoint
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id_token: idToken }),
-    })
-    .then(res => {
-        if (!res.ok) {
-            // Handle HTTP errors
-            throw new Error(`Server responded with status: ${res.status}`);
-        }
-        return res.json();
-    })
-    .then(data => {
-        // 2. Successful server-side verification and token issuance
-        
-        // --- YOUR SUCCESS LOGIC FROM THE PROMPT ---
+    
+    const res  =  apiPost(ENDPOINT.oauthGoogle, { id_token: idToken })
+        if(res.data.success){
         showToast("Login successful. Redirecting...");
-        setRefreshToken(data.refresh_token, 30); // Assumes data.refresh_token exists
-        setAccessToken(data.access_token, 30);   // Assumes data.access_token exists
-        showToast('Login successful'); 
-        // -----------------------------------------
-        
-        // Example: Redirect to a dashboard after success
-        // window.location.href = '/dashboard'; 
-    })
-    .catch(error => {
-        // Handle network errors or server-side login failures
-        console.error('Login failed:', error);
-        showToast('Login failed. Please try again.');
-    });
+        setRefreshToken(res.data.refresh_token, 30);
+        setAccessToken(res.data.access_token, 30);   
+        window.location.replace("../dashboard/dashboard.html");
+           
+        }
+
 }
  
