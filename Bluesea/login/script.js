@@ -505,7 +505,7 @@ async  function SignUpButton() {
 
 async function handleCredentialResponse(response) {
     const idToken = response.credential;
-    const redirect_uri = "https://www.blueseamobile.ng.com/Bluesea/dashboard/dashboard.html";
+    const redirect_uri = "https://blueseamobile.com.ng/Bluesea/dashboard/dashboard.html";
     
     let res  = await apiPost(ENDPOINT.oauthGoogle, { id_token: idToken });
         if(res.data.success){
@@ -515,7 +515,7 @@ async function handleCredentialResponse(response) {
         window.location.href = redirect_uri;
         }
         else{
-        window.parent.location.href  = "https://www.blueseamobile.ng.com";
+        window.parent.location.href  = "https://www.blueseamobile.com.ng";
             
         }
 ;
