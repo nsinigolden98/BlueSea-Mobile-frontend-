@@ -246,7 +246,7 @@ async function makePayment(){
         }
         else{
             hideLoader();
-            showToast(buy_airtime.response_description);
             cancelPayment();
+            showToast(buy_airtime.response_description);
     }
   }
