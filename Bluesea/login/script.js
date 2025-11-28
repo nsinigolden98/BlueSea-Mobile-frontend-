@@ -521,3 +521,6 @@ async function handleCredentialResponse(response) {
 ;
 }
  
+ window.addEventListener("popstate", (event)=>{
+     history.go(0);
+ })
