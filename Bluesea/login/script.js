@@ -506,7 +506,7 @@ async  function SignUpButton() {
 async function handleCredentialResponse(response) {
     const idToken = response.credential;
     
-    let res  =  apiPost(ENDPOINT.oauthGoogle, { id_token: idToken });
+    let res  = await apiPost(ENDPOINT.oauthGoogle, { id_token: idToken });
         if(res.data.success){
         showToast("Login successful. Redirecting...");
         setRefreshToken(res.data.refresh_token, 30);
