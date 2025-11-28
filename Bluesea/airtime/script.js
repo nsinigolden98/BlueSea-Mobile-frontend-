@@ -226,48 +226,27 @@ function showToast(msg, ms = 8200) {
     updateSummary(); 
 //});
 
-async function makePayment(event) {
-    event.preventDefault();
+async function makePayment(){
+        event.preventDefault();
+        const pin =document.getElementById("pin").value.trim();
+        
 
-    const pinInput = document.getElementById("pin");
-    const pin = pinInput?.value.trim();
-
-    if (!pin) {
-        showToast("Please enter your transaction PIN.");
-        return;
-    }
-    
-    const amount = String(currentAmount || 0);
-    const phoneNumber = String(currentRecipient || '');
-
-    const normalizedNetwork = currentNetwork?.toLowerCase() === "9mobile" ? "etisalat" : (currentNetwork?.toLowerCase() || '');
-
-    if (amount === '0' || !phoneNumber || !normalizedNetwork) {
-        showToast("Payment data is incomplete. Cannot proceed.");
-        return;
-    }
-
-    const payload = {
-        amount,
-        network: normalizedNetwork,
-        phone_number: phoneNumber,
-        transaction_pin: pin
-    };
-
-    showLoader();
-
-    try {
-        const buy_airtime = await postRequest(ENDPOINTS.buy_airtime, payload);
-
-        if (buy_airtime.state === false) {
-            showToast(buy_airtime.error || "An unknown error occurred during payment.");
-        } else {
-            showToast(buy_airtime.response_description || "Payment successful!");
-            cancelPayment();
+           const payload ={
+                amount: String(currentAmount),
+                network: currentNetwork.toLowerCase() !== "9mobile" ? currentNetwork.toLowerCase() : "etisalat",
+                phone_number: String(currentRecipient),
+                transaction_pin: pin
+            };
+        showLoader();
+          const buy_airtime = await postRequest(ENDPOINTS.buy_airtime, payload);
+         
+        if(buy_airtime.state === false){
+            hideLoader();
+            showToast(buy_airtime.error);
         }
-    } catch (error) {
-        showToast("A connection error occurred. Please try again.");
-    } finally {
-        hideLoader();
+        else{
+            hideLoader();
+            showToast(buy_airtime.response_description);
+            cancelPayment();
     }
-}
+  }

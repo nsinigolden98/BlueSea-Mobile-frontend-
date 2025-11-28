@@ -582,64 +582,61 @@
 
 
                 
-async function makePayment() {
-    event.preventDefault();
+async function makePaymentFun(){
+       event.preventDefault()
 
-    const pin = document.getElementById("pin").value.trim();
-    // Assuming ENDPOINTS is defined elsewhere and getRequest is a working utility.
-    const userPhoneNum = await getRequest(ENDPOINTS.user);
-    
-    const newNum = "0" + String(userPhoneNum.phone).slice(4); 
-    
-    const payload = {
-        plan: currentPlan.name,
-        billersCode: recipientNumberInput.value,
-        phone_number: "08011111111", // Keeping hardcoded value as per original code
-        transaction_pin: pin
-    };
-
-    showLoader();
-
-    const paymentFeedback = (buy_data) => {
-        if (buy_data.state === false || buy_data.code === "011") {
-            showToast("Data Plan Not Available At The Moment");
-        } else {
-            showToast(buy_data.response_description);
-            cancelPayment();
+        const pin =document.getElementById("pin").value.trim()
+        const userPhoneNum = await getRequest(ENDPOINTS.user);
+        const removeZero = userPhoneNum.phone.slice(4,)
+         let  newNum = "0" + String(removeZero);
+         const payload ={
+                plan: currentPlan.name,
+                billersCode: recipientNumberInput.value,
+                phone_number: "08011111111", //newNum
+                transaction_pin: pin
+            }
+        function paymentFeedback(buy_data){
+        if(buy_data.state === false || buy_data.code === "011"){
+            showToast("Data Plan Not Available At The Moment ")
         }
-    };
-
-    let buy_data;
-    let endpoint;
-
-    switch (currentNetwork) {
-        case "MTN":
-            endpoint = ENDPOINTS.buy_mtn;
-            break;
-        case "Glo":
-            endpoint = ENDPOINTS.buy_glo;
-            break;
-        case "9mobile":
-            endpoint = ENDPOINTS.buy_etisalat;
-            break;
-        case "Airtel":
-            endpoint = ENDPOINTS.buy_airtel;
-            break;
-        default:
-            showToast("Invalid Network");
-            hideLoader();
-            return;
-    }
-
-    // Await the postRequest only once after determining the endpoint
-    try {
-        buy_data = await postRequest(endpoint, payload);
-        paymentFeedback(buy_data);
+        else{
+            showToast(buy_data.response_description);
+      }
+        }
         
-    } catch (error) {
-        showToast("Payment processing failed.");
-    } finally {
-        hideLoader();
-    }
-    
+        if(currentNetwork === "MTN"){
+            
+          const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload)
+          paymentFeedback(buy_data)
+        
+        }
+        else if (currentNetwork === "Glo"){
+            
+          const buy_data = await postRequest(ENDPOINTS.buy_glo, payload)
+          paymentFeedback(buy_data);
+
+        }
+        else if(currentNetwork === "9mobile"){
+            
+          const buy_data = await postRequest(ENDPOINTS.buy_etisalat, payload)
+          paymentFeedback(buy_data)
+
+        }
+        else if (currentNetwork === "Airtel"){
+            
+          const buy_data = await postRequest(ENDPOINTS.buy_airtel, payload)
+          paymentFeedback(buy_data)
+        
+
+        }
+        else{
+            console.log("Invalid Network")
+        };
+ 
+  }
+
+function makePayment(){
+    showLoader();
+    makePaymentFun();
+    hideLoader();
 }
