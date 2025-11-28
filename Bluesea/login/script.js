@@ -505,8 +505,8 @@ async  function SignUpButton() {
 
 async function handleCredentialResponse(response) {
     const idToken = response.credential;
-    
-    let res  =  apiPost(ENDPOINT.oauthGoogle, { id_token: idToken });
+    let redirection_uri = "https://www.blueseamobile.ng.com/Bluesea/dashboard/dashboard.html"
+    let res  =  apiPost(ENDPOINT.oauthGoogle, { id_token: idToken, redirect_uri: redirection_uri });
         if(res.data.success){
         showToast("Login successful. Redirecting...");
         setRefreshToken(res.data.refresh_token, 30);
