@@ -587,10 +587,11 @@ function paymentFeedback(buy_data){
         }
         else if(buy_data.code === "011"){
             showToast("Plan Not Available, Try Again Later...")
+            hideLoader();
         }
         else{
             showToast(buy_data.response_description);
-        
+            hideLoader();
       }
         }                
 async function makePayment(){
@@ -598,9 +599,8 @@ async function makePayment(){
         
         const pin =document.getElementById("pin").value.trim()
         const userPhoneNum = await getRequest(ENDPOINTS.user);
-        const removeZero = userPhoneNum.phone.slice(4,)
-         let  newNum = "0" + String(removeZero);
-         const payload ={
+         let  newNum = "0" + userPhoneNum.phone.slice(4,)
+         let payload ={
                 plan: currentPlan.name,
                 billersCode: recipientNumberInput.value,
                 phone_number: String(newNum),
@@ -609,30 +609,26 @@ async function makePayment(){
         
         
         cancelPayment()
+         showLoader(); 
         if(currentNetwork === "MTN"){
-           showLoader(); 
           const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload);
           paymentFeedback(buy_data);
-          hideLoader();
+          
         
         }
         else if (currentNetwork === "Glo"){
-            showLoader(); 
           const buy_data = await postRequest(ENDPOINTS.buy_glo, payload);
           paymentFeedback(buy_data);
-            hideLoader();
         }
         else if(currentNetwork === "9mobile"){
-            showLoader(); 
+            
           const buy_data = await postRequest(ENDPOINTS.buy_etisalat, payload);
           paymentFeedback(buy_data);
-            hideLoader();
         }
         else if (currentNetwork === "Airtel"){
-            showLoader(); 
+            
           const buy_data = await postRequest(ENDPOINTS.buy_airtel, payload);
           paymentFeedback(buy_data);
-          hideLoader();
         }
         else{
                 showToast("Invalid Network")
