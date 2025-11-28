@@ -228,8 +228,8 @@ function showToast(msg, ms = 8200) {
 
                 
   async function makePayment(){
-        event.preventDefault()
-        const pin =document.getElementById("pin").value.trim()
+        event.preventDefault();
+        const pin =document.getElementById("pin").value.trim();
         
 
            const payload ={
@@ -237,18 +237,17 @@ function showToast(msg, ms = 8200) {
                 network: currentNetwork.toLowerCase() !== "9mobile" ? currentNetwork.toLowerCase() : "etisalat",
                 phone_number: String(currentRecipient),
                 transaction_pin: pin
-            }
+            };
         showLoader();
-          const buy_airtime = await postRequest(ENDPOINTS.buy_airtime, payload)
-          console.log(buy_airtime)
+          const buy_airtime = await postRequest(ENDPOINTS.buy_airtime, payload);
+         
         if(buy_airtime.state === false){
-            showToast(buy_airtime.error)
-            hideLoader()
+            hideLoader();
+            showToast(buy_airtime.error);
         }
         else{
-            console.log(buy_airtime)
-            showToast(buy_airtime.response_description)
-            cancelPayment()
-            hideLoader()
+            cancelPayment();
+            hideLoader();
+            showToast(buy_airtime.response_description);
     }
   }

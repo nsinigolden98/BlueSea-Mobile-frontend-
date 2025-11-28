@@ -603,9 +603,9 @@ async function makePayment(){
             hideLoader();
         }
         else{
+            cancelPayment();
             hideLoader();
-            showToast(buy_data.response_description)
-            cancelPayment()
+            showToast(buy_data.response_description);
       }
         }
         
