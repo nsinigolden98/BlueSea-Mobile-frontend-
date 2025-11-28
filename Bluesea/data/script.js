@@ -581,7 +581,18 @@
 //});
 
 
-                
+function paymentFeedback(buy_data){
+        if(buy_data.state === false){
+            showToast(buy_data.error )
+        }
+        else if(buy_data.code === "011"){
+            showToast("Plan Not Available, Try Again Later...")
+        }
+        else{
+            showToast(buy_data.response_description);
+        
+      }
+        }                
 async function makePayment(){
        event.preventDefault()
         
@@ -595,17 +606,9 @@ async function makePayment(){
                 phone_number: String(newNum),
                 transaction_pin: pin
             }
+        
+        
         cancelPayment()
-        function paymentFeedback(buy_data){
-        if(buy_data.state === false || buy_data.code === "011"){
-            showToast(buy_data.error || buy_data.response_description)
-        }
-        else{
-            showToast(buy_data.response_description);
-        
-      }
-        }
-        
         if(currentNetwork === "MTN"){
            showLoader(); 
           const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload);
