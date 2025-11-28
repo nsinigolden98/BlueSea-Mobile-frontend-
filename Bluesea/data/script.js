@@ -604,8 +604,8 @@ async function makePayment() {
         if (buy_data.state === false || buy_data.code === "011") {
             showToast("Data Plan Not Available At The Moment");
         } else {
-            cancelPayment();
             showToast(buy_data.response_description);
+            cancelPayment();
         }
     };
 
@@ -635,11 +635,10 @@ async function makePayment() {
     try {
         buy_data = await postRequest(endpoint, payload);
         paymentFeedback(buy_data);
+        
     } catch (error) {
-        console.error("Payment request failed:", error);
         showToast("Payment processing failed.");
     } finally {
-        
         hideLoader();
     }
     

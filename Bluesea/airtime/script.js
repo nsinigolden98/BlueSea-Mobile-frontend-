@@ -227,7 +227,7 @@ function showToast(msg, ms = 8200) {
 //});
 
 async function makePayment(event) {
-    event?.preventDefault();
+    event.preventDefault();
 
     const pinInput = document.getElementById("pin");
     const pin = pinInput?.value.trim();
@@ -262,8 +262,8 @@ async function makePayment(event) {
         if (buy_airtime.state === false) {
             showToast(buy_airtime.error || "An unknown error occurred during payment.");
         } else {
-            cancelPayment();
             showToast(buy_airtime.response_description || "Payment successful!");
+            cancelPayment();
         }
     } catch (error) {
         showToast("A connection error occurred. Please try again.");
