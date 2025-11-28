@@ -520,8 +520,8 @@ function handleCredentialResponse(response) {
                      showToast("Login successful. Redirecting...");
                      setRefreshToken(data.refresh_token, 30);
                     setAccessToken(data.access_token, 30);
-                    window.parent.location.replace("../dashboard/dashboard.html"); 
-                   // console.log('Login successful')
+                   ; 
+                  showToast('Login successful')
                 }
             })
             .catch(error => console.error('Error:', error))
