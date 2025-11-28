@@ -507,12 +507,12 @@ async function handleCredentialResponse(response) {
     const idToken = response.credential;
     const redirect_uri = "https://www.blueseamobile.ng.com/Bluesea/dashboard/dashboard.html";
     
-    let res  = await apiPost(ENDPOINT.oauthGoogle, { id_token: idToken, redirect_uri: redirect_uri });
+    let res  = await apiPost(ENDPOINT.oauthGoogle, { id_token: idToken });
         if(res.data.success){
         showToast("Login successful. Redirecting...");
         setRefreshToken(res.data.refresh_token, 30);
         setAccessToken(res.data.access_token, 30);   
-        window.parent.location.replace("https://www.blueseamobile.ng.com/Bluesea/dashboard/dashboard.html");
+        window.parent.location.replace("../dashboard/dashboard.html");
         }
         else{
         window.parent.location.replace("https://www.blueseamobile.ng.com");
