@@ -229,11 +229,10 @@ function showToast(msg, ms = 8200) {
 async function makePayment(){
         const pin =document.getElementById("pin").value.trim();
         
-
            const payload ={
                 amount: String(currentAmount),
                 network: currentNetwork.toLowerCase() !== "9mobile" ? currentNetwork.toLowerCase() : "etisalat",
-                phone_number: String(currentRecipient),
+                phone_number: String(08011111111),//String(currentRecipient),
                 transaction_pin: pin
             };
         showLoader();
