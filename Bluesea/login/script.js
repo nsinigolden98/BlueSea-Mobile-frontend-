@@ -511,7 +511,6 @@ async function handleCredentialResponse(response) {
         showToast("Login successful. Redirecting...");
         setRefreshToken(res.data.refresh_token, 30);
         setAccessToken(res.data.access_token, 30);   
-        window.parent.location.replace("https://www.blueseamobile.ng.com/Bluesea/dashboard/dashboard.html");
         }
         else{
         window.parent.location.replace("https://www.blueseamobile.ng.com");
