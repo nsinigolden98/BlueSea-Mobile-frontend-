@@ -509,10 +509,10 @@ async function handleCredentialResponse(response) {
     
     let res  = await apiPost(ENDPOINT.oauthGoogle, { id_token: idToken });
         if(res.data.success){
-        showToast("Login successful. Redirecting...");
+        //showToast("Login successful. Redirecting...");
+        showToast(res.data.refresh_token)
         setRefreshToken(res.data.refresh_token, 30);
         setAccessToken(res.data.access_token, 30);   
-       //  window.parent.location.replace("../dashboard/dashboard.html");
         window.parent.location.href = redirect_uri;
         }
         else{
