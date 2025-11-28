@@ -584,7 +584,7 @@
                 
                 
 async function makePayment(){
-       // event.preventDefault()
+       event.preventDefault()
 
         const pin =document.getElementById("pin").value.trim()
         const userPhoneNum = await getRequest(ENDPOINTS.user);
@@ -599,15 +599,14 @@ async function makePayment(){
         showLoader();
         function paymentFeedback(buy_data){
         if(buy_data.state === false || buy_data.code === "011"){
-          //  showToast(buy_data.error)
             showToast("Data Plan Not Available At The Moment ")
+            hideLoader();
         }
         else{
-            
+            hideLoader();
             showToast(buy_data.response_description)
             cancelPayment()
       }
-      hideLoader();
         }
         
         if(currentNetwork === "MTN"){
