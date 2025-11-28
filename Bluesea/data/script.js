@@ -600,34 +600,34 @@ async function makePaymentData(){
         const pin =document.getElementById("pin").value.trim()
         const userPhoneNum = await getRequest(ENDPOINTS.user);
          let  newNum = "0" + userPhoneNum.phone.slice(4,)
-         showToast(newNum)
+         let buy_data;
          let payload ={
                 plan: currentPlan.name,
                 billersCode: recipientNumberInput.value,
-                phone_number: newNum,
+                phone_number: "08011111111",  //newNum
                 transaction_pin: pin
             }
         
         
         cancelPaymentData()
-        // showLoader(); 
+        showLoader(); 
         if(currentNetwork === "MTN"){
-          const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload);
+           buy_data = await postRequest(ENDPOINTS.buy_mtn, payload);
           paymentFeedback(buy_data)
           
         }
         else if (currentNetwork === "Glo"){
-          const buy_data = await postRequest(ENDPOINTS.buy_glo, payload);
+           buy_data = await postRequest(ENDPOINTS.buy_glo, payload);
           paymentFeedback(buy_data);
         }
         else if(currentNetwork === "9mobile"){
             
-          const buy_data = await postRequest(ENDPOINTS.buy_etisalat, payload);
+          buy_data = await postRequest(ENDPOINTS.buy_etisalat, payload);
           paymentFeedback(buy_data);
         }
         else if (currentNetwork === "Airtel"){
             
-          const buy_data = await postRequest(ENDPOINTS.buy_airtel, payload);
+          buy_data = await postRequest(ENDPOINTS.buy_airtel, payload);
           paymentFeedback(buy_data);
         }
         else{
