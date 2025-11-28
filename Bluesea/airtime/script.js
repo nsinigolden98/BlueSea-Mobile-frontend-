@@ -227,7 +227,6 @@ function showToast(msg, ms = 8200) {
 //});
 
 async function makePayment(){
-        event.preventDefault();
         const pin =document.getElementById("pin").value.trim();
         
 
