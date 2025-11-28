@@ -598,7 +598,7 @@ async function makePayment(){
         
         function paymentFeedback(buy_data){
         if(buy_data.state === false || buy_data.code === "011"){
-            showToast("Data Plan Not Available At The Moment ")
+            showToast(buy_data.error || buy_data.response_description)
         }
         else{
             showToast(buy_data.response_description);
