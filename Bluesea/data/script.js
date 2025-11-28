@@ -602,7 +602,7 @@ async function makePayment(){
         }
         else{
             showToast(buy_data.response_description);
-            window.reload()
+            
       }
         }
         

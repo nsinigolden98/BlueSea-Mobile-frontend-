@@ -241,12 +241,11 @@ async function makePayment(){
           const buy_airtime = await postRequest(ENDPOINTS.buy_airtime, payload);
          
         if(buy_airtime.state === false){
-            hideLoader();
-            showToast(buy_airtime.error);
+            showToast(buy_airtime.error)
+            hideLoader()
         }
         else{
-            hideLoader();
-            showToast(buy_airtime.response_description);
-            window.reload()
+            showToast(buy_airtime.response_description)
+            hideLoader()
     }
   }
