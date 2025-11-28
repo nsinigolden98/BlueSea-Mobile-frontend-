@@ -506,16 +506,15 @@ async  function SignUpButton() {
 async function handleCredentialResponse(response) {
     const idToken = response.credential;
     
-    
-    const res  =  apiPost(ENDPOINT.oauthGoogle, { id_token: idToken })
+    let res  =  apiPost(ENDPOINT.oauthGoogle, { id_token: idToken });
         if(res.data.success){
         showToast("Login successful. Redirecting...");
         setRefreshToken(res.data.refresh_token, 30);
         setAccessToken(res.data.access_token, 30);   
-        window.parent.location.replace("../dashboard/dashboard.html");
+        window.parent.location.replace("https://www.blueseamobile.ng.com/Bluesea/dashboard/dashboard.html");
         }
         else{
-        window.parent.location.replace("../../index.html");
+        window.parent.location.replace("https://www.blueseamobile.ng.com");
             
         }
 
