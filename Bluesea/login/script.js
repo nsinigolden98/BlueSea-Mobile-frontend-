@@ -512,10 +512,11 @@ async function handleCredentialResponse(response) {
         showToast("Login successful. Redirecting...");
         setRefreshToken(res.data.refresh_token, 30);
         setAccessToken(res.data.access_token, 30);   
-        window.parent.location.replace("../dashboard/dashboard.html");
+       //  window.parent.location.replace("../dashboard/dashboard.html");
+        window.parent.location.href = redirect_uri;
         }
         else{
-        window.parent.location.replace("https://www.blueseamobile.ng.com");
+        window.parent.location.href  = "https://www.blueseamobile.ng.com";
             
         }
 ;
