@@ -246,6 +246,6 @@ async function makePayment(){
         else{
             showToast(buy_airtime.response_description)
             hideLoader()
-           window.parent.location.replace(window.parent.loaction.href)
+           window.parent.location.replace(window.parent.location.href)
     }
   }
