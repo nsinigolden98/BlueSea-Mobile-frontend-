@@ -27,6 +27,9 @@ async function fund(){
     window.location.href = response.authorization_url;
     //hideLoader()
 };
+window.addEventListener('load', function(event) {
+ showLoader();
+});
 
 async function withdraw() {
 
