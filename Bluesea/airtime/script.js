@@ -232,7 +232,7 @@ async function makePayment(){
            const payload ={
                 amount: String(currentAmount),
                 network: currentNetwork.toLowerCase() !== "9mobile" ? currentNetwork.toLowerCase() : "etisalat",
-                phone_number: String(08011111111),//String(currentRecipient),
+                phone_number: String(currentRecipient),
                 transaction_pin: pin
             };
         cancelPayment()

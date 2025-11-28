@@ -592,17 +592,17 @@ async function makePayment(){
          const payload ={
                 plan: currentPlan.name,
                 billersCode: recipientNumberInput.value,
-                phone_number: "08011111111", //newNum
+                phone_number: String(newNum),
                 transaction_pin: pin
             }
-        
+        cancelPayment()
         function paymentFeedback(buy_data){
         if(buy_data.state === false || buy_data.code === "011"){
             showToast(buy_data.error || buy_data.response_description)
         }
         else{
             showToast(buy_data.response_description);
-        window.parent.location.replace(window.parent.location.href)
+        
       }
         }
         
