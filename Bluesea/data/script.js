@@ -582,9 +582,9 @@
 
 
                 
-async function makePaymentFun(){
+async function makePayment(){
        event.preventDefault()
-
+        
         const pin =document.getElementById("pin").value.trim()
         const userPhoneNum = await getRequest(ENDPOINTS.user);
         const removeZero = userPhoneNum.phone.slice(4,)
@@ -595,6 +595,7 @@ async function makePaymentFun(){
                 phone_number: "08011111111", //newNum
                 transaction_pin: pin
             }
+        
         function paymentFeedback(buy_data){
         if(buy_data.state === false || buy_data.code === "011"){
             showToast("Data Plan Not Available At The Moment ")
@@ -605,38 +606,33 @@ async function makePaymentFun(){
         }
         
         if(currentNetwork === "MTN"){
-            
-          const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload)
-          paymentFeedback(buy_data)
+           showLoader(); 
+          const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload);
+          paymentFeedback(buy_data);
+          hideLoader();
         
         }
         else if (currentNetwork === "Glo"){
-            
-          const buy_data = await postRequest(ENDPOINTS.buy_glo, payload)
+            showLoader(); 
+          const buy_data = await postRequest(ENDPOINTS.buy_glo, payload);
           paymentFeedback(buy_data);
-
+            hideLoader();
         }
         else if(currentNetwork === "9mobile"){
-            
-          const buy_data = await postRequest(ENDPOINTS.buy_etisalat, payload)
-          paymentFeedback(buy_data)
-
+            showLoader(); 
+          const buy_data = await postRequest(ENDPOINTS.buy_etisalat, payload);
+          paymentFeedback(buy_data);
+            hideLoader();
         }
         else if (currentNetwork === "Airtel"){
-            
-          const buy_data = await postRequest(ENDPOINTS.buy_airtel, payload)
-          paymentFeedback(buy_data)
-        
-
+            showLoader(); 
+          const buy_data = await postRequest(ENDPOINTS.buy_airtel, payload);
+          paymentFeedback(buy_data);
+          hideLoader();
         }
         else{
-            console.log("Invalid Network")
+                showToast("Invalid Network")
         };
  
   }
 
-function makePayment(){
-    showLoader();
-    makePaymentFun();
-    hideLoader();
-}
