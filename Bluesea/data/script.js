@@ -513,7 +513,7 @@
         } 
     });
     
-   function cancelPayment(){
+   function cancelPaymentData(){
        event.preventDefault()
         document.getElementById("pin-creation-step").style.display = 'none';
         document.getElementById("buy-data-form").style.opacity = '1';
@@ -594,27 +594,27 @@ function paymentFeedback(buy_data){
             hideLoader();
       }
         }                
-async function makePayment(){
+async function makePaymentData(){
        event.preventDefault()
         
         const pin =document.getElementById("pin").value.trim()
         const userPhoneNum = await getRequest(ENDPOINTS.user);
          let  newNum = "0" + userPhoneNum.phone.slice(4,)
+         showToast(newNum)
          let payload ={
                 plan: currentPlan.name,
                 billersCode: recipientNumberInput.value,
-                phone_number: String(newNum),
+                phone_number: newNum,
                 transaction_pin: pin
             }
         
         
-        cancelPayment()
-         showLoader(); 
+        cancelPaymentData()
+        // showLoader(); 
         if(currentNetwork === "MTN"){
           const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload);
-          paymentFeedback(buy_data);
+          paymentFeedback(buy_data)
           
-        
         }
         else if (currentNetwork === "Glo"){
           const buy_data = await postRequest(ENDPOINTS.buy_glo, payload);
