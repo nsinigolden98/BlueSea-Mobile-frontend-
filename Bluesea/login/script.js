@@ -80,7 +80,7 @@ function closeModal(){
 
  // Domain base; update if your API is at another subdomain
  const API_BASE = "https://notepad-one-wheat.vercel.app"; // <--- change if needed
-//let API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
+ //let API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
 
 let ENDPOINT = {
     login: `${API_BASE}/accounts/login/`,
