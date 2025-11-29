@@ -5,7 +5,6 @@ function deposit() {
     document.getElementById("page_inner").style.opacity = "0.3";
 }
 
-let error =  document.getElementById("error-amount");
 
 function cancel() {
     document.getElementById("page_inner").style.opacity = "1";
@@ -14,6 +13,7 @@ function cancel() {
 }
 
 async function fund(){
+    let error =  document.getElementById("error-amount");
     let amount = document.getElementById("deposit-input").value.trim();
     let valid = true;
     if (Number(amount) < 100){
@@ -28,6 +28,9 @@ async function fund(){
     //hideLoader()
 };
 
+document.getElementById('deposit-input').addEventListener('input', e => 
+  e.target.value = e.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+);
 async function withdraw() {
 
 }
