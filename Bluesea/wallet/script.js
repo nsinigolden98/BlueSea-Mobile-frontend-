@@ -23,7 +23,7 @@ async function fund(){
     if (!valid) return;
     showLoader();
     error.textContent = "";
-    const response = await postRequest(ENDPOINTS.fund, {amount: Number(amount)});
+    const response = await postRequest(ENDPOINTS.fund, {amount: Number(amount.replace(/,/g, ""))});
     window.parent.location.href = response.authorization_url;
     //hideLoader()
 };
