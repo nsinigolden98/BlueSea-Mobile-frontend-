@@ -601,13 +601,11 @@ async function makePayment(){
        event.preventDefault()
         
         const pin =document.getElementById("pin").value.trim()
-        const userPhoneNum = await getRequest(ENDPOINTS.user);
-         let  newNum = "0" + userPhoneNum.phone.slice(4,)
         
          let payload ={
                 plan: currentPlan.name,
                 billersCode: recipientNumberInput.value,
-                phone_number: recipientNumberInput.value,  //newNum
+                phone_number: recipientNumberInput.value,  
                 transaction_pin: pin
             }
     

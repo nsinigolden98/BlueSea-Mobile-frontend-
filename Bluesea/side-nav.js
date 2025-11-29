@@ -132,6 +132,7 @@ async function getUserNav() {
     const user = await getRequest(ENDPOINTS.user);
     // Side nav
     document.getElementById("profile_name").textContent = user.other_names;
+    document.getElementById("avatar_img").src = user.image;
     document.getElementById("profile_email").textContent = user.email;
     
 
