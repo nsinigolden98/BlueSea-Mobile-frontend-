@@ -4,5 +4,6 @@ async function getUser() {
     document.getElementById("email").textContent = user.email;
     document.getElementById("full_name").textContent = user.surname + " " +user.other_names;
     document.getElementById("phone_number").textContent = user.phone;
+    document.getElementById("user_image").src = user.image;
 }
  getUser();

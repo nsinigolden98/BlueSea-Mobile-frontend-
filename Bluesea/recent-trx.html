@@ -86,7 +86,7 @@
     let count = histories.count
     
     let tbody = document.getElementById("transactions_body");
-  //  tbody.innerHTML = '';
+    if (count > 0){
     for(let i = 0; i<= 5; i++){
         let  description = history[i].description
         let  time = getDate(history[i].created_at.slice(0,10))
@@ -111,6 +111,10 @@
         row.appendChild(cellTwo);
         row.appendChild(cellThree);
         tbody.appendChild(row);
+        hideLoader()
+    }
+    }
+    else{
         hideLoader()
     }
     

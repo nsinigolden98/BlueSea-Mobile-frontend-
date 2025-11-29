@@ -226,29 +226,27 @@ function showToast(msg, ms = 8200) {
     updateSummary(); 
 //});
 
-                
-  async function makePayment(){
-        event.preventDefault()
-        const pin =document.getElementById("pin").value.trim()
-        
-
+async function makePayment(){
+        const pin =document.getElementById("pin").value.trim();
+        cancelPayment()
            const payload ={
                 amount: String(currentAmount),
                 network: currentNetwork.toLowerCase() !== "9mobile" ? currentNetwork.toLowerCase() : "etisalat",
                 phone_number: String(currentRecipient),
                 transaction_pin: pin
-            }
+            };
+        cancelPayment()
         showLoader();
-          const buy_airtime = await postRequest(ENDPOINTS.buy_airtime, payload)
-          console.log(buy_airtime)
+          const buy_airtime = await postRequest(ENDPOINTS.buy_airtime, payload);
+         
         if(buy_airtime.state === false){
             showToast(buy_airtime.error)
             hideLoader()
         }
         else{
-            console.log(buy_airtime)
+            
             showToast(buy_airtime.response_description)
-            cancelPayment()
             hideLoader()
+           
     }
   }

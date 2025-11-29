@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async function() {
        }
         
         const set_pin = await postRequest(ENDPOINTS.pin_set, payload);
-        console.log(set_pin)
+        
         showToast(set_pin.message)
         
         if(set_pin.state === true){

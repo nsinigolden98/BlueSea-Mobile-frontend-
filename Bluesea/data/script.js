@@ -195,7 +195,7 @@
     if (!t) { alert(msg); return; }
     t.textContent = msg;
     t.hidden = false;
-    t.style.opacity = 1;
+    t.style.opacity = "1";
     clearTimeout(t._hideTO);
     t._hideTO = setTimeout(() => { t.hidden = true; }, ms);
   }
@@ -581,67 +581,57 @@
 //});
 
 
-                
-                
-async function makePayment(){
-        event.preventDefault()
-
-        const pin =document.getElementById("pin").value.trim()
-        const userPhoneNum = await getRequest(ENDPOINTS.user);
-        const removeZero = userPhoneNum.phone.slice(4,)
-         let  newNum = "0" + String(removeZero);
-         const payload ={
-                plan: currentPlan.name,
-                billersCode: recipientNumberInput.value,
-                phone_number: "08011111111", //newNum
-                transaction_pin: pin
-            }
-        showLoader();
-        function paymentFeedback(buy_data){
-        if(buy_data.state === false || buy_data.code === "011"){
-          //  showToast(buy_data.error)
-            showToast("Data Plan Not Available At The Moment ")
+function paymentFeedback(buy_data){
+        hideLoader();
+        document.getElementById("pin-creation-step").style.display = 'none';
+        document.getElementById("buy-data-form").style.opacity = '1';
+        document.getElementById("pin").value = "";
+        
+        if(buy_data.state === false){
+            showToast(buy_data.error )
+        }
+        else if(buy_data.code === "011"){
+            showToast("Plan Not Available, Try Again Later...")
         }
         else{
-            
-            showToast(buy_data.response_description)
-            cancelPayment()
+            showToast(buy_data.response_description);
       }
-        }
+        }                
+async function makePayment(){
+       event.preventDefault()
         
-        if(currentNetwork === "MTN"){
-            
-          const buy_data = await postRequest(ENDPOINTS.buy_mtn, payload)
+        const pin =document.getElementById("pin").value.trim()
+        
+         let payload ={
+                plan: currentPlan.name,
+                billersCode: recipientNumberInput.value,
+                phone_number: recipientNumberInput.value,  
+                transaction_pin: pin
+            }
+    
+       showLoader(); 
+    if(currentNetwork === "MTN"){
+       let  buy_data = await postRequest(ENDPOINTS.buy_mtn, payload);
           paymentFeedback(buy_data)
-          hideLoader();
-        
+          
         }
         else if (currentNetwork === "Glo"){
-            
-          const buy_data = await postRequest(ENDPOINTS.buy_glo, payload)
-          paymentFeedback(buy_data)
-          hideLoader();
-
+          let  buy_data = await postRequest(ENDPOINTS.buy_glo, payload);
+          paymentFeedback(buy_data);
         }
         else if(currentNetwork === "9mobile"){
             
-          const buy_data = await postRequest(ENDPOINTS.buy_etisalat, payload)
-          paymentFeedback(buy_data)
-          hideLoader();
-
+        let  buy_data = await postRequest(ENDPOINTS.buy_etisalat, payload);
+          paymentFeedback(buy_data);
         }
         else if (currentNetwork === "Airtel"){
             
-          const buy_data = await postRequest(ENDPOINTS.buy_airtel, payload)
-          paymentFeedback(buy_data)
-          hideLoader();
-        
-
+        let buy_data = await postRequest(ENDPOINTS.buy_airtel, payload);
+          paymentFeedback(buy_data);
         }
         else{
-            console.log("Invalid Network")
-            hideLoader();
-
-        };
+                showToast("Invalid Network")
+        } 
  
   }
+

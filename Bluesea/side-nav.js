@@ -6,6 +6,7 @@ getUserNav();
 getBalanace();
  })    
 
+// let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
 let API_BASE = "https://notepad-one-wheat.vercel.app"; // from Postman collection
 
 function getCookie(name) {
@@ -131,6 +132,7 @@ async function getUserNav() {
     const user = await getRequest(ENDPOINTS.user);
     // Side nav
     document.getElementById("profile_name").textContent = user.other_names;
+    document.getElementById("avatar_img").src = user.image;
     document.getElementById("profile_email").textContent = user.email;
     
 
@@ -158,31 +160,29 @@ function closeNavBody() {
     }
 }
 
+
 // PROTECTED PAGE GUARD – Works perfectly with your cookie setup
 (() => {
     function isLoggedIn() {
         const token = getCookie("accessToken");
         const refresh_token = getCookie("refreshToken");
-        return (token || refresh_token);  // true if at least one exists
+        return !!(token || refresh_token);  // true if at least one exists
     }
 
     function redirectToLogin() {
         // Use replace() so user can't go back to this page
-        let currentPage = window.parent.location.href;
-        if(currentPage.includes("/dashboard")){
-            window.parent.location.replace(currentPage);
-        }
-        else{
-        window.parent.location.replace(document.referrer);
-        }
+        window.location.replace("../login/login.html");
     }
 
     // This fires on EVERY page view — including back/forward button!
     window.addEventListener("pageshow", (event) => {
-        if (event.persisted && isLoggedIn()) {
+        if (event.persisted || !isLoggedIn()) {
             redirectToLogin();
         }
     });
 
-
-})();
+    // Also protect normal page loads/refresh
+    if (!isLoggedIn()) {
+        redirectToLogin();
+    }
+})

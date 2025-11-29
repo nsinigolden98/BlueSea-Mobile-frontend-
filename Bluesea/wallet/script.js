@@ -21,12 +21,15 @@ async function fund(){
         valid = false;
     }
     if (!valid) return;
-    showLoader()
+    showLoader();
     error.textContent = "";
     const response = await postRequest(ENDPOINTS.fund, {amount: Number(amount)});
     window.location.href = response.authorization_url;
     //hideLoader()
 };
+window.addEventListener('load', function(event) {
+ showLoader();
+});
 
 async function withdraw() {
 
