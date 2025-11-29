@@ -258,7 +258,7 @@ body{
       else if (dir.includes("airtime")) {
            airtime.classList.add("menu_item-active");
         }
-        const full_screen_size = window.parent.matchMedia('(max-width: 768px)').matches;
+        const full_screen_size = window.parent.matchMedia('(min-width: 768px)').matches;
         if(full_screen_size){
             document.getElementById("close_nav_btn").style.display = "none";
         }
