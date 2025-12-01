@@ -327,8 +327,8 @@ safeAdd(form_login, "submit", async (ev) => {
     const res = await apiPost(ENDPOINT.login, { email: identifier,password: password});
        if(res.data.user.email_verified){
          showToast("Login successful. Redirecting...");
-         setRefreshToken(res.data.refresh_token, 30);
-         setAccessToken(res.data.access_token, 30);
+         setRefreshToken(res.data.refresh_token, 1);
+         setAccessToken(res.data.access_token, 1);
           document.getElementById("loader").style.display = "none";
             window.parent.location.replace("../dashboard/dashboard.html"); 
       }  
@@ -506,12 +506,12 @@ async  function SignUpButton() {
 async function handleCredentialResponse(response) {
     const idToken = response.credential;
     const redirect_uri = "https://www.blueseamobile.com.ng/Bluesea/dashboard/dashboard.html";
-    
-    let res  = await apiPost(ENDPOINT.oauthGoogle, { id_token: idToken });
+    let res  = await apiPost(ENDPOINT.oauthGoogle, { id_token: idToken,redirect_uri });
         if(res.data.success){
+         document.getElementById("loader").style.display = "none";
         showToast("Login successful. Redirecting...");
-        setRefreshToken(res.data.refresh_token, 30);
-        setAccessToken(res.data.access_token, 30);   
+        setRefreshToken(res.data.refresh_token, 1);
+        setAccessToken(res.data.access_token, 1);   
         window.location.href = redirect_uri;
         }
         else{

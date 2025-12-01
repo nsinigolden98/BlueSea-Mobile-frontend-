@@ -260,4 +260,11 @@ body{
   .features-grid{grid-template-columns:1fr}
   .partners-grid{grid-template-columns:1fr}
   .testimonials-track{animation-duration:22s}
+  .trust-grid{
+  display:block;
+  gap:16px;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:18px;
+  }
 }

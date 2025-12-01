@@ -57,7 +57,9 @@
               </div> -->
             </section>
             
-                <iframe src="../recent-trx.html" id="transaction_list" onclick="closeNavBody()"></iframe>
+               <iframe src="../recent-trx.html" id="transaction_list" onclick="closeNavBody()"></iframe>
+               
+             <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
             <!-- Recipient Account (visible when adding) -->
             <section class="recipient_wrap" id="recipient_wrap" aria-hidden="true">
               <div class="card recipient_card" id="recipient_card" role="region" aria-labelledby="recipient_title">
@@ -186,13 +188,6 @@
             <button id="confirm_recheck" class="btn btn_secondary">Recheck</button>
             <button id="confirm_continue" class="btn btn_primary">Continue</button>
           </div>
-        </div>
-      </div>
-
-      <div id="loader" class="loader" aria-hidden="true" aria-live="polite">
-        <div class="loader_inner">
-          <div class="spinner" role="status" aria-hidden="true"></div>
-          <div class="loader_text">Loading…</div>
         </div>
       </div>
 

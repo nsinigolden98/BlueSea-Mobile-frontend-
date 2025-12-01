@@ -153,7 +153,6 @@ function closeNav() {
 }
 
 function closeNavBody() {
-   
     const screen_size = window.matchMedia('(max-width: 768px)').matches;
     if(document.getElementById("side-bar").style.display === 'block' && screen_size  ){
         document.getElementById("side-bar").style.display = 'none';

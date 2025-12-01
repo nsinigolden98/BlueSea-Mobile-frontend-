@@ -5,7 +5,6 @@ function deposit() {
     document.getElementById("page_inner").style.opacity = "0.3";
 }
 
-let error =  document.getElementById("error-amount");
 
 function cancel() {
     document.getElementById("page_inner").style.opacity = "1";
@@ -14,6 +13,7 @@ function cancel() {
 }
 
 async function fund(){
+    let error =  document.getElementById("error-amount");
     let amount = document.getElementById("deposit-input").value.trim();
     let valid = true;
     if (Number(amount) < 100){
@@ -23,14 +23,14 @@ async function fund(){
     if (!valid) return;
     showLoader();
     error.textContent = "";
-    const response = await postRequest(ENDPOINTS.fund, {amount: Number(amount)});
-    window.location.href = response.authorization_url;
+    const response = await postRequest(ENDPOINTS.fund, {amount: Number(amount.replace(/,/g, ""))});
+    window.parent.location.href = response.authorization_url;
     //hideLoader()
 };
-window.addEventListener('load', function(event) {
- showLoader();
-});
 
+document.getElementById('deposit-input').addEventListener('input', e => 
+  e.target.value = e.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+);
 async function withdraw() {
 
 }
