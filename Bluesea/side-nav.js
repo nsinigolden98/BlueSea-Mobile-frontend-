@@ -49,6 +49,7 @@ let refresh_token = getCookie("refreshToken");
     buy_mtn: `${API_BASE}/payments/mtn-data/`,
     buy_glo: `${API_BASE}/payments/glo-data/`,
     buy_etisalat: `${API_BASE}/payments/etisalat-data/`,
+    account_name: `${API_BASE}/transactions/account-name/`,
     logout: `${API_BASE}/accounts/logout/`,
   };
    
