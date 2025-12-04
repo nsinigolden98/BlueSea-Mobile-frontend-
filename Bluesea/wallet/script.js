@@ -208,7 +208,7 @@ function selectBank(){
   const listItems = document.getElementsByTagName('li')
   const bank_output = document.getElementById('bank-output')
 
-  const account_number = document.getElementById('account-input').value.trim();
+  const account_number = document.getElementById('account-input');
 
   const bankKeys = Object.keys(BANK_LIST)
    const account_helper = document.getElementById('account_helper')
@@ -216,17 +216,18 @@ function selectBank(){
   for(let i = 1; i < listItems.length; i++){
     listItems[i].addEventListener("click", ()=>{
       
-      showLoader()
+      
+      account_helper.textContent = ""
       let bank_code= BANK_LIST[bankKeys[i]].cbnCode;
       document.getElementById("bank-list").value  = '';
       let bank_name = listItems[i].textContent  
      bank_output.textContent = "Recipient Bank: "  + bank_name
        document.getElementById('optionsList').style.display ="none" ; 
-      if(account_number.length > 9){
-        
-        accountName(account_number,bank_code)
+      if(account_number.value.length > 9){
+        accountName(account_number.value,bank_code)
       }
       else{
+        bank_output.textContent = ""
           account_helper.textContent = "Input your account number";
       }
     })
@@ -236,6 +237,7 @@ selectBank()
 
 
 async function accountName(account_number, bank_code) {
+    showLoader();
     const name_output = document.getElementById('name-output')
     const payload = {
         account_number,
@@ -243,7 +245,8 @@ async function accountName(account_number, bank_code) {
     }
     const response = await postRequest(ENDPOINTS.account_name, payload)
     
-    name_output.textContent = "Recipient Name: " + typeof(response.account_name)
+    name_output.textContent = "Recipient Name: " + response.account_name
+    hideLoader()
 }
 
 function recipientNext(){
