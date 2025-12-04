@@ -155,7 +155,7 @@
 .options-list{
   display: none;
   max-height: 200px;
-  overflow: scroll;
+  overflow-y: scroll;
   padding: 0;
 }
 li {
