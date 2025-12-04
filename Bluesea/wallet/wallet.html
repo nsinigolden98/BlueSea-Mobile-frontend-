@@ -48,7 +48,8 @@
                 <div class="balance_value" id="balance_value" >******</div>
                 <div class="balance_actions">
                   <button class="btn btn_primary btn_deposit" id="deposit_btn" onclick="deposit()">Deposit</button>
-                  <button class="btn btn_primary btn_withdraw" id="withdraw_btn" >Withdraw</button>
+                <button class="btn btn_primary btn_withdraw" id="withdraw_btn" 
+                onclick="withdraw()">Withdraw</button>
                 </div>
               </div>
 
@@ -60,47 +61,8 @@
                <iframe src="../recent-trx.html" id="transaction_list" onclick="closeNavBody()"></iframe>
                
              <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
-            <!-- Recipient Account (visible when adding) -->
-            <section class="recipient_wrap" id="recipient_wrap" aria-hidden="true">
-              <div class="card recipient_card" id="recipient_card" role="region" aria-labelledby="recipient_title">
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                  <h3 id="recipient_title" class="card_title">Recipient Account</h3>
-                </div>
 
-                <div class="form_row">
-                  <label for="account_input" class="form_label">Account Number</label>
-                  <input id="account_input" class="input" placeholder="Enter 10 digits Account Number" inputmode="numeric" autocomplete="off" maxlength="12" />
-                  <div id="account_helper" class="helper_text" aria-live="polite"></div>
-                </div>
-
-                <div class="form_row">
-                  <label class="form_label">Bank</label>
-
-                  <!-- Dropdown bank selector (searchable) -->
-                  <div class="bank_dropdown" id="bank_dropdown" aria-haspopup="listbox">
-                    <button id="bank_toggle" class="bank_toggle" aria-expanded="false" aria-controls="bank_list">
-                      <div class="bank_toggle_inner">
-                        <div id="bank_selected" class="bank_selected">
-                          <div class="bank-logo small" aria-hidden="true"></div>
-                          <span class="bank-name">Select bank</span>
-                        </div>
-                        <div class="bank_toggle_chev" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9l6 6 6-6"></path></svg>
-                        </div>
-                      </div>
-                    </button>
-
-                    <div id="bank_list" class="bank_list" role="listbox" tabindex="-1" aria-hidden="true">
-                      <!-- search input will be injected by JS to allow typing -->
-                    </div>
-                  </div>
-                </div>
-
-                <div class="actions_row_small" style="margin-top:10px;">
-                  <button id="recipient_next" class="btn btn_primary" disabled>Next</button>
-                </div>
-              </div>
-            </section>
+        
 
             <!-- Withdraw confirm card (slides in below recipient; both can be visible simultaneously) -->
             <section class="withdraw_wrap" id="withdraw_wrap" aria-hidden="true">
@@ -137,6 +99,33 @@
             </section>
 
           </div>
+
+              <div class="card recipient_card" id="recipient_card" >
+                <div>
+                  <h3 ">Recipient Account</h3>
+                </div>
+
+                <div class="form_row">
+                  <label for="account_input" class="form_label">Account Number</label><br>
+                  <input id="account-input" class="account-input" placeholder="Enter  Account Number" inputmode="numeric" autocomplete="off" maxlength="10" />
+                  <div id="account_helper" class="helper-text" aria-live="polite"></div>
+                </div>
+
+                <div class="form_row">
+                  <label class="form_label" for="bank_list">Bank</label><br>
+                 <input type="text" name="bank_list" id="bank-list" placeholder="Search for bank" class="bank-list"
+                 >
+                 <ul id="optionsList"  class="options-list">
+                 </ul>
+                 <div id="bank_helper" class="helper-text" aria-live="polite"></div>
+                </div>
+
+              <div class="actions_row_small" style="margin-top:10px;">
+                  <button id="recipient_next" class="btn btn_primary" onclick="recipientNext()">Next</button>
+
+                  <button class="btn btn_primary" onclick="cancel('recipient_card')"> Cancel</button>
+                </div>
+              </div>
           <div class = "deposit-modal" id = "deposit-modal">
           <label for="deposit-amount"> Amount</label>
           <input type="text" inputmode="numeric" placeholder="Enter amount"  id="deposit-input" class="deposit-input" maxlength="10">
@@ -145,8 +134,8 @@
           </div>
           <div class="deposit-modal-btn" id="deposit-modal-btn">
               
-          <button class="btn btn_primary" onclick="fund()"> Confirm</button>
-          <button class="btn btn_primary" onclick="cancel()"> Cancel</button>
+          <button class="btn btn_primary" onclick="fund()">Confirm</button>
+          <button class="btn btn_primary" onclick="cancel('deposit-modal')">Cancel</button>
           </div>
           
       </div>

@@ -1,15 +1,152 @@
 'use strict';
 
-function deposit() {
+const BANK_LIST = {
+  // --- Commercial Banks (Keys use simple names) ---
+  "AccessBank": {
+    "name": "Access Bank",
+    "cbnCode": "044",
+    "category": "COMMERCIAL"
+  },
+  "ZenithBank": {
+    "name": "Zenith Bank",
+    "cbnCode": "057",
+    "category": "COMMERCIAL"
+  },
+  "GTBank": {
+    "name": "Guaranty Trust Bank",
+    "cbnCode": "058",
+    "category": "COMMERCIAL"
+  },
+  "FirstBank": {
+    "name": "First Bank of Nigeria",
+    "cbnCode": "011",
+    "category": "COMMERCIAL"
+  },
+  "UBA": {
+    "name": "United Bank For Africa",
+    "cbnCode": "033",
+    "category": "COMMERCIAL"
+  },
+  "WemaBank": {
+    "name": "Wema Bank",
+    "cbnCode": "035",
+    "category": "COMMERCIAL"
+  },
+  "FidelityBank": {
+    "name": "Fidelity Bank",
+    "cbnCode": "070",
+    "category": "COMMERCIAL"
+  },
+  "SterlingBank": {
+    "name": "Sterling Bank",
+    "cbnCode": "232",
+    "category": "COMMERCIAL"
+  },
+  "Ecobank": {
+    "name": "Ecobank Nigeria",
+    "cbnCode": "050",
+    "category": "COMMERCIAL"
+  },
+  "PolarisBank": {
+    "name": "Polaris Bank",
+    "cbnCode": "076",
+    "category": "COMMERCIAL"
+  },
+  "ProvidusBank": {
+    "name": "Providus Bank",
+    "cbnCode": "101",
+    "category": "COMMERCIAL"
+  },
+  "UnionBank": {
+    "name": "Union Bank of Nigeria",
+    "cbnCode": "032",
+    "category": "COMMERCIAL"
+  },
+  "StanbicIBTC": {
+    "name": "Stanbic IBTC Bank",
+    "cbnCode": "221",
+    "category": "COMMERCIAL"
+  },
+  "TitanBank": {
+    "name": "Titan Trust Bank",
+    "cbnCode": "102",
+    "category": "COMMERCIAL"
+  },
+  "KeystoneBank": {
+    "name": "Keystone Bank",
+    "cbnCode": "082",
+    "category": "COMMERCIAL"
+  },
+  "HeritageBank": {
+    "name": "Heritage Bank",
+    "cbnCode": "030",
+    "category": "COMMERCIAL"
+  },
+
+  // --- Fintechs / Digital & Payments Banks ---
+  "KudaBank": {
+    "name": "Kuda Microfinance Bank",
+    "cbnCode": "50211", // MFB Code supported for transfers
+    "category": "FINTECH/MFB"
+  },
+  "Opay": {
+    "name": "Paycom (OPay)",
+    "cbnCode": "999992", // Paycom PSB Code
+    "category": "FINTECH/PSB"
+  },
+  "PalmPay": {
+    "name": "PalmPay",
+    "cbnCode": "999991", // PSB Code
+    "category": "FINTECH/PSB"
+  },
+  "Paga": {
+    "name": "Paga",
+    "cbnCode": "100002", // Paga's NIBSS Code for transfers
+    "category": "FINTECH/PSP"
+  },
+  "Moniepoint": {
+    "name": "Moniepoint MFB",
+    "cbnCode": "50515",
+    "category": "FINTECH/MFB"
+  },
+  "VFDMFB": {
+    "name": "VFD Microfinance Bank",
+    "cbnCode": "566",
+    "category": "MFB"
+  },
+
+  // --- Non-Interest / Mortgage Banks ---
+  "JaizBank": {
+    "name": "Jaiz Bank",
+    "cbnCode": "301",
+    "category": "NON-INTEREST"
+  },
+  "TajBank": {
+    "name": "TAJ Bank",
+    "cbnCode": "302",
+    "category": "NON-INTEREST"
+  },
+  "AbbeyMortgage": {
+    "name": "Abbey Mortgage Bank",
+    "cbnCode": "402",
+    "category": "MORTGAGE"
+  }
+}
+
+function deposit(){
+
     document.getElementById("deposit-modal").style.display = "block";
     document.getElementById("page_inner").style.opacity = "0.3";
+
 }
 
 
-function cancel() {
+function cancel(id) {
     document.getElementById("page_inner").style.opacity = "1";
-    document.getElementById("deposit-modal").style.display = "none";
-    document.getElementById("deposit-input").value = "";   
+    document.getElementById(id).style.display = "none";
+    document.getElementById("deposit-input").value = ""; 
+    document.getElementById("account-input").value = ""; 
+
 }
 
 async function fund(){
@@ -31,113 +168,74 @@ async function fund(){
 document.getElementById('deposit-input').addEventListener('input', e => 
   e.target.value = e.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 );
-async function withdraw() {
+function withdraw(){
+    document.getElementById('recipient_card').style.display = "block";
+    document.getElementById("page_inner").style.opacity = "0.3";
 
 }
 
+function bankList(){
+    const optionsList = document.getElementById("optionsList")
+    const bankKeys = Object.keys(BANK_LIST)
+    for(let i = 0; i < bankKeys.length ; i++){
+        const listItems = document.createElement('li');
+        listItems.textContent = BANK_LIST[bankKeys[i]].name;
+        optionsList.appendChild(listItems);
+    }
+}
+bankList()
 
-const BANK_LIST = [
-    { code: 'ACCESS', name: 'Access Bank' },
-    { code: 'GTB', name: 'Guaranty Trust Bank' },
-    { code: 'ZENITH', name: 'Zenith Bank' },
-    { code: 'UBA', name: 'UBA' },
-    { code: 'FIRST', name: 'First Bank' },
-    { code: 'FCMB', name: 'FCMB' },
-    { code: 'STERLING', name: 'Sterling Bank' },
-    { code: 'UNION', name: 'Union Bank' },
-    { code: 'ECO', name: 'Ecobank' },
-    { code: 'STANBIC', name: 'Stanbic IBTC' },
-    { code: 'WEMA', name: 'Wema Bank' },
-    { code: 'PROVIDUS', name: 'Providus Bank' },
-    { code: 'POLARIS', name: 'Polaris Bank' },
-    { code: 'OPAY', name: 'OPay' },
-    { code: 'PAGA', name: 'Paga' },
-    { code: 'MONIEPOINT', name: 'Moniepoint' },
-    { code: 'CITIBANK', name: 'Citi Bank' },
-    { code: 'KEYSTONE', name: 'Keystone Bank' },
-    { code: 'FIDELITY', name: 'Fidelity Bank' },
-    { code: 'UNITY', name: 'Unity Bank' },
-    { code: 'HERITAGE', name: 'Heritage Bank' },
-    { code: 'STANDARD', name: 'Standard Chartered' },
-    { code: 'ACCESSCORP', name: 'AccessCorp' },
-    { code: 'KALD', name: 'Kuda Bank' },
-    { code: 'OPPO', name: 'Opay Micro' },
-    { code: 'STERLNG', name: 'Sterling (Alt)' },
-    { code: 'CHAP', name: 'Chapman Bank' },
-    { code: 'LOANS', name: 'Loans Bank' },
-    { code: 'SIMPLE', name: 'Simple Bank' },
-    { code: 'ALAT', name: 'ALAT by WEMA' },
-    { code: 'GTCO', name: 'GTCO (alias)' },
-    { code: 'HERIT', name: 'Heritage (alt)' },
-    { code: 'MFB1', name: 'MicroBank One' },
-    { code: 'MFB2', name: 'MicroBank Two' },
-    { code: 'CORAL', name: 'Coral Bank' },
-    { code: 'NLNB', name: 'NLN Bank' },
-    { code: 'SOV', name: 'Sovereign Bank' },
-    { code: 'PAYSTACK', name: 'Paystack Bank' },
-    { code: 'FLUTTER', name: 'Flutter Bank' },
-    { code: 'MOB', name: 'Mobile Bank' },
-    { code: 'NEX', name: 'Next Bank' },
-    { code: 'LAGO', name: 'Lagos State Bank' },
-    { code: 'RUBY', name: 'Ruby Bank' },
-    { code: 'BLUE', name: 'Blue Bank' },
-    { code: 'ORANGE', name: 'Orange Bank' },
-    { code: 'GREEN', name: 'Green Bank' },
-    { code: 'TRUST', name: 'Trust Bank' },
-    { code: 'SUMMIT', name: 'Summit Bank' },
-    { code: 'ZEN', name: 'Zen Fintech' }
-  ];
+ 
+function search() {
+  document.getElementById('optionsList').style.display ="block" ;  
+  //bankList()
+  const searchValue = document.getElementById('bank-list').value.trim().toLowerCase()
+  const listItems = document.getElementsByTagName('li')
+  for(let i = 0; i < listItems.length; i++){
+    const listItem = listItems[i]
+    const listText = listItem.textContent.toLowerCase()
+
+    if(listText.includes(searchValue) && !searchValue ){
+      
+       listItem.style.display = "block"
+    }
+    else{
+        listItem.style.display = "none"
+    }
+  }
+}
+document.getElementById('bank-list').addEventListener("keyup", search)
   
-  const BANK_LIST_PAYSTACK_COMPATIBLE = [
-    // Commercial Banks
-    { code: 'ACCESS', name: 'Access Bank', nip_code: '044', type: 'COMMERCIAL' },
-    { code: 'GTB', name: 'Guaranty Trust Bank', nip_code: '058', type: 'COMMERCIAL' },
-    { code: 'ZENITH', name: 'Zenith Bank', nip_code: '057', type: 'COMMERCIAL' },
-    { code: 'UBA', name: 'UBA', nip_code: '033', type: 'COMMERCIAL' },
-    { code: 'FIRST', name: 'First Bank', nip_code: '011', type: 'COMMERCIAL' },
-    { code: 'FCMB', name: 'FCMB', nip_code: '214', type: 'COMMERCIAL' },
-    { code: 'STERLING', name: 'Sterling Bank', nip_code: '232', type: 'COMMERCIAL' },
-    { code: 'UNION', name: 'Union Bank', nip_code: '032', type: 'COMMERCIAL' },
-    { code: 'ECO', name: 'Ecobank', nip_code: '050', type: 'COMMERCIAL' },
-    { code: 'STANBIC', name: 'Stanbic IBTC', nip_code: '221', type: 'COMMERCIAL' },
-    { code: 'WEMA', name: 'Wema Bank', nip_code: '035', type: 'COMMERCIAL' },
-    { code: 'PROVIDUS', name: 'Providus Bank', nip_code: '101', type: 'COMMERCIAL' },
-    { code: 'POLARIS', name: 'Polaris Bank', nip_code: '076', type: 'COMMERCIAL' },
-    { code: 'CITIBANK', name: 'Citi Bank', nip_code: '023', type: 'COMMERCIAL' },
-    { code: 'KEYSTONE', name: 'Keystone Bank', nip_code: '082', type: 'COMMERCIAL' },
-    { code: 'FIDELITY', name: 'Fidelity Bank', nip_code: '070', type: 'COMMERCIAL' },
-    { code: 'UNITY', name: 'Unity Bank', nip_code: '215', type: 'COMMERCIAL' },
-    { code: 'HERITAGE', name: 'Heritage Bank', nip_code: '030', type: 'COMMERCIAL' },
-    { code: 'STANDARD', name: 'Standard Chartered', nip_code: '068', type: 'COMMERCIAL' },
-    { code: 'TITAN', name: 'Titan Trust Bank', nip_code: '102', type: 'COMMERCIAL' },
-    { code: 'PARALLEX', name: 'Parallex Bank', nip_code: '104', type: 'COMMERCIAL' },
-    { code: 'GLOBUS', name: 'Globus Bank', nip_code: '00103', type: 'COMMERCIAL' },
-    { code: 'PREMIUM', name: 'PremiumTrust Bank', nip_code: '105', type: 'COMMERCIAL' },
-    
-    // Fintechs / Digital Banks / MFBs / Payment Service Banks (PSBs)
-    { code: 'OPAY', name: 'OPay', nip_code: '999992', type: 'FINTECH' },
-    { code: 'MONIEPOINT', name: 'Moniepoint MFB', nip_code: '50515', type: 'MICROFINANCE' },
-    { code: 'KALD', name: 'Kuda Bank', nip_code: '50211', type: 'MICROFINANCE' },
-    { code: 'ALAT', name: 'ALAT by WEMA', nip_code: '035A', type: 'DIGITAL' },
-    { code: 'RUBY', name: 'Rubies MFB', nip_code: '125', type: 'MICROFINANCE' },
-    { code: 'PAGA', name: 'Paga', nip_code: '100002', type: 'FINTECH' },
-    { code: 'PALMPAY', name: 'PalmPay', nip_code: '999991', type: 'FINTECH' },
-    { code: 'VFD', name: 'VFD Microfinance Bank', nip_code: '566', type: 'MICROFINANCE' },
-    { code: 'SPARKLE', name: 'Sparkle Microfinance Bank', nip_code: '51310', type: 'MICROFINANCE' },
-
-    // Non-Interest / Merchant Banks
-    { code: 'JAIZ', name: 'Jaiz Bank', nip_code: '301', type: 'NON_INTEREST' },
-    { code: 'TAJ', name: 'TAJ Bank', nip_code: '302', type: 'NON_INTEREST' },
-    { code: 'FSDH', name: 'FSDH Merchant Bank', nip_code: '501', type: 'MERCHANT' },
-    { code: 'LOTUS', name: 'Lotus Bank', nip_code: '303', type: 'NON_INTEREST' },
-];
 
 
-async function accountName() {
+async function accountName(account_number, bank_code) {
     const payload = {
         account_number,
-        bank_code,
+        bank_code
     }
     const reponse = await postRequest(ENDPOINTS.account_name, payload)
 }
 
+function recipientNext(){
+    const account_number = document.getElementById('account-input').value.trim();
+    const account_helper = document.getElementById('account_helper')
+    const bank_helper = document.getElementById('bank_helper')
+    const bank  = document.getElementById('bank-list')
+    
+    let valid = true;
+    if(!account_number){
+         account_helper.textContent = "Input your account number";
+        return false;
+    }
+    if(account_number.length < 9){
+        account_helper.textContent = "Incomplete account number";
+        return false;
+    }
+    if(!bank){
+        bank_helper.textContent = "Select your bank";
+        return false;
+    }
+    valid = false;
+
+     accountName(account_number, bank_code)
+}
