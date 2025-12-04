@@ -187,20 +187,18 @@ bankList()
 
  
 function search() {
-  document.getElementById('optionsList').style.display ="block" ;  
-  //bankList()
   const searchValue = document.getElementById('bank-list').value.trim().toLowerCase()
   const listItems = document.getElementsByTagName('li')
   for(let i = 0; i < listItems.length; i++){
     const listItem = listItems[i]
     const listText = listItem.textContent.toLowerCase()
 
-    if(listText.includes(searchValue) && !searchValue ){
-      
-       listItem.style.display = "block"
+    if(!listText.includes(searchValue) || searchValue === "" ){
+        listItem.style.display = "none"
     }
     else{
-        listItem.style.display = "none"
+       document.getElementById('optionsList').style.display ="block" ;  
+       listItem.style.display = "block"
     }
   }
 }
