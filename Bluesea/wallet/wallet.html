@@ -61,7 +61,7 @@
             
                <iframe src="../recent-trx.html" id="transaction_list" onclick="closeNavBody()"></iframe>
                
-             <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
+             
 
         
 
@@ -103,18 +103,23 @@
 
               <div class="card recipient_card" id="recipient_card" >
                 <div>
-                  <h3 ">Recipient Account</h3>
+                  <h3 >Recipient Account</h3>
                 </div>
 
                 <div class="form_row">
+                 
+              <label for="withdraw-amount"> Amount</label>
+              <input type="text" inputmode="numeric"       placeholder="Enter amount"  
+             id="withdraw-input" class="withdraw-input" maxlength="10"> 
+             
+               <div id="amount_helper" class="helper-text" aria-live="polite"></div>
+                  
                   <label for="account_input" class="form_label">Account Number</label><br>
                   <input id="account-input" class="account-input" placeholder="Enter  Account Number" inputmode="numeric" autocomplete="off" maxlength="10" />
                   <div id="account_helper" class="helper-text" aria-live="polite"></div>
-                </div>
-
-                <div class="form_row">
+                
                   <label class="form_label" for="bank_list">Bank</label><br>
-                 <input type="text" name="bank_list" id="bank-list" placeholder="Search for bank" class="bank-list"
+                 <input type="text" name="bank_list" id="bank_list" placeholder="Search for bank" class="bank-list"
                  >
                  <ul id="optionsList"  class="options-list">
                  </ul>
@@ -122,7 +127,7 @@
           
                  <p id='bank-output' class='bank-output'></p>
                  <p id='name-output' class='name-output'></p>
-                 <div id="bank_helper" class="helper-text" aria-live="polite"></div>
+                 <div id="bank_helper" class="helper-text" aria-live="polite"> </div>
                 </div>
 
               <div class="actions_row_small" style="margin-top:10px;">
@@ -185,19 +190,8 @@
         </div>
       </div>
 
-      <div id="error" class="error" aria-hidden="true" role="alert" aria-live="assertive">
-        <div class="error_inner">
-          <div class="error_title">Unable to load this section</div>
-          <div id="error_message" class="error_message">Please check your network connection and try again.</div>
-          <div class="error_actions">
-            <button id="error_retry" class="btn">Retry</button>
-            <button id="error_close" class="btn btn--ghost">Close</button>
-          </div>
-        </div>
-      </div>
-      
-
     </main>
+    <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
   
     <!-- script files  -->
     <script src="../side-nav.js"></script>

@@ -146,6 +146,8 @@ function cancel(id) {
     document.getElementById(id).style.display = "none";
     document.getElementById("deposit-input").value = ""; 
     document.getElementById("account-input").value = ""; 
+    document.getElementById("account_helper").textContent = ""; 
+    document.getElementById("amount_helper").textContent = ""; 
 
 }
 
@@ -162,13 +164,19 @@ async function fund(){
     error.textContent = "";
     const response = await postRequest(ENDPOINTS.fund, {amount: Number(amount.replace(/,/g, ""))});
     window.parent.location.href = response.authorization_url;
-    //hideLoader()
+    hideLoader()
 };
 
 document.getElementById('deposit-input').addEventListener('input', e => 
   e.target.value = e.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 );
+
+document.getElementById('withdraw-input').addEventListener('input', e => 
+  e.target.value = e.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+);
+
 function withdraw(){
+    
     document.getElementById('recipient_card').style.display = "block";
     document.getElementById("page_inner").style.opacity = "0.3";
 
@@ -203,7 +211,9 @@ function search() {
   }
 }
 document.getElementById('bank-list').addEventListener("keyup", search)
-  
+ 
+
+let bankCode = '';
 function selectBank(){
   const listItems = document.getElementsByTagName('li')
   const bank_output = document.getElementById('bank-output')
@@ -215,19 +225,20 @@ function selectBank(){
 
   for(let i = 1; i < listItems.length; i++){
     listItems[i].addEventListener("click", ()=>{
-      
-      
+         
       account_helper.textContent = ""
       let bank_code= BANK_LIST[bankKeys[i]].cbnCode;
       document.getElementById("bank-list").value  = '';
-      let bank_name = listItems[i].textContent  
+       
+    bankCode = bank_code;
+    let bank_name = listItems[i].textContent;
      bank_output.textContent = "Recipient Bank: "  + bank_name
        document.getElementById('optionsList').style.display ="none" ; 
       if(account_number.value.length > 9){
         accountName(account_number.value,bank_code)
       }
       else{
-        bank_output.textContent = ""
+        bank_output.textContent = '';
           account_helper.textContent = "Input your account number";
       }
     })
@@ -253,22 +264,22 @@ function recipientNext(){
     const account_number = document.getElementById('account-input').value.trim();
     const account_helper = document.getElementById('account_helper')
     const bank_helper = document.getElementById('bank_helper')
-    const bank  = document.getElementById('bank-list')
+    const bankc  = document.getElementById('bank-output')
+
+    account_helper.textContent = "";
     
-    let valid = true;
     if(!account_number){
          account_helper.textContent = "Input your account number";
         return false;
     }
     if(account_number.length < 9){
-        account_helper.textContent = "Incomplete account number";
+        account_helper.textContent = "Incomplete account number" ;
         return false;
     }
-    if(!bank){
+    if(!bankc){
         bank_helper.textContent = "Select your bank";
         return false;
     }
-    valid = false;
+  
 
-     accountName(account_number, bank_code)
 }

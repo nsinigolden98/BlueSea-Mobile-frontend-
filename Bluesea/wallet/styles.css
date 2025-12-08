@@ -124,7 +124,7 @@
     border-radius:var(--wallet-radius) ;
 }
 
-.deposit-input, .account-input, .bank-list{
+.deposit-input, .account-input, .bank-list,  .withdraw-input{
         border-radius:var(--wallet-radius) ;
         width:100%;
         height:40px;
