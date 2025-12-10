@@ -148,6 +148,7 @@ function cancel(id) {
 }
 
 async function fund() {
+  
   let error = document.getElementById("error-amount");
   let amount = document.getElementById("deposit-input").value.trim();
   let valid = true;
@@ -161,8 +162,14 @@ async function fund() {
   const response = await postRequest(ENDPOINTS.fund, {
     amount: Number(amount.replace(/,/g, "")),
   });
-  window.parent.location.href = response.authorization_url;
-  hideLoader();
+  if (response.success) {
+    hideLoader();
+   window.parent.location.href = response.authorization_url;
+  } else {
+    hideLoader();
+    cancel("deposit-modal");
+    showToast("Wallet funding error. Please try again.");
+  }
 }
 
 document
