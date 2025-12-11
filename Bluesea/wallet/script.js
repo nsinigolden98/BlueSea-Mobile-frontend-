@@ -151,12 +151,12 @@ async function fund() {
   
   let error = document.getElementById("error-amount");
   let amount = document.getElementById("deposit-input").value.trim();
-  let valid = true;
+  
   if (Number(amount) < 100) {
     error.textContent = "Amount must be more than ₦100.00";
-    valid = false;
+    return;
   }
-  if (!valid) return;
+  
   showLoader();
   error.textContent = "";
   const response = await postRequest(ENDPOINTS.fund, {
@@ -303,7 +303,7 @@ async function recipientNext() {
       document.getElementById("recipient_card").style.display = "none";
 
        document.getElementById('confirm_name').textContent = accountOwn.textContent.slice(16);
-      document.getElementById('confirm_account').textContent = account_number + bankCode;
+      document.getElementById('confirm_account').textContent = account_number;
       document.getElementById('confirm_bank').textContent = bank.textContent.slice(16);
       document.getElementById('confirm_amount').textContent = '₦'+amount.value;
 
@@ -321,13 +321,12 @@ function showToast(msg, ms = 8200) {
   t._hideTO = setTimeout(() => { t.hidden = true; }, ms);
 }
 
-async function makeWithdrawal(event) {
-  event.preventDefault()
+async function makeWithdrawal() {
    
    const pin =document.getElementById("pin").value.trim()
-   
+   let account_name = document.getElementById('confirm_name').textContent ;
     let payload ={
-           account_name: document.getElementById('confirm_name').textContent ,
+           account_name,
            account_number: document.getElementById('confirm_account').textContent ,
            amount: document.getElementById('confirm_amount').textContent.slice(1).replace(/,/g, ""),
            bank_code: bankCode, 
@@ -336,11 +335,11 @@ async function makeWithdrawal(event) {
 
   showLoader(); 
 
-  let  buy_data = await postRequest(ENDPOINTS.buy_mtn, payload);
-   if (buy_data.status === "success"){
+  let  response = await postRequest(ENDPOINTS.withdraw, payload);
+   if (response.status === "success"){
            hideLoader();
            cancel('confirm_modal')
-           showToast("Transfer Successful")
+           showToast(`Transfer  to ${account_name} Successful`)
    }
    else{
         hideLoader();

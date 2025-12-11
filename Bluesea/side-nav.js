@@ -40,6 +40,7 @@ let refresh_token = getCookie("refreshToken");
     fund: `${API_BASE}/transactions/fund-wallet/`,
     webhook: `${API_BASE}/transactions/webhook/paystack/`,
     history: `${API_BASE}/transactions/history/`,
+    withdraw: `${API_BASE}/transactions/withdraw/`,
     user: `${API_BASE}/user_preference/user/`,
     pin_set: `${API_BASE}/accounts/pin/set/`,
     pin_verify: `${API_BASE}/accounts/pin/verify/`,
