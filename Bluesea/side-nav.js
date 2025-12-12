@@ -10,25 +10,21 @@ getBalanace();
 //let API_BASE = "https://notepad-one-wheat.vercel.app"; // from Postman collection
 
 function getCookie(name) {
-  // 1. Prepend '=' to the name to ensure accurate matching (e.g., 'user_id=')
+  
   const nameEQ = name + "=";
   
-  // 2. Decode the cookie string, then split it by '; ' to get an array of "key=value" pairs
-  // decodeURIComponent handles values that were URL-encoded when set
   const cookieArray = decodeURIComponent(document.cookie).split('; ');
   
-  // 3. Loop through the array
   for (let i = 0; i < cookieArray.length; i++) {
     let cookie = cookieArray[i];
     
-    // Check if the current cookie string starts with the desired name
     if (cookie.indexOf(nameEQ) === 0) {
-      // 4. If it matches, return the value part (the substring starting after 'name=')
+      
       return cookie.substring(nameEQ.length, cookie.length);
     }
   }
   
-  // 5. Return null if no cookie with that name is found
+
   return null;
 }
 

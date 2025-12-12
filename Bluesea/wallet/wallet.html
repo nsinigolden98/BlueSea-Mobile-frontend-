@@ -329,7 +329,6 @@
             
               <h2>Enter PIN</h2>
   
-              <form id="create-pin-form">
                   <div class="input-group">
                       <input type="password" id="pin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="\d{4}" title="Please enter exactly 4 digits" >
                   </div>
@@ -337,10 +336,11 @@
                   
                   <button  class="btn btn_primary" id="confirm-btn" onclick="makeWithdrawal()">CONFIRM </button>
                   <button class="btn btn_primary" onclick="cancel('confirm_modal')">CANCEL </button>
-              </form>
-  
+      
+           </div>
         </div>
       </div>
+      
     </main>
     <div id="toast" class="toast" aria-live="assertive" hidden></div>
     <iframe src="../loader.html" frameborder="0" id="loader"></iframe>

@@ -276,6 +276,7 @@ async function accountName(account_number, bank_code) {
 async function recipientNext() {
   const account_number = document.getElementById("account-input").value.trim();
   const account_helper = document.getElementById("account_helper");
+  const amount_helper = document.getElementById("amount_helper");
   const bank_helper = document.getElementById("bank_helper");
   const bank = document.getElementById("bank-output");
   const amount = document.getElementById("withdraw-input");

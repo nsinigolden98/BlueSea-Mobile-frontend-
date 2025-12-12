@@ -324,15 +324,15 @@ safeAdd(form_login, "submit", async (ev) => {
     if (!valid) return;
     document.getElementById("loader").style.display = "block";
    
-    const res = await apiPost(ENDPOINT.login, { email: identifier,password: password});
-       if(res.data.user.email_verified){
+    const response = await apiPost(ENDPOINT.login, { email: identifier,password: password});
+       if(response.data.user.email_verified){
          showToast("Login successful. Redirecting...");
          setRefreshToken(res.data.refresh_token, 1);
          setAccessToken(res.data.access_token, 1);
           document.getElementById("loader").style.display = "none";
-            window.parent.location.replace("../dashboard/dashboard.html"); 
+            window.parent.location.href="../dashboard/dashboard.html"; 
       }  
-      else if (!res.data.user.email_verified){
+      else if (!response.data.user.email_verified){
         await apiPost(ENDPOINT.sendOtp, {email: identifier});
        showToast("Email Already Registered ");
        localStorage.setItem("email",  identifier);
@@ -340,7 +340,7 @@ safeAdd(form_login, "submit", async (ev) => {
        window.parent.location.replace("../verify_email.html"); 
       }
       else{
-          showToast(res.data.detail);
+          showToast(response.data.detail);
           document.getElementById("loader").style.display = "none";
       }
   });
@@ -521,6 +521,6 @@ async function handleCredentialResponse(response) {
 ;
 }
  
- window.addEventListener("popstate", (event)=>{
+ window.addEventListener("popstate", ()=>{
      history.go(0);
  })
