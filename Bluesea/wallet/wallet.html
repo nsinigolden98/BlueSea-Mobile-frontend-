@@ -25,7 +25,12 @@
     <!-- Main content -->
     <main class="main" id="main" role="main" aria-live="polite">
       <header class="header">
-        <button class="menu-btn" onclick="showNav()">
+        <button
+          type="button"
+          title="menu-btn"
+          class="menu-btn"
+          onclick="showNav()"
+        >
           <svg
             viewBox="0 0 48 48"
             xmlns="http://www.w3.org/2000/svg"
@@ -322,25 +327,37 @@
               <div class="confirm_value" id="confirm_bank">—</div>
             </div>
             <div class="confirm_row">
-
               <div class="confirm_label">Amount</div>
               <div class="confirm_value" id="confirm_amount">—</div>
             </div>
-            
-              <h2>Enter PIN</h2>
-  
-                  <div class="input-group">
-                      <input type="password" id="pin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="\d{4}" title="Please enter exactly 4 digits" >
-                  </div>
-                  
-                  
-                  <button  class="btn btn_primary" id="confirm-btn" onclick="makeWithdrawal()">CONFIRM </button>
-                  <button class="btn btn_primary" onclick="cancel('confirm_modal')">CANCEL </button>
-      
-           </div>
+
+            <h2>Enter PIN</h2>
+
+            <div class="input-group">
+              <input
+                type="password"
+                id="pin"
+                placeholder="••••"
+                maxlength="4"
+                inputmode="numeric"
+                pattern="\d{4}"
+                title="Please enter exactly 4 digits"
+              />
+            </div>
+
+            <button
+              class="btn btn_primary"
+              id="confirm-btn"
+              onclick="makeWithdrawal()"
+            >
+              CONFIRM
+            </button>
+            <button class="btn btn_primary" onclick="cancel('confirm_modal')">
+              CANCEL
+            </button>
+          </div>
         </div>
       </div>
-      
     </main>
     <div id="toast" class="toast" aria-live="assertive" hidden></div>
     <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
