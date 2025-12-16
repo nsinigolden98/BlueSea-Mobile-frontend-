@@ -451,11 +451,11 @@ async function SignUpButton() {
 
   // POST to signup
   let signup_payload = {
-    email: email,
+    email
     phone: String(phone),
     other_names: name,
-    surname: surname,
-    password: password
+    surname
+    password
   };
   const res = await apiPost(ENDPOINT.signup, signup_payload);
   if (res.data.state) {
