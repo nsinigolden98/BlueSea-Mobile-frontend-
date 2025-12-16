@@ -451,10 +451,10 @@ async function SignUpButton() {
 
   // POST to signup
   let signup_payload = {
-    email
+    email,
     phone: String(phone),
     other_names: name,
-    surname
+    surname,
     password
   };
   const res = await apiPost(ENDPOINT.signup, signup_payload);
@@ -517,7 +517,7 @@ safeAdd($("#change_pass"), "click", async (ev) => {
 
   const payload = {
     email: email,
-    otp: otp,
+    otp: otp
   };
   const send = await apiPost(ENDPOINT.verify_FP, payload);
   console.log(send);
