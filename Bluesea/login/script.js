@@ -370,8 +370,8 @@ safeAdd(form_login, "submit", async (ev) => {
 });
 
 /* -------------- Signup Form Submit -------------- */
-async function SignUpButton(event) {
-  event.preventDefault();
+async function SignUpButton() {
+
   clearAllErrors(form_signup);
   const email = $("#signup_email").value.trim();
   const phoneRaw = $("#signup_phone").value.trim();
