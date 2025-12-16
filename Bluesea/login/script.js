@@ -305,7 +305,7 @@ async function verifyEmailSignUp() {
 
   let verifyOtp_payload = {
     otp: Number(code),
-    email: userEmail,
+    email: userEmail
   };
   // call backend
   let res = await apiPost(ENDPOINT.verifyOtp, verifyOtp_payload);
@@ -360,7 +360,7 @@ safeAdd(form_login, "submit", async (ev) => {
 
   const response = await apiPost(ENDPOINT.login, {
     email: identifier,
-    password: password,
+    password: password 
   });
   if (response.data.user.email_verified) {
     showToast("Login successful. Redirecting...");
@@ -480,9 +480,7 @@ async function SignUpButton(event) {
     document.getElementById("loader").style.display = "none";
   }
 }
-const signupForm = document.getElementById("form_signup")
 
-signupForm.addEventListener("submit",SignUpButton)
 /* -------------- Forgot password flow (trigger modal for email) -------------- */
 function forgotPassword(event) {
   event.preventDefault();
