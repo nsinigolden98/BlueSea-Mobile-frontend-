@@ -250,7 +250,7 @@ function selectBank() {
       bank_output.textContent = "Recipient Bank: " + bank_name;
       document.getElementById("optionsList").style.display = "none";
       if (account_number.value.length > 9) {
-       //accountName(account_number.value,bank_code)
+       accountName(account_number.value,bank_code)
       } else {
         bank_output.textContent = "";
         account_helper.textContent = "Input your account number";
@@ -269,8 +269,17 @@ async function accountName(account_number, bank_code) {
   };
   const response = await postRequest(ENDPOINTS.account_name, payload);
 
-  name_output.textContent = "Recipient Name: " + response.account_name;
-  hideLoader();
+  if (response.account_name !== undefined){
+    hideLoader();
+    name_output.textContent = "Recipient Name: " + response.account_name;
+  }
+  else{
+      hideLoader();
+      name_output.textContent = "User Not Found"
+      name_output.style.color = "red"
+      showToast("Network Error. Try Again Later")
+
+  }
 }
 
 async function recipientNext() {
@@ -292,7 +301,11 @@ async function recipientNext() {
     bank_helper.textContent = "Select your bank";
   } else if (!amount.value) {
     amount_helper.textContent = "Enter an amount";
-  } else {
+  } else if (accountOwn.textContent.includes("undefined")) {
+      accountOwn.textContent = "User Not Found"
+      accountOwn.style.color = "red"
+      showToast("Network Error. Try Again Later")
+  }else {
     showLoader()
     const user = await getRequest(ENDPOINTS.user);
     if (!user.pin_is_set) {
@@ -331,6 +344,7 @@ async function makeWithdrawal() {
            account_number: document.getElementById('confirm_account').textContent ,
            amount: document.getElementById('confirm_amount').textContent.slice(1).replace(/,/g, ""),
            bank_code: bankCode, 
+           bank_name: document.getElementById('confirm_bank').textContent,
            transaction_pin: pin
        }
 
