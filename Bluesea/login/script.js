@@ -92,9 +92,7 @@ function closeModal() {
   resetModalTimers("forgot_password");
 }
 
-// Domain base; update if your API is at another subdomain
-const API_BASE = "http://157.230.168.63:8000"; // <--- change if needed
-//let API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
+const API_BASE = "http://157.230.168.63:8000"; 
 
 let ENDPOINT = {
   login: `${API_BASE}/accounts/login/`,
@@ -339,7 +337,7 @@ safeAdd(form_login, "submit", async (ev) => {
   ev.preventDefault();
   clearAllErrors(form_login);
   const identifier = $("#login_identifier").value.trim();
-  const password = $("#login_password").value;
+  const password = $("#login_password").value.trim();
   const rememberMe = !!$("#login_remember").checked;
 
   let valid = true;
@@ -367,13 +365,13 @@ safeAdd(form_login, "submit", async (ev) => {
     setRefreshToken(response.data.refresh_token, 1);
     setAccessToken(response.data.access_token, 1);
     document.getElementById("loader").style.display = "none";
-    window.location.replace("../dashboard/dashboard.html");
+    window.location.replace("https://www.blueseamobile.com.ng/Bluesea/dashboard/dashboard.html");
   } else if (!response.data.user.email_verified) {
     await apiPost(ENDPOINT.sendOtp, { email: identifier });
     showToast("Email Already Registered ");
     localStorage.setItem("email", identifier);
     document.getElementById("loader").style.display = "none";
-    window.parent.location.replace("../verify_email.html");
+    window.parent.location.replace("https://www.blueseamobile.com.ng/Bluesea/verify_email.html");
   } else {
     document.getElementById("loader").style.display = "none";
     showToast(response.data.detail);
@@ -462,11 +460,12 @@ async function SignUpButton(event) {
 
   // POST to signup
   let signup_payload = {
-    email: email,
+    email,
     phone: String(phone),
     other_names: name,
-    surname: surname,
-    password: password,
+    surname,
+    password,
+    role: "user"
   };
   const res = await apiPost(ENDPOINT.signup, signup_payload);
   if (res.data.state) {
@@ -476,8 +475,8 @@ async function SignUpButton(event) {
     document.getElementById("loader").style.display = "none";
     startCountdown(modal_timer_email, modal_resend_email);
   } else {
-    showToast(res.data.message);
     document.getElementById("loader").style.display = "none";
+    showToast(res.data.message);
   }
 }
 
@@ -528,7 +527,7 @@ safeAdd($("#change_pass"), "click", async (ev) => {
 
   const payload = {
     email: email,
-    otp: otp,
+    otp: otp
   };
   const send = await apiPost(ENDPOINT.verify_FP, payload);
   console.log(send);
@@ -548,6 +547,8 @@ safeAdd($("#reset_resend"), "click", async (ev) => {
   const email = $("#modal_email_FP").value.trim();
   const payload = { email: email };
   const send = await apiPost(ENDPOINT.sendOtp_FP, payload);
+
+  showToast(send.data.message);
   resetModalTimers("forgot_password");
   startCountdown($("#fp_modal_timer_email"), $("#reset_resend"));
 });

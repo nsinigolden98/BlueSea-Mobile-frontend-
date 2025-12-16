@@ -3,14 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
   <title>BlueseaMobile — Login / Sign up</title>
   <meta name="description" content="BlueseaMobile — secure login & signup" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="../loader.css" />
   <link rel="icon" href="../basic_imgs/logo.png" />
-    
+  <script src="https://accounts.google.com/gsi/client" async defer></script>   
 </head>
 <body class="page" >
 
@@ -77,7 +75,7 @@
               <button type="button" class="link forgot" id="forgot" onclick="forgotPassword()">Forgot password?</button>
             </div>
 
-            <button class="btn btn_primary" id="btn_login" type="submit">Log in</button>
+            <button class="btn btn_primary" id="btn_login" type="button">Log in</button>
           </form>
                      <!-- Forgot Password panel -->
                <div class="forgot_modal field" id= "FP" data-panel="forgot password" aria-hidden="false">
@@ -89,7 +87,7 @@
             <input id="modal_email_FP" class="input" type="email" inputmode="email " placeholder="Enter email " />
             <h3 id="fp_email_error" class="error" aria-live="polite">
             </h3>
-               <button id="modal_FP" class="btn" onclick="sendOTP_FP()">Request OTP</button>  
+               <button id="modal_FP" class="btn" onclick="sendOTP_FP()" type="button">Request OTP</button>  
             
           </div>
          <!-- Enter OTP -->
@@ -232,16 +230,16 @@
               <div id="signup_terms_error" class="error" aria-live="polite"></div>
             </div>
 
-            <button class="btn btn_primary" id="btn_signup" type="button" >Sign up</button>
+            <button class="btn btn_primary" id="btn_signup" type="button" onclick="SignUpButton()">Sign up</button>
           </form>
         
             <!-- OTP Modal (reused for signup/login) -->
         <div class="modal_panel" id= "modal_panel" role="document">
       <button class="modal_close" id="modal_close" aria-label="Close" onclick="closeModal()">✕</button>
       <h2 id="modal_title" class="modal_title">Verify Account</h2>
-      <div class="modal_tabs" id= "modal_tabs" role="tablist" aria-label="Verification targets">
-        <button class="modal_tab active" id="modal_tab_email" onclick="emailSwitch()">Email</button>
-        <button class="modal_tab" id= "modal_tab_phone" onclick="phoneSwitch()">Phone</button>
+      <div class="modal_tabs" id= "modal_tabs"  aria-label="Verification targets">
+        <button class="modal_tab active" id="modal_tab_email" onclick="emailSwitch()" type="button">Email</button>
+        <button class="modal_tab" id= "modal_tab_phone" onclick="phoneSwitch()" type="button">Phone</button>
       </div>
 
       <div class="modal_body">
@@ -254,8 +252,8 @@
             <div id="modal_email_error" class="error" aria-live="polite"></div>
           </div>
           <div class="row modal_actions">
-            <button id="modal_verify_email" class="btn" onclick="verifyEmailSignUp()">Verify Email OTP</button>
-            <button id="modal_resend_email" class="btn" onclick="resendEmailSignUp()">Resend (<span id="modal_timer_email">50</span>s)</button>
+            <button id="modal_verify_email" class="btn" onclick="verifyEmailSignUp()" type="button">Verify Email OTP</button>
+            <button id="modal_resend_email" class="btn" onclick="resendEmailSignUp()" type="button">Resend (<span id="modal_timer_email">50</span>s)</button>
           </div>
         </div>
 
@@ -268,8 +266,8 @@
             <div id="modal_phone_error" class="error" aria-live="polite"></div>
           </div>
           <div class="row modal_actions">
-            <button id="modal_verify_phone" class="btn">Verify Phone OTP</button>
-            <button id="modal_resend_phone" class="btn">Resend (<span id="modal_timer_phone">50</span>s)</button>
+            <button id="modal_verify_phone" class="btn" type="button">Verify Phone OTP</button>
+            <button id="modal_resend_phone" class="btn" type="button">Resend (<span id="modal_timer_phone">50</span>s)</button>
         
           </div>
         </div>
