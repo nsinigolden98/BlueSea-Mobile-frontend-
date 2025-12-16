@@ -294,7 +294,7 @@ async function verifyEmailSignUp() {
 
   let verifyOtp_payload = {
     otp: Number(code),
-    email: userEmail,
+    email: userEmail
   };
   // call backend
   let res = await apiPost(ENDPOINT.verifyOtp, verifyOtp_payload);
@@ -349,7 +349,7 @@ safeAdd(form_login, "submit", async (ev) => {
 
   const response = await apiPost(ENDPOINT.login, {
     email: identifier,
-    password: password,
+    password: password
   });
   if (response.data.user.email_verified) {
     showToast("Login successful. Redirecting...");
@@ -455,7 +455,7 @@ async function SignUpButton(event) {
     phone: String(phone),
     other_names: name,
     surname: surname,
-    password: password,
+    password: password
   };
   const res = await apiPost(ENDPOINT.signup, signup_payload);
   if (res.data.state) {
