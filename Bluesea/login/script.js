@@ -12,6 +12,17 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("modal_tab_email").style.color = "#0ea5e9";
   document.getElementById("tab_login").style.color = "#0ea5e9";
   phone_tab.style.display = "none";
+
+  function deleteCookie(name) {
+    // Set max-age to 0 and an expiration date in the past to delete the cookie
+    document.cookie = `${name}=; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+  }
+
+  // Delete the Access Token cookie
+  deleteCookie("accessToken");
+
+  // Delete the Refresh Token cookie
+  deleteCookie("refreshToken");
 });
 
 function clearInput() {
@@ -469,7 +480,9 @@ async function SignUpButton(event) {
     document.getElementById("loader").style.display = "none";
   }
 }
+const signupForm = document.getElementById("form_signup")
 
+signupForm.addEventListener("submit",SignUpButton)
 /* -------------- Forgot password flow (trigger modal for email) -------------- */
 function forgotPassword(event) {
   event.preventDefault();
