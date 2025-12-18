@@ -12,6 +12,17 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("modal_tab_email").style.color = "#0ea5e9";
   document.getElementById("tab_login").style.color = "#0ea5e9";
   phone_tab.style.display = "none";
+
+  function deleteCookie(name) {
+    // Set max-age to 0 and an expiration date in the past to delete the cookie
+    document.cookie = `${name}=; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+  }
+
+  // Delete the Access Token cookie
+  deleteCookie("accessToken");
+
+  // Delete the Refresh Token cookie
+  deleteCookie("refreshToken");
 });
 
 function clearInput() {
@@ -81,9 +92,8 @@ function closeModal() {
   resetModalTimers("forgot_password");
 }
 
-// Domain base; update if your API is at another subdomain
-const API_BASE = "http://157.230.168.63:8000"; // <--- change if needed
-//let API_BASE = "http://127.0.0.1:8000"; // <--- change if needed this is for testing locally
+//const API_BASE = "http://157.230.168.63:8000"; 
+let API_BASE = "http://127.0.0.1:8000";
 
 let ENDPOINT = {
   login: `${API_BASE}/accounts/login/`,
@@ -324,11 +334,11 @@ function setRefreshToken(token, days) {
   )}; max-age=${maxAge}; path=/; SameSite=Lax; secure`;
 }
 
-safeAdd(form_login, "submit", async (ev) => {
-  ev.preventDefault();
+async function signInButton(){
+  
   clearAllErrors(form_login);
   const identifier = $("#login_identifier").value.trim();
-  const password = $("#login_password").value;
+  const password = $("#login_password").value.trim();
   const rememberMe = !!$("#login_remember").checked;
 
   let valid = true;
@@ -351,23 +361,27 @@ safeAdd(form_login, "submit", async (ev) => {
     email: identifier,
     password: password
   });
-  if (response.data.user.email_verified) {
+  console.log(response);
+  if (response.data.detail !== "No active account found with the given credentials"){
+  if (response.data.user.email_verified ) {
     showToast("Login successful. Redirecting...");
     setRefreshToken(response.data.refresh_token, 1);
     setAccessToken(response.data.access_token, 1);
     document.getElementById("loader").style.display = "none";
     window.location.replace("../dashboard/dashboard.html");
-  } else if (!response.data.user.email_verified) {
+  } else{
     await apiPost(ENDPOINT.sendOtp, { email: identifier });
     showToast("Email Already Registered ");
     localStorage.setItem("email", identifier);
     document.getElementById("loader").style.display = "none";
     window.parent.location.replace("../verify_email.html");
-  } else {
-    document.getElementById("loader").style.display = "none";
-    showToast(response.data.detail);
+  }  
   }
-});
+   else{
+    document.getElementById("loader").style.display = "none";
+    showToast("Incorrect Email Or Password");
+  }
+};
 
 /* -------------- Signup Form Submit -------------- */
 async function SignUpButton() {
@@ -465,14 +479,13 @@ async function SignUpButton() {
     document.getElementById("loader").style.display = "none";
     startCountdown(modal_timer_email, modal_resend_email);
   } else {
-    showToast(res.data.message);
     document.getElementById("loader").style.display = "none";
+    showToast(res.data.message);
   }
 }
 
 /* -------------- Forgot password flow (trigger modal for email) -------------- */
-function forgotPassword(event) {
-  event.preventDefault();
+function forgotPassword() {
   // Show modal purpose forgot_password (default to email)
   document.getElementById("FP").style.display = "block";
   document.getElementById("FP_email_field").style.display = "block";
@@ -537,6 +550,8 @@ safeAdd($("#reset_resend"), "click", async (ev) => {
   const email = $("#modal_email_FP").value.trim();
   const payload = { email: email };
   const send = await apiPost(ENDPOINT.sendOtp_FP, payload);
+
+  showToast(send.data.message);
   resetModalTimers("forgot_password");
   startCountdown($("#fp_modal_timer_email"), $("#reset_resend"));
 });
@@ -585,7 +600,7 @@ async function handleCredentialResponse(response) {
     "https://www.blueseamobile.com.ng/Bluesea/dashboard/dashboard.html";
   let res = await apiPost(ENDPOINT.oauthGoogle, {
     id_token: idToken,
-    redirect_uri,
+    redirect_uri
   });
   if (res.data.success) {
     document.getElementById("loader").style.display = "none";

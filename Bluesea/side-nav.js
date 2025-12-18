@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", function () {
   getBalanace();
 });
 
-//let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
-let API_BASE = "http://157.230.168.63:8000"; // from Postman collection
+let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
+//let API_BASE = "http://157.230.168.63:8000"; 
 
 function getCookie(name) {
   const nameEQ = name + "=";
