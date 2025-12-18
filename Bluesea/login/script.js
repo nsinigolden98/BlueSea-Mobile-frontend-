@@ -361,21 +361,25 @@ async function signInButton(){
     email: identifier,
     password: password 
   });
-  if (response.data.user.email_verified) {
+  console.log(response);
+  if (response.data.detail !== "No active account found with the given credentials"){
+  if (response.data.user.email_verified ) {
     showToast("Login successful. Redirecting...");
     setRefreshToken(response.data.refresh_token, 1);
     setAccessToken(response.data.access_token, 1);
     document.getElementById("loader").style.display = "none";
     window.location.replace("../dashboard/dashboard.html");
-  } else if (!response.data.user.email_verified) {
+  } else{
     await apiPost(ENDPOINT.sendOtp, { email: identifier });
     showToast("Email Already Registered ");
     localStorage.setItem("email", identifier);
     document.getElementById("loader").style.display = "none";
     window.parent.location.replace("../verify_email.html");
-  } else {
+  }  
+  }
+   else{
     document.getElementById("loader").style.display = "none";
-    showToast(response.data.detail);
+    showToast("Incorrect Email Or Password");
   }
 };
 
