@@ -35,7 +35,7 @@
           <!-- LOGIN -->
           <section class="login" id ="login">
               <form id="form_login" class="form form_login" role="tabpanel" 
-                aria-labelledby="tab_login" aria-hidden="false" novalidate>
+                aria-labelledby="tab_login"  novalidate>
             <!-- identifier: email / username / phone -->
             <div class="field">
               <label for="login_identifier" class="sr_only">Email</label>
@@ -75,7 +75,7 @@
               <button type="button" class="link forgot" id="forgot" onclick="forgotPassword()">Forgot password?</button>
             </div>
 
-            <button class="btn btn_primary" id="btn_login" type="button">Log in</button>
+            <button class="btn btn_primary" id="btn_login" type="button" onclick="signInButton()">Log in</button>
           </form>
                      <!-- Forgot Password panel -->
                <div class="forgot_modal field" id= "FP" data-panel="forgot password" aria-hidden="false">
@@ -97,8 +97,8 @@
             <input id="modal_otp_FP" class="input" type="text" inputmode="numeric" placeholder="Enter OTP" maxlength="6"/>
             <h3 id="fp_otp_error" class="error" aria-live="polite"></h3>
           <div class="row modal_actions">
-            <button id="change_pass" class="btn">Confirm</button>
-        <button id="reset_resend" class="btn">Resend (<span id="fp_modal_timer_email">50</span>s)</button>
+            <button type="button" id="change_pass" class="btn">Confirm</button>
+        <button type="button" id="reset_resend" class="btn">Resend (<span id="fp_modal_timer_email">50</span>s)</button>
           </div>
           
           </div> 
@@ -143,7 +143,7 @@
               </div>
               <h3 id="reset_confirm_error" class="error" aria-live="polite"></h3>
             </div>
-               <button id="reset_btn" class="btn">Reset</button>     
+               <button type='button' id="reset_btn" class="btn">Reset</button>     
             </div>
         </div>
           </section>
@@ -151,7 +151,7 @@
         <section  class= "sign-up" id ="sign-up" >
               
           <form id="form_signup" class="form form_signup" role="tabpanel"
-                aria-labelledby="tab_signup" aria-hidden="true"  novalidate>
+                  novalidate>
             <div class="field">
               <label for="signup_email" class="sr_only">Email</label>
               <input id="signup_email" name="signup_email" class="input" type="email"
@@ -171,8 +171,7 @@
             <div class="field">
               <label for="signup_name" class="sr_only">Name</label>
               <input id="signup_name" name="signup_name" class="input" type="text"
-                     placeholder="First Name (e.g., John)" autocomplete="given-name"
-                     aria-describedby="signup_name_error" required />
+                     placeholder="First Name (e.g., John)" autocomplete="given-name" required />
               <div id="signup_name_error" class="error" aria-live="polite"></div>
             </div>
             <div class="field">
@@ -279,7 +278,7 @@
    
           <div class="divider"><span>Or continue with</span></div>
       
-      <div class="socials"  id="g_id_onload"
+      <!-- <div class="socials"  id="g_id_onload"
          data-client_id="557271059008-u6r4bna1r9jqe5r20rkhcjr4rof9s18u.apps.googleusercontent.com"       
          data-callback="handleCredentialResponse">
       </div>
@@ -292,7 +291,7 @@
        data-size="large"
        data-logo_alignment="left">
   </div>
-    
+     -->
     <iframe src="../loader.html" frameborder="0" id ="loader"></iframe>        
 
   </main>

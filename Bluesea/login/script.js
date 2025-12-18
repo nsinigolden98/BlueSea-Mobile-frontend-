@@ -92,7 +92,8 @@ function closeModal() {
   resetModalTimers("forgot_password");
 }
 
-const API_BASE = "http://157.230.168.63:8000"; 
+//const API_BASE = "http://157.230.168.63:8000"; 
+let API_BASE = "http://127.0.0.1:8000";
 
 let ENDPOINT = {
   login: `${API_BASE}/accounts/login/`,
@@ -333,8 +334,8 @@ function setRefreshToken(token, days) {
   )}; max-age=${maxAge}; path=/; SameSite=Lax; secure`;
 }
 
-safeAdd(form_login, "submit", async (ev) => {
-  ev.preventDefault();
+async function signInButton(){
+  
   clearAllErrors(form_login);
   const identifier = $("#login_identifier").value.trim();
   const password = $("#login_password").value.trim();
@@ -365,22 +366,22 @@ safeAdd(form_login, "submit", async (ev) => {
     setRefreshToken(response.data.refresh_token, 1);
     setAccessToken(response.data.access_token, 1);
     document.getElementById("loader").style.display = "none";
-    window.location.replace("https://www.blueseamobile.com.ng/Bluesea/dashboard/dashboard.html");
+    window.location.replace("../dashboard/dashboard.html");
   } else if (!response.data.user.email_verified) {
     await apiPost(ENDPOINT.sendOtp, { email: identifier });
     showToast("Email Already Registered ");
     localStorage.setItem("email", identifier);
     document.getElementById("loader").style.display = "none";
-    window.parent.location.replace("https://www.blueseamobile.com.ng/Bluesea/verify_email.html");
+    window.parent.location.replace("../verify_email.html");
   } else {
     document.getElementById("loader").style.display = "none";
     showToast(response.data.detail);
   }
-});
+};
 
 /* -------------- Signup Form Submit -------------- */
-async function SignUpButton(event) {
-  event.preventDefault();
+async function SignUpButton() {
+  
   clearAllErrors(form_signup);
   const email = $("#signup_email").value.trim();
   const phoneRaw = $("#signup_phone").value.trim();
@@ -481,8 +482,7 @@ async function SignUpButton(event) {
 }
 
 /* -------------- Forgot password flow (trigger modal for email) -------------- */
-function forgotPassword(event) {
-  event.preventDefault();
+function forgotPassword() {
   // Show modal purpose forgot_password (default to email)
   document.getElementById("FP").style.display = "block";
   document.getElementById("FP_email_field").style.display = "block";
@@ -597,7 +597,7 @@ async function handleCredentialResponse(response) {
     "https://www.blueseamobile.com.ng/Bluesea/dashboard/dashboard.html";
   let res = await apiPost(ENDPOINT.oauthGoogle, {
     id_token: idToken,
-    redirect_uri,
+    redirect_uri
   });
   if (res.data.success) {
     document.getElementById("loader").style.display = "none";
