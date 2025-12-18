@@ -359,7 +359,7 @@ async function signInButton(){
 
   const response = await apiPost(ENDPOINT.login, {
     email: identifier,
-    password: password 
+    password: password
   });
   console.log(response);
   if (response.data.detail !== "No active account found with the given credentials"){
@@ -385,7 +385,7 @@ async function signInButton(){
 
 /* -------------- Signup Form Submit -------------- */
 async function SignUpButton() {
-  
+
   clearAllErrors(form_signup);
   const email = $("#signup_email").value.trim();
   const phoneRaw = $("#signup_phone").value.trim();
@@ -469,8 +469,7 @@ async function SignUpButton() {
     phone: String(phone),
     other_names: name,
     surname,
-    password,
-    role: "user"
+    password
   };
   const res = await apiPost(ENDPOINT.signup, signup_payload);
   if (res.data.state) {
