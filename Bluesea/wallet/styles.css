@@ -11,7 +11,7 @@
   --wallet-panel: #ffffff;
   --wallet-card-muted: #ffffff;
   --muted_card: #f4f7f9;
-  --wallet-accent: #00c6ff;
+  --wallet-accent: #0b84ff;
   --wallet-accent-2: #0072ff;
   --wallet-text: #0b2130;
   --wallet-text-muted: #6b7b84;
@@ -57,7 +57,7 @@ body {
 
 /* CARD */
 .card {
-  background: var(--wallet-card-muted);
+  background: linear-gradient(90deg,var(--wallet-accent), rgba(45,199,255,0.9));
   border-radius: var(--wallet-radius);
   padding: 22px;
   display: flex;
@@ -82,7 +82,7 @@ body {
 }
 .card_title {
   font-size: 14px;
-  color: var(--wallet-text);
+  color: var(--wallet-muted-2);
   font-weight: 700;
   display: inline-block;
 }
@@ -111,7 +111,7 @@ body {
 .balance_value {
   font-size: 30px;
   font-weight: 800;
-  color: var(--wallet-text);
+  color: var(--wallet-muted-2);
   margin-top: 6px;
 }
 .balance_actions {
