@@ -84,9 +84,7 @@ body {
     height: 100%;
     object-fit: cover;
     display: block;
-    /* To simulate the placeholder image in the screenshot */
-    filter: grayscale(100%); 
-    opacity: 0.8;
+    pointer-events: none;
 }
 
 .camera-icon {
@@ -99,6 +97,7 @@ body {
     padding: 4px;
     font-size: 16px;
     border: 2px solid var(--card-background);
+    cursor: pointer;
 }
 
 .profile-image-section h2 {
@@ -107,6 +106,90 @@ body {
     color: var(--text-color);
 }
 
+/* Info Groups */
+.info-group {
+    background-color: var(--card-background);
+    border-radius: 10px;
+    margin-top: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-item.clickable {
+    cursor: pointer;
+}
+
+.info-item.clickable:active {
+    background-color: var(--background-color);
+}
+
+.label {
+    flex-grow: 1;
+    font-size: 15px;
+    color: var(--secondary-text-color);
+}
+
+.value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-color);
+    text-align: right;
+    margin-right: 5px;
+}
+
+.value.static-value {
+    color: var(--text-color);
+}
+
+.value.placeholder-value {
+    color: #aaa;
+}
+
+.icon-button {
+    font-size: 18px;
+    color: var(--secondary-text-color);
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.icon-arrow {
+    font-size: 20px;
+    color: #ccc;
+    margin-left: 5px;
+}
+
+/* Tier Specific Styling */
+.tier-item .icon-button.gold {
+    color: var(--gold-color);
+    font-size: 20px;
+}
+
+.tier-item .value {
+    color: var(--gold-color);
+    margin-right: 5px;
+}
+
+.tier-item {
+    padding-right: 15px; /* Adjust padding for better alignment with arrow */
+}
+
+/* Specific item adjustments */
+.address-item .label {
+    flex-grow: 0; /* Let the label take only necessary width */
+    margin-right: auto; /* Push arrow to the right */
+}
 /* Info Groups */
 .info-group {
     background-color: var(--card-background);
