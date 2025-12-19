@@ -1,3 +1,4 @@
+
 /* style.css - updated to mirror Data page nav behavior (desktop-only) */
 
 /* base tokens */
@@ -78,7 +79,7 @@
 .card{background:var(--dash-card-muted);border-radius:var(--dash-radius);padding:28px;display:flex;gap:24px;align-items:center}
 .card--balance{background:linear-gradient(90deg,var(--dash-accent), rgba(45,199,255,0.9));color:#001e24;align-items:center;justify-content:space-between;padding:28px 36px;border-radius:18px;box-shadow:0 10px 40px rgba(45,199,255,0.06)}
 /*.balance_left{}*/
-.balance_label{font-size:14px;color:rgba(0,30,36,0.6);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.balance_label{font-size:14px;color:var(--dash-muted-2);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .balance_value{font-size:30px;font-weight:800;line-height:1;letter-spacing:0.01em;
     color: var(--dash-muted-2);
 }
