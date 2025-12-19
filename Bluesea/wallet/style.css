@@ -57,7 +57,7 @@ body{
 .wallet_topgrid{display:grid;grid-template-columns:420px 1fr;gap:24px;align-items:start}
 
 /* CARD */
-.wallet_card{background:var(--wallet-card-muted);border-radius:var(--wallet-radius);padding:22px;display:flex;flex-direction:column;gap:18px;box-shadow: 0 6px 18px rgba(0,0,0,0.45);}
+.wallet_card{background:linear-gradient(90deg,var(--wallet-accent), rgba(45,199,255,0.9));border-radius:var(--wallet-radius);padding:22px;display:flex;flex-direction:column;gap:18px;box-shadow: 0 6px 18px rgba(0,0,0,0.45);}
 .wallet_balance_card{
   min-height:200px;
   justify-content:flex-start;
@@ -70,7 +70,7 @@ body{
 
 /* Title row for label + eye toggle */
 .wallet_card_title_row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.wallet_card_title{font-size:14px;color:var(--wallet-text);font-weight:700;display:inline-block}
+.wallet_card_title{font-size:14px;color:var(--wallet-muted-2);font-weight:700;display:inline-block}
 
 /* Eye toggle - more visible */
 .wallet_total_eye_btn{
@@ -91,7 +91,7 @@ body{
 }
 
 /* Balance value large & readable */
-.wallet_balance_value{font-size:56px;font-weight:800;color:var(--wallet-text);margin-top:6px}
+.wallet_balance_value{font-size:56px;font-weight:800;color:var(--wallet-muted-2);margin-top:6px}
 .wallet_balance_actions{display:flex;gap:12px;align-items:center;margin-top:8px}
 .wallet_btn{padding:10px 20px;border-radius:999px;border:none;cursor:pointer;font-weight:700;height:44px;min-width:110px}
 .wallet_btn_primary{background:linear-gradient(90deg,var(--wallet-accent),var(--wallet-accent-2));color:#001e24;box-shadow:0 8px 24px rgba(23,170,255,0.12)}
