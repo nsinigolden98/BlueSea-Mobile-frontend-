@@ -140,6 +140,108 @@ body{
     top:25px;
 }
 
+    /* ================================
+     Navigation Ad
+  ================================ */
+  .nav-ad-container {
+    margin: 10px 0;
+    margin-top:5px;
+    position: relative;
+    width: 100%;
+    height: 200px;
+    border-radius: 0% 12% 0% 12%;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  flex-shrink: 0;
+  }
+
+  .nav-ad-slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .nav-ad-slide.active { opacity: 1; transform: scale(1.02); }
+
+  .nav-ad-slide img, .nav-ad-slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  
+
+  .nav-dots {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+  }
+
+  .nav-dot {
+    width: 10px;
+    height: 10px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .nav-dot.active { background: #fff; }
+
+
+/*title animation  */
+.nav-ad-title {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.6);
+    color: whitesmoke;
+    padding: 8px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+.ticker {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ticker span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: ticker-move 5s linear infinite;
+}
+
+/* Pause on hover */
+.ticker:hover span {
+  animation-play-state: paused;
+}
+
+/* Right → Left movement */
+@keyframes ticker-move {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .nav-ad-container { height: 150px; }
+  }
+
+
+                  
 
   </style>
 
@@ -215,7 +317,47 @@ body{
 
         </nav>
 
-       
+       <!-- Navigation Ad -->
+  <div class="nav-ad-container" id="navAdCarousel">
+    <!-- Slide 1: Personal Ad -->
+    <div class="nav-ad-slide active">
+      <a href="https://example.com" target="_blank">
+        <img src="https://picsum.photos/id/1015/400/400" alt="Nav Ad 1">
+        <div class="nav-ad-title ticker"><span>Exclusive Deal on Blue Sea Mobile Services!</span></div>
+      </a>
+    </div>
+
+    <!-- Slide 2: Video Ad 
+    <div class="nav-ad-slide">
+      <a href="https://example.com" target="_blank">
+        <video autoplay muted loop>
+          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+        </video>
+        <div class="nav-ad-title ticker"><span>Check Out Our Latest Video Campaign</span></div>
+      </a>
+    </div>-->
+
+    <!-- Slide 3: Simulated Google Ad -->
+    <div class="nav-ad-slide">
+      <a href="https://blueseamobile.com.ng" target="_blank">
+        <img src="https://www.facebook.com/share/17S4vNCJEi/" alt="Google Ad">
+          <div class="nav-ad-title ticker"><span>Google Ad Simulation</span></div>
+      </a>
+       </div>
+
+    <!-- Slide 4: -->
+    <div class="nav-ad-slide">
+      <a href="https://blueseamobile.com.ng" target="_blank">
+        <img src="phone.jpg" alt="ads">
+          <div class="nav-ad-title ticker"><span>download now and enjoy</span></div>
+      </a>
+       </div>
+
+    <!-- Dots -->
+    <div class="nav-dots" id="navDots"></div>
+  </div>
+
+</div> 
 
         <div class="profile" id="profile_block">
           <div class="avatar" id="avatar" onclick="window.parent.location.href= 'profile/profile.html'">
@@ -262,6 +404,42 @@ body{
         if(full_screen_size){
             document.getElementById("close_nav_btn").style.display = "none";
         }
+
+      /* ================================
+     Navigation Ad Carousel
+  ================================ */
+  const navSlides = document.querySelectorAll('.nav-ad-slide');
+  const navDotsContainer = document.getElementById('navDots');
+  let currentNavSlide = 0;
+  const navInterval = 10000; // 10 seconds for better visibility
+
+  // Generate dots
+  navSlides.forEach((slide, i) => {
+    const dot = document.createElement('div');
+    dot.classList.add('nav-dot');
+    if(i === 0) dot.classList.add('active');
+    dot.addEventListener('click', () => goToNavSlide(i));
+    navDotsContainer.appendChild(dot);
+  });
+
+  const navDots = document.querySelectorAll('.nav-dot');
+
+  function goToNavSlide(i){
+    navSlides[currentNavSlide].classList.remove('active');
+    navDots[currentNavSlide].classList.remove('active');
+    currentNavSlide = i;
+    navSlides[currentNavSlide].classList.add('active');
+    navDots[currentNavSlide].classList.add('active');
+  }
+
+  function nextNavSlide(){
+    let next = (currentNavSlide + 1) % navSlides.length;
+    goToNavSlide(next);
+  }
+
+  setInterval(nextNavSlide, navInterval);
+
+  
     </script>
 </body>
 
