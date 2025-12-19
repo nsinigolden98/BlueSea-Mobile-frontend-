@@ -346,3 +346,20 @@ h3{
       
 }
 
+/* Password rules container */
+.password-rules {
+  display: none;          /* Hidden on page load */
+  margin-top: 6px;        /* SMALL spacing (fixed) */
+  font-size: 13px;
+}
+
+/* Individual rule */
+.password-rules .rule {
+  margin: 0 0;          /* Tight spacing */
+  color: #c0392b;         /* Red */
+}
+
+/* Valid rule */
+.password-rules .rule.valid {
+  color: #27ae60;         /* Green */
+}
