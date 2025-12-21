@@ -92,8 +92,8 @@ function closeModal() {
   resetModalTimers("forgot_password");
 }
 
-//const API_BASE = "http://157.230.168.63:8000"; 
-let API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://api.blueseamobile.com.ng"; 
+//let API_BASE = "http://127.0.0.1:8000";
 
 let ENDPOINT = {
   login: `${API_BASE}/accounts/login/`,
@@ -449,13 +449,13 @@ async function SignUpButton() {
   }
 
   // password policy
-  if (!validPassword(password)) {
+ /* if (!validPassword(password)) {
     setError(
       $("#signup_password"),
       "Password must be >=8 chars, include letters and digits; allowed specials: # $ @"
     );
     return;
-  }
+  }*/
   if (password !== confirm) {
     setError($("#signup_confirm"), "Passwords do not match.");
     return;
@@ -616,3 +616,45 @@ async function handleCredentialResponse(response) {
 window.addEventListener("popstate", () => {
   history.go(0);
 });
+
+//password UI validation 
+const passwordInput = document.getElementById('signup_password');
+  const submitBtn = document.getElementById('btn_signup');
+  const rulesBox = document.getElementById('password-rules');
+
+  const ruleLower = document.getElementById('rule-lower');
+  const ruleUpper = document.getElementById('rule-upper');
+  const ruleNumber = document.getElementById('rule-number');
+  const ruleSpecial = document.getElementById('rule-special');
+
+  // Show rules ONLY when user clicks password
+  passwordInput.addEventListener('focus', () => {
+    rulesBox.style.display = 'block';
+  });
+
+  passwordInput.addEventListener('input', () => {
+    const value = passwordInput.value;
+
+    const hasLower = /[a-z]/.test(value);
+    const hasUpper = /[A-Z]/.test(value);
+    const hasNumber = /[0-9]/.test(value);
+    const hasSpecial = /[#@$]/.test(value);
+
+    toggleRule(ruleLower, hasLower);
+    toggleRule(ruleUpper, hasUpper);
+    toggleRule(ruleNumber, hasNumber);
+    toggleRule(ruleSpecial, hasSpecial);
+
+    const allValid =
+      hasLower && hasUpper && hasNumber && hasSpecial;
+
+    submitBtn.disabled = !allValid;
+  });
+
+  function toggleRule(element, isValid) {
+    if (isValid) {
+      element.classList.add('valid');
+    } else {
+      element.classList.remove('valid');
+    }
+  }

@@ -1,3 +1,4 @@
+
 /* style.css - updated to mirror Data page nav behavior (desktop-only) */
 
 /* base tokens */
@@ -74,11 +75,99 @@
 }
 .bell:hover{color:var(--dash-accent)}
 
+/* Static header */
+.app-header {
+  position: static;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: transparent;
+  border-bottom: 1px solid #eee;
+    z-index: 0;
+}
+
+/* Hamburger button */
+.menu-btn {
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0px 0px;
+  line-height: 1;
+}
+
+/* Divider between menu and text */
+.header-divider {
+  width: 1px;
+  height: 22px;
+  background-color: #ddd;
+}
+
+/* Header text container */
+.header-text {
+  display: flex;
+  flex-direction: column;
+  pointer-events: none; /* text is not clickable */
+  animation: fadeSlideIn 0.4s ease-out;
+    color: linear-gradient(90deg,var(--dash-accent), rgba(45,199,255,0.9));
+}
+
+/* Title */
+.header-text h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  }
+
+/* Subtitle */
+.header-text p {
+  font-size: 13px;
+  margin: 2px 0 0;
+  color: #666;
+}
+
+.menu-open .app-header {
+  visibility: hidden;
+}
+
+/* Animation */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Desktop / Laptop */
+@media (min-width: 768px) {
+  .menu-btn {
+    display: none;
+  }
+
+  .header-divider {
+    display: none;
+  }
+
+  .app-header {
+    padding: 18px 24px;
+  }
+
+  .header-text h1 {
+    font-size: 20px;
+  }
+    }
+
 /* CARD */
 .card{background:var(--dash-card-muted);border-radius:var(--dash-radius);padding:28px;display:flex;gap:24px;align-items:center}
 .card--balance{background:linear-gradient(90deg,var(--dash-accent), rgba(45,199,255,0.9));color:#001e24;align-items:center;justify-content:space-between;padding:28px 36px;border-radius:18px;box-shadow:0 10px 40px rgba(45,199,255,0.06)}
 /*.balance_left{}*/
-.balance_label{font-size:14px;color:rgba(0,30,36,0.6);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.balance_label{font-size:14px;color:var(--dash-muted-2);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .balance_value{font-size:30px;font-weight:800;line-height:1;letter-spacing:0.01em;
     color: var(--dash-muted-2);
 }

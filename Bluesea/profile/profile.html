@@ -16,10 +16,21 @@
 
         <main class="profile-card">
             <div class="profile-image-section">
+                 <!-- LABEL = REAL CLICK TARGET -->
+            <label
                 <div class="profile-image-placeholder">
                     <img id="user_image" alt="Profile Picture" class="profile-pic">
                     <span class="material-icons camera-icon">photo_camera</span>
+                                   <!-- ADD this just after the img -->
+<input 
+  type="file" 
+  id="profile_image_input" 
+  accept="image/*" 
+  hidden
+/>
+                </label>
                 </div>
+                
                 <h2 id="name"></h2>
             </div>
 
@@ -76,3 +87,4 @@
      <script src="script.js"></script>
 </body>
 </html>
+
