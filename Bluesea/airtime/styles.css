@@ -145,13 +145,13 @@ body {
     width: 96%; 
 }
 
-.header {
+/*.header {
     display: flex;
     justify-content: flex-start;
     align-items: center;
     padding: 0 0 16px 0; 
 }
-
+*/
 
 
 /* Section Styling */
