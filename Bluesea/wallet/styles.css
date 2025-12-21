@@ -55,6 +55,94 @@ body {
   width: 100%;
 }
 
+/* Static header */
+.app-header {
+  position: static;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: transparent;
+  border-bottom: 1px solid #eee;
+    z-index: 0;
+}
+
+/* Hamburger button */
+.menu-btn {
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0px 0px;
+  line-height: 1;
+}
+
+/* Divider between menu and text */
+.header-divider {
+  width: 1px;
+  height: 22px;
+  background-color: #ddd;
+}
+
+/* Header text container */
+.header-text {
+  display: flex;
+  flex-direction: column;
+  pointer-events: none; /* text is not clickable */
+  animation: fadeSlideIn 0.4s ease-out;
+    color: linear-gradient(90deg,var(--dash-accent), rgba(45,199,255,0.9));
+}
+
+/* Title */
+.header-text h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  }
+
+/* Subtitle */
+.header-text p {
+  font-size: 13px;
+  margin: 2px 0 0;
+  color: #666;
+}
+
+.menu-open .app-header {
+  visibility: hidden;
+}
+
+/* Animation */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Desktop / Laptop */
+@media (min-width: 768px) {
+  .menu-btn {
+    display: none;
+  }
+
+  .header-divider {
+    display: none;
+  }
+
+  .app-header {
+    padding: 18px 24px;
+  }
+
+  .header-text h1 {
+    font-size: 20px;
+  }
+}
+
 /* CARD */
 .card {
   background: linear-gradient(90deg,var(--wallet-accent), rgba(45,199,255,0.9));
