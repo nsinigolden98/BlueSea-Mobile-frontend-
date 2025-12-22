@@ -27,7 +27,8 @@
 html,body{
     height: 100%;
     position: relative;
-    
+    margin: 0;
+    padding: 0;
 }
 body {
     font-family: Arial, sans-serif;
@@ -36,7 +37,8 @@ body {
     display: inline-flex; 
     width: 100%;
     overflow:visible;
-    
+    margin: 0;
+    padding: 0;
 }
 
 .container {
@@ -296,7 +298,7 @@ section {
 /* --------------------------------------------- */
 .amount-select-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Use same min size as data cards */
+    grid-template-columns: repeat(3, 1fr); /* Use same min size as data cards */
     gap: 16px; /* Use same gap as data cards */
     margin-bottom: 8px; 
 }
@@ -435,7 +437,7 @@ section {
 
     .data-plans-grid, .amount-select-grid {
         /* Switch to 2 columns on small screens */
-        grid-template-columns: repeat(2, 1fr); 
+        grid-template-columns: repeat(3, 1fr); 
         gap: 8px; 
     }
     
