@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
   getBalanace();
 });
 
-//let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
+// let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
 let API_BASE = "https://api.blueseamobile.com.ng"; 
 
 function getCookie(name) {
@@ -87,6 +87,23 @@ async function postRequest(url, payload) {
   }
 }
 
+async function patchRequest(url, payload) {
+  try {
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: payload,
+    });
+    const json = await response.json().catch(() => ({}));
+    return json;
+  } catch (err) {
+    // Only network or fundamental request errors reach here
+    return { ok: false, status: 0, data: { error: "Network error" } };
+  }
+}
+
 function hideBalance() {
   let value = document.getElementById("balance_value");
   console.log(value.textContent);
@@ -134,7 +151,7 @@ async function getUserNav() {
   const user = await getRequest(ENDPOINTS.user);
   // Side nav
   document.getElementById("profile_name").textContent = user.other_names;
-  document.getElementById("avatar_img").src = user.image;
+  document.getElementById("avatar_img").src = API_BASE + user.image;
   document.getElementById("profile_email").textContent = user.email;
 }
 

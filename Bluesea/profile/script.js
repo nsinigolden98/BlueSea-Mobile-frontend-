@@ -4,10 +4,18 @@ async function getUser() {
     document.getElementById("email").textContent = user.email;
     document.getElementById("full_name").textContent = user.surname + " " +user.other_names;
     document.getElementById("phone_number").textContent = user.phone;
-    document.getElementById("user_image").src = user.image;
+    document.getElementById("user_image").src = API_BASE + user.image;
 }
  getUser();
-
+function showToast(msg, ms = 8200) {
+    const t = document.getElementById("toast");
+    if (!t) { alert(msg); return; }
+    t.textContent = msg;
+    t.hidden = false;
+    t.style.opacity = "1";
+    clearTimeout(t._hideTO);
+    t._hideTO = setTimeout(() => { t.hidden = true; }, ms);
+  }
 //
 const imageInput = document.getElementById("profile_image_input");
 const profileImage = document.getElementById("user_image");
@@ -29,28 +37,12 @@ imageInput.addEventListener("change", async () => {
 
     // Loading state
     imageWrapper.classList.add("loading");
+    const formData = new FormData();
+    formData.append('image', file);
 
-    try {
-        // ---- DEMO BACKEND SIMULATION ----
-        await fakeUpload(file);
+    let response = await patchRequest(ENDPOINTS.user, formData)
+        
+    showToast(response.message)
+    imageWrapper.classList.remove("loading");
 
-        // When backend returns image URL later:
-        // profileImage.src = response.image;
-
-        console.log("Upload successful");
-    } catch (err) {
-        console.error("Upload failed", err);
-        alert("Failed to upload image");
-    } finally {
-        imageWrapper.classList.remove("loading");
-    }
 });
-
-/* 3. Fake backend upload (replace later) */
-function fakeUpload(file) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({ success: true });
-        }, 1500);
-    });
-    }
