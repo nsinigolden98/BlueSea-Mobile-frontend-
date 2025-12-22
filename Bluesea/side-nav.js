@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
-let API_BASE = "https://api.blueseamobile.com.ng"; 
+ let API_BASE = "https://api.blueseamobile.com.ng"; 
 
 function getCookie(name) {
   const nameEQ = name + "=";
@@ -151,7 +151,9 @@ async function getUserNav() {
   const user = await getRequest(ENDPOINTS.user);
   // Side nav
   document.getElementById("profile_name").textContent = user.other_names;
-  document.getElementById("avatar_img").src = API_BASE + user.image;
+  // document.getElementById("avatar_img").src = API_BASE + user.image;
+  document.getElementById("avatar_img").src = 
+    user.image ? API_BASE + user.image : "../basic_imgs/profile.jpeg";
   document.getElementById("profile_email").textContent = user.email;
 }
 
