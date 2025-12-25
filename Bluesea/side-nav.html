@@ -166,9 +166,14 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
+    pointer-events: none;
   }
 
-  .nav-ad-slide.active { opacity: 1; transform: scale(1.02); }
+  .nav-ad-slide.active {
+    opacity: 1; 
+    transform: scale(1.02); 
+    pointer-events: auto;
+ }
 
   .nav-ad-slide img, .nav-ad-slide video {
     width: 100%;
@@ -207,6 +212,7 @@ body{
     padding: 8px;
     font-size: 14px;
     text-align: center;
+  pointer-events: none;
   }
 
 .ticker {
