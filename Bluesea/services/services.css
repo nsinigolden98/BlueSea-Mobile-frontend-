@@ -1,0 +1,434 @@
+:root{
+  --bg: #ffffff;
+  --text: #0f172a;
+  --muted: #6b7280;
+  --accent: #3b82f6; /* soft blue */
+  --card-bg: #ffffff;
+  --radius: 12px;
+  --shadow: 0 6px 18px rgba(15,23,42,0.06);
+  --shadow-hover: 0 14px 30px rgba(15,23,42,0.09);
+  --gap: 12px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --tap-duration: 180ms;
+  --shake-duration: 180ms;
+  --load-duration: 360ms;
+  --stagger-step: 60ms;
+}
+
+/* Reset & base */
+* { box-sizing: border-box; }
+html,body { height:100%; }
+body{
+  margin:0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.35;
+  padding:16px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Page header */
+.page {
+  max-width:980px;
+  margin:0 auto;
+}
+/* Static header */
+.app-header {
+  position: static;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: transparent;
+  border-bottom: 1px solid #eee;
+    z-index: 0;
+}
+
+/* Hamburger button */
+.menu-btn {
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0px 0px;
+  line-height: 1;
+}
+
+/* Divider between menu and text */
+.header-divider {
+  width: 1px;
+  height: 22px;
+  background-color: #ddd;
+}
+
+/* Header text container */
+.header-text {
+  display: flex;
+  flex-direction: column;
+  pointer-events: none; /* text is not clickable */
+  animation: fadeSlideIn 0.4s ease-out;
+    color: linear-gradient(90deg,var(--dash-accent), rgba(45,199,255,0.9));
+}
+
+/* Title */
+.header-text h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  }
+
+/* Subtitle */
+.header-text p {
+  font-size: 13px;
+  margin: 2px 0 0;
+  color: #666;
+}
+
+.menu-open .app-header {
+  visibility: hidden;
+}
+
+/* Animation */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Desktop / Laptop */
+@media (min-width: 768px) {
+  .menu-btn {
+    display: none;
+  }
+
+  .header-divider {
+    display: none;
+  }
+
+  .app-header {
+    padding: 18px 24px;
+  }
+
+  .header-text h1 {
+    font-size: 20px;
+  }
+}
+
+/* Categories layout */
+.categories {
+  display:grid;
+  gap:18px;
+  margin-top:8px;
+}
+
+/* Category visual polish */
+.category {
+  padding:10px;
+  border-radius:10px;
+  background: linear-gradient(180deg, rgba(59,130,246,0.02), rgba(59,130,246,0.00));
+  border: 1px solid rgba(15,23,42,0.03);
+  /* avoid creating unnecessary stacking contexts here */
+}
+.category + .category {
+  margin-top:6px;
+}
+.category-title {
+  font-size:clamp(0.95rem, 2.6vw, 1.02rem);
+  margin:0 2px 8px 2px;
+  color:var(--text);
+  font-weight:600;
+  padding-bottom:6px;
+  border-bottom:1px solid rgba(15,23,42,0.04);
+}
+
+/* Services grid - mobile: compact 2-column */
+.services-grid {
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:var(--gap);
+  margin-top:8px;
+}
+
+/* Service card
+   NOTE: removed will-change to avoid creating unexpected stacking contexts.
+   Explicit z-index is set to 0 so overlays with higher z-index (toast, global overlays)
+   reliably appear above cards even when cards are transformed. */
+.service-card {
+  position:relative;
+  display:flex;
+  z-index: 1;
+  align-items:center;
+  gap:12px;
+  padding:10px;
+  background:var(--card-bg);
+  border-radius:10px;
+  box-shadow:var(--shadow);
+  border:1px solid rgba(15,23,42,0.04);
+  cursor:pointer;
+  user-select:none;
+  transition:
+    transform 220ms var(--ease),
+    box-shadow 220ms var(--ease),
+    border-color 220ms var(--ease),
+    opacity 220ms var(--ease);
+  min-height:56px;
+  overflow:visible;
+  z-index: 0; /* ensure predictable stacking baseline */
+  will-change: opacity; /* keep to opacity only for performance */
+}
+
+./* Hide service cards when side menu is open */
+.menu-open .categories {
+  display: none;
+}
+
+/* Icon and label */
+.icon {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  height:44px;
+  border-radius:8px;
+  background:rgba(59,130,246,0.06);
+  color:var(--accent);
+  flex:0 0 44px;
+  box-shadow: 0 2px 6px rgba(59,130,246,0.04);
+  transition: transform 220ms var(--ease), box-shadow 220ms var(--ease);
+  will-change: transform;
+}
+.icon svg { display:block; width:22px; height:22px; transition: transform 220ms var(--ease), stroke 220ms var(--ease); transform-origin:center center; }
+
+/* Label: fluid, wrap-friendly for mobile */
+.label {
+  font-size: clamp(0.86rem, 2.8vw, 0.96rem);
+  line-height: 1.18;
+  color:var(--text);
+  font-weight:500;
+  display:block;
+  white-space:normal;
+  word-wrap:break-word;
+  overflow-wrap:break-word;
+  hyphens:auto;
+  max-width: calc(100% - 56px);
+}
+
+/* Hover (desktop only) - subtle elevation and icon scale */
+@media (hover: hover) and (pointer: fine) {
+  .service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(59,130,246,0.12);
+     /* lift above siblings during hover */
+  }
+  .service-card:hover .icon {
+    transform: scale(1.05);
+    box-shadow: 0 6px 18px rgba(59,130,246,0.06);
+  }
+  .service-card:hover .icon svg {
+    transform: scale(1.05);
+    stroke: var(--accent);
+  }
+}
+
+/* Focus visible for keyboard */
+.service-card:focus-visible {
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.10);
+  outline: none;
+  
+}
+
+/* Press (tap/click) effect - applied via class for both mobile & desktop */
+.press {
+  transform: scale(0.975) !important;
+  transition: transform 160ms var(--ease) !important;
+  
+}
+
+/* Tap animation (JS toggled) */
+@keyframes tap {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.975); }
+  100% { transform: scale(1); }
+}
+.tap {
+  animation: tap 180ms var(--ease) both;
+}
+
+/* Subtle shake for disabled */
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+.shake {
+  animation: shake var(--shake-duration) var(--ease);
+  
+}
+
+/* Ripple element - ensure it sits above card content */
+.ripple {
+  position:absolute;
+  border-radius:50%;
+  background: rgba(59,130,246,0.12);
+  transform: scale(0);
+  opacity:0.9;
+  pointer-events:none;
+  will-change: transform, opacity;
+  transition: transform 260ms var(--ease), opacity 260ms var(--ease);
+  z-index: 4;
+}
+
+/* Page-load animation: fade + slide up
+   Keep animation on opacity and transform; set z-index to 0 so overlays remain above. */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card-preload {
+  opacity:0;
+  transform: translateY(8px);
+}
+.card-animate {
+  animation: fadeUp var(--load-duration) var(--ease) both;
+  z-index: 0;
+}
+
+/* Toast - ensure it is above everything */
+.toast {
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:18px;
+  min-width:160px;
+  max-width:90%;
+  background:rgba(15,23,42,0.95);
+  color:#fff;
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:0.92rem;
+  text-align:center;
+  box-shadow:0 8px 24px rgba(2,6,23,0.2);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 220ms var(--ease), transform 220ms var(--ease);
+  z-index:99999; /* very high to avoid stacking issues */
+}
+.toast.show {
+  opacity:1;
+  transform:translateX(-50%) translateY(-6px);
+  pointer-events:auto;
+}
+
+/* Small inline feedback near card */
+.feedback {
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:calc(100% + 8px);
+  background:#111827;
+  color:#fff;
+  padding:6px 10px;
+  border-radius:8px;
+  font-size:0.82rem;
+  box-shadow:0 6px 18px rgba(2,6,23,0.18);
+  white-space:nowrap;
+  opacity:0;
+  transition:opacity 200ms var(--ease);
+  pointer-events:none;
+  z-index: 6;
+}
+
+/* Disabled card visual hint */
+.service-card[data-status="disabled"] {
+  opacity:0.98;
+  filter:grayscale(0.02);
+}
+
+/* Make sure everything is touch-friendly */
+@media (hover: none) {
+  .service-card:hover { transform:none; box-shadow:var(--shadow); }
+}
+
+/* Mobile-specific text visibility fixes (critical) */
+@media (max-width:420px) {
+  body { padding:12px; }
+  .services-grid { gap:10px; }
+  .service-card { padding:9px; min-height:52px; border-radius:10px; }
+  .icon { width:40px; height:40px; flex:0 0 40px; }
+  .icon svg { width:20px; height:20px; }
+  .label {
+    font-size: clamp(0.78rem, 3.6vw, 0.88rem);
+    line-height:1.12;
+    max-width: calc(100% - 52px);
+  }
+  .category { padding:8px; border-radius:10px; }
+  .category-title { font-size:0.95rem; padding-bottom:4px; margin-bottom:6px; }
+}
+
+/* Desktop layout changes */
+@media (min-width:900px) {
+  body { padding:28px; }
+  .page-header { padding:0 0 18px 0; }
+  .title { font-size:1.5rem; }
+  .subtitle { font-size:1rem; }
+
+  /* Categories become a two-column grouped layout */
+  .categories {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:22px;
+    align-items:start;
+  }
+
+  .category {
+    background: linear-gradient(180deg, rgba(59,130,246,0.01), rgba(59,130,246,0.00));
+    padding:12px;
+  }
+
+  .services-grid {
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:14px;
+  }
+
+  .service-card {
+    padding:14px;
+    min-height:64px;
+    border-radius:12px;
+  }
+
+  .icon { width:48px; height:48px; flex:0 0 48px; }
+  .icon svg { width:24px; height:24px; }
+}
+
+/* Larger desktop: show more columns for services within a category */
+@media (min-width:1200px) {
+  .services-grid {
+    grid-template-columns:repeat(3, minmax(0,1fr));
+    gap:16px;
+  }
+}
+
+/* Ensure no overflow */
+.title, .subtitle, .category-title, .label {
+  word-break:break-word;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .service-card, .toast, .feedback, .icon svg {
+    transition: none !important;
+    animation: none !important;
+  }
+}

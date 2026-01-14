@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VTU Services</title>
+  <link rel="stylesheet" href="services.css" />
+  <link rel="stylesheet" href="../side-nav.css">
+      <link rel="stylesheet" href="../loader.css">
+</head>
+<body>
+  <main class="page">
+            <!-- Side Navigation-->
+      
+      <iframe src="../side-nav.html" id ="side-bar" ></iframe>
+    <header class="app-header"> 
+          <!-- Hamburger menu (your existing logic still works) -->  
+          <button  class="menu-btn" id="menu-btn" onclick="showNav()"> 
+            ☰
+          </button>
+  <!-- Divider (mobile only) -->
+  <span class="header-divider"></span>
+  <!-- Header text (non-clickable) -->
+  <div class="header-text">
+    <h1>BlueSea Services</h1>
+    <p>Quick access to recharge, bills, and more</p>
+  </div>
+      </header>
+
+    <section class="categories" aria-label="Service categories">
+            <!-- Category: Special -->
+      <div class="category">
+        <h2 class="category-title">Special feautures</h2>
+        <div class="services-grid" role="list">
+          <article class="service-card" role="button" tabindex="0"
+                   data-route="../group_payment/grouppayment.html" data-status="disabled" aria-pressed="false">
+            <span class="icon" aria-hidden="true">
+              <!-- Outline SVG: Group Payment -->
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <circle cx="12" cy="8" r="2.5" stroke="#222222" stroke-linecap="round"></circle> <path d="M13.7679 6.5C13.9657 6.15743 14.2607 5.88121 14.6154 5.70625C14.9702 5.5313 15.3689 5.46548 15.7611 5.51711C16.1532 5.56874 16.5213 5.73551 16.8187 5.99632C17.1161 6.25713 17.3295 6.60028 17.4319 6.98236C17.5342 7.36445 17.521 7.76831 17.3939 8.14288C17.2667 8.51745 17.0313 8.8459 16.7175 9.08671C16.4037 9.32751 16.0255 9.46985 15.6308 9.49572C15.2361 9.52159 14.8426 9.42983 14.5 9.23205" stroke="#222222"></path> <path d="M10.2321 6.5C10.0343 6.15743 9.73935 5.88121 9.38458 5.70625C9.02981 5.5313 8.63113 5.46548 8.23895 5.51711C7.84677 5.56874 7.47871 5.73551 7.18131 5.99632C6.88391 6.25713 6.67053 6.60028 6.56815 6.98236C6.46577 7.36445 6.47899 7.76831 6.60614 8.14288C6.73329 8.51745 6.96866 8.8459 7.28248 9.08671C7.5963 9.32751 7.97448 9.46985 8.36919 9.49572C8.76391 9.52159 9.15743 9.42983 9.5 9.23205" stroke="#222222"></path> <path d="M12 12.5C16.0802 12.5 17.1335 15.8022 17.4054 17.507C17.4924 18.0524 17.0523 18.5 16.5 18.5H7.5C6.94771 18.5 6.50763 18.0524 6.59461 17.507C6.86649 15.8022 7.91976 12.5 12 12.5Z" stroke="#222222" stroke-linecap="round"></path> <path d="M19.2965 15.4162L18.8115 15.5377L19.2965 15.4162ZM13.0871 12.5859L12.7179 12.2488L12.0974 12.9283L13.0051 13.0791L13.0871 12.5859ZM17.1813 16.5L16.701 16.639L16.8055 17H17.1813V16.5ZM15.5 12C16.5277 12 17.2495 12.5027 17.7783 13.2069C18.3177 13.9253 18.6344 14.8306 18.8115 15.5377L19.7816 15.2948C19.5904 14.5315 19.2329 13.4787 18.578 12.6065C17.9126 11.7203 16.9202 11 15.5 11V12ZM13.4563 12.923C13.9567 12.375 14.6107 12 15.5 12V11C14.2828 11 13.3736 11.5306 12.7179 12.2488L13.4563 12.923ZM13.0051 13.0791C15.3056 13.4614 16.279 15.1801 16.701 16.639L17.6616 16.361C17.1905 14.7326 16.019 12.5663 13.1691 12.0927L13.0051 13.0791ZM18.395 16H17.1813V17H18.395V16ZM18.8115 15.5377C18.8653 15.7526 18.7075 16 18.395 16V17C19.2657 17 20.0152 16.2277 19.7816 15.2948L18.8115 15.5377Z" fill="#222222"></path> <path d="M10.9129 12.5859L10.9949 13.0791L11.9026 12.9283L11.2821 12.2488L10.9129 12.5859ZM4.70343 15.4162L5.18845 15.5377L4.70343 15.4162ZM6.81868 16.5V17H7.19453L7.29898 16.639L6.81868 16.5ZM8.49999 12C9.38931 12 10.0433 12.375 10.5436 12.923L11.2821 12.2488C10.6264 11.5306 9.71723 11 8.49999 11V12ZM5.18845 15.5377C5.36554 14.8306 5.68228 13.9253 6.22167 13.2069C6.75048 12.5027 7.47226 12 8.49999 12V11C7.0798 11 6.08743 11.7203 5.42199 12.6065C4.76713 13.4787 4.40955 14.5315 4.21841 15.2948L5.18845 15.5377ZM5.60498 16C5.29247 16 5.13465 15.7526 5.18845 15.5377L4.21841 15.2948C3.98477 16.2277 4.73424 17 5.60498 17V16ZM6.81868 16H5.60498V17H6.81868V16ZM7.29898 16.639C7.72104 15.1801 8.69435 13.4614 10.9949 13.0791L10.8309 12.0927C7.98101 12.5663 6.8095 14.7326 6.33838 16.361L7.29898 16.639Z" fill="#222222"></path> </g></svg>
+            </span>
+            <span class="label">Group Payment</span>
+          </article>
+
+          <article class="service-card" role="button" tabindex="0"
+                   data-route="../smarttopup/smarttopup.html" data-status="disabled" aria-pressed="false">
+            <span class="icon" aria-hidden="true">
+              <!-- Outline SVG: Smart-top-up -->
+              <svg fill="currentColor" stroke="currentColor" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64px" height="64px" viewBox="0 0 512 512" enable-background="new 0 0 512 512" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M256,0C114.609,0,0,114.609,0,256s114.609,256,256,256s256-114.609,256-256S397.391,0,256,0z M256,472 c-119.297,0-216-96.703-216-216S136.703,40,256,40s216,96.703,216,216S375.297,472,256,472z"></path> <g> <path d="M256.008,224c-17.672,0-32,14.312-32,32c0,17.672,14.328,32,32,32C273.672,288,288,273.672,288,256 C288,238.312,273.672,224,256.008,224z"></path> <path d="M304.875,202.688l-18.016,13.531C299.609,224.844,308,239.438,308,256s-8.391,31.141-21.141,39.766l18.016,13.531 C320.094,296.453,330,277.453,330,256C330,234.531,320.094,215.531,304.875,202.688z"></path> <path d="M348.844,169.594l-17.75,13.344C350.125,201.469,362,227.344,362,256s-11.875,54.531-30.906,73.047l17.75,13.359 C370.562,320.047,384,289.625,384,256S370.562,191.938,348.844,169.594z"></path> <path d="M204.008,256.531c0.219-16.562,8.781-31.062,21.656-39.516L207.82,203.25c-15.375,12.656-25.531,31.516-25.812,53 c-0.281,21.469,9.375,40.578,24.438,53.625l18.188-13.297C211.992,287.812,203.789,273.094,204.008,256.531z"></path> <path d="M181.867,183.156l-17.578-13.562c-22,22.062-35.844,52.312-36.281,85.938c-0.438,33.641,12.625,64.234,34.031,86.875 l17.938-13.125c-18.812-18.781-30.344-44.797-29.969-73.453C150.383,227.156,162.602,201.438,181.867,183.156z"></path> </g> </g></svg>
+            </span>
+            <span class="label">Smart-top-up</span>
+          </article>
+        </div>
+      </div>
+      
+      <!-- Category: Airtime & Data -->
+      <div class="category">
+        <h2 class="category-title">Airtime & Data</h2>
+        <div class="services-grid" role="list">
+          <article class="service-card" role="button" tabindex="0"
+                   data-route="../airtime/airtime.html" data-status="active" aria-pressed="false">
+            <span class="icon" aria-hidden="true">
+              <!-- Outline SVG: Airtime -->
+             <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" height="1.5em" width="1.5em"><path fill="currentColor" d="M13 46q-1.2 0-2.1-.9-.9-.9-.9-2.1V5q0-1.2.9-2.1.9-.9 2.1-.9h22q1.2 0 2.1.9.9.9.9 2.1v38q0 1.2-.9 2.1-.9.9-2.1.9Zm0-7.5h22v-29H13Zm0 3V43h22v-1.5Zm0-35h22V5H13ZM13 5v1.5V5Zm0 38v-1.5V43Z"/></svg>
+            </span>
+            <span class="label">Airtime</span>
+          </article>
+
+          <article class="service-card" role="button" tabindex="0"
+                   data-route="../data/data.html" data-status="active" aria-pressed="false">
+            <span class="icon" aria-hidden="true">
+              <!-- Outline SVG: Data -->
+              <span class="icon">
+              <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" height="1.5em" width="1.5em"><path fill="currentColor" d="M10.05 28.6q-.65-.65-.675-1.575-.025-.925.675-1.525 3.15-2.75 6.6-4.125Q20.1 20 24 20q3.9 0 7.35 1.375 3.45 1.375 6.6 4.125.7.6.7 1.5t-.7 1.6q-.65.65-1.55.65t-1.6-.6q-2.7-2.25-5.375-3.2Q26.75 24.5 24 24.5t-5.425.95q-2.675.95-5.375 3.2-.7.6-1.6.6-.9 0-1.55-.65ZM1.6 20.15q-.65-.65-.675-1.6Q.9 17.6 1.6 17q4.55-4.1 10.275-6.55Q17.6 8 24 8t12.125 2.45Q41.85 12.9 46.4 17q.7.6.7 1.525 0 .925-.7 1.625-.65.65-1.575.65-.925 0-1.625-.6-4.15-3.55-8.95-5.625Q29.45 12.5 24 12.5t-10.25 2.075Q8.95 16.65 4.8 20.2q-.7.6-1.625.6T1.6 20.15ZM24 41.65q-1.8 0-3.15-1.35-1.35-1.35-1.35-3.15 0-1.8 1.35-3.15 1.35-1.35 3.15-1.35 1.8 0 3.15 1.35 1.35 1.35 1.35 3.15 0 1.8-1.35 3.15-1.35 1.35-3.15 1.35Z"/></svg>
+            </span>
+            </span>
+            <span class="label">Data</span>
+          </article>
+        </div>
+      </div>
+
+      <!-- Category: Bills & Utilities -->
+      <div class="category">
+        <h2 class="category-title">Bills & Utilities</h2>
+        <div class="services-grid" role="list">
+          <article class="service-card" role="button" tabindex="0"
+                   data-route="../lightbill/Lightbill.html" data-status="disabled" aria-pressed="false">
+            <span class="icon" aria-hidden="true">
+              <!-- Outline SVG: Electricity -->
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
+              </svg>
+            </span>
+            <span class="label">Light Bills</span>
+          </article>
+
+          <article class="service-card" role="button" tabindex="0"
+                   data-route="../decoder/tv.html" data-status="disabled" aria-pressed="false">
+            <span class="icon" aria-hidden="true">
+              <!-- Outline SVG: TV -->
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <path d="M8 3l4 4 4-4" />
+              </svg>
+            </span>
+            <span class="label">TV subs</span>
+          </article>
+        </div>
+      </div>
+
+      <!-- Category:   Wallet -->
+      <div class="category">
+        <h2 class="category-title">Wallet</h2>
+        <div class="services-grid" role="list">
+          <article class="service-card" role="button" tabindex="0"
+                   data-route="../wallet/wallet.html" data-status="active" aria-pressed="false">
+            <span class="icon" aria-hidden="true">
+              <!-- Outline SVG: Wallet -->
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 7h18v10H2z" />
+                <path d="M16 12a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
+              </svg>
+            </span>
+            <span class="label">Wallet</span>
+          </article>
+
+          <article class="service-card" role="button" tabindex="0"
+                   data-route="../giftcard/giftcard.html" data-status="disabled" aria-pressed="false">
+            <span class="icon" aria-hidden="true">
+              <!-- Outline SVG: Bank -->
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 10l9-6 9 6" />
+                <path d="M5 10v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+                <path d="M9 21v-6" />
+                <path d="M15 21v-6" />
+              </svg>
+            </span>
+            <span class="label">Gift Card</span>
+          </article>
+        </div>
+      </div>
+
+      <!-- Category: Value Added -->
+      <div class="category">
+        <h2 class="category-title">Value Added</h2>
+        <div class="services-grid" role="list">
+          <article class="service-card" role="button" tabindex="0"
+                   data-route="../referral/reward.html" data-status="disabled" aria-pressed="false">
+            <span class="icon" aria-hidden="true">
+              <!-- Outline SVG: Subscriptions -->
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2" />
+                <rect x="3" y="8" width="18" height="13" rx="2" />
+                <path d="M16 3v5" />
+              </svg>
+            </span>
+            <span class="label">Referral/Reward</span>
+          </article>
+
+          <article class="service-card" role="button" tabindex="0"
+                   data-route="../bluepoint/bluepoint.html" data-status="disabled" aria-pressed="false">
+            <span class="icon" aria-hidden="true">
+              <!-- Outline SVG: Offers -->
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10V6a2 2 0 0 0-2-2h-4" />
+                <path d="M3 14v4a2 2 0 0 0 2 2h4" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </span>
+            <span class="label">Blue Point</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+  </main>
+
+  <script src="../side-nav.js"></script>
+  <script src="services.js"></script>
+</body>
+</html>
