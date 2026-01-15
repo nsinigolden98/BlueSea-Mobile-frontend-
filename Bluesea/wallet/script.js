@@ -136,6 +136,7 @@ const BANK_LIST = {
 function deposit() {
   document.getElementById("deposit-modal").style.display = "block";
   document.getElementById("page_inner").style.opacity = "0.3";
+
 }
 
 function cancel(id) {
@@ -162,6 +163,7 @@ async function fund() {
   const response = await postRequest(ENDPOINTS.fund, {
     amount: Number(amount.replace(/,/g, "")),
   });
+  console.log(response);
   if (response.success) {
     hideLoader();
    window.parent.location.href = response.authorization_url;

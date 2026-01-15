@@ -1,0 +1,300 @@
+/* BASE */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #ffffff;
+  color: #1f2933;
+}
+
+/* HEADER */
+/* Header container */
+.app-header {
+  position: sticky; /* better UX than static */
+  top: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 20;
+}
+
+/* Hamburger button */
+.menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Hamburger icon */
+.menu-btn svg {
+  width: 22px;
+  height: 22px;
+  stroke: #1f2933;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Divider */
+.header-divider {
+  width: 1px;
+  height: 24px;
+  background-color: #e5e7eb;
+}
+
+/* Header text */
+.header-text {
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+/* Title */
+.header-text h1 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  color: black;
+}
+
+/* Subtitle */
+.header-text p {
+  font-size: 13px;
+  margin: 2px 0 0;
+  color: #64748b;
+}
+
+/* IMPORTANT: do NOT hide header */
+.menu-open .app-header {
+  visibility: visible;
+}
+
+/* Animation */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Desktop / Laptop */
+@media (min-width: 768px) {
+  .menu-btn {
+    display: none;
+  }
+
+  .header-divider {
+    display: none;
+  }
+
+  .app-header {
+    padding: 18px 24px;
+  }
+
+  .header-text h1 {
+    font-size: 20px;
+  }
+}
+
+
+/* LAYOUT */
+.lightbuild {
+  display: grid;
+  gap: 20px;
+  padding: 16px;
+}
+
+.zone {
+  border: 1px solid #e6edf5;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+}
+
+/* FIELDS */
+.field { margin-bottom: 14px; }
+
+label {
+  font-size: 14px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 15px;
+}
+
+.helper {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+/* CUSTOM SELECT */
+.custom-select {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.selected {
+  padding: 12px;
+  cursor: pointer;
+}
+
+.options {
+  display: none;
+  border-top: 1px solid #e6edf5;
+}
+
+.custom-select.open .options {
+  display: block;
+}
+
+.options div {
+  padding: 12px;
+  display: flex;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.options div:hover {
+  background: #f0f6ff;
+}
+
+/* METER CARD */
+.meter-card {
+  background: #f0f6ff;
+  padding: 14px;
+  border-radius: 12px;
+}
+
+.hidden { display: none; }
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #0b5ed7;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* LIGHT IMPACT */
+.light-impact {
+  background: #f8fbff;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+/* BUTTON */
+button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: #0b5ed7;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+button:disabled {
+  background: #94a3b8;
+}
+
+/* DESKTOP */
+@media (min-width: 900px) {
+  .lightbuild {
+    grid-template-columns: 1fr 1.2fr 1fr;
+  }
+}
+
+/* HEADER TIGHTENING */
+.header-content {
+  padding: 12px 16px;
+}
+
+/* IDENTITY HEADER */
+.identity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.lock-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.lock {
+  width: 18px;
+  height: 18px;
+  stroke: #64748b;
+  fill: none;
+  stroke-width: 2;
+  transition: all 0.3s ease;
+}
+
+.lock.locked {
+  stroke: #0b5ed7;
+}
+
+/* UNIT PREVIEW */
+.unit-preview {
+  background: #f8fbff;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.unit-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+/* HISTORY */
+.history-list {
+  display: grid;
+  gap: 12px;
+}
+
+.history-item {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-item span {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+}
