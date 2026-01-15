@@ -92,8 +92,8 @@ function closeModal() {
   resetModalTimers("forgot_password");
 }
 
- const API_BASE = "https://api.blueseamobile.com.ng";  
- // let API_BASE = "http://127.0.0.1:8000";
+ //const API_BASE = "https://api.blueseamobile.com.ng";  
+ let API_BASE = "http://127.0.0.1:8000";
 
 let ENDPOINT = {
   login: `${API_BASE}/accounts/login/`,

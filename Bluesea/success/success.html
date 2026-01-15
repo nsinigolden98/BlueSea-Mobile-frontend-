@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BlueSea Mobile — Transaction Status</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- App page behind -->
+  <div class="app-page">
+    <h2>Wallet</h2>
+    <p>Main application content.</p>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay-backdrop" id="overlay">
+
+    <section class="transaction-layer" role="dialog" aria-live="polite">
+
+      <!-- Flowing background -->
+      <svg class="flow-bg" viewBox="0 0 600 600" preserveAspectRatio="none">
+        <path class="wave wave-1"
+          d="M0,360 C160,330 320,390 480,360 L600,360 L600,600 L0,600 Z"/>
+        <path class="wave wave-2"
+          d="M0,390 C180,420 360,360 520,390 L600,390 L600,600 L0,600 Z"/>
+      </svg>
+
+      <div class="content">
+
+        <p id="statusText" class="status-text">
+          Securing your transaction…
+        </p>
+
+        <div class="ripple-wrapper">
+
+          <svg class="ripple-svg" viewBox="0 0 300 300">
+            <circle class="ripple ripple-1" cx="150" cy="150" r="48" />
+            <circle class="ripple ripple-2" cx="150" cy="150" r="48" />
+          </svg>
+
+          <div class="logo-container">
+            <svg viewBox="0 0 100 100" class="logo-svg">
+              <circle cx="50" cy="50" r="34" class="logo-outline" />
+              <circle cx="50" cy="50" r="34" class="logo-fill" />
+            </svg>
+          </div>
+
+          <svg class="checkmark-svg" viewBox="0 0 52 52">
+            <path class="checkmark-path" d="M14 27 L22 35 L38 18" />
+          </svg>
+
+        </div>
+
+        <h1 id="headline" class="headline">
+          Processing securely…
+        </h1>
+
+        <ul class="confirmation-list">
+          <li>Network verified</li>
+          <li>Balance updated</li>
+          <li>Recipient confirmed</li>
+        </ul>
+
+        <button id="doneBtn" class="done-btn">
+          Done
+        </button>
+
+      </div>
+
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
