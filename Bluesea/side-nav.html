@@ -394,7 +394,8 @@ body{
        let wallet = document.getElementById("menu_wallet")
        let data = document.getElementById("menu_buy_data")
        let airtime = document.getElementById("menu_buy_airtime")
-       let services = document.getElementById("menu_pay_bills")
+       let group_payment = document.getElementById("menu_group_payment")
+       let services = document.getElementById("menu_services")
        
        let dir = window.parent.location.href;
       if (dir.includes("dashboard")) {
@@ -408,6 +409,9 @@ body{
         }
       else if (dir.includes("airtime")) {
            airtime.classList.add("menu_item-active");
+        }
+        else if (dir.includes("group")) {
+           group_payment.classList.add("menu_item-active");
         }
       else if (dir.includes("services")) {
            services.classList.add("menu_item-active");
