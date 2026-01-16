@@ -384,7 +384,7 @@ body {
 
 /* Desktop layout changes */
 @media (min-width:900px) {
-  body { padding:28px; }
+  body { padding:8px; }
   .page-header { padding:0 0 18px 0; }
   .title { font-size:1.5rem; }
   .subtitle { font-size:1rem; }
@@ -408,13 +408,13 @@ body {
   }
 
   .service-card {
-    padding:14px;
+    padding:9px;
     min-height:64px;
     border-radius:12px;
   }
 
   .icon { width:48px; height:48px; flex:0 0 48px; }
-  .icon svg { width:24px; height:24px; }
+  .icon svg { width:20px; height:20px; }
 }
 
 /* Larger desktop: show more columns for services within a category */
