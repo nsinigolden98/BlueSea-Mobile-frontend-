@@ -142,7 +142,74 @@ body {
 
 /* --- Main Form Container --- */
 .buy-data-form {
-    background-color: var(--card-background-color);
+    background-/* ===============================
+   PLAN TABS – FINAL WORKING STYLE
+   =============================== */
+
+.plan-tabs {
+    display: flex;
+    flex-wrap: nowrap;              /* prevents breaking */
+    gap: 8px;
+    overflow-x: auto;               /* enables sliding */
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    scrollbar-width: none;
+}
+
+plan-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+/* Liquid underline */
+.plan-tabs::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 0;
+    background-color: var(--primary-color);
+    border-radius: 999px;
+    transition: transform 0.35s ease, width 0.35s ease;
+}
+
+/* Buttons */
+.tab-button {
+    flex: 0 0 auto;                 /* stay on one line */
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 10px 18px;
+    border-radius: 999px;           /* mature look */
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: 
+        background-color 0.25s ease,
+        color 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+/* Active tab = floating pill */
+.tab-button.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* ===============================
+   DATA GRID TRANSITION
+   =============================== */
+
+.data-plans-grid {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.data-plans-grid.switching {
+    opacity: 0;
+    transform: translateY(10px);
+    }color: var(--card-background-color);
     padding: 24px; /* Convert 1.5rem to 24px for pixel unit */
     margin: 2%; /* Retaining 2% margin */
     border-radius: 12px;
@@ -156,44 +223,7 @@ body {
 
 
 
-/* Section Styling */
-section {
-    margin-bottom: 24px;
-}
 
-.section-label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 12px;
-    color: var(--text-color);
-}
-
-/* Tabs Styling (Network & Plan) */
-.network-tabs, .plan-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px; /* Pixel gap */
-    margin-bottom: 16px;
-}
-
-.tab-button {
-    background: none;
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
-    padding: 10px 16px; /* Pixel padding */
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-    flex-grow: 1; 
-    text-align: center;
-    font-size: 14px; /* Pixel font size */
-}
-
-.tab-button.active {
-    background-color: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
 
 /* Input Group (Recipient Section) */
 .input-group {
