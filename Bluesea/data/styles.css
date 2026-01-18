@@ -142,7 +142,21 @@ body {
 
 /* --- Main Form Container --- */
 .buy-data-form {
-    background-/* ===============================
+    background-color: var(--card-background-color);
+    padding: 24px; /* Convert 1.5rem to 24px for pixel unit */
+    margin: 2%; /* Retaining 2% margin */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    
+    /* Max width helps keep layout clean on large screens */
+    max-width: 800px; 
+    /* Use percentage for fluid width, combined with max-width */
+    width: 96%; /* 100% minus 2% margin on each side (approx) */
+}
+
+
+
+/* ===============================
    PLAN TABS – FINAL WORKING STYLE
    =============================== */
 
@@ -209,20 +223,7 @@ plan-tabs::-webkit-scrollbar {
 .data-plans-grid.switching {
     opacity: 0;
     transform: translateY(10px);
-    }color: var(--card-background-color);
-    padding: 24px; /* Convert 1.5rem to 24px for pixel unit */
-    margin: 2%; /* Retaining 2% margin */
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    
-    /* Max width helps keep layout clean on large screens */
-    max-width: 800px; 
-    /* Use percentage for fluid width, combined with max-width */
-    width: 96%; /* 100% minus 2% margin on each side (approx) */
 }
-
-
-
 
 
 /* Input Group (Recipient Section) */
@@ -531,4 +532,5 @@ input:focus {
     padding:10px 14px; 
     border-radius:8px; 
     box-shadow:0 6px 22px rgba(2,6,23,0.6);  }
+
     
