@@ -260,14 +260,34 @@ h3{
   display: inline-flex;
   width: 100%;
 }
-.link {
+.forgot-password {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  background: none;
+  border: none;
+  padding: 0;
+
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+
   color: var(--brand-blue);
-  text-decoration: none;
-  font-size: 13px;
+  cursor: pointer;
+
+  transition: color 0.2s ease, text-decoration 0.2s ease;
 }
-.link:hover {
-  color: var(--text);
+
+.forgot-password:hover {
+  color: #0b4edb; /* darker brand blue */
   text-decoration: underline;
+}
+
+.forgot-password:focus-visible {
+  outline: 2px solid rgba(30, 102, 255, 0.4);
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 
 /* checkbox */
@@ -364,4 +384,5 @@ h3{
 .password-rules .rule.valid {
   color: #27ae60;         /* Green */
 }
+
 
