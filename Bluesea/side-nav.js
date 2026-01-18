@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", function () {
   getBalanace();
 });
 
-let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
-//let API_BASE = "https://api.blueseamobile.com.ng"; 
+// let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
+let API_BASE = "https://api.blueseamobile.com.ng"; 
 
 function getCookie(name) {
   const nameEQ = name + "=";
