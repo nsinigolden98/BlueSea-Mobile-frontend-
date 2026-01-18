@@ -72,8 +72,38 @@
                 <input type="checkbox" id="login_remember" class="checkbox" />
                 <span>Remember me</span>
               </label>
-              <button type="button" class="link forgot" id="forgot" onclick="forgotPassword()">Forgot password?</button>
-            </div>
+              <button
+  type="button"
+  class="forgot-password"
+  id="forgot"
+  onclick="forgotPassword()"
+>
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+  >
+    <path
+      d="M7 10V7a5 5 0 0 1 10 0v3"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+    />
+    <rect
+      x="5"
+      y="10"
+      width="14"
+      height="10"
+      rx="2"
+      stroke="currentColor"
+      stroke-width="2"
+    />
+  </svg>
+  Forgot password?
+              </button>
+                </div>
 
             <button class="btn btn_primary" id="btn_login" type="button" onclick="signInButton()">Log in</button>
           </form>
