@@ -10,6 +10,7 @@
     #side-bar{
         display: none;
         position:fixed;
+        z-index: 999;
     }
     
     .menu-btn{

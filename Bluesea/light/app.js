@@ -1,3 +1,4 @@
+
 const meterNumber = document.getElementById('meterNumber');
 const nickname = document.getElementById('nickname');
 const amount = document.getElementById('amount');
@@ -6,6 +7,22 @@ const meterCard = document.getElementById('meterCard');
 const lockIndicator = document.getElementById('lockIndicator');
 const lockSvg = lockIndicator.querySelector('.lock');
 const unitCount = document.getElementById('unitCount');
+
+
+BILLER_NAME= {
+ 'Ikeja Electric(IKEDC)': 'ikeja-electric' ,
+'Eko Electric(EKEDC)' : 'eko-electric',
+ 'Kano Electric(KEDCO)' : 'kano-electric',
+ 'Port-harcourt Electric(PHED)' : 'portharcourt-electric',
+ 'Jos Electric(JED)' : 'jos-electric' ,
+'Ibadan Electric(IBEDC)':'ibadan-electric' ,
+ 'Kaduna Electric(KAEDCO)' : 'kaduna-electric',
+ 'Abuja Electric(AEDC)' :'abuja-electric',
+ 'Enugu Electric(EEDC)' : 'enugu-electric',
+'Benin Electric(BEDC)' : 'benin-electric',
+ 'Aba Electric(ABA)': 'aba-electric',
+ 'Yola Electric(YEDC)' : 'yola-electric'
+}
 
 let meterType = null;
 let disco = null;
@@ -33,6 +50,7 @@ document.querySelectorAll('.custom-select').forEach(select => {
   });
 });
 
+
 /* VALIDATION + LOCK */
 function validate() {
   const locked = meterNumber.value && meterType && disco;
@@ -43,8 +61,7 @@ function validate() {
 
   if (locked) {
     meterCard.classList.remove('hidden');
-    document.getElementById('cardTitle').textContent =
-      nickname.value || 'Unnamed Meter';
+    getCustomer();
     document.getElementById('cardDetails').textContent =
       `${meterType} • ${disco}`;
   }
@@ -73,4 +90,32 @@ amount.addEventListener('input', () => {
 //for meter number 
 function isValidMeterNumber(value) {
   return /^[0-9]{8,13}$/.test(value);
+}
+
+async function getCustomer() {
+  payload= {
+    meter_number: meterNumber.value.trim(),
+    meter_type: meterType.toLowerCase(),
+    biller: BILLER_NAME[disco]
+  }
+
+  user = await postRequest(ENDPOINTS.electricity_user,payload)
+  //showLoader()
+
+  if(user.success){
+    //hideLoader()
+    document.getElementById('cardTitle').textContent = "lowww"
+  }
+  else{
+    document.getElementById('cardTitle').textContent = user.error
+  }
+}
+
+async function makePayment(){
+ 
+  payload={
+    
+    transaction_pin: pin
+  }
+  response = await  postRequest(ENDPOINTS.electricity, payload)
 }
