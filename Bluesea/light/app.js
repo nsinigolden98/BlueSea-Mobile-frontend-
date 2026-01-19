@@ -104,7 +104,7 @@ async function getCustomer() {
 
   if(user.success){
     //hideLoader()
-    document.getElementById('cardTitle').textContent = "lowww"
+    document.getElementById('cardTitle').textContent = user.content.CustomerName;
   }
   else{
     document.getElementById('cardTitle').textContent = user.error

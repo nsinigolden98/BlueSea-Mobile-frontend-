@@ -361,21 +361,21 @@ async function signInButton(){
     email: identifier,
     password: password
   });
-  console.log(response);
+  //console.log(response);
   if (response.data.detail !== "No active account found with the given credentials"){
-  if (response.data.user.email_verified ) {
+  //if (response.data.user.email_verified ) {
     showToast("Login successful. Redirecting...");
     setRefreshToken(response.data.refresh_token, 1);
     setAccessToken(response.data.access_token, 1);
     document.getElementById("loader").style.display = "none";
     window.location.replace("../dashboard/dashboard.html");
-  } else{
-    let verifyResponse = await apiPost(ENDPOINT.sendOtp, { email: identifier });
-    showToast("Email Already Registered ");
-    localStorage.setItem("email", identifier);
-    document.getElementById("loader").style.display = "none";
-    window.parent.location.replace("../verify-email.html");
-  }  
+  // } else{
+  //   let verifyResponse = await apiPost(ENDPOINT.sendOtp, { email: identifier });
+  //   showToast("Email Already Registered ");
+  //   localStorage.setItem("email", identifier);
+  //   document.getElementById("loader").style.display = "none";
+  //   window.parent.location.replace("../verify-email.html");
+  // }  
   }
    else{
     document.getElementById("loader").style.display = "none";
@@ -533,7 +533,7 @@ safeAdd($("#change_pass"), "click", async (ev) => {
     otp: otp
   };
   const send = await apiPost(ENDPOINT.verify_FP, payload);
-  console.log(send);
+  //console.log(send);
   if (send.data.state) {
     localStorage.setItem("reset_token", send.data.reset_token);
     document.getElementById("FP_email_field").style.display = "none";
