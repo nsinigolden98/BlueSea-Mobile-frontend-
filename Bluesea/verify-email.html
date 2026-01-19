@@ -60,7 +60,7 @@
       .toast {
         position: fixed;
         bottom: 150px;
-        text-align: centre;
+        text-align: center;
         left: 50%;
         transform: translateX(-50%);
         background: #3498db;
@@ -112,13 +112,12 @@
 
       <div class="code-input-group" id="codeInputGroup"></div>
 
-      <button class="verify-button" id="verifyButton">Verify Account</button>
+      <button type="button" class="verify-button" id="verifyButton">Verify Account</button>
 
       <div class="resend-section">
         <span id="resendText">Didn't receive the code?</span>
         <a href="#" class="resend-link disabled" id="resendLink"
-          >Resend Code (<span id="countdown">60</span>s)</a
-        >
+          >Resend Code (<span id="countdown">60</span>s)</a>
       </div>
     </div>
     <div id="toast" class="toast" aria-live="assertive" hidden></div>
@@ -139,6 +138,7 @@
           t.hidden = true;
         }, ms);
       }
+
 
       async function apiPost(url, body) {
         try {
@@ -238,7 +238,7 @@
         if (enteredCode.length === numInputs) {
           verifyEmailSignUp(enteredCode);
         } else {
-          alert("Please enter the full 6-digit code.");
+          showToast("Please enter the full 6-digit code.");
         }
       });
 
