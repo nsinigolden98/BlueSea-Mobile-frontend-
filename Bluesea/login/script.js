@@ -370,11 +370,11 @@ async function signInButton(){
     document.getElementById("loader").style.display = "none";
     window.location.replace("../dashboard/dashboard.html");
   } else{
-    await apiPost(ENDPOINT.sendOtp, { email: identifier });
+    let verifyResponse = await apiPost(ENDPOINT.sendOtp, { email: identifier });
     showToast("Email Already Registered ");
     localStorage.setItem("email", identifier);
     document.getElementById("loader").style.display = "none";
-    window.parent.location.replace("../verify_email.html");
+    window.parent.location.replace("../verify-email.html");
   }  
   }
    else{
