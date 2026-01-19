@@ -44,7 +44,15 @@ let ENDPOINTS = {
   buy_glo: `${API_BASE}/payments/glo-data/`,
   buy_etisalat: `${API_BASE}/payments/etisalat-data/`,
   account_name: `${API_BASE}/transactions/account-name/`,
-  logout: `${API_BASE}/accounts/logout/`,
+  electricity: `${API_BASE}/electricity/`,
+  electricity_user: `${API_BASE}/payments/electricity/customer/`,
+  group_payment_history: `${API_BASE}/payments/group-payment/history/`,
+  group_payment: `${API_BASE}/payments/group-payment/`,
+  dstv: `${API_BASE}/payments/dstv/`,
+  gotv: `${API_BASE}/payments/gotv/`,
+  showmax: `${API_BASE}/payments/showmax/`,
+  startimes: `${API_BASE}/payments/startimes/`,
+  logout: `${API_BASE}/accounts/logout/`
 };
 
 // Get Requset Function
@@ -64,7 +72,7 @@ async function getRequest(url) {
     }
   } catch (err) {
     // Only network or fundamental request errors reach here
-    return { ok: false, status: 0, data: { error: "Network error" } };
+    return { ok: false, success: false, error: "Network error" };
   }
 }
 
@@ -83,7 +91,7 @@ async function postRequest(url, payload) {
     return json;
   } catch (err) {
     // Only network or fundamental request errors reach here
-    return { ok: false, status: 0, data: { error: "Network error" } };
+    return { ok: false, success : false, error: "Network error" };
   }
 }
 
@@ -100,7 +108,7 @@ async function patchRequest(url, payload) {
     return json;
   } catch (err) {
     // Only network or fundamental request errors reach here
-    return { ok: false, status: 0, data: { error: "Network error" } };
+    return { ok: false, success: false, error: "Network error" };
   }
 }
 

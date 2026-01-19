@@ -5,132 +5,153 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LightBuild | Blue Sea</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="../side-nav.css" />
+  <link rel="stylesheet" href="../loader.css" />
 </head>
 <body>
 
-<header class="app-header">
-  <!-- Hamburger menu -->
-  <button class="menu-btn" id="menu-btn" onclick="showNav()" aria-label="Open menu">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <line x1="3" y1="6" x2="21" y2="6" />
-      <line x1="3" y1="12" x2="21" y2="12" />
-      <line x1="3" y1="18" x2="21" y2="18" />
-    </svg>
-  </button>
+  <nav>
+    <iframe src="../side-nav.html" id="side-bar"></iframe>
+  </nav>
 
-  <!-- Divider -->
-  <span class="header-divider"></span>
-
-  <!-- Header text -->
-  <div class="header-text">
-    <h1>Light Bills</h1>
-    <p>Buy Smarter & Cheaper</p>
-  </div>
-</header>
-
-<main class="lightbuild">
-
-  <!-- ZONE 1: IDENTITY -->
-  <section class="zone identity-zone">
-    <div class="identity-header">
-      <h2>Meter Profile</h2>
-      <div class="lock-indicator" id="lockIndicator">
-        <svg viewBox="0 0 24 24" class="lock open">
-          <path d="M6 10V7a6 6 0 0 1 12 0" />
-          <rect x="4" y="10" width="16" height="10" rx="2" />
+  <div  class='body'>
+    <header class="app-header">
+      <!-- Hamburger menu -->
+      <button class="menu-btn" id="menu-btn" onclick="showNav()" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
         </svg>
-        <span>Meter not locked</span>
+      </button>
+    
+      <!-- Divider -->
+      <span class="header-divider"></span>
+    
+      <!-- Header text -->
+      <div class="header-text">
+        <h1>Light Bills</h1>
+        <p>Buy Smarter & Cheaper</p>
       </div>
-    </div>
+    </header>
 
-    <div class="field">
-      <label>Meter Number</label>
-      <input type="text" id="meterNumber"inputmode="numeric" pattern="[0-9]{8,13}" minlength="8" maxlength="10" placeholder="Enter meter number" />
-      <small class="helper">Enter your meter number</small>
-    </div>
 
-    <div class="field">
-      <label>Meter Type</label>
-      <div class="custom-select" id="meterTypeSelect">
-        <div class="selected">Select meter type</div>
-        <div class="options">
-          <div data-value="Prepaid">Prepaid</div>
-          <div data-value="Postpaid">Postpaid</div>
+  <main class="lightbuild">
+    
+  
+    <!-- ZONE 1: IDENTITY -->
+    <section class="zone identity-zone">
+      <div class="identity-header">
+        <h2>Meter Profile</h2>
+        <div class="lock-indicator" id="lockIndicator">
+          <svg viewBox="0 0 24 24" class="lock open">
+            <path d="M6 10V7a6 6 0 0 1 12 0" />
+            <rect x="4" y="10" width="16" height="10" rx="2" />
+          </svg>
+          <span>Meter not locked</span>
         </div>
       </div>
-    </div>
-
-    <div class="field">
-      <label>Distribution Company</label>
-      <div class="custom-select" id="discoSelect">
-        <div class="selected">Select DISCO</div>
-        <div class="options">
-          <div data-value="IKEJA ELECTRIC">IKEJA ELECTRIC</div>
-          <div data-value="EKO DISCO">EKO DISCO</div>
-          <div data-value="IBEDC">IBEDC</div>
+  
+      <div class="field">
+        <label>Meter Number</label>
+        <input type="text" id="meterNumber"inputmode="numeric" pattern="[0-9]{8,13}" minlength="8" maxlength="12" placeholder="Enter meter number" />
+        <small class="helper">Enter your meter number</small>
+      </div>
+  
+      <div class="field">
+        <label>Meter Type</label>
+        <div class="custom-select" id="meterTypeSelect">
+          <div class="selected">Select meter type</div>
+          <div class="options">
+            <div data-value="Prepaid">Prepaid</div>
+            <div data-value="Postpaid">Postpaid</div>
+          </div>
         </div>
       </div>
-    </div>
-
-    <div class="field">
-      <label>Meter Nickname</label>
-      <input type="text" id="nickname" placeholder="e.g. Home" />
-    </div>
-
-    <div class="meter-card hidden" id="meterCard">
-      <h3 id="cardTitle"></h3>
-      <p id="cardDetails"></p>
-    </div>
-  </section>
-
-  <!-- ZONE 2: CONTROL -->
-  <section class="zone control-zone">
-    <h2>Purchase Units</h2>
-
-    <div class="field">
-      <label>Amount (₦)</label>
-      <input type="number" id="amount" min="100" />
-    </div>
-
-    <div class="unit-preview" id="unitPreview">
-      <div class="unit-line">
-        <span>Price per unit</span>
-        <strong>₦65 / unit</strong>
-      </div>
-      <div class="unit-line">
-        <span>Units you’ll receive</span>
-        <strong id="unitCount">—</strong>
-      </div>
-    </div>
-
-    <button id="continueBtn" disabled>Continue Payment</button>
-  </section>
-
-  <!-- ZONE 3: INSIGHT -->
-  <section class="zone insight-zone">
-    <h2>Electricity History</h2>
-
-    <div class="history-list">
-      <div class="history-item">
-        <div>
-          <strong>₦5,000</strong>
-          <span>Home Meter</span>
+  
+      <div class="field">
+        <label>Biller</label>
+        <div class="custom-select" id="discoSelect">
+          <div class="selected">Select Biller</div>
+          <div class="options">
+            <div data-value="Ikeja Electric(IKEDC)">Ikeja Electric(IKEDC)</div>
+            <div data-value="Eko Electric(EKEDC)">Eko Electric(EKEDC)</div>
+           <div data-value="Kano Electric(KEDCO)"> Kano Electric(KEDCO)</div>
+           <div data-value="Port-harcourt Electric(PHED)"> Port-harcourt Electric(PHED)</div>
+           <div data-value="Jos Electric(JED)"> Jos Electric(JED)</div>
+           <div data-value="Ibadan Electric(IBEDC)"> Ibadan Electric(IBEDC)</div>
+           <div data-value="Kaduna Electric(KAEDCO)"> Kaduna Electric(KAEDCO)</div>
+           <div data-value="Abuja Electric(AEDC)"> Abuja Electric(AEDC)</div>
+           <div data-value="Enugu Electric(BEDC)"> Enugu Electric(BEDC)</div>
+           <div data-value="Benin Electric(BEDC)"> Benin Electric(BEDC)</div>
+           <div data-value="Aba Electric(ABA)"> Aba Electric(ABA)</div>
+           <div data-value="Yola Electric(YEDC)"> Yola Electric(YEDC)</div>
+          </div>
         </div>
-        <small>4 days ago</small>
       </div>
-
-      <div class="history-item">
-        <div>
-          <strong>₦3,500</strong>
-          <span>Shop Meter</span>
+  
+      <!-- <div class="field">
+        <label>Meter Nickname</label>
+        <input type="text" id="nickname" placeholder="e.g. Home" />
+      </div> -->
+  
+      <div class="meter-card hidden" id="meterCard">
+        <h3 id="cardTitle"></h3>
+        <p id="cardDetails"></p>
+      </div>
+    </section>
+  
+    <!-- ZONE 2: CONTROL -->
+    <section class="zone control-zone">
+      <h2>Purchase Units</h2>
+  
+      <div class="field">
+        <label>Amount (₦)</label>
+        <input type="number" id="amount" min="100" />
+      </div>
+  
+      <div class="unit-preview" id="unitPreview">
+        <div class="unit-line">
+          <span>Price per unit</span>
+          <strong>₦65 / unit</strong>
         </div>
-        <small>11 days ago</small>
+        <div class="unit-line">
+          <span>Units you’ll receive</span>
+          <strong id="unitCount">—</strong>
+        </div>
       </div>
-    </div>
-  </section>
+  
+      <button id="continueBtn" disabled>Continue Payment</button>
+    </section>
+  
+    <!-- ZONE 3: INSIGHT -->
+    <section class="zone insight-zone">
+      <h2>Electricity History</h2>
+  
+      <div class="history-list">
+        <div class="history-item">
+          <div>
+            <strong>₦5,000</strong>
+            <span>Home Meter</span>
+          </div>
+          <small>4 days ago</small>
+        </div>
+  
+        <div class="history-item">
+          <div>
+            <strong>₦3,500</strong>
+            <span>Shop Meter</span>
+          </div>
+          <small>11 days ago</small>
+        </div>
+      </div>
+    </section>
+  
+  </main>
+  </div>
+  
 
-</main>
-
+  <script src="../side-nav.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

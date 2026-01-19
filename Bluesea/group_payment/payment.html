@@ -6,17 +6,24 @@
   <title>Group Payment — VTU Platform</title>
   <meta name="description" content="Group Payment platform — easily set up and manage shared expenses for airtime, data, electricity, subscriptions, and more.">
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="../side-nav.css">
 </head>
 <body>
+
+  <nav>
+    <iframe src="../side-nav.html" id ="side-bar" ></iframe>
+  </nav>
+
+  <div class="body">
   <!-- Header: app title and primary action -->
   <header class="site-header" role="banner">
     <div class="header-inner">
       <div class="brand" aria-hidden="false">
-        <!-- SVG logo -->
-        <svg class="logo" width="36" height="36" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <rect x="2" y="2" width="20" height="20" rx="4" fill="#0b5fff"></rect>
-          <path d="M7 12h10M7 8h10M7 16h6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <button  class="menu-btn" id="menu-btn" onclick="showNav()"> ☰
+        </button>
+       <!-- Divider (mobile only) -->
+<span class="header-divider"></span>
+<!-- Header text (non-clickable) -->
         <div class="brand-text">
           <h1 class="app-title">Group Payment</h1>
           <p class="app-sub">Easily set up and manage shared expenses</p>
@@ -34,7 +41,7 @@
     </div>
   </header>
 
-  <main id="main" class="main" role="main">
+  <main id="main" class="main" role="main" onclick="closeNavBody()">
     <!-- PAGE: Dashboard (empty state initially) -->
     <section id="dashboard" class="dashboard" aria-labelledby="dashboard-heading">
       <div class="dashboard-inner">
@@ -206,7 +213,8 @@
       <p class="muted small">© <span id="year"></span> Group Payment — VTU Platform</p>
     </div>
   </footer>
-
+</div>
   <script src="script.js" defer></script>
+  <script src="../side-nav.js"></script>
 </body>
 </html>
