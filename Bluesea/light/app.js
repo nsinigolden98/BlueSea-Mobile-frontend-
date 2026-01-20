@@ -8,7 +8,6 @@ const lockIndicator = document.getElementById('lockIndicator');
 const lockSvg = lockIndicator.querySelector('.lock');
 const unitCount = document.getElementById('unitCount');
 
-
 BILLER_NAME= {
  'Ikeja Electric(IKEDC)': 'ikeja-electric' ,
 'Eko Electric(EKEDC)' : 'eko-electric',
@@ -26,7 +25,7 @@ BILLER_NAME= {
 
 let meterType = null;
 let disco = null;
-const UNIT_PRICE = 65;
+const UNIT_PRICE = 70;
 
 /* CUSTOM SELECT */
 document.querySelectorAll('.custom-select').forEach(select => {
@@ -53,7 +52,7 @@ document.querySelectorAll('.custom-select').forEach(select => {
 
 /* VALIDATION + LOCK */
 function validate() {
-  const locked = meterNumber.value && meterType && disco;
+  const locked = meterNumber.value && meterType && disco && meterNumber.value.length >= 13;
 
   lockSvg.classList.toggle('locked', locked);
   lockIndicator.querySelector('span').textContent =
@@ -94,17 +93,17 @@ function isValidMeterNumber(value) {
 
 async function getCustomer() {
   payload= {
-    meter_number: meterNumber.value.trim(),
+    meter_number: meterNumber.value,
     meter_type: meterType.toLowerCase(),
     biller: BILLER_NAME[disco]
   }
 
-  user = await postRequest(ENDPOINTS.electricity_user,payload)
-  //showLoader()
+  showLoader()
+  let user = await postRequest(ENDPOINTS.electricity_user,payload)
 
   if(user.success){
-    //hideLoader()
-    document.getElementById('cardTitle').textContent = "lowww"
+  hideLoader()
+    document.getElementById('cardTitle').textContent = user.response.Customer_Name ? user.response.Customer_Name : user.response.error;
   }
   else{
     document.getElementById('cardTitle').textContent = user.error
@@ -114,8 +113,58 @@ async function getCustomer() {
 async function makePayment(){
  
   payload={
-    
+    billerCode: meterNumber.value,
+    amount: amount.value,
+    biller_name:BILLER_NAME[disco],
+    meter_type: meterType.toLowerCase(),
     transaction_pin: pin
   }
-  response = await  postRequest(ENDPOINTS.electricity, payload)
+  let response = await  postRequest(ENDPOINTS.electricity, payload)
 }
+
+async function getElectricityHistory() {
+    showLoader()
+    const list = await getRequest(ENDPOINTS.history);
+    const page_length = Math.round(list.count / 5) + 1;
+    
+     
+    for(let i = 1; i<=page_length; i++ ){
+        
+    const histories = await getRequest(`${ENDPOINTS.history}?page=${i}`);
+    const history = histories.results;
+    let hist_body = document.getElementById("history-list");
+    
+    for(let i = 0; i< history.length ; i++){
+        if(history[i].description.includes("Electricity")){
+        let  time = getDate(history[i].created_at.slice(0,10))
+        let  amount_history =  history[i].formatted_amount
+        if(history[i].transaction_type ==='DEBIT'){
+             amount_history = "-" + amount_history;
+        }
+        else{
+             amount_history = "+" + amount_history;
+        }
+        
+        const typeBody = document.createElement('span')
+        const timeBody = document.createElement('small')
+        const enclose = document.createElement('div')
+        const amountBody = document.createElement('strong')
+        
+        typeBody.textContent = description 
+        timeBody.textContent = time
+        amountBody.textContent = amount_history
+        
+        enclose.appendChild(amountBody);
+        enclose.appendChild(typeBody);
+        
+        const history_item = document.createElement('div')
+        history_item.classList.add("history-item")
+        history_item.appendChild(enclose);
+        history_item.appendChild(timeBody);
+        hist_body.appendChild(history_item);
+    }}
+    
+    hideLoader()
+    } 
+}
+getElectricityHistory();

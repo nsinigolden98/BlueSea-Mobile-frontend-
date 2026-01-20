@@ -31,7 +31,7 @@
       <!-- Header text -->
       <div class="header-text">
         <h1>Light Bills</h1>
-        <p>Buy Smarter & Cheaper</p>
+        <p>Buy Smarter amp&; Cheaper</p>
       </div>
     </header>
 
@@ -54,7 +54,7 @@
   
       <div class="field">
         <label>Meter Number</label>
-        <input type="text" id="meterNumber"inputmode="numeric" pattern="[0-9]{8,13}" minlength="8" maxlength="12" placeholder="Enter meter number" />
+        <input type="text" id="meterNumber"inputmode="numeric" pattern="[0-9]{8,13}" minlength="12" maxlength="13" placeholder="Enter meter number" />
         <small class="helper">Enter your meter number</small>
       </div>
   
@@ -121,15 +121,15 @@
         </div>
       </div>
   
-      <button id="continueBtn" disabled>Continue Payment</button>
+      <button type="button" onclick="makePayment()" id="continueBtn" disabled >Continue Payment</button>
     </section>
   
     <!-- ZONE 3: INSIGHT -->
     <section class="zone insight-zone">
       <h2>Electricity History</h2>
   
-      <div class="history-list">
-        <div class="history-item">
+      <div class="history-list" id="history-list">
+<!--         <div class="history-item">
           <div>
             <strong>₦5,000</strong>
             <span>Home Meter</span>
@@ -143,10 +143,11 @@
             <span>Shop Meter</span>
           </div>
           <small>11 days ago</small>
-        </div>
-      </div>
+        </div>-->
+      </div> 
     </section>
   
+   <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
   </main>
   </div>
   

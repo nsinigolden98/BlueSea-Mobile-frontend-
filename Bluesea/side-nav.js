@@ -161,7 +161,7 @@ async function getUserNav() {
   document.getElementById("profile_name").textContent = user.other_names;
   // document.getElementById("avatar_img").src = API_BASE + user.image;
   document.getElementById("avatar_img").src = 
-    user.image ? API_BASE + user.image : "../basic_imgs/profile.jpeg";
+    user.image ? API_BASE + user.image : "basic_imgs/profile.jpeg";
   document.getElementById("profile_email").textContent = user.email;
 }
 
