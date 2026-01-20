@@ -361,7 +361,7 @@ async function signInButton(){
     email: identifier,
     password: password
   });
-  console.log(response);
+  // console.log(response);
   if (response.data.detail !== "No active account found with the given credentials"){
   if (response.data.user.email_verified ) {
     showToast("Login successful. Redirecting...");
