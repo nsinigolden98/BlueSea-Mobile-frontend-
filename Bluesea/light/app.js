@@ -51,21 +51,21 @@ document.querySelectorAll('.custom-select').forEach(select => {
 
 
 /* VALIDATION + LOCK */
-function validate() {
+async function validate() {
   const locked = meterNumber.value && meterType && disco && meterNumber.value.length >= 13;
 
   lockSvg.classList.toggle('locked', locked);
   lockIndicator.querySelector('span').textContent =
     locked ? 'Meter locked' : 'Meter not locked';
-
-  if (locked) {
+    
+  if(locked){
     meterCard.classList.remove('hidden');
-    getCustomer();
+    getCustomer()
     document.getElementById('cardDetails').textContent =
       `${meterType} • ${disco}`;
   }
 
-  continueBtn.disabled = !(locked && amount.value);
+ // continueBtn.disabled = !(locked && amount.value);
 }
 
 /* UNIT CALCULATION */
@@ -73,13 +73,13 @@ amount.addEventListener('input', () => {
   const val = Number(amount.value);
   if (!val) {
     unitCount.textContent = '—';
-    validate();
+    //validate();
     return;
   }
 
   const units = Math.floor(val / UNIT_PRICE);
   unitCount.textContent = `${units} units`;
-  validate();
+  // validate();
 });
 
 [meterNumber, nickname].forEach(el =>
@@ -102,8 +102,9 @@ async function getCustomer() {
   let user = await postRequest(ENDPOINTS.electricity_user,payload)
 
   if(user.success){
-  hideLoader()
+    hideLoader()
     document.getElementById('cardTitle').textContent = user.response.Customer_Name ? user.response.Customer_Name : user.response.error;
+    continueBtn.disabled = user.response.Customer_Name ? false : true;
   }
   else{
     document.getElementById('cardTitle').textContent = user.error
@@ -111,60 +112,68 @@ async function getCustomer() {
 }
 
 async function makePayment(){
+    
+    pin = document.getElementById("pin")
  
   payload={
     billerCode: meterNumber.value,
     amount: amount.value,
     biller_name:BILLER_NAME[disco],
     meter_type: meterType.toLowerCase(),
-    transaction_pin: pin
+    transaction_pin: pin.value
   }
-  let response = await  postRequest(ENDPOINTS.electricity, payload)
+  showLoader()
+  if(pin.value.length <3){
+      showToast("Incomplete Pin")
+  }
+  else{
+  let response = await  postRequest(ENDPOINTS.electricity, payload) 
+  if(response.success || response.code ==="000"){
+      showToast(response.response_description)
+  }else{
+      showToast(response.error)
+  }
+  cancelPayment()
+  }
+  hideLoader()
+  
 }
 
-async function getElectricityHistory() {
-    showLoader()
-    const list = await getRequest(ENDPOINTS.history);
-    const page_length = Math.round(list.count / 5) + 1;
+function cancelPayment(){
+       //event.preventDefault()
+        document.getElementById("pin-creation-step").style.display = 'none';
+        // document.getElementById("buy-data-form").style.opacity = '1';
+        document.getElementById("pin").value = "";
+    }
     
-     
-    for(let i = 1; i<=page_length; i++ ){
+    
+
+// Buy Now Button Click Handler
+async function enterPin() {
         
-    const histories = await getRequest(`${ENDPOINTS.history}?page=${i}`);
-    const history = histories.results;
-    let hist_body = document.getElementById("history-list");
-    
-    for(let i = 0; i< history.length ; i++){
-        if(history[i].description.includes("Electricity")){
-        let  time = getDate(history[i].created_at.slice(0,10))
-        let  amount_history =  history[i].formatted_amount
-        if(history[i].transaction_type ==='DEBIT'){
-             amount_history = "-" + amount_history;
+        let valid = true;
+        const user = await getRequest(ENDPOINTS.user)
+        if (user.pin_is_set === false){
+            window.parent.location.href = "../settings/pin/pin.html";
+            return valid = false;
+        }
+        if (!continueBtn.disabled && amount.value > 1500) {
+            document.getElementById("pin-creation-step").style.display = 'block';
+           // document.getElementById("buy-data-form").style.opacity = '0.3';
+            
         }
         else{
-             amount_history = "+" + amount_history;
-        }
-        
-        const typeBody = document.createElement('span')
-        const timeBody = document.createElement('small')
-        const enclose = document.createElement('div')
-        const amountBody = document.createElement('strong')
-        
-        typeBody.textContent = description 
-        timeBody.textContent = time
-        amountBody.textContent = amount_history
-        
-        enclose.appendChild(amountBody);
-        enclose.appendChild(typeBody);
-        
-        const history_item = document.createElement('div')
-        history_item.classList.add("history-item")
-        history_item.appendChild(enclose);
-        history_item.appendChild(timeBody);
-        hist_body.appendChild(history_item);
-    }}
+            showToast("Minimum Purchase is ₦1,500")
+        } 
+
+    }
     
-    hideLoader()
-    } 
-}
-getElectricityHistory();
+function showToast(msg, ms = 8200) {
+    const t = document.getElementById("toast");
+    if (!t) { alert(msg); return; }
+    t.textContent = msg;
+    t.hidden = false;
+    t.style.opacity = "1";
+    clearTimeout(t._hideTO);
+    t._hideTO = setTimeout(() => { t.hidden = true; }, ms);
+  }

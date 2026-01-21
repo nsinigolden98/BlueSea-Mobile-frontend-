@@ -202,13 +202,13 @@ function showToast(msg, ms = 8200) {
         
         let valid = true;
         const user = await getRequest(ENDPOINTS.user)
-        if (user.pin_is_set === false){
+        if (!user.pin_is_set){
             window.parent.location.href = "../settings/pin/pin.html";
             return valid = false;
         }
         if (!buyNowBtn.disabled) {
             document.getElementById("pin-creation-step").style.display = 'block';
-            document.getElementById("buy-data-form").style.opacity = '0.3';
+          //  document.getElementById("buy-data-form").style.opacity = '0.3';
             
         } else {
             showToast('Please select a network, enter a valid 11-digit number, and an amount of at least ₦50.');
@@ -218,7 +218,7 @@ function showToast(msg, ms = 8200) {
    function cancelPayment(){
        event.preventDefault()
         document.getElementById("pin-creation-step").style.display = 'none';
-        document.getElementById("buy-data-form").style.opacity = '1';
+        //document.getElementById("buy-data-form").style.opacity = '1';
         document.getElementById("pin").value = "";
     }
 
@@ -239,14 +239,11 @@ async function makePayment(){
         showLoader();
           const buy_airtime = await postRequest(ENDPOINTS.buy_airtime, payload);
          
-        if(buy_airtime.state === false){
-            showToast(buy_airtime.error)
-            hideLoader()
+        if(buy_airtime.success || buy_airtime.code ==="000"){
+            showToast(buy_airtime.response_description)
         }
         else{
-            
-            showToast(buy_airtime.response_description)
-            hideLoader()
-           
+            showToast(buy_airtime.error ? buy_airtime.error : buy_airtime.response_description)
     }
+    hideLoader();
   }

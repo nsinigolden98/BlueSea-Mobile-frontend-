@@ -36,7 +36,7 @@
     </header>
 
 
-  <main class="lightbuild">
+  <main class="lightbuild" onclick="closeNavBody()">
     
   
     <!-- ZONE 1: IDENTITY -->
@@ -113,7 +113,7 @@
       <div class="unit-preview" id="unitPreview">
         <div class="unit-line">
           <span>Price per unit</span>
-          <strong>₦65 / unit</strong>
+          <strong>₦70 / unit</strong>
         </div>
         <div class="unit-line">
           <span>Units you’ll receive</span>
@@ -121,11 +121,11 @@
         </div>
       </div>
   
-      <button type="button" onclick="makePayment()" id="continueBtn" disabled >Continue Payment</button>
+      <button type="button" onclick="enterPin()" id="continueBtn" disabled >Continue Payment</button>
     </section>
   
     <!-- ZONE 3: INSIGHT -->
-    <section class="zone insight-zone">
+    <section class="zone insight-zone" id="history">
       <h2>Electricity History</h2>
   
       <div class="history-list" id="history-list">
@@ -148,7 +148,26 @@
     </section>
   
    <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
+   <div id="toast" class="toast" aria-live="assertive" hidden></div>
+            
+    <div id="pin-creation-step" class="form-card active-step">
+            <h2> Enter PIN</h2>
+
+            <aside id="create-pin-form">
+                <div class="input-group">
+                
+                    <input type="password" id="pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" inputmode="numeric">
+                </div>
+                
+                
+                <button  type="button" class="btn btn-primary" onclick="makePayment()">CONFIRM </button>
+                <button  type="button" class="btn btn-primary" onclick="cancelPayment()">CANCEL </button>
+            </aside>
+
+    </div>
+ 
   </main>
+  
   </div>
   
 

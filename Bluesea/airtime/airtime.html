@@ -25,7 +25,7 @@
   <!-- Header text (non-clickable) -->
   <div class="header-text">
     <h1>Airtime</h1>
-    <p>Buy Smarter & Cheaper</p>
+    <p>Buy Smarter amp&; Cheaper</p>
   </div>
             </header>
         <main id="buy-data-form" class="buy-data-form" onclick="closeNavBody()">
@@ -141,25 +141,25 @@
             <button class="buy-now-button" id="buy-now-btn">Buy Airtime</button>
             
             <div id="enter_pin"></div>
-        
-        </main>
-            <div id="toast" class="toast" aria-live="assertive" hidden></div>
-            <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
-        <div id="pin-creation-step" class="form-card active-step">
+                <div id="pin-creation-step" class="form-card active-step">
             <h2> Enter PIN</h2>
 
-            <form id="create-pin-form">
+            <aside id="create-pin-form">
                 <div class="input-group">
-                    <label for="new-pin">Enter PIN</label>
+                    
                     <input type="password" id="pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" inputmode="numeric">
                 </div>
                 
                 
                 <button  class="btn btn-primary" onclick="makePayment()">CONFIRM </button>
-                <button class="btn btn-primary" onclick="cancelPayment()">CANCEL </button>
-            </form>
+                <button class="btn btn-primary" onclick="cancelPaymente()">CANCEL </button>
+            </aside>
 
     </div>
+        </main>
+            <div id="toast" class="toast" aria-live="assertive" hidden></div>
+            <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
+
     
     </div>
      <script src="../side-nav.js"></script>
