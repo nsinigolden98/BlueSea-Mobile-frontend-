@@ -130,6 +130,7 @@ async function makePayment(){
   let response = await  postRequest(ENDPOINTS.electricity, payload) 
   if(response.success || response.code ==="000"){
       showToast(response.response_description)
+      showSuccess()
   }else{
       showToast(response.error)
   }

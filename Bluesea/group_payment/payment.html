@@ -30,7 +30,7 @@
         </div>
       </div>
 
-      <div class="header-actions">
+      <div id="add-btn" class="header-actions">
         <button id="open-create" class="btn btn-primary" aria-haspopup="dialog" aria-controls="create-panel">
           <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -44,7 +44,7 @@
   <main id="main" class="main" role="main" onclick="closeNavBody()">
     <!-- PAGE: Dashboard (empty state initially) -->
     <section id="dashboard" class="dashboard" aria-labelledby="dashboard-heading">
-      <div class="dashboard-inner">
+      <div class="dashboard-inner" id="dashboard-inner">
         <h2 id="dashboard-heading" class="section-title">Your Groups</h2>
         <p class="muted">Create a group to start collecting contributions for airtime, data, electricity, subscriptions, betting and more.</p>
 
@@ -62,8 +62,8 @@
               <h3 class="empty-title">No groups yet</h3>
               <p class="muted">Create a group to invite members and start collecting funds for shared services.</p>
               <div class="empty-actions">
-                <button id="empty-create" class="btn btn-secondary">Create Group</button>
-                <button id="empty-join" class="btn btn-ghost">Join Group</button>
+                <button id="empty-create" class="btn btn-secondary" onclick="hideJoinGroup()">Create Group</button>
+                <button id="empty-join" class="btn btn-ghost" onclick="hideCreateGroup()">Join Group</button>
               </div>
             </div>
           </div>
@@ -88,22 +88,21 @@
 
         <!-- Tabs -->
         <nav class="tabs" role="tablist" aria-label="Create or join group">
-          <button id="tab-create" class="tab active" role="tab" aria-selected="true" aria-controls="create-form">Create Group</button>
-          <button id="tab-join" class="tab" role="tab" aria-selected="false" aria-controls="join-form">Join Existing Group</button>
+          <button id="tab-create" class="tab active" role="tab" aria-selected="true" aria-controls="create-form" onclick="hideJoinGroup()">Create Group</button>
+          <button id="tab-join" class="tab" role="tab" aria-selected="false" aria-controls="join-form" onclick="hideCreateGroup()">Join Existing Group</button>
         </nav>
 
         <div class="panel-body">
-          <!-- Toast / inline messages -->
-          <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+          
 
           <!-- Create Group Form -->
           <form id="create-form" class="form" role="form" aria-labelledby="panel-heading" novalidate>
             <p class="muted">Set up your group, define the payment goal and invite members to contribute.</p>
 
-            <label for="group-name" class="form-label">Group Name</label>
-            <input id="group-name" name="groupName" class="form-input" type="text" placeholder="e.g., Weekend Netflix Plan" required aria-required="true" />
+            <label for="group-name" class="form-label">Group Name</label> 
+            <input id="group-name" name="groupName" class="form-input" type="text" placeholder="e.g., Weekend Netflix Plan" required aria-required="true" />  
 
-            <label for="service-type" class="form-label">Service Type</label>
+            <label for="service-type" class="form-label">Service Type</label>  
             <select id="service-type" name="serviceType" class="form-select" required aria-required="true">
               <option value="">Select Payment Type</option>
               <option value="airtime">Airtime</option>
@@ -111,19 +110,19 @@
               <option value="electricity">Electricity</option>
               <option value="subscriptions">Subscriptions</option>
               <option value="betting">Betting</option>
-            </select>
+            </select> 
 
             <!-- Dynamic fields container -->
             <div id="dynamic-fields" class="dynamic-fields" aria-live="polite"></div>
 
-            <label for="target-amount" class="form-label">Target Amount (NGN)</label>
-            <input id="target-amount" name="targetAmount" class="form-input" type="number" min="1" placeholder="Enter total amount" required aria-required="true" />
+            <label for="target-amount" class="form-label">Target Amount (NGN)</label> 
+            <input id="target-amount" name="targetAmount" class="form-input" type="number" min="1" placeholder="Enter total amount" required aria-required="true" /> 
 
-            <label for="group-purpose" class="form-label">Purpose</label>
-            <input id="group-purpose" name="purpose" class="form-input" type="text" placeholder="Short description of the group" />
+            <label for="group-purpose" class="form-label">Purpose</label> 
+            <input id="group-purpose" name="purpose" class="form-input" type="text" placeholder="Short description of the group" /> 
 
-            <label for="invite-members" class="form-label">Invite Members</label>
-            <textarea id="invite-members" name="invite" class="form-textarea" placeholder="Enter emails or phone numbers, separated by commas"></textarea>
+            <label for="invite-members" class="form-label">Invite Members</label> 
+            <textarea id="invite-members" name="invite" class="form-textarea" placeholder="Enter emails or phone numbers, separated by commas"></textarea> 
 
             <div class="form-actions">
               <button type="submit" id="create-submit" class="btn btn-primary">Create Group</button>
@@ -206,6 +205,8 @@
         </div>
       </div>
     </section>
+     <div id="toast" class="toast" aria-live="assertive" hidden></div>
+             
   </main>
 
   <footer class="site-footer" role="contentinfo">

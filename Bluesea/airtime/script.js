@@ -246,4 +246,5 @@ async function makePayment(){
             showToast(buy_airtime.error ? buy_airtime.error : buy_airtime.response_description)
     }
     hideLoader();
+    showSuccess();
   }
