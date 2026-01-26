@@ -422,6 +422,8 @@ plan-tabs::-webkit-scrollbar {
     .price-column, .validity-column {
         padding: 8px 3px;
     }
+    
+    
 }
 
 
@@ -441,6 +443,7 @@ plan-tabs::-webkit-scrollbar {
 .btn-primary {
     background-color: #007bff;
     color: white;
+    height: 30px;
 }
 
 .btn-primary:hover {
@@ -468,7 +471,7 @@ plan-tabs::-webkit-scrollbar {
     text-align: center;
     display: none ;
     position:fixed;
-    top:300px;
+    top:20%;
     margin:5%;
    
 }

@@ -191,7 +191,7 @@ body {
   will-change: opacity; /* keep to opacity only for performance */
 }
 
-./* Hide service cards when side menu is open */
+/* Hide service cards when side menu is open */
 .menu-open .categories {
   display: none;
 }
@@ -437,3 +437,9 @@ body {
     animation: none !important;
   }
 }
+
+#side-bar{
+    top:0;
+    display: fixed;
+}
+

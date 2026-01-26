@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // function body
   getUserNav();
   getBalanace();
+  getElectricityHistory();
 });
 
 // let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
@@ -44,7 +45,7 @@ let ENDPOINTS = {
   buy_glo: `${API_BASE}/payments/glo-data/`,
   buy_etisalat: `${API_BASE}/payments/etisalat-data/`,
   account_name: `${API_BASE}/transactions/account-name/`,
-  electricity: `${API_BASE}/electricity/`,
+  electricity: `${API_BASE}/payments/electricity/`,
   electricity_user: `${API_BASE}/payments/electricity/customer/`,
   group_payment_history: `${API_BASE}/payments/group-payment/history/`,
   group_payment: `${API_BASE}/payments/group-payment/`,
@@ -210,3 +211,53 @@ function closeNavBody() {
     redirectToLogin();
   }
 };
+
+
+async function getElectricityHistory() {
+   
+    const list = await getRequest(ENDPOINTS.history);
+    const page_length = Math.round(list.count / 5) + 1;
+    
+    for(let i = 1; i<=page_length; i++ ){
+ 
+    const histories = await getRequest(`${ENDPOINTS.history}?page=${i}`);
+    const history = histories.results;
+    let hist_body = document.getElementById("history-list");
+    
+    for(let i = 0; i< history.length ; i++){
+       if(history[i].description.includes("Electricity")){
+        let  time = getDate(history[i].created_at.slice(0,10))
+        let  amount_history =  history[i].formatted_amount
+        let description = history[i].description
+        if(history[i].transaction_type ==='DEBIT'){
+             amount_history = "-" + amount_history;
+        }
+        else{
+             amount_history = "+" + amount_history;
+        }
+        
+        const typeBody = document.createElement('span')
+        const timeBody = document.createElement('small')
+        const enclose = document.createElement('div')
+        const amountBody = document.createElement('strong')
+        
+        typeBody.textContent = description 
+        timeBody.textContent = time
+        amountBody.textContent = amount_history
+        
+        enclose.appendChild(amountBody);
+        enclose.appendChild(typeBody);
+        
+        const history_item = document.createElement('div')
+        history_item.classList.add("history-item")
+        history_item.appendChild(enclose);
+        history_item.appendChild(timeBody);
+        hist_body.appendChild(history_item);
+        document.getElementById("history").style.display = "grid";
+    }}
+    
+    } 
+    
+}
+
+
