@@ -167,8 +167,8 @@
       let email = localStorage.getItem("email");
       text.textContent = `A 6-digit verification code has been sent to ${email}. Please enter the code below.`;
 
-      //let API_BASE = "https://api.blueseamobile.com.ng";
-      let API_BASE = "http://127.0.0.1:8000";
+      let API_BASE = "https://api.blueseamobile.com.ng";
+      // let API_BASE = "http://127.0.0.1:8000";
       let ENDPOINT = {
         sendOtp: `${API_BASE}/accounts/resend-otp/`,
         verifyOtp: `${API_BASE}/accounts/verify-email/`,
