@@ -50,9 +50,13 @@ let ENDPOINTS = {
   group_payment_history: `${API_BASE}/payments/group-payment/history/`,
   group_payment: `${API_BASE}/payments/group-payment/`,
   dstv: `${API_BASE}/payments/dstv/`,
-  gotv: `${API_BASE}/payments/gotv/`,
   showmax: `${API_BASE}/payments/showmax/`,
   startimes: `${API_BASE}/payments/startimes/`,
+  gotv: `${API_BASE}/payments/gotv/`,
+  create_group: `${API_BASE}/payments/group/create/`,
+  join_group: `${API_BASE}/payments/group/add-member/`,
+  my_group: `${API_BASE}/payments/group/my-groups/`,
+  group_detail: `${API_BASE}/payments/group/`,
   logout: `${API_BASE}/accounts/logout/`
 };
 
@@ -151,6 +155,9 @@ function getDate(date = "2025-11-20") {
 
 function showLoader() {
   document.getElementById("loader").style.display = "block";
+}
+function showSuccess() {
+  document.getElementById("success").style.display = "block";
 }
 function hideLoader() {
   document.getElementById("loader").style.display = "none";

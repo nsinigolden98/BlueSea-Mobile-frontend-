@@ -480,6 +480,7 @@ function paymentFeedback(buy_data){
         else{
             
             showToast(buy_data.response_description);
+            showSuccess()
       }
         }                
 async function makePayment(){

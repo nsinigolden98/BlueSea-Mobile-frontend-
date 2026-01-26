@@ -243,7 +243,7 @@ body {
   display: none;
   width: 90%;
   margin: 2%;
-  top: 100px;
+  top: 20%;
   left: 40%;
   align-items: center;
   justify-content: center;
@@ -398,3 +398,4 @@ li {
     left: 2%;
   }
 }
+
