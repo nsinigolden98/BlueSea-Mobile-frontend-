@@ -92,8 +92,8 @@ function closeModal() {
   resetModalTimers("forgot_password");
 }
 
- //const API_BASE = "https://api.blueseamobile.com.ng";  
- let API_BASE = "http://127.0.0.1:8000";
+ const API_BASE = "https://api.blueseamobile.com.ng";  
+ // let API_BASE = "http://127.0.0.1:8000";
 
 let ENDPOINT = {
   login: `${API_BASE}/accounts/login/`,
@@ -361,7 +361,7 @@ async function signInButton(){
     email: identifier,
     password: password
   });
-  //console.log(response);
+  // console.log(response);
   if (response.data.detail !== "No active account found with the given credentials"){
   //if (response.data.user.email_verified ) {
     showToast("Login successful. Redirecting...");

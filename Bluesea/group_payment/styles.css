@@ -72,7 +72,7 @@ body{
 .header-actions{display:flex;align-items:center;gap:var(--space-2)}
 
 /* Main content */
-.main{max-width:var(--max-width);margin:var(--space-4) auto;padding:0 var(--space-3)}
+.main{max-width:var(--max-width);margin:var(--space-4) auto;padding:0 var(--space-3);}
 .dashboard-inner{padding:var(--space-3);background:var(--color-surface);border-radius:12px;box-shadow:var(--shadow)}
 
 /* Placeholder area wraps both empty-state and group-list so they occupy same space */
@@ -169,10 +169,14 @@ body{
 
 /* Forms */
 .form{display:flex;flex-direction:column;gap:var(--space-2)}
-.form-label{font-size:13px;margin-top:var(--space-2)}
+.form-label{font-size:13px;margin-top:var(--space-2);
+    display: block;
+}
 .form-input,.form-select,.form-textarea{
   padding:10px 12px;border-radius:8px;border:1px solid #e6eefc;background:#fff;
   font-size:14px;color:#111827;
+  display: block;
+  width: 100%;
 }
 .form-textarea{min-height:80px;resize:vertical}
 .form-actions{display:flex;gap:var(--space-2);margin-top:var(--space-3)}
@@ -204,7 +208,7 @@ body{
 .form-select:focus,.form-input:focus,.form-textarea:focus{outline:3px solid rgba(11,95,255,0.12);outline-offset:2px}
 
 /* Toast */
-.toast{
+/* .toast{
   margin-bottom:var(--space-2);
   padding:10px 12px;
   border-radius:8px;
@@ -212,7 +216,7 @@ body{
   color:#fff;
   font-weight:600;
   display:inline-block;
-}
+} */
 
 /* Tab animation helpers */
 .fade-in{animation:fadeIn 220ms ease both}
@@ -239,3 +243,17 @@ body{
   .tab{transition:none !important}
   *{animation-duration:0.001ms !important; animation-iteration-count:1 !important}
 }
+
+.toast{
+    position:fixed;
+    text-align: center;
+    bottom :100px; 
+    left:50%; 
+    transform:translateX(-50%); 
+    background:#3498db;
+    color:#fff;
+    width:80%;
+    padding:10px 14px; 
+    border-radius:8px; 
+    box-shadow:0 6px 22px rgba(2,6,23,0.6);  }
+    

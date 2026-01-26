@@ -389,7 +389,7 @@
         }
         if (!buyNowBtn.disabled) {
             document.getElementById("pin-creation-step").style.display = 'block';
-            document.getElementById("buy-data-form").style.opacity = '0.3';
+            //document.getElementById("buy-data-form").style.opacity = '0.3';
         
             
         } else {
@@ -400,7 +400,7 @@
    function cancelPayment(){
        event.preventDefault()
         document.getElementById("pin-creation-step").style.display = 'none';
-        document.getElementById("buy-data-form").style.opacity = '1';
+        //document.getElementById("buy-data-form").style.opacity = '1';
         document.getElementById("pin").value = "";
     }
     // 2. Active State Management setup
@@ -468,21 +468,22 @@
 function paymentFeedback(buy_data){
         hideLoader();
         document.getElementById("pin-creation-step").style.display = 'none';
-        document.getElementById("buy-data-form").style.opacity = '1';
+        //document.getElementById("buy-data-form").style.opacity = '1';
         document.getElementById("pin").value = "";
         
-        if(buy_data.state === false){
-            showToast(buy_data.error )
-        }
-        else if(buy_data.code === "011"){
+        if(buy_data.code === "011"){
             showToast("Plan Not Available, Try Again Later...")
         }
+        else if(!buy_data.success || buy_data.code !== "000" ){
+            showToast(buy_airtime.error ? buy_airtime.error : buy_airtime.response_description)
+        }
         else{
+            
             showToast(buy_data.response_description);
+            showSuccess()
       }
         }                
 async function makePayment(){
-       event.preventDefault()
         
         const pin =document.getElementById("pin").value.trim()
         
@@ -516,6 +517,7 @@ async function makePayment(){
         else{
                 showToast("Invalid Network")
         } 
+        hideLoader()
  
   }
 

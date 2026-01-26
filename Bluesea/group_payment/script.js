@@ -104,7 +104,7 @@
   /* ---------------------------
      Toast
      --------------------------- */
-  function showToast(message, ms = 2500) {
+  /* function showToast(message, ms = 2500) {
     if (!toastEl) {
       alert(message);
       return;
@@ -118,8 +118,8 @@
       toastEl.classList.add('fade-out');
       setTimeout(() => { toastEl.hidden = true; }, 220);
     }, ms);
-  }
-
+  } 
+ */
   /* ---------------------------
      Event listeners
      --------------------------- */
@@ -300,7 +300,7 @@
   /* ---------------------------
      Create group
      --------------------------- */
-  function onCreateSubmit(e) {
+ async function onCreateSubmit(e) {
     e.preventDefault();
     if (!createForm) return;
 
@@ -327,7 +327,7 @@
       return;
     }
 
-    const dynamicInputs = dynamicFields ? Array.from(dynamicFields.querySelectorAll('select, input, textarea')) : [];
+   const dynamicInputs = dynamicFields ? Array.from(dynamicFields.querySelectorAll('select, input, textarea')) : [];
     for (const el of dynamicInputs) {
       if (el.dataset.required === 'true') {
         const val = (el.value || '').toString().trim();
@@ -336,7 +336,7 @@
           showToast(`Please complete: ${el.previousElementSibling ? el.previousElementSibling.textContent : el.id}`);
           return;
         }
-      }
+      } 
     }
 
     const options = {};
@@ -382,6 +382,7 @@
 
     groups.push(group);
     saveGroups(groups);
+    let  create_group = await postRequest(ENDPOINTS.create_group,group)
 
     closePanel();
     renderDashboard();
@@ -587,3 +588,37 @@
   init(); 
 })();
    
+
+async function getGroup(){
+    
+    let groups = await getRequest(ENDPOINTS.my_group);
+    if(groups.count === 0){
+        document.getElementById("add-btn").style.display ="none"
+       
+    }else{
+        document.getElementById("dashboard-inner").style.display = "none"
+        
+    }
+    
+    
+}
+getGroup()
+function hideCreateGroup(){
+      document.getElementById("create-form").style.display ="none"
+    document.getElementById("join-form").style.display = "block"
+      
+}
+function hideJoinGroup(){
+      document.getElementById("create-form").style.display ="block"
+    document.getElementById("join-form").style.display ="none"
+      
+}
+function showToast(msg, ms = 8200) {
+    const t = document.getElementById("toast");
+    if (!t) { alert(msg); return; }
+    t.textContent = msg;
+    t.hidden = false;
+    t.style.opacity = "1";
+    clearTimeout(t._hideTO);
+    t._hideTO = setTimeout(() => { t.hidden = true; }, ms);
+  }

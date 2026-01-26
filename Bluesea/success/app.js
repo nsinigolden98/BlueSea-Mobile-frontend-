@@ -43,5 +43,6 @@ doneBtn.addEventListener("click", () => {
   overlay.style.transition = "opacity 0.4s ease";
   overlay.style.opacity = "0";
 
-  setTimeout(() => overlay.remove(), 400);
+   setTimeout(() => overlay.remove(), 400);
+  document.getElementById("body").style.display ="none"
 });

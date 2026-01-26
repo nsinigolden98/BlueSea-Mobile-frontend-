@@ -195,9 +195,10 @@ document
   );
 
 function withdraw() {
-  document.getElementById("recipient_card").style.display = "block";
+  showToast("Withdrawal Not Available")
+  // document.getElementById("recipient_card").style.display = "block";
   //document.getElementById("confirm_modal").style.display = "block";
-  document.getElementById("page_inner").style.opacity = "0.3";
+ // document.getElementById("page_inner").style.opacity = "0.3";
 }
 
 function bankList() {
@@ -365,3 +366,4 @@ async function makeWithdrawal() {
 
 }
 
+showToast("Withdrawal Not Available")

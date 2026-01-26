@@ -391,6 +391,8 @@ section {
     .price-column, .validity-column {
         padding: 8px 3px;
     }
+    
+    
 }
 
 
@@ -410,6 +412,7 @@ section {
 .btn-primary {
     background-color: #007bff;
     color: white;
+    height: 30px;
 }
 
 .btn-primary:hover {
@@ -437,7 +440,7 @@ section {
     text-align: center;
     display: none ;
     position:fixed;
-    top:300px;
+    top:20%;
     margin:5%;
    
 }

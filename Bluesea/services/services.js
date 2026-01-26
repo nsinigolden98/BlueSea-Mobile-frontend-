@@ -260,28 +260,3 @@
 
 })();
 
-// HARD FIX: hide/show service cards when menu button is clicked
-(function () {
-  const menuBtn = document.getElementById("menu-btn");
-  const categories = document.querySelector(".categories");
-
-  if (!menuBtn || !categories) return;
-
-  let menuOpen = false;
-
-  menuBtn.addEventListener("click", () => {
-    menuOpen = !menuOpen;
-
-    if (menuOpen) {
-      categories.style.display = "none";
-    } else {
-      categories.style.display = "";
-    }
-  });
-
-  // expose close hook for sidebar close button (iframe safe)
-  window.closeNav = function () {
-    menuOpen = false;
-    categories.style.display = "";
-  };
-})();

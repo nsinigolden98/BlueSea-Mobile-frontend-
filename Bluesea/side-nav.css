@@ -1,6 +1,8 @@
 #side-bar{
     min-height: 100%;
     border: none;    
+    top:0;
+    left:0;
   }
 .menu-btn{
     display: none;
