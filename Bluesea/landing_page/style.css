@@ -188,7 +188,9 @@ body {
   color: gray;
   font-size: 12px;
 }
-
+.about-text{
+    font-size:12px;
+}
 .about-card span{
   color: #1da1f2;
   font-size: 15px;
@@ -404,7 +406,6 @@ footer {
 .social-icon{
   width:20px;
   height:20px;
-  fill:var(--navy);
 }
 
 

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blue Vault – Loyalty Marketplace</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="../../side-nav.css">
+      <link rel="stylesheet" href="../loader.css">
+</head>
+<body>
+  <iframe src="../side-nav.html" id="side-bar"></iframe>
+  <div class="app">
+    <header class="topbar data-header">
+  <div class="topbar-left">
+    <button class="icon-btn hamburger" id="menu-btn" onclick="showNav()" aria-label="Open menu">
+      ☰
+    </button>
+  </div>
+
+  <div class="topbar-center header-text">
+    <h1>Blue Vault</h1>
+    <p>Buy Smarter & Cheaper</p>
+  </div>
+
+      <div class="topbar-right">
+        <div class="cart-wrap" title="Cart" onclick="location.href='../cart/cart.html'">
+          <svg class="cart-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 6h15l-1.5 9h-12L6 6z" stroke="#111827" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="10" cy="20" r="1.5" fill="#111827"/>
+            <circle cx="18" cy="20" r="1.5" fill="#111827"/>
+          </svg>
+          <span id="cartCount" class="cart-count">0</span>
+        </div>
+
+        <!-- Three-dot menu -->
+        <div class="menu-wrap">
+          <button class="icon-btn dots" id="dotsBtn" aria-label="Open menu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="5" cy="12" r="1.8" fill="#111827"/>
+              <circle cx="12" cy="12" r="1.8" fill="#111827"/>
+              <circle cx="19" cy="12" r="1.8" fill="#111827"/>
+            </svg>
+          </button>
+
+          <div class="dropdown" id="dotsDropdown" aria-hidden="true">
+            <a href="../verified/verify-seller.html" class="dropdown-link" data-page="marketplace">Verify Seller</a>
+            <a href="../ticket/tickets.html" class="dropdown-link" data-page="orders">My Ticket</a>
+            <a href="../eventmanager/event-manager.html" class="dropdown-link" data-page="profile">Create Event</a>
+             <a href="../scanner/scanner.html" class="dropdown-link" data-page="profile">QR Scanner</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="search-filters">
+        <div class="search-row">
+          <input id="searchInput" class="search-input" type="search" placeholder="Search products, events, points..." aria-label="Search" />
+        </div>
+
+        <div class="filters-row" id="filtersRow">
+          <div class="filter category-filter" role="tablist" aria-label="Categories">
+            <button class="cat-btn active" data-cat="Tickets">Tickets</button>
+            <button class="cat-btn" data-cat="Data">Data</button>
+            <button class="cat-btn" data-cat="Gift Cards">Gift Cards</button>
+            <button class="cat-btn" data-cat="Airtime">Airtime</button>
+            <button class="cat-btn" data-cat="Points">Points</button>
+          </div>
+
+         
+      </section>
+
+      <section class="grid-wrap" id="gridWrap" aria-live="polite">
+        <!-- Cards will be injected here -->
+      </section>
+    </main>
+  </div>
+
+ <div class="bv-modal" id="bvModal" aria-hidden="true">
+  <div class="bv-modal-backdrop" data-close></div>
+
+  <div class="bv-modal-box" role="dialog" aria-modal="true">
+    <button class="bv-modal-close" data-close aria-label="Close modal">×</button>
+
+    <div class="bv-modal-carousel">
+      <button class="ctrl left" data-prev>‹</button>
+      <img id="bvModalImage" />
+      <button class="ctrl right" data-next>›</button>
+      <div class="carousel-count" id="bvModalCount"></div>
+    </div>
+
+    <div class="bv-modal-body">
+      <h3 id="bvModalTitle"></h3>
+      <p id="bvModalDesc"></p>
+      <div id="bvModalDetails"></div>
+    </div>
+
+    <div class="bv-modal-actions">
+      <button class="primary-btn" id="bvModalAction"></button>
+      <button class="add-cart" data-close>
+        <svg
+  width="30"
+  height="30"
+  viewBox="0 0 24 24"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
+>
+  <path
+    d="M6.75 6.75L17.25 17.25M17.25 6.75L6.75 17.25"
+    stroke="currentColor"
+    stroke-width="1.75"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+      </svg>
+      </button>
+    </div>
+  </div>
+</div>
+  
+    <script src="../../side-nav.js"></script>
+  <script src="script.js" defer></script>
+</body>
+</html>

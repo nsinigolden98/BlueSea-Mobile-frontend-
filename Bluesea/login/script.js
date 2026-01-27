@@ -93,7 +93,7 @@ function closeModal() {
 }
 
  const API_BASE = "https://api.blueseamobile.com.ng";  
- // let API_BASE = "http://127.0.0.1:8000";
+// let API_BASE = "http://127.0.0.1:8000";
 
 let ENDPOINT = {
   login: `${API_BASE}/accounts/login/`,
@@ -361,21 +361,21 @@ async function signInButton(){
     email: identifier,
     password: password
   });
-  // console.log(response);
+  
   if (response.data.detail !== "No active account found with the given credentials"){
-  //if (response.data.user.email_verified ) {
+  if (response.data.user.email_verified ) {
     showToast("Login successful. Redirecting...");
     setRefreshToken(response.data.refresh_token, 1);
     setAccessToken(response.data.access_token, 1);
     document.getElementById("loader").style.display = "none";
     window.location.replace("../dashboard/dashboard.html");
-  // } else{
-  //   let verifyResponse = await apiPost(ENDPOINT.sendOtp, { email: identifier });
-  //   showToast("Email Already Registered ");
-  //   localStorage.setItem("email", identifier);
-  //   document.getElementById("loader").style.display = "none";
-  //   window.parent.location.replace("../verify-email.html");
-  // }  
+  } else{
+    let verifyResponse = await apiPost(ENDPOINT.sendOtp, { email: identifier });
+    showToast("Email Already Registered ");
+    localStorage.setItem("email", identifier);
+    document.getElementById("loader").style.display = "none";
+    window.parent.location.replace("../verify-email.html");
+  }  
   }
    else{
     document.getElementById("loader").style.display = "none";

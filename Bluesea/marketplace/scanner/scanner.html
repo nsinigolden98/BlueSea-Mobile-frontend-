@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ticket Scanner</title>
+  <link rel="stylesheet" href="scanner.css" />
+</head>
+<body>
+  <div class="page" aria-live="polite">
+    <header class="header">
+            <button id="backBtn" class="btn-icon" aria-label="Back to Marketplace" onclick="location.href='../marketplace/marketplace.html'">
+        <!-- SVG Arrow -->
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M15 18l-6-6 6-6" fill="none" stroke="#0b66a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <h1>Ticket Scanner</h1>
+    </header>
+
+    <main class="main">
+      <section class="instructions">
+        <p>This scanner uses your device camera to validate event tickets.</p>
+        <p>Please allow camera access when prompted.</p>
+        <button id="startScan" class="primary-btn">Start Scan</button>
+        <p class="error-text" id="cameraError" hidden></p>
+      </section>
+
+      <section class="scanner hidden" aria-hidden="true">
+        <video id="camera" autoplay playsinline></video>
+
+        <div class="scan-overlay">
+          <div class="scan-frame">
+            <div class="scan-line"></div>
+          </div>
+            
+          <button class="secondary-btn stop-btn" id="stopScan">
+            Stop Scan
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-content">
+        <div class="status-header">
+          <div id="statusIcon"></div>
+          <h2 id="modalTitle"></h2>
+        </div>
+
+        <div class="ticket-info">
+          <p><strong>Ticket ID:</strong> <span id="ticketId"></span></p>
+          <p><strong>Event:</strong> <span id="eventName"></span></p>
+          <p><strong>Buyer:</strong> <span id="buyerName"></span></p>
+          <p><strong>Status:</strong> <span id="ticketStatus"></span></p>
+        </div>
+
+        <div class="modal-actions">
+          <button id="grantAccess" class="success-btn hidden">Grant Access</button>
+          <button id="closeModal" class="secondary-btn">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="scanner.js"></script>
+</body>
+</html>

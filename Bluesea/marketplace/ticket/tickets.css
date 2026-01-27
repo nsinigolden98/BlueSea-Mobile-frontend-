@@ -1,0 +1,298 @@
+:root{
+  --primary:#1da1f2;
+  --bg:#ffffff;
+  --accent:#eef7fd;
+  --text:#222;
+  --border:#e5e5e5;
+  --radius:14px;
+  --shadow:0 10px 30px rgba(0,0,0,.08);
+  --muted:#6b7280;
+  --max-width:1100px;
+  font-family:Inter,system-ui,sans-serif;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.site-header{
+  position:sticky;
+  top:0;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  z-index:50;
+}
+
+.header-inner{
+  max-width:var(--max-width);
+  margin:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px 18px;
+}
+
+.btn-icon{
+  background:transparent;
+  border:0;
+  padding:8px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.header-title{
+  flex:1;
+  text-align:center;
+}
+
+.breadcrumb{display:none}
+
+.container{
+  max-width:var(--max-width);
+  margin:auto;
+  padding:20px 18px 60px;
+}
+
+.tickets-section{
+  display:block;
+}
+
+.list-column{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+/* Ticket card */
+.ticket-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px;
+  display:flex;
+  gap:14px;
+  cursor:pointer;
+  transition:.25s;
+}
+
+.ticket-card:hover{
+  box-shadow:var(--shadow);
+  transform:translateY(-3px);
+}
+
+.ticket-card.faded{
+  opacity:.35;
+  pointer-events:none;
+}
+
+.qr-preview{
+  width:72px;
+  height:72px;
+  border-radius:10px;
+  background:var(--accent);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.qr-preview img{
+  width:60px;
+  filter:blur(3px);
+}
+
+.meta{
+  flex:1;
+}
+
+.event-name{
+  font-weight:600;
+  font-size:15px;
+}
+
+.meta-row{
+  display:flex;
+  gap:10px;
+  font-size:13px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.status{
+  margin-left:auto;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+}
+
+.status.upcoming{background:#e6f4ff;color:#1da1f2}
+.status.used{background:#e8f7ed;color:#16a34a}
+.status.expired{background:#fef2f2;color:#dc2626}
+.status.transferred{background:#fef9c3;color:#ca8a04}
+.status.canceled{background:#f3f4f6;color:#6b7280}
+
+/* Expanded (mobile only) */
+.ticket-expanded{
+  margin-top:12px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  animation:expand .25s ease;
+}
+
+@keyframes expand{
+  from{opacity:0;transform:translateY(-6px)}
+  to{opacity:1}
+}
+
+.expanded-banner{
+  height:120px;
+  background:linear-gradient(135deg,#1da1f2,#60a5fa);
+  color:#fff;
+  padding:14px;
+}
+
+.expanded-body{
+  padding:18px;
+}
+
+.qr-large{
+  width:240px;
+  margin:auto;
+}
+
+.qr-large img{
+  width:100%;
+}
+
+.detail{
+  margin-top:12px;
+}
+
+.detail strong{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.actions{
+  display:flex;
+  gap:12px;
+  margin-top:18px;
+}
+
+.primary-btn{
+  background:var(--primary);
+  color:#fff;
+  border:0;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.ghost-btn{
+  background:#fff;
+  border:1px solid var(--border);
+  padding:10px 14px;
+  border-radius:10px;
+}
+
+/* Desktop */
+.preview-column{
+  display:none;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px;
+}
+
+@media(min-width:900px){
+  .tickets-section{
+    display:grid;
+    grid-template-columns:1fr 380px;
+    gap:20px;
+  }
+  .preview-column{display:block}
+  .breadcrumb{display:block}
+}
+
+/* CATEGORY CAROUSEL */
+.category-carousel{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding-bottom:10px;
+  margin-bottom:18px;
+}
+
+.category-carousel button{
+  border:1px solid var(--border);
+  background:#fff;
+  padding:8px 14px;
+  border-radius:999px;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.category-carousel button.active{
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
+}
+
+/* EVENT BANNER */
+.expanded-banner,
+.preview-banner{
+  height:130px;
+  background:url("https://picsum.photos/800/400?blur=2") center/cover no-repeat;
+  color:#fff;
+  padding:14px;
+  position:relative;
+}
+
+.banner-overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.45);
+}
+
+.banner-content{
+  position:relative;
+  z-index:1;
+}
+
+.banner-content h3{
+  margin:0;
+  font-size:18px;
+}
+
+.banner-content small{
+  opacity:.9;
+  font-size:13px;
+}
+
+/* COMPACT SPACING */
+.ticket-card{
+  padding:12px;
+}
+
+.ticket-expanded .expanded-body{
+  padding:14px;
+}
+
+.detail{
+  margin-top:8px;
+  font-size:14px;
+}
+
+.detail strong{
+  font-size:12px;
+}
+
+.preview-column img{
+  margin:12px auto;
+  display:block;
+}

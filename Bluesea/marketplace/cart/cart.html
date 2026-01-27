@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Your Cart — Blue Sea Mobile</title>
+  <link rel="stylesheet" href="cart.css" />
+</head>
+<body class="page-fade">
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+            <button id="backBtn" class="btn-icon" aria-label="Back to Marketplace" onclick="location.href='../marketplace/marketplace.html'">
+        <!-- SVG Arrow -->
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M15 18l-6-6 6-6" fill="none" stroke="#0b66a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <h1 class="header-title">Your Cart</h1>
+
+      <div class="header-right">
+        <div id="desktopCountBadge" class="count-badge" aria-hidden="true">0</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main" role="main">
+    <div class="container grid">
+      <section class="cart-items" id="cartItems" aria-live="polite">
+        <div id="emptyState" class="empty-state" aria-hidden="true">
+          <h2 class="empty-title">Your cart is empty</h2>
+          <p class="empty-subtext">Items you add will appear here</p>
+          <a href="#" class="btn primary continue-btn" id="continueShopping">Continue Shopping</a>
+        </div>
+
+        <div id="itemsList" class="items-list"></div>
+      </section>
+
+      <aside class="summary-panel" id="summaryPanel">
+        <div class="summary-inner">
+          <h2 class="summary-title">Order Summary</h2>
+
+          <dl class="summary-list">
+            <div class="summary-row">
+              <dt>Subtotal</dt>
+              <dd id="subtotal">₦0.00</dd>
+            </div>
+
+            <div class="summary-row">
+              <dt>Service fee</dt>
+              <dd id="serviceFee">₦0.00</dd>
+            </div>
+
+            <div class="summary-row">
+              <dt>Tax</dt>
+              <dd id="tax">₦0.00</dd>
+            </div>
+
+            <hr class="summary-divider" />
+
+            <div class="summary-row total-row">
+              <dt>Total</dt>
+              <dd id="finalTotal">₦0.00</dd>
+            </div>
+          </dl>
+
+          <button id="checkoutBtn" class="btn checkout" disabled>
+            Proceed to Checkout
+          </button>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div class="mobile-checkout" id="mobileCheckout" aria-hidden="true">
+    <div class="mobile-checkout-inner">
+      <div class="mobile-totals">
+        <div class="mobile-sub">Total</div>
+        <div id="mobileTotal">₦0.00</div>
+      </div>
+      <button id="mobileCheckoutBtn" class="btn checkout" disabled>
+        Proceed to Checkout
+      </button>
+    </div>
+  </div>
+
+  <script src="cart.js" defer></script>
+</body>
+</html>

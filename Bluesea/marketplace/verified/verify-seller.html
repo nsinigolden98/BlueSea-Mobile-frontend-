@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Become a Verified Seller</title>
+  <link rel="stylesheet" href="verify-seller.css" />
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <div class="header-inner">
+      <button id="backBtn" class="btn-icon" aria-label="Back to Marketplace">
+        <!-- SVG Arrow -->
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M15 18l-6-6 6-6" fill="none" stroke="#0b66a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <div class="header-title">
+        <h1 id="pageTitle">Become a Verified Seller</h1>
+        <p id="headerSubtitle" class="header-subtitle">
+          Verification helps prevent scams and ensures accountability for ticket buyers and event partners.
+        </p>
+      </div>
+
+      <div class="header-space" aria-hidden="true"></div>
+    </div>
+  </header>
+
+  <main class="main" id="mainContent">
+    <section class="container" id="formContainer" aria-labelledby="pageTitle">
+      <form id="verifyForm" novalidate>
+        <!-- Intro -->
+        <div class="form-intro">
+          <p class="lead">Complete this verification to list and sell tickets on DripWify. Each item requested helps us confirm identity and protect buyers.</p>
+        </div>
+
+        <!-- SECTION 1 — Seller Identity -->
+        <fieldset class="card section" aria-labelledby="section1Title">
+          <legend id="section1Title" class="section-title">Seller Identity</legend>
+
+          <div class="field">
+            <label for="businessType" class="label">
+              Business Type <span class="required">*</span>
+            </label>
+            <div class="field-desc">Tell us whether you are an individual, a registered business, or an event organizer. This determines verification steps.</div>
+            <div class="custom-select" data-name="businessType" tabindex="0" role="listbox" aria-labelledby="businessTypeLabel" aria-required="true">
+              <button type="button" class="select-toggle" id="businessTypeLabel" aria-haspopup="listbox" aria-expanded="false">
+                <span class="select-value">Select business type</span>
+                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="#1da1f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="select-options" role="presentation" aria-hidden="true">
+                <li role="option" data-value="individual">Individual</li>
+                <li role="option" data-value="registered">Registered Business</li>
+                <li role="option" data-value="organizer">Event Organizer</li>
+              </ul>
+            </div>
+            <div class="error" id="businessTypeError" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="legalName" class="label">Legal Full Name <span class="required">*</span></label>
+            <div class="field-desc">Your legal name is used to match government ID and for accountability in transactions.</div>
+            <input id="legalName" name="legalName" type="text" readonly aria-readonly="true" class="input readonly" />
+            <div class="error" id="legalNameError" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="brandName" class="label">Business / Brand Name <span class="required">*</span></label>
+            <div class="field-desc">If you operate under a brand, provide the name so buyers can identify your listings.</div>
+            <input id="brandName" name="brandName" type="text" class="input" />
+            <div class="error" id="brandNameError" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="phone" class="label">Phone Number <span class="required">*</span></label>
+            <div class="field-desc">We use this number for verification and urgent contact regarding listings.</div>
+            <input id="phone" name="phone" type="tel" readonly aria-readonly="true" class="input readonly" />
+            <div class="error" id="phoneError" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="email" class="label">Email Address <span class="required">*</span></label>
+            <div class="field-desc">We will send verification updates and important account notices to this address.</div>
+            <input id="email" name="email" type="email" readonly aria-readonly="true" class="input readonly" />
+            <div class="error" id="emailError" aria-live="polite"></div>
+          </div>
+        </fieldset>
+
+        <!-- SECTION 2 — Accountability Details -->
+        <fieldset class="card section" aria-labelledby="section2Title">
+          <legend id="section2Title" class="section-title">Accountability Details</legend>
+
+          <div class="field">
+            <label for="resAddress" class="label">Residential Address <span class="required">*</span></label>
+            <div class="field-desc">A residential address helps us confirm identity and respond to disputes or investigations.</div>
+            <textarea id="resAddress" name="resAddress" rows="3" class="textarea"></textarea>
+            <div class="error" id="resAddressError" aria-live="polite"></div>
+          </div>
+
+          <div class="grid-two">
+            <div class="field">
+              <label for="stateCity" class="label">State & City <span class="required">*</span></label>
+              <div class="field-desc">Select your state and city so we can verify local regulations and event permissions.</div>
+              <div class="custom-select" data-name="stateCity" tabindex="0" role="listbox" aria-labelledby="stateCityLabel" aria-required="true">
+                <button type="button" class="select-toggle" id="stateCityLabel" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="select-value">Select state & city</span>
+                  <svg class="chev" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="#1da1f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <ul class="select-options" role="presentation" aria-hidden="true">
+                  <li role="option" data-value="abia:umuahia">Abia; Umuahia</li>
+                  <li role="option" data-value="ebonyi:enyibichiri">Ebonyi; Enyibichiri</li>
+                  <li role="option" data-value="lagos:ikeja">Lagos; Ikeja</li>
+                  <li role="option" data-value="fct:abuja">FCT; Abuja</li>
+                </ul>
+              </div>
+              <div class="error" id="stateCityError" aria-live="polite"></div>
+            </div>
+
+            <div class="field">
+              <label for="idMeans" class="label">Means of Identification <span class="required">*</span></label>
+              <div class="field-desc">Choose the ID type you will upload so we can match document format and validation rules.</div>
+              <div class="custom-select" data-name="idMeans" tabindex="0" role="listbox" aria-labelledby="idMeansLabel" aria-required="true">
+                <button type="button" class="select-toggle" id="idMeansLabel" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="select-value">Select ID type</span>
+                  <svg class="chev" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="#1da1f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <ul class="select-options" role="presentation" aria-hidden="true">
+                  <li role="option" data-value="nin">NIN Slip</li>
+                  <li role="option" data-value="passport">International Passport</li>
+                  <li role="option" data-value="driver">Driver’s License</li>
+                </ul>
+              </div>
+              <div class="error" id="idMeansError" aria-live="polite"></div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- SECTION 3 — Document Uploads -->
+        <fieldset class="card section" aria-labelledby="section3Title">
+          <legend id="section3Title" class="section-title">Document Uploads</legend>
+
+          <div class="field">
+            <label class="label">Upload ID Document <span class="required">*</span></label>
+            <div class="field-desc">Upload a clear scan or photo of the selected ID. We accept PDF, JPG, PNG. This confirms your identity.</div>
+            <div class="upload" data-name="idDoc" tabindex="0" role="group" aria-labelledby="uploadIdLabel">
+              <div class="upload-drop" data-accept=".pdf,.jpg,.jpeg,.png" aria-hidden="false">
+                <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12" stroke="#1da1f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#1da1f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                <div class="upload-actions">
+                  <button type="button" class="btn-upload">Choose file</button>
+                  <span class="upload-hint">or drag and drop here</span>
+                </div>
+              </div>
+              <div class="upload-info" aria-live="polite"></div>
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png" class="file-input" aria-hidden="true" />
+            </div>
+            <div class="error" id="idDocError" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label class="label">Upload Proof of Address <span class="required">*</span></label>
+            <div class="field-desc">A utility bill or bank statement dated within the last 3 months helps confirm your residence.</div>
+            <div class="upload" data-name="proofAddress" tabindex="0" role="group" aria-labelledby="uploadAddressLabel">
+              <div class="upload-drop" data-accept=".pdf,.jpg,.jpeg,.png">
+                <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="#1da1f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                <div class="upload-actions">
+                  <button type="button" class="btn-upload">Choose file</button>
+                  <span class="upload-hint">or drag and drop here</span>
+                </div>
+              </div>
+              <div class="upload-info" aria-live="polite"></div>
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png" class="file-input" aria-hidden="true" />
+            </div>
+            <div class="error" id="proofAddressError" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label class="label">Upload Event Authorization (if applicable)</label>
+            <div class="field-desc">If you represent an event, upload authorization or a letter from the event owner. Accepts PDF, JPG, PNG.</div>
+            <div class="upload" data-name="eventAuth" tabindex="0" role="group" aria-labelledby="uploadEventLabel">
+              <div class="upload-drop" data-accept=".pdf,.jpg,.jpeg,.png">
+                <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 6 6 .5-4.5 3.5L18 20l-6-3-6 3 1.5-7L3 8.5 9 8z" stroke="#1da1f2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                <div class="upload-actions">
+                  <button type="button" class="btn-upload">Choose file</button>
+                  <span class="upload-hint">or drag and drop here</span>
+                </div>
+              </div>
+              <div class="upload-info" aria-live="polite"></div>
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png" class="file-input" aria-hidden="true" />
+            </div>
+            <div class="error" id="eventAuthError" aria-live="polite"></div>
+          </div>
+        </fieldset>
+
+        <!-- SECTION 4 — Business & Event Information -->
+        <fieldset class="card section" aria-labelledby="section4Title">
+          <legend id="section4Title" class="section-title">Business & Event Information</legend>
+
+          <div class="field">
+            <label class="label">What will you sell? <span class="required">*</span></label>
+            <div class="field-desc">Select all categories that apply so buyers can find your listings and we can apply category-specific checks.</div>
+            <div class="checkboxes" role="group" aria-labelledby="whatSellLabel">
+              <label class="checkbox"><input type="checkbox" name="sell[]" value="concerts" /> Concert Tickets</label>
+              <label class="checkbox"><input type="checkbox" name="sell[]" value="conferences" /> Conferences</label>
+              <label class="checkbox"><input type="checkbox" name="sell[]" value="religious" /> Religious Events</label>
+              <label class="checkbox"><input type="checkbox" name="sell[]" value="sports" /> Sports Events</label>
+              <label class="checkbox"><input type="checkbox" name="sell[]" value="others" /> Others</label>
+            </div>
+            <div class="error" id="whatSellError" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="monthlyVolume" class="label">Estimated monthly ticket volume <span class="required">*</span></label>
+            <div class="field-desc">This helps us assess risk and the level of verification required for your account.</div>
+            <div class="custom-select" data-name="monthlyVolume" tabindex="0" role="listbox" aria-labelledby="monthlyVolumeLabel" aria-required="true">
+              <button type="button" class="select-toggle" id="monthlyVolumeLabel" aria-haspopup="listbox" aria-expanded="false">
+                <span class="select-value">Select estimated volume</span>
+                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="#1da1f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <ul class="select-options" role="presentation" aria-hidden="true">
+                <li role="option" data-value="1-10">1–10 tickets</li>
+                <li role="option" data-value="11-50">11–50 tickets</li>
+                <li role="option" data-value="51-200">51–200 tickets</li>
+                <li role="option" data-value="200+">200+ tickets</li>
+              </ul>
+            </div>
+            <div class="error" id="monthlyVolumeError" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label for="businessDesc" class="label">Brief description of business / events <span class="required">*</span></label>
+            <div class="field-desc">Describe your business model, typical events, and any partners. This helps our review team verify legitimacy.</div>
+            <textarea id="businessDesc" name="businessDesc" rows="4" class="textarea"></textarea>
+            <div class="error" id="businessDescError" aria-live="polite"></div>
+          </div>
+        </fieldset>
+
+        <!-- SECTION 5 — Compliance & Agreement -->
+        <fieldset class="card section" aria-labelledby="section5Title">
+          <legend id="section5Title" class="section-title">Compliance & Agreement</legend>
+
+          <div class="field">
+            <label class="checkbox block">
+              <input type="checkbox" id="confirmAccurate" name="confirmAccurate" />
+              <span>I confirm that all information provided is accurate and truthful <span class="required">*</span></span>
+            </label>
+            <div class="field-desc">Accurate information ensures fair resolution of disputes and protects buyers and sellers.</div>
+            <div class="error" id="confirmAccurateError" aria-live="polite"></div>
+          </div>
+
+          <div class="field">
+            <label class="checkbox block">
+              <input type="checkbox" id="understandSuspension" name="understandSuspension" />
+              <span>I understand that false information may lead to permanent suspension <span class="required">*</span></span>
+            </label>
+            <div class="field-desc">Providing false information undermines trust and may result in permanent removal from DripWify.</div>
+            <div class="error" id="understandSuspensionError" aria-live="polite"></div>
+          </div>
+        </fieldset>
+
+        <!-- Submit -->
+        <div class="form-actions">
+          <button id="submitBtn" class="btn-primary" type="submit" disabled>
+            <span class="btn-text">Submit verification request</span>
+            <svg class="btn-spinner" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="60" stroke-dashoffset="0"></circle></svg>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Success / Pending Screen (hidden by default) -->
+    <section class="container success-screen" id="successScreen" hidden aria-live="polite">
+      <div class="success-card card">
+        <div class="success-graphic" aria-hidden="true">
+          <svg width="96" height="96" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" fill="#eaf6ff"/>
+            <path d="M7 12l3 3 7-7" stroke="#1da1f2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <h2 class="success-title">Your verification request has been submitted</h2>
+        <p class="success-sub">Our team is reviewing your information. This usually takes 24–72 hours.</p>
+        <div class="status-pill">Status: <strong>Pending Review</strong></div>
+        <div class="success-actions">
+          <button id="statusBtn" class="btn-outline">Go to Verification Status</button>
+          <a href="#" id="backToMarket" class="link">Back to Marketplace</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer note / accordion -->
+    <footer class="container footer-note">
+      <button id="whyToggle" class="accordion-toggle" aria-expanded="false">Why we need this information</button>
+      <div id="whyPanel" class="accordion-panel" hidden>
+        <p><strong>Identity & accountability:</strong> We verify identity to reduce fraud, enable dispute resolution, and ensure buyers can trust sellers.</p>
+        <p><strong>Document verification:</strong> Official documents confirm the person or organization behind listings and help us comply with local regulations.</p>
+        <p><strong>Event authorization:</strong> For event organizers, authorization proves you have the right to sell tickets on behalf of the event owner.</p>
+        <p><strong>Privacy:</strong> Your documents are used only for verification and are stored securely in accordance with our policies.</p>
+      </div>
+    </footer>
+  </main>
+
+  <script src="verify-seller.js"></script>
+</body>
+</html>
