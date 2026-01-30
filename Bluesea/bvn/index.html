@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blue C Mobile – Identity Verification</title>
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- =========================
+       MAIN PAGE CONTAINER
+  ========================== -->
+  <main class="page-wrapper">
+
+    <!-- =========================
+         VERIFICATION CARD
+    ========================== -->
+    <section class="verification-card" aria-labelledby="page-title">
+
+      <!-- =========================
+           HEADER SECTION
+      ========================== -->
+      <header class="header">
+        <div class="brand">
+          <!-- Shield SVG Icon -->
+          <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2L4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5l-8-3z" />
+          </svg>
+          <span class="brand-name">Blue C Mobile</span>
+        </div>
+
+        <h1 id="page-title">Verify Your Identity</h1>
+        <p class="subtitle">
+          Verify your NIN or BVN to confirm your personal details and age.
+        </p>
+      </header>
+
+      <!-- =========================
+           TAB SYSTEM
+      ========================== -->
+      <div class="tabs" role="tablist">
+        <button class="tab active" id="bvnTab" role="tab" aria-selected="true">
+          BVN Verification
+        </button>
+        <button class="tab" id="ninTab" role="tab" aria-selected="false">
+          NIN Verification
+        </button>
+      </div>
+
+      <!-- =========================
+           FORM SECTION
+      ========================== -->
+      <form id="verificationForm" novalidate>
+
+        <!-- =========================
+             BVN FORM
+        ========================== -->
+        <div class="form-section active" id="bvnForm">
+          <div class="form-group">
+            <label for="bvnNumber">BVN Number</label>
+            <input type="text" id="bvnNumber" inputmode="numeric" />
+            <span class="error" id="bvnError"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="bvnPhone">Phone Number linked to BVN</label>
+            <input type="tel" id="bvnPhone" />
+            <span class="error" id="bvnPhoneError"></span>
+          </div>
+        </div>
+
+        <!-- =========================
+             NIN FORM
+        ========================== -->
+        <div class="form-section" id="ninForm">
+          <div class="form-group">
+            <label for="ninNumber">NIN Number</label>
+            <input type="text" id="ninNumber" inputmode="numeric" />
+            <span class="error" id="ninError"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="ninPhone">Phone Number linked to NIN</label>
+            <input type="tel" id="ninPhone" />
+            <span class="error" id="ninPhoneError"></span>
+          </div>
+        </div>
+
+        <!-- =========================
+             VERIFY BUTTON
+        ========================== -->
+        <button type="submit" class="primary-button" id="verifyButton">
+          Verify Now
+        </button>
+
+        <!-- =========================
+             LOADING STATE
+        ========================== -->
+        <div class="loading" id="loadingState">
+          <svg class="spinner" viewBox="0 0 50 50">
+            <circle cx="25" cy="25" r="20" />
+          </svg>
+          <p>Verifying your details…</p>
+        </div>
+      </form>
+
+      <!-- =========================
+           VERIFICATION RESULT
+      ========================== -->
+      <section id="resultSection" class="hidden">
+
+        <!-- SUCCESS HEADER -->
+        <div class="success-header">
+          <svg class="success-icon" viewBox="0 0 24 24">
+            <path d="M9 12l2 2 4-4" />
+          </svg>
+          <h2>Verification Successful</h2>
+        </div>
+
+        <!-- PREVIEW CARD -->
+        <div class="preview-card">
+          <p><strong>Full Name:</strong> <span id="fullName"></span></p>
+          <p><strong>First Name:</strong> <span id="firstName"></span></p>
+          <p><strong>Phone Number:</strong> <span id="verifiedPhone"></span></p>
+          <p><strong>Date of Birth:</strong> <span id="dob"></span></p>
+          <p><strong>Age:</strong> <span id="age"></span></p>
+          <p><strong>Gender:</strong> <span id="gender"></span></p>
+        </div>
+
+        <!-- CONFIRMATION -->
+        <div class="confirmation">
+          <label class="checkbox">
+            <input type="checkbox" id="confirmCheckbox" />
+            <span>I confirm that these details belong to me.</span>
+          </label>
+
+          <button class="primary-button" id="confirmButton" disabled>
+            Confirm & Continue
+          </button>
+        </div>
+      </section>
+
+      <!-- =========================
+           FINAL VERIFIED STATE
+      ========================== -->
+      <section id="verifiedState" class="hidden">
+        <svg class="verified-icon" viewBox="0 0 24 24">
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+        <h2>Your identity has been successfully verified.</h2>
+      </section>
+
+    </section>
+  </main>
+
+  <!-- External JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>

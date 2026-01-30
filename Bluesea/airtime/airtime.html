@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buy Airtime - BlueSea</title>
+      <!--<link rel="stylesheet" href="../group_payment/styles.css">-->
     <link rel="stylesheet" href="styles.css"> 
       <link rel="stylesheet" href="../side-nav.css">
       <link rel="stylesheet" href="../loader.css">
-      
 </head>
 <body class="light-mode"> 
 
@@ -28,10 +28,10 @@
     <p>Buy Smarter amp&; Cheaper</p>
   </div>
             </header>
-        <main id="buy-data-form" class="buy-data-form" onclick="closeNavBody()">
+        <main  class="buy-data-form" onclick="closeNavBody()">
             
-        
-
+    
+            <section id="buy-data-form" >
             <section class="network-select-section">
                 <label class="section-label">Select Network</label>
                 <div class="network-tabs">
@@ -138,8 +138,9 @@
                 </div>
             </section>
 
-            <button class="buy-now-button" id="buy-now-btn">Buy Airtime</button>
-            
+            <button class="buy-now-button" id="buy-now-btn" onclick="enterPin('single')">Buy Airtime</button>
+            <button class="buy-now-button" id="buy-now-btn-group" onclick="showGroupPayment()" disabled>Buy Airtime (Group Payment)</button>
+            </section>
             <div id="enter_pin"></div>
                 <div id="pin-creation-step" class="form-card active-step">
             <h2> Enter PIN</h2>
@@ -147,15 +148,42 @@
             <aside id="create-pin-form">
                 <div class="input-group">
                     
-                    <input type="password" id="pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" inputmode="numeric">
+                    <input type="password" id="pin" placeholder="••••" maxlength="4" inputmode="numeric">
                 </div>
                 
                 
-                <button  class="btn btn-primary" onclick="makePayment()">CONFIRM </button>
-                <button class="btn btn-primary" onclick="cancelPaymente()">CANCEL </button>
+                <button id='make-payment'  class="btn btn-primary" onclick="makePayment('single')">CONFIRM </button>
+                <button id='cancel-payment'  class="btn  btn-primary" onclick="cancelPayment()">CANCEL </button>
             </aside>
-
     </div>
+    <aside id="create-form" class="form" role="form" aria-labelledby="panel-heading" novalidate>
+        <h2>Create Group Payment</h2>
+      <p class="muted">Set up your group, set payment goal and invite members to contribute.</p>
+
+      <label for="group-name" class="form-label">Group Name</label> 
+      <input id="group-name" name="groupName" class="form-input" type="text" placeholder="e.g. Weekend Netflix Plan" required aria-required="true" />  
+
+      <label for="network-group" class="form-label">Network</label> 
+      <input id="network-group" name="network-group" class="form-input" type="text"  placeholder="Network For Group Payment" required aria-required="true" disabled/> 
+      
+      <label for="phone-number" class="form-label">Phone Number</label> 
+      <input id="phone-number-group" name="phone-number" class="form-input" type="number" minlength="10" maxlength="11" placeholder="Phone Number For Group Payment" required aria-required="true" disabled/> 
+      
+      
+      <label for="target-amount" class="form-label">Target Amount (NGN)</label> 
+      <input id="target-amount" name="targetAmount" class="form-input" type="number" min="1" placeholder="Enter total amount" required aria-required="true" disabled/> 
+
+      <label for="group-purpose" class="form-label">Purpose</label> 
+      <input id="group-purpose" name="purpose" class="form-input" type="text" placeholder="Short description of the group" /> 
+
+      <label for="invite-members" class="form-label">Invite Members</label> 
+      <textarea id="invite-members" name="invite" class="form-textarea" placeholder="Enter emails or phone numbers, separated by commas"></textarea> 
+
+      <div class="form-actions">
+        <button type="submit" id="create-submit" class="btn btn-primary" onclick="enterPin('group')">Create Group</button>
+        <button type="button" id="cancel-create" class="btn btn-ghost" onclick="cancelGroupPayment()">Cancel</button>
+      </div>
+    </aside>
         </main>
             <div id="toast" class="toast" aria-live="assertive" hidden></div>
             <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
