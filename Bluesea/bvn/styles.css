@@ -1,0 +1,211 @@
+/* =========================
+   CSS VARIABLES
+========================= */
+:root {
+  --primary: #C4DFFF;
+  --primary-dark: #9FC4F5;
+  --white: #FFFFFF;
+  --border: #E5E7EB;
+  --text: #1F2937;
+  --success: #22C55E;
+  --error: #EF4444;
+}
+
+/* =========================
+   BASE STYLES
+========================= */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--primary);
+  color: var(--text);
+}
+
+/* =========================
+   CENTERED LAYOUT
+========================= */
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* =========================
+   CARD CONTAINER
+========================= */
+.verification-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--white);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* =========================
+   HEADER
+========================= */
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.brand-icon {
+  width: 24px;
+  height: 24px;
+  fill: var(--primary-dark);
+}
+
+.brand-name {
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #6B7280;
+}
+
+/* =========================
+   TABS
+========================= */
+.tabs {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--primary);
+}
+
+/* =========================
+   FORMS
+========================= */
+.form-section {
+  display: none;
+}
+
+.form-section.active {
+  display: block;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  font-size: 14px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.error {
+  font-size: 12px;
+  color: var(--error);
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.primary-button {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================
+   LOADING
+========================= */
+.loading {
+  display: none;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  stroke: var(--primary-dark);
+  fill: none;
+  stroke-width: 4;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =========================
+   RESULTS
+========================= */
+.hidden {
+  display: none;
+}
+
+.success-header {
+  text-align: center;
+  color: var(--success);
+}
+
+.success-icon,
+.verified-icon {
+  width: 48px;
+  height: 48px;
+  fill: none;
+  stroke: var(--success);
+  stroke-width: 2;
+}
+
+.preview-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.confirmation {
+  margin-top: 16px;
+}
+
+.checkbox {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+}

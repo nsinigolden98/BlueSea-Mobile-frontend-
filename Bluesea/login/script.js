@@ -92,8 +92,8 @@ function closeModal() {
   resetModalTimers("forgot_password");
 }
 
- const API_BASE = "https://api.blueseamobile.com.ng";  
-// let API_BASE = "http://127.0.0.1:8000";
+ // const API_BASE = "https://api.blueseamobile.com.ng";  
+let API_BASE = "http://127.0.0.1:8000";
 
 let ENDPOINT = {
   login: `${API_BASE}/accounts/login/`,
@@ -370,7 +370,7 @@ async function signInButton(){
     document.getElementById("loader").style.display = "none";
     window.location.replace("../dashboard/dashboard.html");
   } else{
-    let verifyResponse = await apiPost(ENDPOINT.sendOtp, { email: identifier });
+     await apiPost(ENDPOINT.sendOtp, { email: identifier });
     showToast("Email Already Registered ");
     localStorage.setItem("email", identifier);
     document.getElementById("loader").style.display = "none";

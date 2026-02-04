@@ -6,11 +6,11 @@
   <title>Blue Vault – Loyalty Marketplace</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="../../side-nav.css">
-      <link rel="stylesheet" href="../loader.css">
+      <link rel="stylesheet" href="../../loader.css">
 </head>
 <body>
-  <iframe src="../side-nav.html" id="side-bar"></iframe>
-  <div class="app">
+  <iframe src="../../side-nav.html" id="side-bar"></iframe>
+  <div class="app" >
     <header class="topbar data-header">
   <div class="topbar-left">
     <button class="icon-btn hamburger" id="menu-btn" onclick="showNav()" aria-label="Open menu">
@@ -18,7 +18,7 @@
     </button>
   </div>
 
-  <div class="topbar-center header-text">
+    <div class="topbar-center header-text">
     <h1>Blue Vault</h1>
     <p>Buy Smarter & Cheaper</p>
   </div>
@@ -53,7 +53,7 @@
       </div>
     </header>
 
-    <main class="container">
+    <main class="container" onclick="closeNavBody()">
       <section class="search-filters">
         <div class="search-row">
           <input id="searchInput" class="search-input" type="search" placeholder="Search products, events, points..." aria-label="Search" />
@@ -119,6 +119,7 @@
     </div>
   </div>
 </div>
+
   
     <script src="../../side-nav.js"></script>
   <script src="script.js" defer></script>

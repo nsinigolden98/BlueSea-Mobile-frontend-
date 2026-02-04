@@ -7,8 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
   getElectricityHistory();
 });
 
-//let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
-const API_BASE = "https://api.blueseamobile.com.ng"; 
+let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
+// const API_BASE = "https://api.blueseamobile.com.ng"; 
 
 function getCookie(name) {
   const nameEQ = name + "=";
@@ -54,13 +54,14 @@ let ENDPOINTS = {
   startimes: `${API_BASE}/payments/startimes/`,
   gotv: `${API_BASE}/payments/gotv/`,
   create_group: `${API_BASE}/payments/group/create/`,
-  join_group: `${API_BASE}/payments/group/add-member/`,
+  join_group: `${API_BASE}/payments/group/join-group/`,
+  add_to_group: `${API_BASE}/payments/group/add-member/`,
   my_group: `${API_BASE}/payments/group/my-groups/`,
   group_detail: `${API_BASE}/payments/group/`,
   logout: `${API_BASE}/accounts/logout/`
 };
 
-// Get Requset Function
+// Get Requestt Function
 async function getRequest(url) {
   try {
     const response = await fetch(url, {
@@ -267,4 +268,19 @@ async function getElectricityHistory() {
     
 }
 
+function validateEmail(email) {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+}
 
+function generateJoinCode() {
+  return Math.random().toString(36).slice(2, 10).toUpperCase();
+}
+
+function disableAllBtn(ids,bool=false) {
+  document.querySelectorAll('button').forEach(btn => {
+    if (!ids.includes(btn.id)) {
+      btn.disabled = bool;
+    }
+  })
+}

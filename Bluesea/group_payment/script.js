@@ -222,27 +222,49 @@
      --------------------------- */
   const SERVICE_FIELDS = {
     airtime: [
-      { id: 'airtime-network', label: 'Select Network', tag: 'select', required: true, options: [{value:'mtn',label:'MTN'},{value:'glo',label:'GLO'},{value:'airtel',label:'Airtel'},{value:'9mobile',label:'9mobile'}] },
-      { id: 'airtime-amount', label: 'Airtime Amount (NGN)', tag: 'input', type: 'number', required: true, placeholder: 'Enter amount' }
+      { id: 'airtime-network', 
+        label: 'Select Network', 
+        tag: 'select',
+        required: true,
+        options: 
+        [{ value: 'mtn', label: 'MTN' }, { value: 'glo', label: 'GLO' }, { value: 'airtel', label: 'Airtel' }, { value: 'etisalat', label: '9mobile' }]
+      },
+      { id: 'airtime-amount', label: 'Airtime Amount (NGN)', tag: 'input', type: 'number', required: true, placeholder: 'Enter amount' },
+       { id: 'sub-number', label: 'Phone Number', tag: 'input', type: 'number', required: true, placeholder: 'Enter Phone Number For the Group Payment' }
     ],
     data: [
       { id: 'data-network', label: 'Select Network', tag: 'select', required: true, options: [{value:'mtn',label:'MTN'},{value:'glo',label:'GLO'},{value:'airtel',label:'Airtel'},{value:'9mobile',label:'9mobile'}] },
-      { id: 'data-plan', label: 'Select Data Plan', tag: 'select', required: true, options: [{value:'daily',label:'Daily - 100MB'},{value:'weekly',label:'Weekly - 1GB'},{value:'monthly',label:'Monthly - 5GB'}] }
+      { id: 'data-plan', label: 'Select Data Plan', tag: 'select', required: true, options: [{ value: 'daily', label: 'Daily - 100MB' }, { value: 'weekly', label: 'Weekly - 1GB' }, { value: 'monthly', label: 'Monthly - 5GB' }] },
+       { id: 'sub-number', label: 'Phone Number', tag: 'input', type: 'number', required: true, placeholder: 'Enter Phone Number For The Group Payment' }
     ],
     electricity: [
-      { id: 'electricity-provider', label: 'Select Provider', tag: 'select', required: true, options: [{value:'ikeja',label:'Ikeja Electric'},{value:'eko',label:'Eko Electric'},{value:'phcn',label:'PHCN'}] },
+      {
+        id: 'electricity-provider', label: 'Select Provider', tag: 'select', required: true, options: [{ value: 'ikeja-electric', label: 'Ikeja Electric (EKEDC)' }, { value: 'eko-electric', label: 'Eko Electric (EKEDC)' },
+        { value: 'kano-electric', label: 'Kano Electric (KEDCO)' },
+        { value: 'portharcourt-electric', label: 'Port-harcourt Electric (PHED)' },
+        { value: 'jos-electric', label: 'Jos Electric (JED)' },
+        { value: 'ibadan-electric', label: 'Ibadan Electric (IBEDC)' },
+        { value: 'kaduna-electric', label: 'Kaduna Electric (KAEDCO)' },
+        { value: 'abuja-electric', label: 'Abuja Electric (AEDC)' },
+        { value: 'enugu-electric', label: 'Enugu Electric (EEDC)' },
+        { value: 'aba-electric', label: 'Aba Electric (ABA)' },
+        { value: 'yola-electric', label: 'Yola Electric (YEDC)' }
+        
+        ]
+      },
       { id: 'meter-type', label: 'Meter Type', tag: 'select', required: true, options: [{value:'prepaid',label:'Prepaid'},{value:'postpaid',label:'Postpaid'}] },
-      { id: 'meter-number', label: 'Meter Number', tag: 'input', required: true, placeholder: 'Enter meter number' }
+      { id: 'sub-number', label: 'Meter Number', tag: 'input', required: true, placeholder: 'Enter meter number' }
     ],
     subscriptions: [
-      { id: 'subscription-provider', label: 'Select Provider', tag: 'select', required: true, options: [{value:'netflix',label:'Netflix'},{value:'dstv',label:'DSTV'},{value:'spotify',label:'Spotify'}] },
-      { id: 'subscription-plan', label: 'Select Plan', tag: 'select', required: true, options: [{value:'basic',label:'Basic'},{value:'standard',label:'Standard'},{value:'premium',label:'Premium'}] }
+      { id: 'subscription-provider', label: 'Select Provider', tag: 'select', required: true, options: [{value:'showmax',label:'ShowMax'},{value:'dstv',label:'DSTV'},{value:'gotv',label:'GOTV'}] },
+      { id: 'subscription-plan', label: 'Select Plan', tag: 'select', required: true, options: [{ value: 'basic', label: 'Basic' }, { value: 'standard', label: 'Standard' }, { value: 'premium', label: 'Premium' }] },
+       { id: 'sub-number', label: 'IUC Number', tag: 'input', type: 'number', required: true, placeholder: 'Enter your IUC number' }
     ],
-    betting: [
-      { id: 'betting-platform', label: 'Select Platform', tag: 'select', required: true, options: [{value:'bet9ja',label:'Bet9ja'},{value:'sportybet',label:'SportyBet'},{value:'betking',label:'BetKing'}] },
-      { id: 'account-id', label: 'Account ID', tag: 'input', required: true, placeholder: 'Enter account ID' },
-      { id: 'wallet-type', label: 'Wallet Type', tag: 'select', required: true, options: [{value:'main',label:'Main Wallet'},{value:'bonus',label:'Bonus Wallet'}] }
-    ]
+    // betting: [
+    //   { id: 'betting-platform', label: 'Select Platform', tag: 'select', required: true, options: [{value:'bet9ja',label:'Bet9ja'},{value:'sportybet',label:'SportyBet'},{value:'betking',label:'BetKing'}] },
+    //   { id: 'account-id', label: 'Account ID', tag: 'input', required: true, placeholder: 'Enter account ID' },
+    //   { id: 'wallet-type', label: 'Wallet Type', tag: 'select', required: true, options: [{value:'main',label:'Main Wallet'},{value:'bonus',label:'Bonus Wallet'}] }
+    // ]
   };
 
   function onServiceTypeChange(e) {
@@ -300,12 +322,16 @@
   /* ---------------------------
      Create group
      --------------------------- */
+  
+  
  async function onCreateSubmit(e) {
     e.preventDefault();
     if (!createForm) return;
 
     const nameEl = q('group-name');
+    const subNumEl = q('subscription-number');
     const name = nameEl ? nameEl.value.trim() : '';
+   const subNum = subNumEl ?  subNumEl.value : '';
     const serviceType = serviceTypeSelect ? serviceTypeSelect.value : '';
     const targetAmount = targetAmountInput ? Math.floor(Number(targetAmountInput.value)) : 0;
     const purpose = q('group-purpose') ? q('group-purpose').value.trim() : '';
@@ -326,7 +352,11 @@
       showToast('Please enter a valid target amount.');
       return;
     }
-
+    if (!subNum) {
+      if (subNumEl) subNumEl.focus();
+      showToast('Please enter subscription or phone number type.');
+      return;
+    }
    const dynamicInputs = dynamicFields ? Array.from(dynamicFields.querySelectorAll('select, input, textarea')) : [];
     for (const el of dynamicInputs) {
       if (el.dataset.required === 'true') {
@@ -342,42 +372,40 @@
     const options = {};
     dynamicInputs.forEach(el => { options[el.id] = el.value; });
 
-    const inviteParts = invite ? invite.split(',').map(s => s.trim()).filter(Boolean) : [];
-    const membersCount = inviteParts.length > 0 ? inviteParts.length : 1;
-    const parts = distributeAmounts(targetAmount, membersCount);
+    // const inviteParts = invite ? invite.split(',').map(s => s.trim()).filter(Boolean) : [];
+    // const membersCount = inviteParts.length > 0 ? inviteParts.length : 1;
+    // const parts = distributeAmounts(targetAmount, membersCount);
 
-    const members = [];
-    if (inviteParts.length > 0) {
-      inviteParts.forEach((p, idx) => {
-        members.push({
-          id: `m-${idx}-${Date.now()}`,
-          name: p,
-          amount: parts[idx],
-          status: idx === 0 ? 'paid' : 'pending'
-        });
-      });
-    } else {
-      members.push({
-        id: `m-owner-${Date.now()}`,
-        name: 'You',
-        amount: parts[0],
-        status: 'pending'
-      });
-    }
+    // const members = [];
+    // if (inviteParts.length > 0) {
+    //   inviteParts.forEach((p, idx) => {
+    //     members.push({
+    //       id: `m-${idx}-${Date.now()}`,
+    //       name: p,
+    //       amount: parts[idx],
+    //       status: idx === 0 ? 'paid' : 'pending'
+    //     });
+    //   });
+    // } else {
+    //   members.push({
+    //     id: `m-owner-${Date.now()}`,
+    //     name: 'You',
+    //     amount: parts[0],
+    //     status: 'pending'
+    //   });
+    // }
 
-    const id = generateId();
-    const joinCode = generateJoinCode();
+    // const id = generateId();
+   //  const joinCode = generateJoinCode();
     const group = {
-      id,
-      joinCode,
       name,
-      serviceType,
-      options,
-      purpose,
-      targetAmount,
-      createdAt: Date.now(),
-      owner: { id: `owner-${Date.now()}`, name: 'You' },
-      members
+      description: purpose,
+      service_type: serviceType,
+      plan:options,
+      sub_number: subNum,
+      target_amount: targetAmount,
+      invite_members: invite,
+      transaction_pin: pin,
     };
 
     groups.push(group);
@@ -587,19 +615,25 @@
   --------------------------- */ 
   init(); 
 })();
-   
+
+// async function joinGroup() {
+//   let payload = {
+//     code
+//   }
+//   let response = await postRequest(ENDPOINTS.join_group, payload);
+  
+//  }  
 
 async function getGroup(){
     
     let groups = await getRequest(ENDPOINTS.my_group);
-    if(groups.count === 0){
-        document.getElementById("add-btn").style.display ="none"
-       
+    if(groups.count > 0){
+ 
+      document.getElementById("dashboard-inner").style.display = "block"
+      
     }else{
-        document.getElementById("dashboard-inner").style.display = "none"
-        
+      document.getElementById("add-btn").style.display = "none"   
     }
-    
     
 }
 getGroup()
