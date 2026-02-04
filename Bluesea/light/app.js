@@ -124,7 +124,8 @@ async function makePayment(){
   }
   showLoader()
   if(pin.value.length <3){
-      showToast("Incomplete Pin")
+    showToast("Incomplete Pin")
+    hideLoader()
   }
   else{
   let response = await  postRequest(ENDPOINTS.electricity, payload) 
@@ -135,15 +136,15 @@ async function makePayment(){
       showToast(response.error)
   }
   cancelPayment()
-  }
   hideLoader()
+  }
   
 }
 
 function cancelPayment(){
        //event.preventDefault()
         document.getElementById("pin-creation-step").style.display = 'none';
-        // document.getElementById("buy-data-form").style.opacity = '1';
+        document.getElementById("buy-data-form").style.opacity = '1';
         document.getElementById("pin").value = "";
     }
     
@@ -154,13 +155,14 @@ async function enterPin() {
         
         let valid = true;
         const user = await getRequest(ENDPOINTS.user)
+          document.getElementById("pin").value = "";
         if (user.pin_is_set === false){
             window.parent.location.href = "../settings/pin/pin.html";
             return valid = false;
         }
-        if (!continueBtn.disabled && amount.value > 1500) {
+        if (!continueBtn.disabled && amount.value >= 1500) {
             document.getElementById("pin-creation-step").style.display = 'block';
-           // document.getElementById("buy-data-form").style.opacity = '0.3';
+           document.getElementById("buy-data-form").style.opacity = '0.3';
             
         }
         else{
@@ -177,4 +179,10 @@ function showToast(msg, ms = 8200) {
     t.style.opacity = "1";
     clearTimeout(t._hideTO);
     t._hideTO = setTimeout(() => { t.hidden = true; }, ms);
-  }
+}
+
+// disable buttons when there is modal
+function disableBtn(bool) {
+  const ids = ['confirm-btn', 'cancel-btn' ]
+ disableAllBtn(ids,bool=bool) 
+}

@@ -317,7 +317,8 @@ async function makePayment(){
     //showToast('Group created successfully.');
     hideLoader();
    }
-  }
+  disableBtn(false)
+}
 
 function showGroupPayment() {
   document.getElementById('create-form').style.display = 'block'
@@ -344,6 +345,7 @@ function cancelGroupPayment() {
   disableBtn(false)
 }
 
+// to disable button when there is a modal
 function disableBtn(bool) {
   const ids = ['cancel-create', 'create-submit', 'make-payment','cancel-payment' ]
  disableAllBtn(ids,bool=bool) 
