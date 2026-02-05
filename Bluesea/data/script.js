@@ -300,9 +300,14 @@
     };
     
     async function user(){
-    const user = await getRequest(ENDPOINTS.user);
+      const user = await getRequest(ENDPOINTS.user);
+      if (user.phone.includes("+234")) {
       const removeZero = user.phone.slice(4,)
-    document.getElementById("recipient-number").value = "0" + String(removeZero);
+      document.getElementById("recipient-number").value = "0" + String(removeZero);
+      } else {
+      document.getElementById("recipient-number").value = String(user.phone);
+        
+      }
     updateSummary();
     }
     user()

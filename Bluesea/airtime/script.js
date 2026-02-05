@@ -9,10 +9,16 @@ function showToast(msg, ms = 8200) {
   }
 //document.addEventListener('DOMContentLoaded', async() => {
     async function user(){
-    const user = await getRequest(ENDPOINTS.user);
-    const removeZero = user.phone.slice(4,)
-    const numberp = document.getElementById("recipient-number")
-    numberp.value = "0" + String(removeZero);
+      const user = await getRequest(ENDPOINTS.user);
+     
+      if (user.phone.includes("+234")) {
+      const removeZero = user.phone.slice(4,)
+      document.getElementById("recipient-number").value = "0" + String(removeZero);
+      }
+      else {
+     document.getElementById("recipient-number").value = String(user.phone);
+        
+      }
     updateSummary()
     }
     user()
