@@ -83,10 +83,10 @@
               <div id="toast" class="toast" aria-live="assertive" hidden></div>
               <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
             <iframe src="../success/success.html" frameborder="0" id="success"></iframe>
-        <div id="pin-creation-step" class="form-card active-step">
+        <aside id="pin-creation-step" class="form-card active-step">
             <h2>Enter PIN</h2>
 
-            <aside id="create-pin-form">
+            <div id="create-pin-form">
                 <div class="input-group">
             
                     <input type="password" id="pin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="\d{4}" title="Please enter exactly 4 digits" >
@@ -95,9 +95,9 @@
                 
                 <button  class="btn btn-primary" id="confirm-btn" onclick="makePayment()">CONFIRM </button>
                 <button class="btn btn-primary" id="cancel-btn" onclick="cancelPayment()">CANCEL </button>
-            </aside>
+        </div>
 
-    </div>
+    </aside>
         
 
     </div>
