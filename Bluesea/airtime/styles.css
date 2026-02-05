@@ -494,7 +494,8 @@ body {
     text-align: center;
     display: none ;
     position:fixed;
-    top:20%;
+    min-width: 80%;
+    top:30%;
     left: 50%;
     transform: translateX(-50%);
     margin-left:auto;

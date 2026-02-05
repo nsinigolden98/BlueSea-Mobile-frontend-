@@ -473,7 +473,8 @@ plan-tabs::-webkit-scrollbar {
     position:fixed;
     left: 50%;
     transform: translateX(-50%);
-    top:20%;
+    min-width: 80%;
+    top:30%;
     margin:5%;
    
 }

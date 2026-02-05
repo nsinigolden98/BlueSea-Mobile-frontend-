@@ -316,13 +316,14 @@ button:disabled {
 .form-card {
     background-color: #ffffff;
     max-width:85%;
+    min-width: 80%;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
     text-align: center;
     display: none ;
     position:fixed;
-    top:20%;
+    top:30%;
     left: 50%;
     transform: translateX(-50%);
     margin-left:auto;
