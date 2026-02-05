@@ -359,11 +359,11 @@ h3{
 }
 
 .g_id_signin {
-      width: 100%;
+      min-width: 100%;
       max-width: 400px;  
       padding: 0 20px;
       box-sizing: border-box;
-      
+      align-self: center;
 }
 
 /* Password rules container */
