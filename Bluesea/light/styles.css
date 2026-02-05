@@ -323,6 +323,7 @@ button:disabled {
     display: none ;
     position:fixed;
     top:20%;
+    left: 50%;
     margin-left:auto;
     margin-right:auto;
 }

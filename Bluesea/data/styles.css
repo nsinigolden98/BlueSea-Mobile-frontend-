@@ -471,6 +471,7 @@ plan-tabs::-webkit-scrollbar {
     text-align: center;
     display: none ;
     position:fixed;
+    left: 50%;
     top:20%;
     margin:5%;
    

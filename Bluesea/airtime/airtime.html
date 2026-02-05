@@ -142,11 +142,11 @@
            <!--this is for the button for group payment in airtime -->
             <!--<button class="buy-now-button" id="buy-now-btn-group" onclick="showGroupPayment()" disabled>Buy Airtime (Group Payment)</button>-->
             </section>
-            <div id="enter_pin"></div>
-                <div id="pin-creation-step" class="form-card active-step">
+           
+        <aside id="pin-creation-step" class="form-card active-step">
             <h2> Enter PIN</h2>
 
-            <aside id="create-pin-form">
+            <div id="create-pin-form">
                 <div class="input-group">
                     
                     <input type="password" id="pin" placeholder="••••" maxlength="4" inputmode="numeric">
@@ -155,8 +155,8 @@
                 
                 <button id='make-payment'  class="btn btn-primary" onclick="makePayment('single')">CONFIRM </button>
                 <button id='cancel-payment'  class="btn  btn-primary" onclick="cancelPayment()">CANCEL </button>
-            </aside>
-    </div>
+            </div>
+        </aside`>
     <aside id="create-form" class="form" role="form" aria-labelledby="panel-heading" novalidate>
         <h2>Create Group Payment</h2>
       <p class="muted">Set up your group, set payment goal and invite members to contribute.</p>
