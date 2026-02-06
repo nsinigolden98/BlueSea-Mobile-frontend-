@@ -652,6 +652,15 @@ expandBtn.addEventListener('click', (ev) => {
     });
   }
 
+  
+  // Get events ticket available
+  
+  async function getTickets() {   
+    let tickets = await getRequest(ENDPOINTS.events)
+    console.log(tickets)
+  }
+  getTickets()
+  
   /* -------------------------
      Start
      ------------------------- */

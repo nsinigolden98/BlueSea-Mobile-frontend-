@@ -1,5 +1,4 @@
 "use strict";
-
 document.addEventListener("DOMContentLoaded", function () {
   // function body
   getUserNav();
@@ -7,8 +6,9 @@ document.addEventListener("DOMContentLoaded", function () {
   getElectricityHistory();
 });
 
-//let API_BASE = "http://127.0.0.1:8000"; // from Postman collection
- const API_BASE = "https://api.blueseamobile.com.ng"; 
+// const API_BASE = "https://api.blueseamobile.com.ng";  
+
+const API_BASE = "http://127.0.0.1:8000";
 
 function getCookie(name) {
   const nameEQ = name + "=";
@@ -58,7 +58,9 @@ let ENDPOINTS = {
   add_to_group: `${API_BASE}/payments/group/add-member/`,
   my_group: `${API_BASE}/payments/group/my-groups/`,
   group_detail: `${API_BASE}/payments/group/`,
-  logout: `${API_BASE}/accounts/logout/`
+  logout: `${API_BASE}/accounts/logout/`,
+  events: `${API_BASE}/market_place/events/`,
+  create_events: `${API_BASE}/market_place/events/create/`
 };
 
 // Get Requestt Function

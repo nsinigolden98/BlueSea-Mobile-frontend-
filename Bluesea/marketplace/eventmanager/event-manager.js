@@ -80,3 +80,24 @@ form.onsubmit = e => {
   form.reset();
   categoryValue = "";
 };
+
+// Create Event function
+async function createEvent() {
+  let payload = {
+    vendor_id: '',
+    event_title: '',
+    hosted_by: '',
+    category: '',
+    event_banner: '',
+    ticket_image: '',
+    event_date: '',
+    event_location: '',
+    event_description: '',
+    is_free: '',
+    ticket_type_name: "",
+    ticket_price: "",
+    ticket_quantity:""
+  }
+  let response = postRequest(ENDPOINTS.create_events, payload)
+  
+}

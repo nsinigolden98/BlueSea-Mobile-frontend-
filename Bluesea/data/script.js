@@ -571,11 +571,12 @@ function paymentFeedback(buy_data){
         document.getElementById("pin-creation-step").style.display = 'none';
         document.getElementById("buy-data-form").style.opacity = '1';
         document.getElementById("pin").value = "";
-        disableBtn(false)
+        disableBtn(false);
         
         if (buy_data.code === "000" || buy_data.success) {
     showToast(buy_data.response_description)
     showSuccess();
+    
             
         }
         else if(!buy_data.success || buy_data.code !== "000" ){
