@@ -305,7 +305,24 @@ body{
             </span>
             <span class="menu_label"> Market Place</span>
           </button>-->
- 
+
+          <button class="menu_item" id="menu_bluevault"  onclick="window.parent.location.href= 'marketplace/marketplace/marketplace.html'">
+            <span class="icon">
+        <!-- Outline SVG: BlueVault -->
+              <svg width="20" height="20" viewBox="0 0 30 23" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <!-- Roof -->
+  <path d="M3 9L15 3L27 9" stroke="#1da1f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Store body -->
+  <rect x="5" y="9" width="20" height="11" rx="2" stroke="#1da1f2" stroke-width="2"/>
+  <!-- Door -->
+  <rect x="13" y="13" width="4" height="7" rx="1" fill="#1da1f2"/>
+  <!-- Point dot (BluePoint hint) -->
+  <circle cx="9" cy="14" r="1.5" fill="#1da1f2"/>
+</svg>
+             </span>
+            <span class="menu_label">Blue Vault</span>
+          </button>
+          
           <!--disabling group payment for the time being-->
           <!--<button class="menu_item" id="menu_group_payment"  onclick="window.parent.location.href= 'group_payment/payment.html'">
             <span class="icon">
@@ -397,7 +414,7 @@ body{
        let airtime = document.getElementById("menu_buy_airtime")
        let group_payment = document.getElementById("menu_group_payment")
        let services = document.getElementById("menu_services")
-       let marketplace = document.getElementById("menu_loyalties")
+       let marketplace = document.getElementById("menu_bluevault")
        
        let dir = window.parent.location.href;
       if (dir.includes("dashboard")) {
