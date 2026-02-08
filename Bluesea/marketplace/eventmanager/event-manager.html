@@ -7,139 +7,163 @@
   <link rel="stylesheet" href="event-manager.css">
 </head>
 <body>
-<div class="page fade-in">
 
-  <header class="header">
-          <button id="backBtn" class="btn-icon" aria-label="Back to Marketplace" onclick="location.href='../marketplace/marketplace.html'">
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="topbar">
+    <button id="backBtn" class="btn-icon" aria-label="Back to Marketplace" onclick="location.href='../marketplace/marketplace.html'">
         <!-- SVG Arrow -->
         <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M15 18l-6-6 6-6" fill="none" stroke="#0b66a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
-    
-    <h1 class="header2">Event Manager</h1>
-    <button id="openCreate" class="primary-btn">
-   Create Event
-    </button>
+
+    <h3 class="title">Event Manager</h3>
+
+    <button id="openCreate" class="primary-btn">Create Event</button>
   </header>
 
-  <main class="layout">
-    <section id="eventList" class="event-list" aria-live="polite"></section>
-    <section id="eventDetail" class="event-detail hidden"></section>
+  <!-- EVENTS -->
+  <main>
+    <section id="eventList" class="event-list empty">
+      <p>No events yet. Create your first experience.</p>
+    </section>
   </main>
-
 </div>
 
 <!-- CREATE EVENT MODAL -->
-<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-panel slide-up">
-    <header class="modal-header">
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+
+    <header class="modal-head">
       <h2>Create Event</h2>
-      <button id="closeModal" class="icon-btn" aria-label="Close">
+      <button id="closeModal" class="icon-btn">
         <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12"/></svg>
       </button>
     </header>
 
-    <form id="eventForm" novalidate>
+    <form id="eventForm">
 
-      <div class="field">
+      <section class="form-card">
         <label>Event Title</label>
-        <input name="title" type="text">
-        <small></small>
-      </div>
+        <input name="title" required>
 
-      <div class="field">
         <label>Hosted By</label>
-        <input name="hostedBy" type="text">
-        <small></small>
-      </div>
+        <input name="hostedBy" required>
+      </section>
 
-      <!-- CATEGORY -->
-      <div class="field">
-        <label>Category</label>
-        <div class="dropdown" id="categoryDropdown" tabindex="0">
-          <div class="dropdown-selected">Select category</div>
-          <div class="dropdown-list">
-            <div data-value="Music">Music</div>
-            <div data-value="Conference">Conference</div>
-            <div data-value="Sports">Sports</div>
-            <div data-value="Networking">Networking</div>
+      <section class="form-card">
+        <h3>Category</h3>
+        <div class="category-grid">
+          <button type="button" data-cat="Music">Music</button>
+          <button type="button" data-cat="Conference">Conference</button>
+          <button type="button" data-cat="Sports">Sports</button>
+          <button type="button" data-cat="Networking">Networking</button>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <h3>Event Banner</h3>
+        <div class="upload-box" id="bannerBox">
+          <div class="upload-info">
+            <div class="thumb"></div>
+            <span class="file-name">No file selected</span>
+          </div>
+          <button type="button" class="remove-img hidden" id="removeBanner">✕</button>
+        </div>
+        <input type="file" id="bannerInput" accept="image/*" hidden>
+      </section>
+
+      <section class="form-card">
+        <h3>Location</h3>
+        <div class="grid-2">
+          <input placeholder="Country" required>
+          <input placeholder="State / Region" required>
+          <input placeholder="City" required>
+          <input placeholder="Address" required>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <h3>Date & Time</h3>
+        <div class="grid-2">
+          <input name="date" placeholder="DD / MM / YYYY" maxlength="10" required>
+          <input name="time" placeholder="HH : MM (24h)" maxlength="5" required>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <h3>Tickets</h3>
+
+        <div class="radio-row">
+          <label class="radio">
+            <input type="radio" name="priceType" value="free" checked>
+            <span></span> Free
+          </label>
+          <label class="radio">
+            <input type="radio" name="priceType" value="paid">
+            <span></span> Paid
+          </label>
+        </div>
+
+        <div id="ticketTiers" class="tiers hidden">
+          <div class="tier">
+            <label class="radio">
+              <input type="checkbox" checked>
+              <span></span> Regular
+            </label>
+            <div class="tier-fields">
+              <input placeholder="Price" type="number" minlength="100"  maxlength="1000000" inputmode="numeric" pattern="[0-9]*" min="0" step="any">
+              <input placeholder="Quantity" type="number" minlength="50" inputmode="numeric" pattern="[0-9]*" min="0" step="any">
+            </div>
+          </div>
+
+          <div class="tier">
+            <label class="radio">
+              <input type="checkbox">
+              <span></span> VIP
+            </label>
+            <div class="tier-fields hidden">
+              <input placeholder="Price" type="number" minlength="100" maxlength="10000000" inputmode="numeric" pattern="[0-9]*" min="0" step="any">
+              <input placeholder="Quantity" type="number" minlength="5" inputmode="numeric" pattern="[0-9]*" min="0" step="any">
+            </div>
+          </div>
+
+          <div class="tier">
+            <label class="radio">
+              <input type="checkbox">
+              <span></span> VVIP
+            </label>
+            <div class="tier-fields hidden">
+              <input placeholder="Price" type="number" minlength="100" maxlength="100000000" inputmode="numeric" pattern="[0-9]*" min="0" step="any">
+              <input placeholder="Quantity" type="number" minlength="1" inputmode="numeric" pattern="[0-9]*" min="0" step="any">
+            </div>
           </div>
         </div>
-        <small></small>
-      </div>
+      </section>
 
-      <!-- BANNER -->
-      <div class="field">
-        <label>Event Banner</label>
-        <div class="upload-box banner">
-           <span>Upload banner image</span>
-          <img>
-        </div>
-        <input type="file" name="banner" accept="image/*" hidden>
-        <small></small>
-      </div>
-
-      <!-- TICKET IMAGE -->
-      <div class="field">
-        <label>Ticket Image (optional)</label>
-        <div class="upload-box ticket">
-          <span>Upload ticket image</span>
-          <img>
-        </div>
-        <input type="file" name="ticket" accept="image/*" hidden>
-        <small></small>
-      </div>
-
-      <div class="field">
-        <label>Location</label>
-        <input name="location" type="text">
-        <small></small>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label>Date (DD/MM/YYYY)</label>
-          <input name="date" maxlength="10">
-          <small></small>
-        </div>
-        <div class="field">
-          <label>Time (24h)</label>
-          <input name="time" maxlength="5">
-          <small></small>
-        </div>
-      </div>
-
-      <!-- PRICE TYPE -->
-      <div class="field">
-        <label>Ticket Type</label>
-        <div class="radio-group">
-          <label><input type="radio" name="priceType" value="paid" checked> Paid</label>
-          <label><input type="radio" name="priceType" value="free"> Free</label>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label>Ticket Price</label>
-          <input name="price" type="number">
-          <small></small>
-        </div>
-        <div class="field">
-          <label>Quantity</label>
-          <input name="quantity" type="number">
-          <small></small>
-        </div>
-      </div>
-
-      <div class="field">
+      <section class="form-card">
         <label>Description</label>
-        <textarea name="description"></textarea>
-        <small></small>
-      </div>
+        <textarea required></textarea>
+      </section>
 
-      <button type="submit" class="primary-btn" disabled>Create Event</button>
+      <button class="primary-btn full">Create Event</button>
     </form>
+  </div>
+</div>
+
+<!-- INVITE MODERATOR MODAL -->
+<div id="inviteModal" class="modal hidden">
+  <div class="modal-card small">
+    <header class="modal-head">
+      <h2>Invite Moderator</h2>
+      <button id="closeInvite" class="icon-btn">✕</button>
+    </header>
+    <div class="form-card">
+      <input placeholder="Moderator Email">
+      <button class="primary-btn full">Send Invite</button>
+    </div>
   </div>
 </div>
 
