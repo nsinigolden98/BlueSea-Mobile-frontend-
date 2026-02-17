@@ -1,5 +1,6 @@
 "use strict";
 
+getBalanace();
 const BANK_LIST = {
   // --- Commercial Banks (Keys use simple names) ---
   AccessBank: {

@@ -4,8 +4,9 @@
 */
 
 
-(function () {
-  'use strict';
+( async function () {
+'use strict';
+  
   
   const bvModal = document.getElementById('bvModal');
 const modalImg = document.getElementById('bvModalImage');
@@ -59,218 +60,198 @@ function slide(dir) {
   /* -------------------------
      Data: datasets per category
      ------------------------- */
-  const DATA = {
-    Tickets: [
-      {
-        id: 't1',
-        title: 'Blue Vault Music Fest',
-        short: 'Live music festival with top artists.',
-        points: 12000,
-        popularity: 'popular',
-        images: [
-          svgDataURI('Music Fest 1', '#2563EB', '#fff'),
-          svgDataURI('Music Fest 2', '#1E40AF', '#fff'),
-          svgDataURI('Music Fest 3', '#60A5FA', '#fff')
-        ],
-        details: {
-          eventName: 'Blue Vault Music Fest 2026',
-          venue: 'Grand Arena, Abuja',
-          runDate: '2026-03-12',
-          seller: 'Blue Events Ltd'
-        }
-      },
-      {
-        id: 't2',
-        title: 'Tech Conference 2026',
-        short: 'Two-day conference on web technologies.',
-        points: 8000,
-        popularity: 'new',
-        images: [
-          svgDataURI('Tech Conf 1', '#2563EB', '#fff'),
-          svgDataURI('Tech Conf 2', '#0EA5E9', '#fff')
-        ],
-        details: {
-          eventName: 'Blue Vault Tech Conference',
-          venue: 'Conference Hall A, Abuja',
-          runDate: '2026-04-05',
-          seller: 'Vault Conferences'
-        }
-      },
-      {
-        id: 't3',
-        title: 'Charity Gala',
-        short: 'An evening of dining and auctions.',
-        points: 15000,
-        popularity: 'popular',
-        images: [
-          svgDataURI('Gala 1', '#2563EB', '#fff'),
-          svgDataURI('Gala 2', '#7DD3FC', '#fff')
-        ],
-        details: {
-          eventName: 'Blue Vault Charity Gala',
-          venue: 'Royal Banquet Hall',
-          runDate: '2026-05-20',
-          seller: 'Vault Philanthropy'
-        }
-      }
-    ],
+  // Get events ticket available
+  
+ 
+    
+  let response = await getRequest(ENDPOINTS.events)   
+  
+ 
 
-    Data: [
-      {
-        id: 'd1',
-        title: '5GB Data Bundle',
-        short: 'Valid for 30 days across networks.',
-        points: 2500,
-        popularity: 'popular',
-        images: [
-          svgDataURI('5GB 1', '#10B981', '#fff'),
-          svgDataURI('5GB 2', '#34D399', '#fff')
-        ],
-        details: {
-          pointType: 'Data Bundle',
-          quantity: '5GB',
-          fullDescription: '5GB data bundle valid for 30 days on all networks.'
-        }
-      },
-      {
-        id: 'd2',
-        title: '10GB Night Plan',
-        short: 'Extra data for night browsing.',
-        points: 1800,
-        popularity: 'new',
-        images: [
-          svgDataURI('10GB Night 1', '#06B6D4', '#fff'),
-          svgDataURI('10GB Night 2', '#0891B2', '#fff')
-        ],
-        details: {
-          pointType: 'Data Bundle',
-          quantity: '10GB',
-          fullDescription: '10GB night plan valid between 12AM-6AM for 14 days.'
-        }
-      },
-      {
-        id: 'd3',
-        title: '1GB Daily',
-        short: 'Daily 1GB for 7 days.',
-        points: 700,
-        popularity: 'popular',
-        images: [
-          svgDataURI('1GB 1', '#06B6D4', '#fff'),
-          svgDataURI('1GB 2', '#60A5FA', '#fff')
-        ],
-        details: {
-          pointType: 'Data Bundle',
-          quantity: '1GB/day',
-          fullDescription: '1GB per day for 7 days, auto-renew disabled.'
-        }
-      }
-    ],
+  let DATA = {
+     Tickets:  [],
 
-    'Gift Cards': [
-      {
-        id: 'g1',
-        title: 'Store Gift Card - $25',
-        short: 'Redeemable at partner stores.',
-        points: 5000,
-        popularity: 'popular',
-        images: [
-          svgDataURI('Gift 25 1', '#F59E0B', '#fff'),
-          svgDataURI('Gift 25 2', '#F97316', '#fff')
-        ],
-        details: {
-          pointType: 'Gift Card',
-          quantity: '$25',
-          fullDescription: 'Redeemable at participating retailers for goods and services.'
-        }
-      },
-      {
-        id: 'g2',
-        title: 'Dining Voucher - $50',
-        short: 'Use at selected restaurants.',
-        points: 9500,
-        popularity: 'new',
-        images: [
-          svgDataURI('Dining 50 1', '#EF4444', '#fff'),
-          svgDataURI('Dining 50 2', '#FCA5A5', '#fff')
-        ],
-        details: {
-          pointType: 'Gift Card',
-          quantity: '$50',
-          fullDescription: 'Valid for dine-in at partner restaurants for 6 months.'
-        }
-      }
-    ],
+    // Data: [
+    //   {
+    //     id: 'd1',
+    //     title: '5GB Data Bundle',
+    //     short: 'Valid for 30 days across networks.',
+    //     points: 2500,
+    //     popularity: 'popular',
+    //     images: [
+    //       svgDataURI('5GB 1', '#10B981', '#fff'),
+    //       svgDataURI('5GB 2', '#34D399', '#fff')
+    //     ],
+    //     details: {
+    //       pointType: 'Data Bundle',
+    //       quantity: '5GB',
+    //       fullDescription: '5GB data bundle valid for 30 days on all networks.'
+    //     }
+    //   },
+    //   {
+    //     id: 'd2',
+    //     title: '10GB Night Plan',
+    //     short: 'Extra data for night browsing.',
+    //     points: 1800,
+    //     popularity: 'new',
+    //     images: [
+    //       svgDataURI('10GB Night 1', '#06B6D4', '#fff'),
+    //       svgDataURI('10GB Night 2', '#0891B2', '#fff')
+    //     ],
+    //     details: {
+    //       pointType: 'Data Bundle',
+    //       quantity: '10GB',
+    //       fullDescription: '10GB night plan valid between 12AM-6AM for 14 days.'
+    //     }
+    //   },
+    //   {
+    //     id: 'd3',
+    //     title: '1GB Daily',
+    //     short: 'Daily 1GB for 7 days.',
+    //     points: 700,
+    //     popularity: 'popular',
+    //     images: [
+    //       svgDataURI('1GB 1', '#06B6D4', '#fff'),
+    //       svgDataURI('1GB 2', '#60A5FA', '#fff')
+    //     ],
+    //     details: {
+    //       pointType: 'Data Bundle',
+    //       quantity: '1GB/day',
+    //       fullDescription: '1GB per day for 7 days, auto-renew disabled.'
+    //     }
+    //   }
+    // ],
 
-    Airtime: [
-      {
-        id: 'a1',
-        title: '₦500 Airtime',
-        short: 'Instant top-up for any network.',
-        points: 500,
-        popularity: 'popular',
-        images: [
-          svgDataURI('Airtime 500 1', '#8B5CF6', '#fff'),
-          svgDataURI('Airtime 500 2', '#C4B5FD', '#fff')
-        ],
-        details: {
-          pointType: 'Airtime',
-          quantity: '₦500',
-          fullDescription: 'Instant airtime top-up delivered to your phone number.'
-        }
-      },
-      {
-        id: 'a2',
-        title: '₦2000 Airtime',
-        short: 'Higher value top-up for calls and data.',
-        points: 2000,
-        popularity: 'new',
-        images: [
-          svgDataURI('Airtime 2000 1', '#7C3AED', '#fff'),
-          svgDataURI('Airtime 2000 2', '#A78BFA', '#fff')
-        ],
-        details: {
-          pointType: 'Airtime',
-          quantity: '₦2000',
-          fullDescription: 'Instant airtime top-up delivered to your phone number.'
-        }
-      }
-    ],
+    // 'Gift Cards': [
+    //   {
+    //     id: 'g1',
+    //     title: 'Store Gift Card - $25',
+    //     short: 'Redeemable at partner stores.',
+    //     points: 5000,
+    //     popularity: 'popular',
+    //     images: [
+    //       svgDataURI('Gift 25 1', '#F59E0B', '#fff'),
+    //       svgDataURI('Gift 25 2', '#F97316', '#fff')
+    //     ],
+    //     details: {
+    //       pointType: 'Gift Card',
+    //       quantity: '$25',
+    //       fullDescription: 'Redeemable at participating retailers for goods and services.'
+    //     }
+    //   },
+    //   {
+    //     id: 'g2',
+    //     title: 'Dining Voucher - $50',
+    //     short: 'Use at selected restaurants.',
+    //     points: 9500,
+    //     popularity: 'new',
+    //     images: [
+    //       svgDataURI('Dining 50 1', '#EF4444', '#fff'),
+    //       svgDataURI('Dining 50 2', '#FCA5A5', '#fff')
+    //     ],
+    //     details: {
+    //       pointType: 'Gift Card',
+    //       quantity: '$50',
+    //       fullDescription: 'Valid for dine-in at partner restaurants for 6 months.'
+    //     }
+    //   }
+    // ],
 
-    Points: [
-      {
-        id: 'p1',
-        title: 'COD Points Pack',
-        short: 'Add 1000 COD points to your account.',
-        points: 1000,
-        popularity: 'popular',
-        images: [
-          svgDataURI('COD 1000 1', '#F97316', '#fff'),
-          svgDataURI('COD 1000 2', '#FB923C', '#fff')
-        ],
-        details: {
-          pointType: 'COD Points',
-          quantity: '1000',
-          fullDescription: 'Instantly credited COD points usable across the marketplace.'
-        }
-      },
-      {
-        id: 'p2',
-        title: 'Academic Points Bundle',
-        short: '500 academic points for learning credits.',
-        points: 500,
-        popularity: 'new',
-        images: [
-          svgDataURI('Academic 500 1', '#2563EB', '#fff'),
-          svgDataURI('Academic 500 2', '#60A5FA', '#fff')
-        ],
-        details: {
-          pointType: 'Academic Points',
-          quantity: '500',
-          fullDescription: 'Points redeemable for courses and learning materials.'
-        }
-      }
-    ]
+    // Airtime: [
+    //   {
+    //     id: 'a1',
+    //     title: '₦500 Airtime',
+    //     short: 'Instant top-up for any network.',
+    //     points: 500,
+    //     popularity: 'popular',
+    //     images: [
+    //       svgDataURI('Airtime 500 1', '#8B5CF6', '#fff'),
+    //       svgDataURI('Airtime 500 2', '#C4B5FD', '#fff')
+    //     ],
+    //     details: {
+    //       pointType: 'Airtime',
+    //       quantity: '₦500',
+    //       fullDescription: 'Instant airtime top-up delivered to your phone number.'
+    //     }
+    //   },
+    //   {
+    //     id: 'a2',
+    //     title: '₦2000 Airtime',
+    //     short: 'Higher value top-up for calls and data.',
+    //     points: 2000,
+    //     popularity: 'new',
+    //     images: [
+    //       svgDataURI('Airtime 2000 1', '#7C3AED', '#fff'),
+    //       svgDataURI('Airtime 2000 2', '#A78BFA', '#fff')
+    //     ],
+    //     details: {
+    //       pointType: 'Airtime',
+    //       quantity: '₦2000',
+    //       fullDescription: 'Instant airtime top-up delivered to your phone number.'
+    //     }
+    //   }
+    // ],
+
+    // Points: [
+    //   {
+    //     id: 'p1',
+    //     title: 'COD Points Pack',
+    //     short: 'Add 1000 COD points to your account.',
+    //     points: 1000,
+    //     popularity: 'popular',
+    //     images: [
+    //       svgDataURI('COD 1000 1', '#F97316', '#fff'),
+    //       svgDataURI('COD 1000 2', '#FB923C', '#fff')
+    //     ],
+    //     details: {
+    //       pointType: 'COD Points',
+    //       quantity: '1000',
+    //       fullDescription: 'Instantly credited COD points usable across the marketplace.'
+    //     }
+    //   },
+    //   {
+    //     id: 'p2',
+    //     title: 'Academic Points Bundle',
+    //     short: '500 academic points for learning credits.',
+    //     points: 500,
+    //     popularity: 'new',
+    //     images: [
+    //       svgDataURI('Academic 500 1', '#2563EB', '#fff'),
+    //       svgDataURI('Academic 500 2', '#60A5FA', '#fff')
+    //     ],
+    //     details: {
+    //       pointType: 'Academic Points',
+    //       quantity: '500',
+    //       fullDescription: 'Points redeemable for courses and learning materials.'
+    //     }
+    //   }
+    // ]
   };
+
+for (let i = response.length - 1; i >= 0; i--){
+  let ticket = {
+      id: response[i].id,
+      title: response[i].event_title,
+      short: response[i].event_description,
+      price: response[i].is_free ? "Free": "2000",
+      popularity: 'popular',
+      images: [
+      API_BASE + response[i].ticket_image,
+      API_BASE + response[i].ticket_image,
+      API_BASE +  response[i].ticket_image
+      ],
+      details: {
+        "Event name": response[i].event_title,
+        Venue: response[i].event_location,
+        Time : response[i].event_date.split('T') ,
+       Seller: response[i].vendor.brand_name
+      }
+  }
+ 
+  DATA.Tickets.push(ticket)
+
+ };
+  
 
   /* -------------------------
      State
@@ -319,11 +300,11 @@ function slide(dir) {
     renderGrid();
 
     // hamburger (no side menu required by spec; keep accessible)
-    refs.hamburgerBtn.addEventListener('click', () => {
-      // simple accessible feedback: toggle aria-pressed
-      const pressed = refs.hamburgerBtn.getAttribute('aria-pressed') === 'true';
-      refs.hamburgerBtn.setAttribute('aria-pressed', String(!pressed));
-    });
+    // refs.hamburgerBtn.addEventListener('click', () => {
+    //   // simple accessible feedback: toggle aria-pressed
+    //   const pressed = refs.hamburgerBtn.getAttribute('aria-pressed') === 'true';
+    //   refs.hamburgerBtn.setAttribute('aria-pressed', String(!pressed));
+    // });
   }
 
   /* -------------------------
@@ -471,7 +452,7 @@ actions.style.gap = '8px';
 meta.style.alignItems = 'center';
     const price = document.createElement('div');
     price.className = 'price';
-    price.innerHTML = `<strong>${item.points.toLocaleString()}</strong> pts`;
+    price.innerHTML = `<strong>${item.price.toLocaleString()}</strong> `;
     
 
     // primary action button text based on category
@@ -652,21 +633,12 @@ expandBtn.addEventListener('click', (ev) => {
     });
   }
 
-  
-  // Get events ticket available
-  
-  async function getTickets() {   
-    let tickets = await getRequest(ENDPOINTS.events)
-    console.log(tickets)
-  }
-  getTickets()
-  
   /* -------------------------
      Start
      ------------------------- */
   init();
 
-})();
+ })();
 
 
 

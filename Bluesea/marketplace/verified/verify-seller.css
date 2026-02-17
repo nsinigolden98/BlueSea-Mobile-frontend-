@@ -269,3 +269,18 @@ body{
 }
 
 .accordion-toggle{background:transparent;border:0;color:var(--brand);font-weight:700;padding:8px 0;cursor:pointer}
+
+.toast{
+    position:fixed;
+    text-align: center;
+    bottom :100px; 
+    left:50%; 
+    transform:translateX(-50%); 
+    background:#3498db;
+    color:#fff;
+    width:80%;
+    padding:10px 14px; 
+    border-radius:8px; 
+    box-shadow:0 6px 22px rgba(2,6,23,0.6);  }
+
+    

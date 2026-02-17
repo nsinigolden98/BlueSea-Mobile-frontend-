@@ -2,11 +2,9 @@
 document.addEventListener("DOMContentLoaded", function () {
   // function body
   getUserNav();
-  getBalanace();
-  getElectricityHistory();
 });
 
-// const API_BASE = "https://api.blueseamobile.com.ng";  
+// const API_BASE = "https://api.blueseamobile.com.ng";
 
 const API_BASE = "http://127.0.0.1:8000";
 
@@ -59,11 +57,14 @@ let ENDPOINTS = {
   my_group: `${API_BASE}/payments/group/my-groups/`,
   group_detail: `${API_BASE}/payments/group/`,
   logout: `${API_BASE}/accounts/logout/`,
-  events: `${API_BASE}/market_place/events/`,
-  create_events: `${API_BASE}/market_place/events/create/`
+  events: `${API_BASE}/marketplace/events/all/`,
+  create_events: `${API_BASE}/marketplace/events/create/`,
+  create_vendor: `${API_BASE}/marketplace/vendor/create/`,
+  vendor_status: `${API_BASE}/marketplace/vendor/status/`,
+  tickets: `${API_BASE}/marketplace/tickets/`,
 };
 
-// Get Requestt Function
+// Get Request Function
 async function getRequest(url) {
   try {
     const response = await fetch(url, {
@@ -99,7 +100,7 @@ async function postRequest(url, payload) {
     return json;
   } catch (err) {
     // Only network or fundamental request errors reach here
-    return { ok: false, success : false, error: "Network error" };
+    return { ok: false, success: false, error: "Network error" };
   }
 }
 
@@ -151,7 +152,7 @@ function getDate(date = "2025-11-20") {
   ];
 
   const date_value = `${String(date.slice(8, 10))}  ${String(
-    months[date.slice(5, 7) - 1]
+    months[date.slice(5, 7) - 1],
   )} ${String(date.slice(0, 4))}`;
   return date_value;
 }
@@ -171,8 +172,9 @@ async function getUserNav() {
   // Side nav
   document.getElementById("profile_name").textContent = user.other_names;
   // document.getElementById("avatar_img").src = API_BASE + user.image;
-  document.getElementById("avatar_img").src = 
-    user.image ? API_BASE + user.image : "basic_imgs/profile.jpeg";
+  document.getElementById("avatar_img").src = user.image
+    ? API_BASE + user.image
+    : "basic_imgs/profile.jpeg";
   document.getElementById("profile_email").textContent = user.email;
 }
 
@@ -206,7 +208,7 @@ function closeNavBody() {
 
   function redirectToLogin() {
     // Use replace() so user can't go back to this page
-    window.location.replace("../login/login.html");
+    window.location.replace("http://127.0.0.1:5500/Bluesea/login/login.html");
   }
 
   // This fires on EVERY page view — including back/forward button!
@@ -222,52 +224,47 @@ function closeNavBody() {
   }
 };
 
-
 async function getElectricityHistory() {
-   
-    const list = await getRequest(ENDPOINTS.history);
-    const page_length = Math.round(list.count / 5) + 1;
-    
-    for(let i = 1; i<=page_length; i++ ){
- 
+  const list = await getRequest(ENDPOINTS.history);
+  const page_length = Math.round(list.count / 5) + 1;
+
+  for (let i = 1; i <= page_length; i++) {
     const histories = await getRequest(`${ENDPOINTS.history}?page=${i}`);
     const history = histories.results;
     let hist_body = document.getElementById("history-list");
-    
-    for(let i = 0; i< history.length ; i++){
-       if(history[i].description.includes("Electricity")){
-        let  time = getDate(history[i].created_at.slice(0,10))
-        let  amount_history =  history[i].formatted_amount
-        let description = history[i].description
-        if(history[i].transaction_type ==='DEBIT'){
-             amount_history = "-" + amount_history;
+
+    for (let i = 0; i < history.length; i++) {
+      if (history[i].description.includes("Electricity")) {
+        let time = getDate(history[i].created_at.slice(0, 10));
+        let amount_history = history[i].formatted_amount;
+        let description = history[i].description;
+        if (history[i].transaction_type === "DEBIT") {
+          amount_history = "-" + amount_history;
+        } else {
+          amount_history = "+" + amount_history;
         }
-        else{
-             amount_history = "+" + amount_history;
-        }
-        
-        const typeBody = document.createElement('span')
-        const timeBody = document.createElement('small')
-        const enclose = document.createElement('div')
-        const amountBody = document.createElement('strong')
-        
-        typeBody.textContent = description 
-        timeBody.textContent = time
-        amountBody.textContent = amount_history
-        
+
+        const typeBody = document.createElement("span");
+        const timeBody = document.createElement("small");
+        const enclose = document.createElement("div");
+        const amountBody = document.createElement("strong");
+
+        typeBody.textContent = description;
+        timeBody.textContent = time;
+        amountBody.textContent = amount_history;
+
         enclose.appendChild(amountBody);
         enclose.appendChild(typeBody);
-        
-        const history_item = document.createElement('div')
-        history_item.classList.add("history-item")
+
+        const history_item = document.createElement("div");
+        history_item.classList.add("history-item");
         history_item.appendChild(enclose);
         history_item.appendChild(timeBody);
         hist_body.appendChild(history_item);
         document.getElementById("history").style.display = "grid";
-    }}
-    
-    } 
-    
+      }
+    }
+  }
 }
 
 function validateEmail(email) {
@@ -279,10 +276,10 @@ function generateJoinCode() {
   return Math.random().toString(36).slice(2, 10).toUpperCase();
 }
 
-function disableAllBtn(ids,bool=false) {
-  document.querySelectorAll('button').forEach(btn => {
+function disableAllBtn(ids, bool = false) {
+  document.querySelectorAll("button").forEach((btn) => {
     if (!ids.includes(btn.id)) {
       btn.disabled = bool;
     }
-  })
+  });
 }

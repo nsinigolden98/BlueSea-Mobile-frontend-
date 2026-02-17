@@ -1,148 +1,229 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Event Manager</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="event-manager.css">
-</head>
-<body>
-<div class="page fade-in">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Event Manager</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="event-manager.css" />
+        <link rel="stylesheet" href="../../loader.css">
+    </head>
+    <body>
+        <div class="page fade-in">
+            <header class="header">
+                <button
+                    id="backBtn"
+                    class="btn-icon"
+                    aria-label="Back to Marketplace"
+                    onclick="location.href = '../marketplace/marketplace.html'"
+                >
+                    <!-- SVG Arrow -->
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path
+                            d="M15 18l-6-6 6-6"
+                            fill="none"
+                            stroke="#0b66a8"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </button>
 
-  <header class="header">
-          <button id="backBtn" class="btn-icon" aria-label="Back to Marketplace" onclick="location.href='../marketplace/marketplace.html'">
-        <!-- SVG Arrow -->
-        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M15 18l-6-6 6-6" fill="none" stroke="#0b66a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    
-    <h1 class="header2">Event Manager</h1>
-    <button id="openCreate" class="primary-btn">
-   Create Event
-    </button>
-  </header>
+                <h1 class="header2">Event Manager</h1>
+                <button id="openCreate" class="primary-btn" disabled>
+                    Create Event
+                </button>
+            </header>
 
-  <main class="layout">
-    <section id="eventList" class="event-list" aria-live="polite"></section>
-    <section id="eventDetail" class="event-detail hidden"></section>
-  </main>
+            <main class="layout">
+                <section
+                    id="eventList"
+                    class="event-list"
+                    aria-live="polite"
+                >
+                    <p id="text"> No events yet. Create your first event.</p>
+                    <div id="toast" class="toast" aria-live="assertive" hidden></div>
+                    <iframe src="../../loader.html" frameborder="0" id="loader"></iframe>
+                </section>
+                <section id="eventDetail" class="event-detail hidden"></section>
 
-</div>
-
-<!-- CREATE EVENT MODAL -->
-<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modal-panel slide-up">
-    <header class="modal-header">
-      <h2>Create Event</h2>
-      <button id="closeModal" class="icon-btn" aria-label="Close">
-        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12"/></svg>
-      </button>
-    </header>
-
-    <form id="eventForm" novalidate>
-
-      <div class="field">
-        <label>Event Title</label>
-        <input name="title" type="text">
-        <small></small>
-      </div>
-
-      <div class="field">
-        <label>Hosted By</label>
-        <input name="hostedBy" type="text">
-        <small></small>
-      </div>
-
-      <!-- CATEGORY -->
-      <div class="field">
-        <label>Category</label>
-        <div class="dropdown" id="categoryDropdown" tabindex="0">
-          <div class="dropdown-selected">Select category</div>
-          <div class="dropdown-list">
-            <div data-value="Music">Music</div>
-            <div data-value="Conference">Conference</div>
-            <div data-value="Sports">Sports</div>
-            <div data-value="Networking">Networking</div>
-          </div>
+            </main>
         </div>
-        <small></small>
-      </div>
 
-      <!-- BANNER -->
-      <div class="field">
-        <label>Event Banner</label>
-        <div class="upload-box banner">
-           <span>Upload banner image</span>
-          <img>
+        <!-- CREATE EVENT MODAL -->
+        <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+            <div class="modal-panel slide-up">
+                <header class="modal-header">
+                    <h2>Create Event</h2>
+                    <button id="closeModal" class="icon-btn" aria-label="Close">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 6l12 12M18 6l-12 12" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form id="eventForm" novalidate>
+                    <div class="field">
+                        <label>Event Title</label>
+                        <input id="eventTitle" name="title" type="text" />
+                        <small id="title-helper"></small>
+                    </div>
+
+                    <div class="field">
+                        <label>Hosted By</label>
+                        <input name="hostedBy" id="hostedBy" type="text" />
+                        <small id="host-helper" ></small>
+                    </div>
+
+                    <!-- CATEGORY -->
+                    <div class="field">
+                        <label>Category</label>
+                        <div
+                            class="dropdown"
+                            id="categoryDropdown"
+                            tabindex="0"
+                        >
+                            <div class="dropdown-selected" id="dropdown-selected">Select category</div>
+                            <div class="dropdown-list" id="dropdown-list">
+                                <div  data-value="Music">Music</div>
+                                <div data-value="Conference">Conference</div>
+                                <div data-value="Sports">Sports</div>
+                                <div data-value="Networking">Networking</div>
+                            </div>
+                        </div>
+                        <small id="category-helper" ></small>
+                    </div>
+
+                    <!-- BANNER -->
+                    <div class="field">
+                        <label>Event Banner</label>
+                        <div class="upload-box banner">
+                            <span>Upload banner image</span>
+                            <img />
+                        </div>
+                        <input
+                            type="file"
+                            name="banner"
+                            id="eventBanner"
+                            accept="image/*"
+                            hidden
+                        />
+                        <small id="event-banner-helper"></small>
+                    </div>
+
+                    <!-- TICKET IMAGE -->
+                    <div class="field">
+                        <label>Ticket Image (optional)</label>
+                        <div class="upload-box ticket">
+                            <span>Upload ticket image</span>
+                            <img />
+                        </div>
+                        <input
+                            type="file"
+                            name="ticket"
+                            id="ticketImage"
+                            accept="image/*"
+                            hidden
+                        />
+                        <small></small>
+                    </div>
+
+                    <div class="field">
+                        <label>Location</label>
+                        <input id="eventLocation" name="location" type="text" />
+                        <small id="location-helper" ></small>
+                    </div>
+
+                    <div class="row">
+                        <div class="field">
+                            <label>Date (DD/MM/YYYY)</label>
+                            <input name="date" id="eventDate" maxlength="10" />
+                            <small id="event-date-helper" ></small>
+                        </div>
+                        <div class="field">
+                            <label>Time (24h)</label>
+                            <input name="time" id="eventTime" maxlength="5" />
+                            <small id="event-time-helper" ></small>
+                        </div>
+                    </div>
+
+                    <!-- PRICE TYPE -->
+                    <div class="field">
+                        <label>Ticket Type</label>
+                        <div class="radio-group">
+                           
+                            <label
+                                ><input
+                                    type="radio"
+                                    name="priceType"
+                                    value="free"
+                                    id="free"
+                                    checked
+                                />
+                                Free</label
+                            >
+                            <label
+                                ><input
+                                    type="radio"
+                                    name="priceType"
+                                    value="paid"
+                                    id="paid"
+
+                                />
+                                Paid</label
+                            >
+                        </div>
+                    </div>
+                    <div style="width: 100%;" id="tickets-type">
+
+
+                    <p>Ticket Prices (₦)</p>
+                    <div id="ticketBody" class="ticketBody">
+                        
+                    
+                    <div class="ticket-div">
+                        
+                        <input name="name" class="ticketName" type="text" placeholder="Regular" />
+                            
+                        <input name="price" class="ticketPrice" type="number" placeholder="₦10,000"/>
+                        
+                        <input name="quantity" class="ticketQuantity" type="number" placeholder="10"/>
+                       
+                        <button  class="primary-btn delete-btn" type="button"> DELETE </button>
+                    </div>
+                    
+                    </div><br>
+                    
+                    <button id="add-button" class="primary-btn" type="button" style="width: 100%;"> Add </button>
+                    <small id="tickets-helper"></small>
+                    </div>
+                    <div class="field" id="quantity-div">
+                        <label>Quantity</label> 
+                        <input name="quantity" id="ticket-quantity" type="number" style="width: 100%;"/>
+                        <small id="quantity-helper"></small>
+                    </div>
+                    <div class="field">
+                        <label>Description</label>
+                        <textarea id="eventDescription" name="description"></textarea>
+                        <small id="description-helper"></small>
+                    </div>
+
+                    <button id="formSubmit" type="button" class="primary-btn" >
+                        Create Event
+                    </button>
+                      
+                </form
+
+            </div>
         </div>
-        <input type="file" name="banner" accept="image/*" hidden>
-        <small></small>
-      </div>
-
-      <!-- TICKET IMAGE -->
-      <div class="field">
-        <label>Ticket Image (optional)</label>
-        <div class="upload-box ticket">
-          <span>Upload ticket image</span>
-          <img>
-        </div>
-        <input type="file" name="ticket" accept="image/*" hidden>
-        <small></small>
-      </div>
-
-      <div class="field">
-        <label>Location</label>
-        <input name="location" type="text">
-        <small></small>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label>Date (DD/MM/YYYY)</label>
-          <input name="date" maxlength="10">
-          <small></small>
-        </div>
-        <div class="field">
-          <label>Time (24h)</label>
-          <input name="time" maxlength="5">
-          <small></small>
-        </div>
-      </div>
-
-      <!-- PRICE TYPE -->
-      <div class="field">
-        <label>Ticket Type</label>
-        <div class="radio-group">
-          <label><input type="radio" name="priceType" value="paid" checked> Paid</label>
-          <label><input type="radio" name="priceType" value="free"> Free</label>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label>Ticket Price</label>
-          <input name="price" type="number">
-          <small></small>
-        </div>
-        <div class="field">
-          <label>Quantity</label>
-          <input name="quantity" type="number">
-          <small></small>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Description</label>
-        <textarea name="description"></textarea>
-        <small></small>
-      </div>
-
-      <button type="submit" class="primary-btn" disabled>Create Event</button>
-    </form>
-  </div>
-</div>
-
-<script src="event-manager.js"></script>
-</body>
+        
+        <script src="../../side-nav.js"></script>
+         <script src="event-manager.js"></script>
+    </body>
 </html>

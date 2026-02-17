@@ -23,6 +23,7 @@ body{
   -moz-osx-font-smoothing:grayscale;
   line-height:1.35;
   display: flex;
+   overflow-wrap :anywhere ;
 }
 
 /* App container */
@@ -36,8 +37,7 @@ body{
 
 /* Topbar */
 .topbar{
-  width:100%;
-  max-width:var(--max-width);
+  min-width: 100%;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -777,3 +777,4 @@ a{ color:inherit; }
   background: #e2e8f0;
   color: #0f172a;
 }
+

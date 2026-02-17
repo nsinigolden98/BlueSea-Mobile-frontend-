@@ -181,6 +181,9 @@ function showToast(msg, ms = 8200) {
     t._hideTO = setTimeout(() => { t.hidden = true; }, ms);
 }
 
+// call the electricity function from side-nav.js
+getElectricityHistory();
+  
 // disable buttons when there is modal
 function disableBtn(bool) {
   const ids = ['confirm-btn', 'cancel-btn' ]

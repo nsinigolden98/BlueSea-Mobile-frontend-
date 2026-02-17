@@ -47,7 +47,6 @@ body {
   border:none;
   padding:12px 16px;
   border-radius:10px;
-  display:flex;
   gap:8px;
   cursor:pointer;
   transition:transform .15s, box-shadow .15s;
@@ -62,8 +61,7 @@ body {
   display:grid;
   gap:16px;
 }
-.event-list:empty::after {
-  content:"No events yet. Create your first event.";
+.event-list p{
   color:var(--muted);
   text-align:center;
   padding:40px 0;
@@ -170,10 +168,51 @@ small {
   max-height:0;
   overflow:hidden;
   transition:max-height .25s ease;
+  
 }
-.dropdown.open .dropdown-list { max-height:200px; }
+.dropdown.open .dropdown-list { max-height:200px;  }
 
 .radio-group {
   display:flex;
   gap:16px;
+}
+
+.show{
+    display:block;
+}
+
+.toast{
+    position:fixed;
+    text-align: center;
+    bottom :100px; 
+    left:50%; 
+    transform:translateX(-50%); 
+    background:#3498db;
+    color:#fff;
+    width:80%;
+    padding:10px 14px; 
+    border-radius:8px; 
+    box-shadow:0 6px 22px rgba(2,6,23,0.6);  }
+
+.delete-btn{
+    min-width: 20%; 
+    margin-left: 20px;
+}
+
+.ticket-div{
+    display: flex;
+    margin: 5px;
+    min-width: 100%;
+}
+.ticketName{
+    min-width: 25%;
+}
+.ticketPrice{
+    min-width: 40%;
+}
+.ticketQuantity{
+    min-width:10%;
+}
+.ticketBody{
+     min-width: 100%;
 }
