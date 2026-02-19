@@ -107,10 +107,7 @@ body{
   font-size: 20px;
   font-weight: 700;
   margin: 0;
-  background: linear-gradient(135deg, var(--brand) 0%, #1e40af 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #000;
 }
 
 .data-header p {
@@ -195,13 +192,13 @@ body{
   right:auto;
   top:auto;
   min-width:160px;
-  background:var(--card-bg);
+  background:#fff;
   border-radius:12px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
   padding:8px;
   display:none;
-  z-index:1000;
-  border: 1px solid rgba(0,0,0,0.08);
+  z-index:99999;
+  border: 1px solid rgba(0,0,0,0.1);
 }
 .dropdown.show{
   display:block;
