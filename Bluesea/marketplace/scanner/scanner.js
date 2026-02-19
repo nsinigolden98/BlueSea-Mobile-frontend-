@@ -1,7 +1,6 @@
 const startBtn = document.getElementById('startScan');
-const scanner = document.querySelector('.scanner');
+const scannerSection = document.querySelector('.scanner');
 const instructions = document.querySelector('.instructions');
-const camera = document.getElementById('camera');
 const errorText = document.getElementById('cameraError');
 
 const modal = document.querySelector('.modal');
@@ -11,108 +10,166 @@ const eventNameEl = document.getElementById('eventName');
 const buyerNameEl = document.getElementById('buyerName');
 const ticketStatusEl = document.getElementById('ticketStatus');
 const statusIconEl = document.getElementById('statusIcon');
-const grantBtn = document.getElementById('grantAccess');
 const closeBtn = document.getElementById('closeModal');
 const stopBtn = document.getElementById('stopScan');
-const backBtn = document.querySelector('.back-btn');
 
-let stream;
-let scanning = false;
-let scanningTimeout;
+let html5QrCode = null;
+let isScanning = false;
 
-startBtn.addEventListener('click', async () => {
+startBtn.addEventListener('click', startScanner);
+
+async function startScanner() {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } }
-    });
-    camera.srcObject = stream;
+    html5QrCode = new Html5Qrcode("qr-reader");
+    
     instructions.classList.add('hidden');
-    scanner.classList.remove('hidden');
-    scanning = true;
-    simulateScan();
+    scannerSection.classList.remove('hidden');
+    isScanning = true;
+    
+    const config = {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      aspectRatio: 1.0
+    };
+    
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      config,
+      onScanSuccess,
+      onScanFailure
+    );
   } catch (err) {
     errorText.textContent = 'Camera access denied or unsupported.';
     errorText.hidden = false;
+    scannerSection.classList.add('hidden');
+    instructions.classList.remove('hidden');
   }
-});
-
-function simulateScan() {
-  if (!scanning) return;
-
-  setTimeout(() => {
-    scanning = false;
-    showResult();
-  }, 2500);
 }
 
-function showResult() {
-  const statuses = ['VALID', 'USED', 'PENDING', 'DENIED'];
-  const status = statuses[Math.floor(Math.random() * statuses.length)];
+async function onScanSuccess(decodedText, decodedResult) {
+  if (!isScanning) return;
+  
+  isScanning = false;
+  
+  try {
+    const response = await postRequest(ENDPOINTS.scan_ticket, {
+      qr_data: decodedText
+    });
+    
+    showResult(response);
+  } catch (err) {
+    showError('Failed to validate ticket. Please try again.');
+  }
+}
 
-  ticketIdEl.textContent = 'TCK-' + Math.floor(100000 + Math.random() * 900000);
-  eventNameEl.textContent = 'Live Concert Night';
-  buyerNameEl.textContent = 'John Doe';
-  ticketStatusEl.textContent = status;
+function onScanFailure(error) {
+}
 
-  modalTitle.textContent =
-    status === 'VALID' ? 'Access Granted' :
-    status === 'USED' ? 'Ticket Already Used' :
-    status === 'PENDING' ? 'Pending Verification' :
-    'Invalid Ticket';
-
-  statusIconEl.innerHTML = getStatusIcon(status);
-  grantBtn.classList.toggle('hidden', status !== 'VALID');
-
+function showResult(response) {
+  const isSuccess = response.state === true || response.scan_result === 'success';
+  
+  if (isSuccess && response.ticket_details) {
+    const ticket = response.ticket_details;
+    
+    ticketIdEl.textContent = ticket.ticket_id || 'N/A';
+    eventNameEl.textContent = ticket.event?.title || 'N/A';
+    buyerNameEl.textContent = ticket.owner_name || 'N/A';
+    ticketStatusEl.textContent = 'VALIDATED';
+    
+    modalTitle.textContent = 'Access Granted';
+    statusIconEl.innerHTML = getStatusIcon('VALID');
+  } else {
+    const ticket = response.ticket_details || {};
+    
+    ticketIdEl.textContent = ticket.ticket_id || 'N/A';
+    eventNameEl.textContent = ticket.event?.title || 'Unknown Event';
+    buyerNameEl.textContent = ticket.owner_name || 'Unknown';
+    ticketStatusEl.textContent = response.error_code || 'DENIED';
+    
+    modalTitle.textContent = getErrorTitle(response.error_code);
+    statusIconEl.innerHTML = getStatusIcon(response.error_code || 'DENIED');
+  }
+  
   modal.classList.remove('hidden');
 }
 
-closeBtn.addEventListener('click', () => {
-  modal.classList.add('hidden');
-  scanning = true;
-  simulateScan();
-});
+function getErrorTitle(errorCode) {
+  const titles = {
+    'ALREADY_USED': 'Ticket Already Used',
+    'EXPIRED': 'Ticket Expired',
+    'TRANSFERRED': 'Ticket Transferred',
+    'CANCELED': 'Ticket Canceled',
+    'INVALID_QR_CODE': 'Invalid QR Code',
+    'TICKET_NOT_FOUND': 'Ticket Not Found',
+    'UNAUTHORIZED_SCANNER': 'Unauthorized Scanner',
+    'EVENT_MISMATCH': 'Wrong Event',
+    'TOO_EARLY': 'Too Early for Entry'
+  };
+  return titles[errorCode] || 'Invalid Ticket';
+}
 
 function getStatusIcon(status) {
   const colors = {
-    VALID: '#2ecc71',
-    USED: '#f4a261',
-    PENDING: '#1da1f2',
-    DENIED: '#e63946'
+    'VALID': '#2ecc71',
+    'VALIDATED': '#2ecc71',
+    'SUCCESS': '#2ecc71',
+    'ALREADY_USED': '#f4a261',
+    'EXPIRED': '#e63946',
+    'TRANSFERRED': '#f4a261',
+    'CANCELED': '#e63946',
+    'INVALID_QR_CODE': '#e63946',
+    'TICKET_NOT_FOUND': '#e63946',
+    'UNAUTHORIZED_SCANNER': '#e63946',
+    'EVENT_MISMATCH': '#e63946',
+    'TOO_EARLY': '#f4a261',
+    'DENIED': '#e63946'
   };
-
+  
+  const color = colors[status] || '#e63946';
+  
   return `
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${colors[status]}" stroke-width="2">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2">
       <circle cx="12" cy="12" r="10"></circle>
-      <path d="M8 12l2 2 4-4"></path>
+      ${status === 'VALID' || status === 'VALIDATED' || status === 'SUCCESS' 
+        ? '<path d="M8 12l2 2 4-4"></path>' 
+        : '<path d="M15 9l-6 6M9 9l6 6"></path>'}
     </svg>
   `;
 }
 
-stopBtn.addEventListener('click', resetScanner);
-backBtn.addEventListener('click', resetScanner);
-
-
-function resetScanner() {
-  clearTimeout(scanningTimeout);
-  stopCamera();
-  scanner.classList.add('hidden');
-  instructions.classList.remove('hidden');
-  backCover.classList.add('hidden');
+function showError(message) {
+  ticketIdEl.textContent = 'N/A';
+  eventNameEl.textContent = 'N/A';
+  buyerNameEl.textContent = 'N/A';
+  ticketStatusEl.textContent = 'ERROR';
+  
+  modalTitle.textContent = 'Scan Failed';
+  statusIconEl.innerHTML = getStatusIcon('DENIED');
+  
+  modal.classList.remove('hidden');
 }
 
-function stopCamera() {
-  if (!stream) return;
-
-  stream.getTracks().forEach(track => track.stop());
-  camera.srcObject = null;
-}
-
-function resetScanner() {
-  scanning = false;
-  clearTimeout(scanningTimeout);
-  stopCamera();
-
+closeBtn.addEventListener('click', async () => {
   modal.classList.add('hidden');
-  scanner.classList.add('hidden');
+  
+  if (html5QrCode && html5QrCode.isScanning) {
+    isScanning = true;
+  }
+});
+
+stopBtn.addEventListener('click', stopScanner);
+
+async function stopScanner() {
+  if (html5QrCode && html5QrCode.isScanning) {
+    await html5QrCode.stop();
+    html5QrCode.clear();
+  }
+  
+  isScanning = false;
+  scannerSection.classList.add('hidden');
   instructions.classList.remove('hidden');
+}
+
+function resetScanner() {
+  stopScanner();
 }

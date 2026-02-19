@@ -11,6 +11,10 @@
   async function loadTickets(){
     try{
       const response = await getRequest(ENDPOINTS.mytickets);
+      if(Array.isArray(response)){
+        calculateStats(response);
+        return response;
+      }
       if(response.state && response.tickets){
         statsData = response.stats || {};
         return response.tickets;
@@ -19,6 +23,17 @@
     }catch(err){
       return [];
     }
+  }
+
+  function calculateStats(tickets){
+    statsData = {
+      all: tickets.length,
+      upcoming: tickets.filter(t => t.status === 'upcoming').length,
+      used: tickets.filter(t => t.status === 'used').length,
+      expired: tickets.filter(t => t.status === 'expired').length,
+      canceled: tickets.filter(t => t.status === 'canceled').length,
+      transferred: tickets.filter(t => t.status === 'transferred').length
+    };
   }
 
   async function loadTicketDetail(ticketId){
@@ -54,8 +69,10 @@
 
     const statusClass = ticket.status || 'upcoming';
     const eventBanner = ticket.event_banner 
-      ? API_BASE + ticket.event_banner 
+      ? (ticket.event_banner.startsWith('http') ? ticket.event_banner : API_BASE + ticket.event_banner)
       : 'https://picsum.photos/800/400?blur=2';
+
+    const ticketTypeName = ticket.ticket_type?.name || 'Free Entry';
 
     card.innerHTML = `
       <div class="qr-preview">
@@ -67,7 +84,7 @@
           <span>${ticket.event_location || 'N/A'}</span>
           <span class="status ${statusClass}">${statusClass}</span>
         </div>
-        <div class="meta-row">${ticket.ticket_type_name || 'Free Entry'} - ${ticket.vendor_name || 'N/A'}</div>
+        <div class="meta-row">${ticketTypeName} - ${ticket.vendor_name || 'N/A'}</div>
       </div>
     `;
 
@@ -99,11 +116,11 @@
 
   function expandedHTML(ticket, index){
     const eventBanner = ticket.event?.event_banner 
-      ? API_BASE + ticket.event.event_banner 
+      ? (ticket.event.event_banner.startsWith('http') ? ticket.event.event_banner : API_BASE + ticket.event.event_banner)
       : 'https://picsum.photos/800/400?blur=2';
     
     const qrCodeUrl = ticket.qr_code_url 
-      ? API_BASE + ticket.qr_code_url 
+      ? (ticket.qr_code_url.startsWith('http') ? ticket.qr_code_url : API_BASE + ticket.qr_code_url)
       : `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticket.id}`;
 
     return `

@@ -327,17 +327,21 @@ async function postFileRequest(url, payload) {
 
 async function vendorStatus() {
   const response = await getRequest(ENDPOINTS.vendor_status);
-  let status = response.vendor.verification_status
-  if ( status === 'approved') {
-    document.getElementById('openCreate').disabled = false
+  if (response.vendor) {
+    let status = response.vendor.verification_status;
+    if (status === 'approved') {
+      document.getElementById('openCreate').disabled = false;
+      loadVendorEvents();
+    } else {
+      let text = status === 'pending' 
+        ? "Admin is verifying your application, Please come back later." 
+        : "Vendor's verification was rejected please kindly apply again.";
+      document.getElementById('text').textContent = text;
+      hideLoader();
+    }
   }
-  else {
-    text = status === 'pending' ? "Admin is verifying your application, Please come back later." : " Vendor's verification was rejected please kindly apply again." 
-    document.getElementById('text').textContent = text
-  }
- 
 }
-  
+
 vendorStatus();
 const paid = document.getElementById('paid')
 const free = document.getElementById('free')
@@ -408,6 +412,9 @@ document.getElementById('add-button').addEventListener('click', () => {
   id_num += 1
 })
 
+let allVendorEvents = [];
+let allVendorStats = {};
+
 async function loadVendorEvents() {
   showLoader();
   const response = await getRequest(ENDPOINTS.vendor_tickets);
@@ -417,52 +424,113 @@ async function loadVendorEvents() {
     const eventList = document.getElementById('eventList');
     const textEl = document.getElementById('text');
     
-    if (response.event_breakdown.length > 0) {
+    allVendorEvents = response.event_breakdown;
+    allVendorStats = response.statistics;
+    
+    if (allVendorEvents.length > 0) {
       textEl.style.display = 'none';
-      renderVendorEvents(response.event_breakdown, response.statistics);
+      renderEventContainer();
+      filterEvents('all');
     } else {
       textEl.textContent = 'No events yet. Create your first event.';
     }
   }
 }
 
-function renderVendorEvents(events, stats) {
+function renderEventContainer() {
   const eventList = document.getElementById('eventList');
   
   const statsDiv = document.createElement('div');
   statsDiv.className = 'stats-summary';
   statsDiv.innerHTML = `
     <div class="stat-item">
-      <span class="stat-label">Total Tickets</span>
-      <span class="stat-value">${formatNumberWithCommas(stats.total_tickets)}</span>
+      <span class="stat-label">Total</span>
+      <span class="stat-value">${formatNumberWithCommas(allVendorStats.total_tickets)}</span>
     </div>
     <div class="stat-item">
       <span class="stat-label">Upcoming</span>
-      <span class="stat-value">${formatNumberWithCommas(stats.upcoming)}</span>
+      <span class="stat-value">${formatNumberWithCommas(allVendorStats.upcoming)}</span>
     </div>
     <div class="stat-item">
       <span class="stat-label">Used</span>
-      <span class="stat-value">${formatNumberWithCommas(stats.used)}</span>
+      <span class="stat-value">${formatNumberWithCommas(allVendorStats.used)}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Expired</span>
+      <span class="stat-value">${formatNumberWithCommas(allVendorStats.expired)}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Canceled</span>
+      <span class="stat-value">${formatNumberWithCommas(allVendorStats.canceled)}</span>
     </div>
   `;
   eventList.insertBefore(statsDiv, eventList.firstChild);
   
-  events.forEach(event => {
+  const filterTabs = document.createElement('div');
+  filterTabs.className = 'filter-tabs';
+  filterTabs.innerHTML = `
+    <button class="filter-tab active" data-filter="all">All</button>
+    <button class="filter-tab" data-filter="approved">Approved</button>
+    <button class="filter-tab" data-filter="pending">Pending</button>
+  `;
+  eventList.insertBefore(filterTabs, statsDiv.nextSibling);
+  
+  const eventsContainer = document.createElement('div');
+  eventsContainer.id = 'eventsContainer';
+  eventsContainer.className = 'events-container';
+  eventList.appendChild(eventsContainer);
+  
+  filterTabs.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      filterTabs.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      filterEvents(tab.dataset.filter);
+    });
+  });
+}
+
+function filterEvents(filter) {
+  const container = document.getElementById('eventsContainer');
+  container.innerHTML = '';
+  
+  let filteredEvents = allVendorEvents;
+  
+  if (filter === 'approved') {
+    filteredEvents = allVendorEvents.filter(e => e.is_approved);
+  } else if (filter === 'pending') {
+    filteredEvents = allVendorEvents.filter(e => !e.is_approved);
+  }
+  
+  if (filteredEvents.length === 0) {
+    container.innerHTML = '<p class="no-events">No events in this category.</p>';
+    return;
+  }
+  
+  filteredEvents.forEach(event => {
     const eventCard = document.createElement('div');
     eventCard.className = 'event-card';
+    
+    const approvalBadge = event.is_approved 
+      ? '<span class="badge approved">Approved</span>'
+      : '<span class="badge pending">Pending Approval</span>';
+    
     eventCard.innerHTML = `
       <div class="event-info">
-        <h3 class="event-title">${event.event_title}</h3>
+        <div class="event-header">
+          <h3 class="event-title">${event.event_title}</h3>
+          ${approvalBadge}
+        </div>
         <p class="event-date">${event.event_date}</p>
         <div class="event-stats">
           <span class="badge upcoming">${event.upcoming} upcoming</span>
           <span class="badge used">${event.used} used</span>
+          <span class="badge expired">${event.expired} expired</span>
+          <span class="badge canceled">${event.canceled} canceled</span>
           <span class="badge total">${event.total_tickets} total</span>
         </div>
+        ${!event.is_approved ? '<p class="approval-notice">This event is pending admin approval. Tickets cannot be purchased until approved.</p>' : ''}
       </div>
     `;
-    eventList.appendChild(eventCard);
+    container.appendChild(eventCard);
   });
 }
-
-loadVendorEvents();

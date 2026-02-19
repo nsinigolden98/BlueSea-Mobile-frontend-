@@ -27,7 +27,7 @@
       </section>
 
       <section class="scanner hidden" aria-hidden="true">
-        <video id="camera" autoplay playsinline></video>
+        <div id="qr-reader"></div>
 
         <div class="scan-overlay">
           <div class="scan-frame">
@@ -56,13 +56,14 @@
         </div>
 
         <div class="modal-actions">
-          <button id="grantAccess" class="success-btn hidden">Grant Access</button>
           <button id="closeModal" class="secondary-btn">Close</button>
         </div>
       </div>
     </div>
   </div>
 
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="../../side-nav.js"></script>
   <script src="scanner.js"></script>
 </body>
 </html>

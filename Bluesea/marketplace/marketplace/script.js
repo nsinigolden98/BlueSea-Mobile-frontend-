@@ -26,6 +26,26 @@ const totalCostAmount = document.getElementById('totalCostAmount');
 let modalImages = [];
 let modalIndex = 0;
 let currentItem = null;
+let purchasedEventIds = new Set();
+
+async function fetchUserTickets() {
+  try {
+    const response = await getRequest(ENDPOINTS.mytickets);
+    if (response && Array.isArray(response)) {
+      response.forEach(ticket => {
+        if (ticket.event && ticket.event.id) {
+          purchasedEventIds.add(ticket.event.id);
+        }
+      });
+    }
+  } catch (err) {
+    console.log('Could not fetch user tickets');
+  }
+}
+
+function hasUserPurchasedEvent(eventId) {
+  return purchasedEventIds.has(eventId);
+}
 
 function showModal(item) {
   currentItem = item;
@@ -44,10 +64,19 @@ function showModal(item) {
 
   modalAction.textContent = primaryTextForCategory(state.category);
 
+  const alreadyPurchased = hasUserPurchasedEvent(item.id);
   const is_free = item.price === "Free";
   const is_sold_out = is_free && (item.tickets_left === 0 || item.tickets_left === '0');
   
-  if (is_sold_out) {
+  if (alreadyPurchased) {
+    ticketTypeGroup.style.display = 'none';
+    pinGroup.style.display = 'none';
+    totalCostSection.innerHTML = `<span>Status:</span><span style="color: var(--brand);">Already Purchased</span>`;
+    totalCostSection.style.display = 'flex';
+    modalAction.disabled = true;
+    modalAction.style.opacity = '0.5';
+    modalAction.style.cursor = 'not-allowed';
+  } else if (is_sold_out) {
     ticketTypeGroup.style.display = 'none';
     pinGroup.style.display = 'none';
     totalCostSection.innerHTML = `<span>Status:</span><span class="sold-out">Sold Out</span>`;
@@ -303,12 +332,24 @@ transactionPin.addEventListener('input', (e) => {
   };
 
 for (let i = 0; i  < response.length; i++){
+  let ticketsLeft = response[i].is_free 
+    ? Math.max(0, (response[i].total_tickets || 0) - (response[i].tickets_sold || 0)) 
+    : null;
+  
+  let ticketTypes = response[i].is_free ? null : response[i].ticket_types;
+  if (ticketTypes && Array.isArray(ticketTypes)) {
+    ticketTypes = ticketTypes.map(type => ({
+      ...type,
+      quantity_available: Math.max(0, type.quantity_available || 0)
+    }));
+  }
+  
   let ticket = {
       id: response[i].id,
       title: response[i].event_title,
       short: response[i].event_description,
-      price: response[i].is_free ? "Free": response[i].ticket_types,
-      tickets_left: response[i].is_free ? (response[i].total_tickets - response[i].tickets_sold) : null,
+      price: response[i].is_free ? "Free": ticketTypes,
+      tickets_left: ticketsLeft,
       popularity: 'popular',
       images: [
       API_BASE + response[i].ticket_image,
@@ -435,14 +476,26 @@ for (let i = 0; i  < response.length; i++){
   
   function toggleDropdown(e) {
     e.stopPropagation();
-    const open = refs.dotsDropdown.style.display === 'block';
-    refs.dotsDropdown.style.display = open ? 'none' : 'block';
-    refs.dotsDropdown.setAttribute('aria-hidden', String(open));
+    const open = refs.dotsDropdown.classList.contains('show');
+    
+    if (open) {
+      refs.dotsDropdown.classList.remove('show');
+      refs.dotsDropdown.style.display = 'none';
+      refs.dotsDropdown.setAttribute('aria-hidden', 'true');
+    } else {
+      const rect = refs.dotsBtn.getBoundingClientRect();
+      refs.dotsDropdown.style.top = `${rect.bottom + 8}px`;
+      refs.dotsDropdown.style.right = `${window.innerWidth - rect.right}px`;
+      refs.dotsDropdown.style.display = 'block';
+      refs.dotsDropdown.classList.add('show');
+      refs.dotsDropdown.setAttribute('aria-hidden', 'false');
+    }
   }
 
   function onDocumentClick(e) {
     // close dropdown if click outside
     if (!refs.dotsDropdown.contains(e.target) && !refs.dotsBtn.contains(e.target)) {
+      refs.dotsDropdown.classList.remove('show');
       refs.dotsDropdown.style.display = 'none';
       refs.dotsDropdown.setAttribute('aria-hidden', 'true');
     }
@@ -778,6 +831,13 @@ document.getElementById('bvModalAction').addEventListener('click', () => {
   }
 
   const event_id = currentItem.id;
+  
+  // Check if already purchased
+  if (hasUserPurchasedEvent(event_id)) {
+    showToast("You have already purchased a ticket for this event");
+    return;
+  }
+  
   const is_free = currentItem.price === "Free";
   
   // Check if sold out
@@ -845,6 +905,7 @@ async function vendorStatus() {
   }
     
   vendorStatus();
+  fetchUserTickets();
   /* -------------------------
      Start
      ------------------------- */
