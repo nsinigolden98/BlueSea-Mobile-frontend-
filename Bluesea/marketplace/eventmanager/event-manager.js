@@ -6,11 +6,38 @@ const dropdown = document.getElementById("categoryDropdown");
 
 let categoryValue = "";
 
+function formatNumberWithCommas(num) {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function stripCommas(str) {
+  return str.replace(/,/g, '');
+}
+
+function handleNumberInputWithCommas(e) {
+  let rawValue = e.target.value.replace(/,/g, '').replace(/\D/g, '');
+  if (rawValue) {
+    e.target.value = formatNumberWithCommas(rawValue);
+  } else {
+    e.target.value = '';
+  }
+}
+
 
 openBtn.onclick = () => modal.classList.remove("hidden");
-closeBtn.onclick = () => modal.classList.add("hidden");
+function openCreate() {
+  modal.classList.add("hidden");
+  const inputElements =document.querySelectorAll('input, textarea');
+  inputElements.forEach(input => {
+    input.value = '';
+  });
+  
+  document.getElementById('dropdown-selected').textContent === 'Select category'
+}
+closeBtn.onclick = openCreate()
 modal.onclick = (e) => {
   if (e.target === modal) modal.classList.add("hidden");
+  
 };
 
 // CATEGORY
@@ -65,15 +92,12 @@ form.time.oninput = (e) => {
 form.priceType.forEach((r) => {
   r.onchange = () => {
     form.price.disabled = r.value === "free" && r.checked;
-    if (form.price.disabled) {
+    if (form.price.disable) {
       form.price.value = "";
       form.quantity.value = "";
-      form.name.value = ""
-      document.getElementById('quantity-div').style.display = 'block'
+      form.name.value = "" 
     }
-    else {
-      document.getElementById('quantity-div').style.display = 'none'
-    };
+  
   };
 });
 
@@ -139,18 +163,9 @@ submitButton.addEventListener('click', () => {
   })
   
   let name = Array.from(document.querySelectorAll(".ticketName"), e => e.value.length > 0)
-  let price = Array.from(document.querySelectorAll(".ticketPrice"), e => e.value > 0)
-  let quantity =  Array.from(document.querySelectorAll(".ticketQuantity"), e => e.value > 0)
-  console.log(name)
-  console.log(price)
-  let tickets= document.querySelectorAll('.ticket-div input').forEach((e) => {
-    if (e.value.trim() === "") {
-      return false
-    } else {
-      return true;
-    }
-    
-  })
+  let price = Array.from(document.querySelectorAll(".ticketPrice"), e => stripCommas(e.value) > 0)
+  let quantity = Array.from(document.querySelectorAll(".ticketQuantity"), e => stripCommas(e.value) > 0)
+  
   if (!id('eventTitle').value) {
     id('title-helper').textContent = 'This field is required'
   }
@@ -163,6 +178,9 @@ submitButton.addEventListener('click', () => {
   else if (!id('eventBanner').files) {
     id('event-banner-helper').textContent = "This field id required"
   }
+  else if (!id('ticketImage').files) {
+    id('ticket-image-helper').textContent = "This field id required"
+  }
   else if (!id('eventLocation').value) {
     id('location-helper').textContent = "This field id required"
   } 
@@ -172,23 +190,18 @@ submitButton.addEventListener('click', () => {
   else if (!id('eventTime').value) {
     id('event-time-helper').textContent = "This field id required"
   }
-  else if (!id('ticket-quantity').value && id("free").value === "free") {
+  else if (!stripCommas(id('ticket-quantity').value) && id("free").checked) {
     id('quantity-helper').textContent = "This field id required"
   }else if (!id('eventDescription').value) {
     id('description-helper').textContent = "This field id required"
   }
-  else if (id("paid").value === "paid" || name.includes(false) ) {
+  else if (id("free").checked || name.includes(false) || price.includes(false) || quantity.includes(false)) {
     id('tickets-helper').textContent = "Incomplete entries"
+    console.log("Incomplete entries")
   }
-  else {
-    
+  else {   
     modal.classList.add("hidden");
-    
-  showLoader();
-
-  createEvent();
-  id('dropdown-selected').textContent === 'Select category'
-  hideLoader(); 
+     createEvent();
   }
   
 });
@@ -196,6 +209,8 @@ submitButton.addEventListener('click', () => {
 // Create Event function
 async function createEvent() {
   const formData = new FormData();
+
+  showLoader();
 
   // Assuming form elements have 'name' attributes matching these properties or have these IDs
   // For text inputs
@@ -232,8 +247,8 @@ async function createEvent() {
   const ticket_types = Array.from(ticket_type_list).map((input, index) => {
     return {
       name: input.value,
-      price: ticket_price_list[index] ? ticket_price_list[index].value : "0",
-      quantity_available: ticket_quantity_list[index] ? ticket_quantity_list[index].value : "0"
+      price: ticket_price_list[index] ? stripCommas(ticket_price_list[index].value) : "0",
+      quantity_available: ticket_quantity_list[index] ? stripCommas(ticket_quantity_list[index].value) : "0"
     }
   })
   // Ticket details (only if not free)
@@ -243,7 +258,7 @@ async function createEvent() {
   }
   formData.append(
     "ticket_quantity",
-    document.getElementById("ticket-quantity").value
+    stripCommas(document.getElementById("ticket-quantity").value)
   );
   
   // File inputs
@@ -261,7 +276,7 @@ async function createEvent() {
   
   
   const response = await postFileRequest(ENDPOINTS.create_events, formData);
- 
+  hideLoader(); 
   if (response.success || response.state) {
     // Assuming a successful event creation returns an event ID
     showToast(response.message);
@@ -327,18 +342,29 @@ vendorStatus();
 const paid = document.getElementById('paid')
 const free = document.getElementById('free')
 const ticketType = document.getElementById('tickets-type')
+const quantity = document.getElementById('quantity-div')
 function updateVisibility() {
   if (free.checked) {
     ticketType.style.display = 'none'
+    quantity.style.display = 'block'
   } 
   else if (paid.checked) {
-    ticketType.style.display = 'block'
+    ticketType.style.display = 'block'   
+    quantity.style.display = 'none'
   }
   
 }
 paid.addEventListener('change', updateVisibility);
 free.addEventListener('change', updateVisibility); 
 updateVisibility();
+
+document.querySelectorAll('.ticketPrice').forEach(input => {
+  input.addEventListener('input', handleNumberInputWithCommas);
+});
+document.querySelectorAll('.ticketQuantity').forEach(input => {
+  input.addEventListener('input', handleNumberInputWithCommas);
+});
+document.getElementById('ticket-quantity').addEventListener('input', handleNumberInputWithCommas);
 
 
 // Creating a new ticket set 
@@ -355,10 +381,13 @@ document.getElementById('add-button').addEventListener('click', () => {
     inputName.type = 'text'
     inputName.placeholder = 'name'
     inputPrice.classList.add('ticketPrice')
-    inputPrice.type = 'number'
+    inputPrice.type = 'text'
     inputPrice.placeholder = 'price'
+    inputPrice.addEventListener('input', handleNumberInputWithCommas)
     inputQuantity.placeholder = 'quantity'
+    inputQuantity.type = 'text'
     inputQuantity.classList.add('ticketQuantity')
+    inputQuantity.addEventListener('input', handleNumberInputWithCommas)
  
     let button = document.createElement('button')
     button.type = 'button'
@@ -378,3 +407,62 @@ document.getElementById('add-button').addEventListener('click', () => {
   ticketBody.appendChild(ticketDiv)
   id_num += 1
 })
+
+async function loadVendorEvents() {
+  showLoader();
+  const response = await getRequest(ENDPOINTS.vendor_tickets);
+  hideLoader();
+  
+  if (response.state && response.event_breakdown) {
+    const eventList = document.getElementById('eventList');
+    const textEl = document.getElementById('text');
+    
+    if (response.event_breakdown.length > 0) {
+      textEl.style.display = 'none';
+      renderVendorEvents(response.event_breakdown, response.statistics);
+    } else {
+      textEl.textContent = 'No events yet. Create your first event.';
+    }
+  }
+}
+
+function renderVendorEvents(events, stats) {
+  const eventList = document.getElementById('eventList');
+  
+  const statsDiv = document.createElement('div');
+  statsDiv.className = 'stats-summary';
+  statsDiv.innerHTML = `
+    <div class="stat-item">
+      <span class="stat-label">Total Tickets</span>
+      <span class="stat-value">${formatNumberWithCommas(stats.total_tickets)}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Upcoming</span>
+      <span class="stat-value">${formatNumberWithCommas(stats.upcoming)}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Used</span>
+      <span class="stat-value">${formatNumberWithCommas(stats.used)}</span>
+    </div>
+  `;
+  eventList.insertBefore(statsDiv, eventList.firstChild);
+  
+  events.forEach(event => {
+    const eventCard = document.createElement('div');
+    eventCard.className = 'event-card';
+    eventCard.innerHTML = `
+      <div class="event-info">
+        <h3 class="event-title">${event.event_title}</h3>
+        <p class="event-date">${event.event_date}</p>
+        <div class="event-stats">
+          <span class="badge upcoming">${event.upcoming} upcoming</span>
+          <span class="badge used">${event.used} used</span>
+          <span class="badge total">${event.total_tickets} total</span>
+        </div>
+      </div>
+    `;
+    eventList.appendChild(eventCard);
+  });
+}
+
+loadVendorEvents();

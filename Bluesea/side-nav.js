@@ -61,7 +61,10 @@ let ENDPOINTS = {
   create_events: `${API_BASE}/marketplace/events/create/`,
   create_vendor: `${API_BASE}/marketplace/vendor/create/`,
   vendor_status: `${API_BASE}/marketplace/vendor/status/`,
+  vendor_tickets: `${API_BASE}/marketplace/vendor/tickets/`,
   tickets: `${API_BASE}/marketplace/tickets/`,
+  mytickets: `${API_BASE}/marketplace/mytickets/`,
+  purchase: `${API_BASE}/marketplace/events/`
 };
 
 // Get Request Function

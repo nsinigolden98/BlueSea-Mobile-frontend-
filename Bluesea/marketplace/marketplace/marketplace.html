@@ -1,19 +1,19 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Blue Vault – Loyalty Marketplace</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="../../side-nav.css">
-      <link rel="stylesheet" href="../../loader.css">
+  <link rel="stylesheet" href="../../loader.css">
 </head>
 <body>
   <iframe src="../../side-nav.html" id="side-bar"></iframe>
   <div class="app" >
     <header class="topbar data-header">
         <div class="topbar-left">
-    <button class="icon-btn hamburger" id="menu-btn" onclick="showNav()" aria-label="Open menu">
+    <button type="button" class="icon-btn hamburger" id="menu-btn" onclick="showNav()" aria-label="Open menu">
       ☰
     </button>
   </div>
@@ -24,16 +24,15 @@
         </div>
 
       <div class="topbar-right">
-        <div class="cart-wrap" title="Cart" onclick="location.href='../cart/cart.html'">
+        <!-- <div class="cart-wrap" title="Cart" onclick="location.href='../cart/cart.html'">
           <svg class="cart-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
             <path d="M6 6h15l-1.5 9h-12L6 6z" stroke="#111827" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
             <circle cx="10" cy="20" r="1.5" fill="#111827"/>
             <circle cx="18" cy="20" r="1.5" fill="#111827"/>
           </svg>
           <span id="cartCount" class="cart-count">0</span>
-        </div>
+        </div> -->
 
-        <!-- Three-dot menu -->
         <div class="menu-wrap">
           <button class="icon-btn dots" id="dotsBtn" aria-label="Open menu">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -44,10 +43,10 @@
           </button>
 
           <div class="dropdown" id="dotsDropdown" aria-hidden="true">
-            <a href="../verified/verify-seller.html" class="dropdown-link" data-page="marketplace">Verify Seller</a>
+            <a href="../verified/verify-seller.html" class="dropdown-link" data-page="marketplace" id="seller">Verify Seller</a>
             <a href="../ticket/tickets.html" class="dropdown-link" data-page="orders">My Ticket</a>
-            <a href="../eventmanager/event-manager.html" class="dropdown-link" data-page="profile">Create Event</a>
-             <a href="../scanner/scanner.html" class="dropdown-link" data-page="profile">QR Scanner</a>
+            <a href="../eventmanager/event-manager.html" id="event" class="dropdown-link" data-page="profile">Create Event</a>
+            <a href="../scanner/scanner.html" id="scanner" class="dropdown-link" data-page="profile">QR Scanner</a>
           </div>
         </div>
       </div>
@@ -67,61 +66,65 @@
             <button class="cat-btn" data-cat="Airtime">Airtime</button>
             <button class="cat-btn" data-cat="Points">Points</button>
           </div>
-
-         
+        </div>
       </section>
 
       <section class="grid-wrap" id="gridWrap" aria-live="polite">
-        <!-- Cards will be injected here -->
       </section>
     </main>
+     <div id="toast" class="toast" aria-live="assertive" hidden></div>
+              <iframe src="../../loader.html" frameborder="0" id="loader"></iframe>
+            <iframe src="../../success/success.html" frameborder="0" id="success"></iframe>
   </div>
 
- <div class="bv-modal" id="bvModal" aria-hidden="true">
-  <div class="bv-modal-backdrop" data-close></div>
+  <div class="bv-modal" id="bvModal" aria-hidden="true">
+    <div class="bv-modal-backdrop" data-close></div>
 
-  <div class="bv-modal-box" role="dialog" aria-modal="true">
-    <button class="bv-modal-close" data-close aria-label="Close modal">×</button>
+    <div class="bv-modal-box" role="dialog" aria-modal="true">
+      <button class="bv-modal-close" data-close aria-label="Close modal">×</button>
 
-    <div class="bv-modal-carousel">
-      <button class="ctrl left" data-prev>‹</button>
-      <img id="bvModalImage" />
-      <button class="ctrl right" data-next>›</button>
-      <div class="carousel-count" id="bvModalCount"></div>
-    </div>
+      <div class="bv-modal-carousel">
+        <button class="ctrl left" data-prev>‹</button>
+        <img id="bvModalImage" />
+        <button class="ctrl right" data-next>›</button>
+        <div class="carousel-count" id="bvModalCount"></div>
+      </div>
 
-    <div class="bv-modal-body">
-      <h3 id="bvModalTitle"></h3>
-      <p id="bvModalDesc"></p>
-      <div id="bvModalDetails"></div>
-    </div>
+      <div class="bv-modal-body">
+        <h3 id="bvModalTitle"></h3>
+        <p id="bvModalDesc"></p>
+        <div id="bvModalDetails"></div>
+        
+        <div class="purchase-form" id="purchaseForm">
+          <div class="form-group" id="ticketTypeGroup">
+            <label for="ticketTypeSelect">Ticket Type</label>
+            <select id="ticketTypeSelect" class="form-select"></select>
+          </div>
+          
+          <div class="form-group" id="pinGroup">
+            <label for="transactionPin">Transaction PIN</label>
+            <input type="password" id="transactionPin" placeholder="Enter 4-digit PIN" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" class="form-input">
+          </div>
+          
+          <div class="total-cost" id="totalCostSection">
+            <span>Total:</span>
+            <strong id="totalCostAmount">₦0</strong>
+          </div>
+        </div>
+      </div>
 
-    <div class="bv-modal-actions">
-      <button class="primary-btn" id="bvModalAction"></button>
-      <button class="add-cart" data-close>
-        <svg
-  width="30"
-  height="30"
-  viewBox="0 0 24 24"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
-  aria-hidden="true"
->
-  <path
-    d="M6.75 6.75L17.25 17.25M17.25 6.75L6.75 17.25"
-    stroke="currentColor"
-    stroke-width="1.75"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-      </svg>
-      </button>
+      <div class="bv-modal-actions">
+        <button class="primary-btn" id="bvModalAction"></button>
+        <button class="add-cart" data-close>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6.75 6.75L17.25 17.25M17.25 6.75L6.75 17.25" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
-  
-    <script src="../../side-nav.js"></script>
+  <script src="../../side-nav.js"></script>
   <script src="script.js" defer></script>
 </body>
 </html>

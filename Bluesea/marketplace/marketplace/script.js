@@ -1,25 +1,34 @@
 /* Blue Vault – Loyalty Marketplace
    - Separate data, UI, and logic
-   - No globals exposed
-*/
+   - No globals exposed 
+   
+j*/
 
 
 ( async function () {
 'use strict';
   
   
-  const bvModal = document.getElementById('bvModal');
+const bvModal = document.getElementById('bvModal');
 const modalImg = document.getElementById('bvModalImage');
 const modalCount = document.getElementById('bvModalCount');
 const modalTitle = document.getElementById('bvModalTitle');
 const modalDesc = document.getElementById('bvModalDesc');
 const modalDetails = document.getElementById('bvModalDetails');
 const modalAction = document.getElementById('bvModalAction');
+const ticketTypeSelect = document.getElementById('ticketTypeSelect');
+const ticketTypeGroup = document.getElementById('ticketTypeGroup');
+const pinGroup = document.getElementById('pinGroup');
+const transactionPin = document.getElementById('transactionPin');
+const totalCostSection = document.getElementById('totalCostSection');
+const totalCostAmount = document.getElementById('totalCostAmount');
 
 let modalImages = [];
 let modalIndex = 0;
+let currentItem = null;
 
 function showModal(item) {
+  currentItem = item;
   modalImages = item.images;
   modalIndex = 0;
 
@@ -35,8 +44,67 @@ function showModal(item) {
 
   modalAction.textContent = primaryTextForCategory(state.category);
 
+  const is_free = item.price === "Free";
+  const is_sold_out = is_free && (item.tickets_left === 0 || item.tickets_left === '0');
+  
+  if (is_sold_out) {
+    ticketTypeGroup.style.display = 'none';
+    pinGroup.style.display = 'none';
+    totalCostSection.innerHTML = `<span>Status:</span><span class="sold-out">Sold Out</span>`;
+    totalCostSection.style.display = 'flex';
+    modalAction.disabled = true;
+    modalAction.style.opacity = '0.5';
+    modalAction.style.cursor = 'not-allowed';
+  } else if (is_free) {
+    ticketTypeGroup.style.display = 'none';
+    pinGroup.style.display = 'none';
+    totalCostSection.innerHTML = `<span>Tickets Available:</span><span>${item.tickets_left ?? 'N/A'}</span>`;
+    totalCostSection.style.display = 'flex';
+    modalAction.disabled = false;
+    modalAction.style.opacity = '1';
+    modalAction.style.cursor = 'pointer';
+  } else {
+    const allSoldOut = item.price.every(type => type.quantity_available === 0);
+    
+    ticketTypeGroup.style.display = 'block';
+    pinGroup.style.display = 'block';
+    totalCostSection.innerHTML = `<span>Total:</span><span id="totalCostAmount">${formatCurrency(0)}</span>`;
+    totalCostSection.style.display = 'flex';
+    
+    ticketTypeSelect.innerHTML = item.price.map((type, idx) => {
+      const isTypeSoldOut = type.quantity_available === 0;
+      return `<option value="${idx}" data-price="${type.price}" ${isTypeSoldOut ? 'disabled' : ''}>${type.name} - ${formatCurrency(type.price)} (${isTypeSoldOut ? 'Sold Out' : type.quantity_available + ' left'})</option>`;
+    }).join('');
+    
+    if (allSoldOut) {
+      modalAction.disabled = true;
+      modalAction.style.opacity = '0.5';
+      modalAction.style.cursor = 'not-allowed';
+    } else {
+      modalAction.disabled = false;
+      modalAction.style.opacity = '1';
+      modalAction.style.cursor = 'pointer';
+    }
+    
+    updateTotalCost();
+  }
+  
+  transactionPin.value = '';
+
   bvModal.classList.add('show');
   bvModal.setAttribute('aria-hidden', 'false');
+}
+
+function updateTotalCost() {
+  if (!currentItem || currentItem.price === "Free") return;
+  
+  const selectedOption = ticketTypeSelect.options[ticketTypeSelect.selectedIndex];
+  const price = parseFloat(selectedOption.dataset.price) || 0;
+  
+  const totalCostAmount = document.getElementById("totalCostAmount");
+  if (totalCostAmount) {
+    totalCostAmount.textContent = formatCurrency(price);
+  }
 }
 
 function hideModal() {
@@ -55,6 +123,12 @@ function slide(dir) {
   modalImg.src = modalImages[modalIndex];
   modalCount.textContent = `${modalIndex + 1} / ${modalImages.length}`;
 }
+
+ticketTypeSelect.addEventListener('change', updateTotalCost);
+
+transactionPin.addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+});
   
 
   /* -------------------------
@@ -228,17 +302,18 @@ function slide(dir) {
     // ]
   };
 
-for (let i = response.length - 1; i >= 0; i--){
+for (let i = 0; i  < response.length; i++){
   let ticket = {
       id: response[i].id,
       title: response[i].event_title,
       short: response[i].event_description,
-      price: response[i].is_free ? "Free": "2000",
+      price: response[i].is_free ? "Free": response[i].ticket_types,
+      tickets_left: response[i].is_free ? (response[i].total_tickets - response[i].tickets_sold) : null,
       popularity: 'popular',
       images: [
       API_BASE + response[i].ticket_image,
-      API_BASE + response[i].ticket_image,
-      API_BASE +  response[i].ticket_image
+      API_BASE + response[i].event_banner,
+      API_BASE + response[i].ticket_image
       ],
       details: {
         "Event name": response[i].event_title,
@@ -271,7 +346,7 @@ for (let i = response.length - 1; i >= 0; i--){
     grid: document.getElementById('gridWrap'),
     searchInput: document.getElementById('searchInput'),
     catButtons: null,
-    cartCount: document.getElementById('cartCount'),
+    // cartCount: document.getElementById('cartCount'),
     dotsBtn: document.getElementById('dotsBtn'),
     dotsDropdown: document.getElementById('dotsDropdown'),
     hamburgerBtn: document.getElementById('hamburgerBtn')
@@ -444,15 +519,27 @@ for (let i = response.length - 1; i >= 0; i--){
     const desc = document.createElement('p');
     desc.className = 'card-desc';
     desc.textContent = item.short;
-const actions = document.createElement('div');
-actions.style.display = 'flex';
-actions.style.gap = '8px';
+    const actions = document.createElement('div');
+    actions.style.display = 'flex';
+    actions.style.gap = '8px';
     const meta = document.createElement('div');
     meta.className = 'card-meta';
-meta.style.alignItems = 'center';
+    meta.style.alignItems = 'center';
     const price = document.createElement('div');
     price.className = 'price';
-    price.innerHTML = `<strong>${item.price.toLocaleString()}</strong> `;
+    if (item.price === "Free") {
+      const ticketsLeft = item.tickets_left ?? 'N/A';
+      const isSoldOut = ticketsLeft === 0 || ticketsLeft === '0';
+      price.innerHTML = `Free<br>${isSoldOut ? '<span class="sold-out">Sold Out</span>' : 'Tickets left: ' + ticketsLeft}`;
+    }
+    else{
+    for (let i = 0; i  < item.price.length; i++){
+      const qty = item.price[i].quantity_available;
+      const isTypeSoldOut = qty === 0;
+      price.innerHTML += `${item.price[i].name} : ${formatCurrency(item.price[i].price)} <br> ${isTypeSoldOut ? '<span class="sold-out">Sold Out</span>' : 'Ticket left: ' + qty} <br> `;
+      
+    }
+  }
     
 
     // primary action button text based on category
@@ -593,20 +680,20 @@ expandBtn.addEventListener('click', (ev) => {
   showModal(item);
 }
 
-  function addToCart(item) {
-    // push item id to cart state
-    state.cart.push({
-      id: item.id,
-      title: item.title,
-      points: item.points,
-      category: state.category
-    });
-    updateCartUI();
-  }
+  // function addToCart(item) {
+  //   // push item id to cart state
+  //   state.cart.push({
+  //     id: item.id,
+  //     title: item.title,
+  //     points: item.points,
+  //     category: state.category
+  //   });
+  //   updateCartUI();
+  // }
 
-  function updateCartUI() {
-    refs.cartCount.textContent = String(state.cart.length);
-  }
+  // function updateCartUI() {
+  //   refs.cartCount.textContent = String(state.cart.length);
+  // }
 
   function toggleExpand(cardEl, id) {
     // collapse any other expanded card
@@ -633,6 +720,131 @@ expandBtn.addEventListener('click', (ev) => {
     });
   }
 
+function showToast(msg, ms = 4000) {
+  const t = document.getElementById("toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(t._hideTO);
+  t._hideTO = setTimeout(() => { t.hidden = true; }, ms);
+}
+
+function hideSuccess() {
+  const success = document.getElementById("success");
+  if (success) success.style.display = "none";
+}
+
+function formatCurrency(amount) {
+  return '₦' + Number(amount).toLocaleString('en-NG');
+}
+
+function parseCurrency(str) {
+  return String(str).replace(/[₦,\s]/g, '');
+}
+
+async function purchaseTicket(payload, event_id) {
+  try {
+    showLoader();
+    let response = await postRequest(ENDPOINTS.purchase + event_id + "/purchase/", payload);
+    hideLoader();
+    
+    if (response.success || response.tickets) {
+      showSuccess();
+      showToast(response.message || "Ticket purchased successfully!");
+      setTimeout(() => {
+        location.reload();
+      }, 2500);
+    } else if (response.error) {
+      showToast(response.error);
+    } else if (response.non_field_errors) {
+      showToast(response.non_field_errors.join(', '));
+    } else if (response.transaction_pin) {
+      showToast("PIN: " + response.transaction_pin.join(', '));
+    } else if (response.ticket_type) {
+      showToast("Ticket Type: " + response.ticket_type);
+    } else {
+      showToast("Purchase failed. Please try again.");
+    }
+  } catch (err) {
+    hideLoader();
+    showToast("An error occurred. Please try again.");
+  }
+}
+
+document.getElementById('bvModalAction').addEventListener('click', () => {
+  if (!currentItem) {
+    showToast("No event selected");
+    return;
+  }
+
+  const event_id = currentItem.id;
+  const is_free = currentItem.price === "Free";
+  
+  // Check if sold out
+  if (is_free && (currentItem.tickets_left === 0 || currentItem.tickets_left === '0')) {
+    showToast("This event is sold out");
+    return;
+  }
+  
+  if (!is_free) {
+    const ticketTypes = currentItem.price;
+    const selectedIdx = parseInt(ticketTypeSelect.value);
+    const selectedType = ticketTypes[selectedIdx];
+    
+    if (selectedType.quantity_available === 0) {
+      showToast("This ticket type is sold out");
+      return;
+    }
+    
+    const pin = transactionPin.value.trim();
+    
+    if (!pin) {
+      showToast("Transaction PIN is required");
+      transactionPin.focus();
+      return;
+    }
+    
+    if (!/^\d{4}$/.test(pin)) {
+      showToast("PIN must be 4 digits");
+      transactionPin.focus();
+      return;
+    }
+    
+    const payload = {
+      ticket_type: selectedType.name,
+      quantity: 1,
+      transaction_pin: pin
+    };
+    purchaseTicket(payload, event_id);
+  } else {
+    // Free ticket - no PIN required
+    const payload = { 
+      quantity: 1
+    };
+    purchaseTicket(payload, event_id);
+  }
+})
+
+async function vendorStatus() {
+    const response = await getRequest(ENDPOINTS.vendor_status);
+    let status = response.vendor.verification_status
+    if ( status === 'approved') {
+      document.getElementById('scanner').style.display = 'block'
+      
+      document.getElementById('scanner').style.display = 'block'
+      
+      document.getElementById('seller').style.display = 'none'
+    }
+    else {
+      status === 'pending' ?showToast("Not a vendor yet") : 
+      document.getElementById('scanner').style.display = 'none'
+      
+      document.getElementById('event').style.display = 'none'
+    }
+   
+  }
+    
+  vendorStatus();
   /* -------------------------
      Start
      ------------------------- */
