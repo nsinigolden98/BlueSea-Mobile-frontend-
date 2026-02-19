@@ -212,7 +212,7 @@ function closeNavBody() {
 
   function redirectToLogin() {
     // Use replace() so user can't go back to this page
-    window.location.replace("http://127.0.0.1:5500/Bluesea/login/login.html");
+    window.location.replace("https://blueseamobile.com.ng/Bluesea/login/login.html");
   }
 
   // This fires on EVERY page view — including back/forward button!
