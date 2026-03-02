@@ -174,7 +174,7 @@ function hideLoader() {
 async function getUserNav() {
   const user = await getRequest(ENDPOINTS.user);
   // Side nav
-  document.getElementById("profile_name").textContent = user.other_names;
+  document.getElementById("profile_name").textContent = user.surname + " " +user.other_names;
   // document.getElementById("avatar_img").src = API_BASE + user.image;
   document.getElementById("avatar_img").src = user.image
     ? API_BASE + user.image

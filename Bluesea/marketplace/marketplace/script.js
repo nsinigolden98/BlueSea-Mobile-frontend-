@@ -896,7 +896,7 @@ async function vendorStatus() {
       document.getElementById('seller').style.display = 'none'
     }
     else {
-      status === 'pending' ?showToast("Not a vendor yet") : 
+      status === 'pending' || undefined || 'rejected' ? showToast("Not a vendor yet") : 
       document.getElementById('scanner').style.display = 'none'
       
       document.getElementById('event').style.display = 'none'
