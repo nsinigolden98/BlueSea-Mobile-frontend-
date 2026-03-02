@@ -583,6 +583,8 @@ function showToast(msg, ms = 8200) {
 async function vendorStatus() {
   const response = await getRequest(ENDPOINTS.vendor_status);
   let status = response.vendor.verification_status;
+  if (vendor.status) {
+  
   if (status === "approved") {
     document.getElementById("successScreen").textContent = "Already A Verified Vendor ";
     document.getElementById("successScreen").hidden = false;
@@ -596,5 +598,6 @@ async function vendorStatus() {
   else if (status === "rejected") {
     showToast("Previous application was rejected")
   }
+    }
 }
 vendorStatus()
