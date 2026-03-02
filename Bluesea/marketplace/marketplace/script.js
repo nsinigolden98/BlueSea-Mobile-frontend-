@@ -886,15 +886,11 @@ document.getElementById('bvModalAction').addEventListener('click', () => {
 })
 
 async function vendorStatus() {
-    const response = await getRequest(ENDPOINTS.vendor_status);
+  const response = await getRequest(ENDPOINTS.vendor_status);
+  
+  if (response.vendor) {
   let status = response.vendor.verification_status
-   
-  if (status === undefined) {
-     document.getElementById('scanner').style.display = 'none'
-      
-      document.getElementById('event').style.display = 'none'
-    
-  } else if ( status === 'approved') {
+    if ( status === 'approved') {
       document.getElementById('scanner').style.display = 'block'
       
       document.getElementById('scanner').style.display = 'block'
@@ -907,7 +903,12 @@ async function vendorStatus() {
       
       document.getElementById('event').style.display = 'none'
   };
-   
+  } else {
+   showToast("Not a vendor yet") 
+      document.getElementById('scanner').style.display = 'none'
+      document.getElementById('event').style.display = 'none' 
+  }
+  
   }
     
   vendorStatus();
