@@ -327,6 +327,12 @@ async function postFileRequest(url, payload) {
 
 async function vendorStatus() {
   const response = await getRequest(ENDPOINTS.vendor_status);
+
+  if (response.vendor === undefined) {
+    let  text = "Not a vendor yet"
+    return document.getElementById('text').textContent = text;
+    
+  }
   if (response.vendor) {
     let status = response.vendor.verification_status;
     if (status === 'approved') {
