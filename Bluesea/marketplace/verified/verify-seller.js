@@ -582,9 +582,8 @@ function showToast(msg, ms = 8200) {
 
 async function vendorStatus() {
   const response = await getRequest(ENDPOINTS.vendor_status);
-  let status = response.vendor.verification_status;
-  if (vendor.status) {
-  
+  if (response.vendor) {
+    let status = response.vendor.verification_status;
   if (status === "approved") {
     document.getElementById("successScreen").textContent = "Already A Verified Vendor ";
     document.getElementById("successScreen").hidden = false;
