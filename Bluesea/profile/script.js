@@ -4,6 +4,7 @@ async function getUser() {
     document.getElementById("email").textContent = user.email;
     document.getElementById("full_name").textContent = user.surname + " " +user.other_names;
     document.getElementById("phone_number").textContent = user.phone;
+    document.getElementById("username").textContent = user.username;
     document.getElementById("user_image").src = 
     user.image ? API_BASE + user.image : "../basic_imgs/profile.jpeg";
 }
@@ -46,4 +47,11 @@ imageInput.addEventListener("change", async () => {
     showToast(response.message)
     imageWrapper.classList.remove("loading");
 
+
 });
+
+function copyText(id) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text);
+    showToast("Copied to clipboard");
+}
