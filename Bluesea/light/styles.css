@@ -427,4 +427,74 @@ input:focus {
 
 #history{
     display: none;
+
 }
+
+
+/* ===============================
+   SMART AD CONTAINER (STABLE)
+================================ */
+
+.smart-ad-wrapper{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  margin:20px 0;
+}
+
+/* AD BOX */
+
+.smart-ad-slot{
+
+  width:90%;
+  max-width:900px;
+  height:120px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+
+  /* White background */
+  background:#fff;
+
+  /* Shadow to make it look like a floater */
+  box-shadow:0 8px 20px rgba(0,0,0,0.25);
+
+  /* Border radius: only left-bottom & right-top */
+  border-top-right-radius:12%;
+  border-bottom-left-radius:12%;
+
+  /* Blue outline glow effect */
+  border:2px solid rgba(0,123,255,0.5); /* subtle blue border */
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25), 
+              0 0 15px rgba(0,123,255,0.3); /* soft glow around */
+}
+
+/* FORCE ADSENSE TO FIT */
+
+.smart-ad-slot ins{
+  width:100% !important;
+  height:100% !important;
+  display:block !important;
+}
+
+/* PREVENT ADSENSE IFRAMES FROM BREAKING LAYOUT */
+
+.smart-ad-slot iframe{
+  max-width:100%;
+}
+
+/* MOBILE */
+
+@media (max-width:768px){
+
+.smart-ad-slot{
+
+  width:95%;
+  height:100px;
+
+}
+
+}
+
