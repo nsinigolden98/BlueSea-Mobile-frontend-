@@ -141,111 +141,45 @@ body{
 }
 
     /* ================================
-     Navigation Ad
-  ================================ */
-  .nav-ad-container {
-    margin: 10px 0;
-    margin-top:5px;
-    position: relative;
-    width: 100%;
-    height: 250px;
-    border-radius: 0% 12% 0% 12%;
-    overflow: hidden;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  flex-shrink: 0;
-  }
+   Navigation Ad Card
+================================ */
 
-  .nav-ad-slide {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    opacity: 0;
-    transition: opacity 0.5s ease, transform 0.5s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none;
-  }
-
-  .nav-ad-slide.active {
-    opacity: 1; 
-    transform: scale(1.02); 
-    pointer-events: auto;
- }
-
-  .nav-ad-slide img, .nav-ad-slide video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-
-  
-
-  .nav-dots {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    display: flex;
-    gap: 5px;
-  }
-
-  .nav-dot {
-    width: 10px;
-    height: 10px;
-    background: rgba(255,255,255,0.5);
-    border-radius: 50%;
-    cursor: pointer;
-  }
-
-  .nav-dot.active { background: #fff; }
-
-
-/*title animation  */
-.nav-ad-title {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    background: rgba(0,0,0,0.6);
-    color: whitesmoke;
-    padding: 8px;
-    font-size: 14px;
-    text-align: center;
-  pointer-events: none;
-  }
-
-.ticker {
+.nav-ad-container {
+  margin: 10px 0;
+  margin-top:5px;
+  position: relative;
+  width: 100%;
+  height: 250px;
+  border-radius: 0% 12% 0% 12%;
   overflow: hidden;
-  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  flex-shrink: 0;
 }
 
-.ticker span {
-  display: inline-block;
-  padding-left: 100%;
-  animation: ticker-move 5s linear infinite;
+/* Make ad responsive inside card */
+
+.nav-ad-container ins{
+  display:block;
+  width:100%;
+  height:100%;
 }
 
-/* Pause on hover */
-.ticker:hover span {
-  animation-play-state: paused;
+/* Media elements still responsive if used later */
+
+.nav-ad-container img,
+.nav-ad-container video{
+  width:100%;
+  height:100%;
+  object-fit:contain;
 }
 
-/* Right → Left movement */
-@keyframes ticker-move {
-  from {
-    transform: translateX(0);
+/* Responsive */
+
+@media (max-width:480px){
+  .nav-ad-container{
+    height:150px;
   }
-  to {
-    transform: translateX(-100%);
   }
-}
-
-  /* Responsive */
-  @media (max-width: 480px) {
-    .nav-ad-container { height: 150px; }
-  }
-
 
                   
 
@@ -342,44 +276,7 @@ body{
 </script>
     </div>
     
-    <!-- Slide 1: Personal Ad 
-    <div class="nav-ad-slide">
-      <a href="https://selar.com/no0mgl1p9p" target="_blank">
-        <img src="basic_imgs/ads1.jpg" width="320px" height="200px" alt="Nav Ad 1" target="_blank">
-        <div class="nav-ad-title ticker"><span>Learn to Build Your VTU Platform Fast!</span></div>
-      </a>
-    </div> -->
-
-    <!-- Slide 2: Video Ad 
-    <div class="nav-ad-slide">
-      <a href="https://example.com" target="_blank">
-        <video autoplay muted loop>
-          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-        </video>
-        <div class="nav-ad-title ticker"><span>Check Out Our Latest Video Campaign</span></div>
-      </a>
-    </div>-->
-
-    <!-- Slide 3: Simulated Google Ad 
-    <div class="nav-ad-slide">
-      <a href="https://selar.com/s514v14957" target="_blank">
-        <img src="basic_imgs/ads2.jpg" width="320px" height="200px" alt="Nav Ad 2" target="_blank">
-          <div class="nav-ad-title ticker"><span>Start Your Mini Import Business Today!</span></div>
-      </a>
-       </div>
-
-    <!-- Slide 4: 
-    <div class="nav-ad-slide">
-      <a href=https://banner-api.hfm.com/link/4a9ff55e?regulator=HFSV&refid=30489511 target="_top">
-    <img src=https://banner-api.hfm.com/banner/4a9ff55e?regulator=HFSV&refid=30489511 width="320px" height="200px" />
-      </a>
-          <div class="nav-ad-title ticker"><span>download now and trade your self into financial freedom</span></div>
-      </a>
-       </div>-->
-
-    <!-- Dots -->
-    <div class="nav-dots" id="navDots"></div>
-  </div>
+  
 
 </div> 
 
