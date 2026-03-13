@@ -475,8 +475,8 @@ body {
   box-shadow:0 8px 20px rgba(0,0,0,0.25);
 
   /* Border radius: only left-bottom & right-top */
-  border-top-right-radius:12px;
-  border-bottom-left-radius:12px;
+  border-top-right-radius:12%;
+  border-bottom-left-radius:12%;
 
   /* Blue outline glow effect */
   border:2px solid rgba(0,123,255,0.5); /* subtle blue border */
@@ -510,4 +510,5 @@ body {
 }
 
 }
+
 
