@@ -450,29 +450,21 @@ body {
   width:100%;
   display:flex;
   justify-content:center;
+  align-items:center;
   margin:15px 0;
 }
-
 /* AD SLOT */
 
 .smart-ad-slot{
-
   position:relative;
-
-  width:90%;
+  width:100%;
   max-width:900px;
-
-  height:120px; /* fixed height */
-
-
+  height:120px;
+  margin:0 auto;
   border-radius:12px;
-
   overflow:hidden;
-
   box-shadow:0 6px 18px rgba(0,0,0,0.2);
-
   background:#111;
-
 }
 
 /* AD SLIDES */
@@ -542,3 +534,15 @@ body {
 
   }
 
+.smart-ad-slot iframe{
+  max-width:100%;
+}
+
+
+.smart-ad-wrapper{
+  border:2px solid red;
+}
+
+.smart-ad-slot{
+  border:2px solid blue;
+}
