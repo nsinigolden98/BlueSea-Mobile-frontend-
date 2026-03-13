@@ -462,7 +462,8 @@ body {
   width:90%;
   max-width:900px;
 
-  aspect-ratio: 4 / 1; /* responsive rectangle */
+  height:120px; /* fixed height */
+
 
   border-radius:12px;
 
@@ -530,3 +531,14 @@ body {
 }
 
 }
+
+.smart-ad-slot ins{
+
+  display:block !important;
+
+  width:100% !important;
+
+  height:100% !important;
+
+  }
+
