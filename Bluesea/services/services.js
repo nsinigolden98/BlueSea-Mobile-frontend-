@@ -219,6 +219,29 @@
     });
   }
 
+
+// SMART AD ROTATION
+
+const ads = document.querySelectorAll(".ad-slide")
+
+let currentAd = 0
+
+const adDuration = 12000
+
+function rotateAds(){
+
+  ads[currentAd].classList.remove("active")
+
+  currentAd = (currentAd + 1) % ads.length
+
+  ads[currentAd].classList.add("active")
+
+}
+
+setInterval(rotateAds, adDuration)
+
+
+  
   // Initialize
   function init() {
     validateCards();
@@ -259,4 +282,5 @@
   }
 
 })();
+
 
