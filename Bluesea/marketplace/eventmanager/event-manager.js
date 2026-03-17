@@ -24,22 +24,25 @@ function handleNumberInputWithCommas(e) {
 }
 
 
-openBtn.onclick = () => modal.classList.remove("hidden");
 function openCreate() {
-  modal.classList.add("hidden");
+  modal.style.display = 'block'
   const inputElements =document.querySelectorAll('input, textarea');
   inputElements.forEach(input => {
     input.value = '';
   });
-  
+  document.querySelectorAll('small').forEach((e) => {
+    e.textContent = ""
+  })
   document.getElementById('dropdown-selected').textContent === 'Select category'
 }
-closeBtn.onclick = openCreate()
-modal.onclick = (e) => {
-  if (e.target === modal) modal.classList.add("hidden");
-  
-};
 
+closeBtn.onclick = ()=>  modal.style.display = 'none'
+
+document.getElementById('header').addEventListener("click", () => {
+  if (modal.style.display === 'block') {
+     modal.style.display = 'none'
+  }
+})
 // CATEGORY
 dropdown.onclick = () => {document.getElementById('dropdown-list').style.display = 'block';
   dropdown.classList.toggle("open");}
@@ -195,12 +198,13 @@ submitButton.addEventListener('click', () => {
   }else if (!id('eventDescription').value) {
     id('description-helper').textContent = "This field id required"
   }
-  else if (id("free").checked || name.includes(false) || price.includes(false) || quantity.includes(false)) {
-    id('tickets-helper').textContent = "Incomplete entries"
-    console.log("Incomplete entries")
+  else if (id('paid').checked &&  (name.includes(false) || price.includes(false) || quantity.includes(false))) {
+      id('tickets-helper').textContent = "Incomplete entries"
+      console.log("Incomplete entries")
+    
   }
   else {   
-    modal.classList.add("hidden");
+     modal.style.display = 'none'
      createEvent();
   }
   
@@ -226,8 +230,7 @@ async function createEvent() {
     document.getElementById("eventDescription").value,
   );
 
-  const isFree =
-    form.querySelector('input[name="priceType"]:checked').value === "free";
+  const isFree = id('free').checked
   formData.append("is_free", isFree);
 
   // Combine date and time
