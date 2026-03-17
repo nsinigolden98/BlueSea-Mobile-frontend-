@@ -219,6 +219,9 @@
     });
   }
 
+
+
+  
   // Initialize
   function init() {
     validateCards();
@@ -259,4 +262,6 @@
   }
 
 })();
+
+
 
