@@ -177,9 +177,7 @@ async function getUserNav() {
   // Side nav
   document.getElementById("profile_name").textContent = user.surname + " " +user.other_names;
   // document.getElementById("avatar_img").src = API_BASE + user.image;
-  document.getElementById("avatar_img").src = user.image !== null
-    ? API_BASE + user.image
-    : "basic_imgs/profile.jpeg";
+  document.getElementById("avatar_img").src = user.image !== null ? API_BASE + user.image : "basic_imgs/profile.jpeg";
   document.getElementById("profile_email").textContent = user.email;
 }
 
