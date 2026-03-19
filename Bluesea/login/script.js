@@ -470,6 +470,7 @@ async function SignUpButton() {
     password
   };
   const res = await apiPost(ENDPOINT.signup, signup_payload);
+  console.log(res)
   if (res.data.state) {
     document.getElementById("modal_panel").style.display = "block";
     document.getElementById("form_signup").style.opacity = "0.3";
@@ -595,7 +596,7 @@ safeAdd($("#confirm_show"), "click", function () {
 async function handleCredentialResponse(response) {
   const idToken = response.credential;
   const redirect_uri =
-    "https://www.blueseamobile.com.ng/Bluesea/dashboard/dashboard.html";
+    "https://blueseamobile.com.ng/Bluesea/dashboard/dashboard.html";
   let res = await apiPost(ENDPOINT.oauthGoogle, {
     id_token: idToken,
     redirect_uri
@@ -607,7 +608,7 @@ async function handleCredentialResponse(response) {
     setAccessToken(res.data.access_token, 1);
     window.location.href = redirect_uri;
   } else {
-    window.parent.location.href = "https://www.blueseamobile.com.ng";
+    window.parent.location.href = "https://blueseamobile.com.ng";
   }
 }
 
