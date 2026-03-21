@@ -892,21 +892,17 @@ async function vendorStatus() {
   let status = response.vendor.verification_status
     if ( status === 'approved') {
       document.getElementById('scanner').style.display = 'block'
-      
-      document.getElementById('scanner').style.display = 'block'
-      
       document.getElementById('seller').style.display = 'none'
   }
     else {
       status === 'pending' || 'rejected' ? showToast("Not a vendor yet") : 
       document.getElementById('scanner').style.display = 'none'
-      
       document.getElementById('event').style.display = 'none'
   };
   } else {
    showToast("Not a vendor yet") 
-      document.getElementById('scanner').style.display = 'none'
-      document.getElementById('event').style.display = 'none' 
+    document.getElementById('event').style.display = 'none' 
+     document.getElementById('scanner').style.display = 'none'
   }
   
   }

@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ticket Scanner</title>
-  <link rel="stylesheet" href="scanner.css" />
+  <link rel="stylesheet" href="scanner.css" >
 </head>
 <body>
   <div class="page" aria-live="polite">
     <header class="header">
-            <button id="backBtn" class="btn-icon" aria-label="Back to Marketplace" onclick="location.href='../marketplace/marketplace.html'">
+            <button type="button" id="backBtn" class="btn-icon" aria-label="Back to Marketplace" onclick="location.href='../marketplace/marketplace.html'">
         <!-- SVG Arrow -->
         <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M15 18l-6-6 6-6" fill="none" stroke="#0b66a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -22,7 +22,7 @@
       <section class="instructions">
         <p>This scanner uses your device camera to validate event tickets.</p>
         <p>Please allow camera access when prompted.</p>
-        <button id="startScan" class="primary-btn">Start Scan</button>
+        <button type="button" id="startScan" class="primary-btn">Start Scan</button>
         <p class="error-text" id="cameraError" hidden></p>
       </section>
 
@@ -33,8 +33,7 @@
           <div class="scan-frame">
             <div class="scan-line"></div>
           </div>
-            
-          <button class="secondary-btn stop-btn" id="stopScan">
+          <button type="button" class="secondary-btn stop-btn" id="stopScan">
             Stop Scan
           </button>
         </div>
@@ -56,14 +55,14 @@
         </div>
 
         <div class="modal-actions">
-          <button id="closeModal" class="secondary-btn">Close</button>
+          <button type="button" id="closeModal" class="secondary-btn">Close</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="../../side-nav.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="scanner.js"></script>
 </body>
 </html>

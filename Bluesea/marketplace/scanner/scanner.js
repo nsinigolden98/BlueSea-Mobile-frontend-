@@ -39,6 +39,7 @@ async function startScanner() {
       onScanFailure
     );
   } catch (err) {
+    console.log(err)
     errorText.textContent = 'Camera access denied or unsupported.';
     errorText.hidden = false;
     scannerSection.classList.add('hidden');
@@ -63,6 +64,7 @@ async function onScanSuccess(decodedText, decodedResult) {
 }
 
 function onScanFailure(error) {
+  
 }
 
 function showResult(response) {
