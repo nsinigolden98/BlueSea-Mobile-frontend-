@@ -231,7 +231,7 @@ async function createEvent() {
   );
 
   const isFree = id('free').checked
-  formData.append("is_free", isFree);
+  formData.append("is_free", !isFree);
 
   // Combine date and time
   const eventDate = document.getElementById("eventDate").value; // e.g., "DD/MM/YYYY"
@@ -254,11 +254,14 @@ async function createEvent() {
       quantity_available: ticket_quantity_list[index] ? stripCommas(ticket_quantity_list[index].value) : "0"
     }
   })
-  // Ticket details (only if not free)
-  if (!isFree) {
-    formData.append(
-      "ticket_types", JSON.stringify(ticket_types));
-  }
+  const freeTicket = [{
+      name: 'Free',
+      price: 0.001,
+      quantity_available: stripCommas(document.getElementById("ticket-quantity").value)
+ }]
+  formData.append(
+      "ticket_types", isFree ? JSON.stringify(freeTicket) :JSON.stringify(ticket_types));
+    
   formData.append(
     "ticket_quantity",
     stripCommas(document.getElementById("ticket-quantity").value)
@@ -296,7 +299,7 @@ async function createEvent() {
     // Maybe refresh event list on marketplace or redirect
   }
   else {
-    
+    console.log(response)
     showToast(response.error || response.event_date  || "Not a valid Vendor")
     
   }
@@ -330,7 +333,7 @@ async function postFileRequest(url, payload) {
 
 async function vendorStatus() {
   const response = await getRequest(ENDPOINTS.vendor_status);
-  
+  console.log(response);
   if (response.vendor) {
     let status = response.vendor.verification_status;
     if (status === 'approved') {
