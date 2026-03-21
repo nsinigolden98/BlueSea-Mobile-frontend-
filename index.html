@@ -68,24 +68,39 @@
 </section>
 
 <!-- TRUST -->
-<section class="trust">
-  <h2>Trusted by People Everywhere</h2>
-  <p>Join thousands of users who buy and manage VTU daily.</p>
 
-  <div class="trust-stats">
-    <div class="trust-stats1">
-      <strong>4.8</strong>
-      <span>Users Rating</span>
+<section class="stats-section">
+
+  <div class="stats-card">
+
+    <!-- HEADER -->
+    <div class="stats-header">
+      <h2>Our Community is Growing Fast</h2>
+      <p>Real activity from real users on the platform</p>
     </div>
-    <div class="trust-stats1">
-      <strong>50k+</strong>
-      <span>Transactions</span>
+
+    <!-- STATS (ONE LINE ALWAYS) -->
+    <div class="stats-row">
+
+      <div class="stat-item">
+        <span class="stat-number" id="totalUsers">0</span>
+        <span class="stat-label">Users</span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-number" id="activeUsers">0</span>
+        <span class="stat-label">Active</span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-number" id="ticketsSold">0</span>
+        <span class="stat-label">Tickets Sold</span>
+      </div>
+
     </div>
-    <div class="trust-stats1">
-      <strong>99%</strong>
-      <span>Success Rate</span>
-    </div>
+
   </div>
+
 </section>
 
 <!-- FEATURES -->
@@ -296,6 +311,50 @@ Front-End Developer & Marketing Lead – Designs intuitive user interfaces and d
 
   <!-- Main JavaScript -->
   <script src="Bluesea/landing_page/script.js"></script>
+
+  <script>
+/* =========================
+   SAMPLE DATA
+========================= */
+let totalUsers = 12540;
+let activeUsers = 3240;
+let ticketsSold = 8560;
+
+/* =========================
+   ANIMATION
+========================= */
+function animateValue(id, start, end, duration) {
+  let obj = document.getElementById(id);
+  let startTime = null;
+
+  function step(timestamp) {
+    if (!startTime) startTime = timestamp;
+    let progress = Math.min((timestamp - startTime) / duration, 1);
+    obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString() + "+";
+    if (progress < 1) requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+}
+
+animateValue("totalUsers", 0, totalUsers, 1000);
+animateValue("activeUsers", 0, activeUsers, 1000);
+animateValue("ticketsSold", 0, ticketsSold, 1000);
+
+/* =========================
+   API (REPLACE LATER)
+========================= */
+/*
+fetch("YOUR_API_ENDPOINT")
+.then(res => res.json())
+.then(data => {
+  animateValue("totalUsers", 0, data.totalUsers, 1000);
+  animateValue("activeUsers", 0, data.activeUsers, 1000);
+  animateValue("onlineUsers", 0, data.onlineUsers, 1000);
+  animateValue("ticketsSold", 0, data.ticketsSold, 1000);
+});
+*/
+  </script>
 </body>
 
 </html>
