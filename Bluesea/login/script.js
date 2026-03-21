@@ -322,14 +322,14 @@ function setAccessToken(token, days) {
   const maxAge = days * 24 * 60 * 60; // Convert minutes to seconds
   document.cookie = `accessToken=${encodeURIComponent(
     token
-  )}; max-age=${maxAge}; path=/; SameSite=Strict;`;
+  )}; max-age=${maxAge}; path=/; SameSite=Strict; Secure`;
 }
 
 function setRefreshToken(token, days) {
   const maxAge = days * 24 * 60 * 60; // Convert days to seconds
   document.cookie = `refreshToken=${encodeURIComponent(
     token
-  )}; max-age=${maxAge}; path=/; SameSite=Strict;`;
+  )}; max-age=${maxAge}; path=/; SameSite=Strict; Secure`;
 }
 
 async function signInButton(){
