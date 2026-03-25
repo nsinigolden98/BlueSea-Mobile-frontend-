@@ -426,7 +426,7 @@ async function loadVendorEvents() {
   showLoader();
   const response = await getRequest(ENDPOINTS.vendor_tickets);
   hideLoader();
-  
+  console.log(response)
   if (response.state && response.event_breakdown) {
     const eventList = document.getElementById('eventList');
     const textEl = document.getElementById('text');
