@@ -333,7 +333,7 @@ async function postFileRequest(url, payload) {
 
 async function vendorStatus() {
   const response = await getRequest(ENDPOINTS.vendor_status);
-  console.log(response);
+  
   if (response.vendor) {
     let status = response.vendor.verification_status;
     if (status === 'approved') {
@@ -426,7 +426,7 @@ async function loadVendorEvents() {
   showLoader();
   const response = await getRequest(ENDPOINTS.vendor_tickets);
   hideLoader();
-  console.log(response)
+  
   if (response.state && response.event_breakdown) {
     const eventList = document.getElementById('eventList');
     const textEl = document.getElementById('text');
