@@ -11,7 +11,7 @@ function formatNumberWithCommas(num) {
 }
 
 function stripCommas(str) {
-  return str.replace(/,/g, '');
+  return str.replaceAll(',', '');
 }
 
 function handleNumberInputWithCommas(e) {
@@ -254,6 +254,7 @@ async function createEvent() {
       quantity_available: stripCommas(ticket_quantity_list[index].value) 
     }
   })
+  console.log(ticket_types)
   const freeTicket = [{
       name: 'Free',
       price: 0.001,
