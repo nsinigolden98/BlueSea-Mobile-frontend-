@@ -8,7 +8,7 @@ const lockIndicator = document.getElementById('lockIndicator');
 const lockSvg = lockIndicator.querySelector('.lock');
 const unitCount = document.getElementById('unitCount');
 
-BILLER_NAME= {
+const BILLER_NAME= {
  'Ikeja Electric(IKEDC)': 'ikeja-electric' ,
 'Eko Electric(EKEDC)' : 'eko-electric',
  'Kano Electric(KEDCO)' : 'kano-electric',

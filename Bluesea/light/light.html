@@ -1,33 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" >
+  <meta name="viewport" content="width=device-width, initial-scale=1" >
   <title>LightBuild | Blue Sea</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="../side-nav.css" />
-  <link rel="stylesheet" href="../loader.css" />
+  <link rel="stylesheet" href="styles.css" >
+  <link rel="stylesheet" href="../side-nav.css" >
+  <link rel="stylesheet" href="../loader.css" >
 </head>
 <body>
 
   <nav>
-    <iframe src="../side-nav.html" id="side-bar"></iframe>
+    <iframe src="../side-nav.html" id="side-bar" title="side-nav" ></iframe>
   </nav>
 
-  <div  class='body'>
+  <div  class="body">
     <header class="app-header">
       <!-- Hamburger menu -->
-      <button class="menu-btn" id="menu-btn" onclick="showNav()" aria-label="Open menu">
+      <button type="button" class="menu-btn" id="menu-btn" onclick="showNav()" aria-label="Open menu">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <line x1="3" y1="6" x2="21" y2="6" />
           <line x1="3" y1="12" x2="21" y2="12" />
           <line x1="3" y1="18" x2="21" y2="18" />
         </svg>
       </button>
-    
+
       <!-- Divider -->
       <span class="header-divider"></span>
-    
+
       <!-- Header text -->
       <div class="header-text">
         <h1>Light Bills</h1>
@@ -36,7 +36,6 @@
     </header>
 
 
-    
 <!-- SMART AD AREA -->
 
 <div class="smart-ad-wrapper">
@@ -58,10 +57,9 @@
 
 </div>
 
-    
+
   <main class="lightbuild" onclick="closeNavBody()">
-    
-  
+
     <!-- ZONE 1: IDENTITY -->
     <section class="zone identity-zone">
       <div class="identity-header">
@@ -74,13 +72,13 @@
           <span>Meter not locked</span>
         </div>
       </div>
-  
+
       <div class="field">
         <label>Meter Number</label>
-        <input type="text" id="meterNumber"inputmode="numeric" pattern="[0-9]{8,13}" minlength="12" maxlength="13" placeholder="Enter meter number" />
+        <input type="text" id="meterNumber" inputmode="numeric" pattern="[0-9]{8,13}" minlength="12" maxlength="13" placeholder="Enter meter number">
         <small class="helper">Enter your meter number</small>
       </div>
-  
+
       <div class="field">
         <label>Meter Type</label>
         <div class="custom-select" id="meterTypeSelect">
@@ -91,7 +89,7 @@
           </div>
         </div>
       </div>
-  
+
       <div class="field">
         <label>Biller</label>
         <div class="custom-select" id="discoSelect">
@@ -112,27 +110,27 @@
           </div>
         </div>
       </div>
-  
+
       <!-- <div class="field">
         <label>Meter Nickname</label>
         <input type="text" id="nickname" placeholder="e.g. Home" />
       </div> -->
-  
+
       <div class="meter-card hidden" id="meterCard">
         <h3 id="cardTitle"></h3>
         <p id="cardDetails"></p>
       </div>
     </section>
-  
+
     <!-- ZONE 2: CONTROL -->
     <section class="zone control-zone">
       <h2>Purchase Units</h2>
-  
+
       <div class="field">
         <label>Amount (₦)</label>
-        <input type="number" id="amount" min="100" />
+        <input type="number" id="amount" min="100" >
       </div>
-  
+
       <div class="unit-preview" id="unitPreview">
         <div class="unit-line">
           <span>Price per unit</span>
@@ -143,14 +141,14 @@
           <strong id="unitCount">—</strong>
         </div>
       </div>
-  
+
       <button type="button" onclick="enterPin()" id="continueBtn" disabled >Continue Payment</button>
     </section>
-  
+
     <!-- ZONE 3: INSIGHT -->
     <section class="zone insight-zone" id="history">
       <h2>Electricity History</h2>
-  
+
       <div class="history-list" id="history-list">
 <!--         <div class="history-item">
           <div>
@@ -167,33 +165,33 @@
           </div>
           <small>11 days ago</small>
         </div>-->
-      </div> 
+      </div>
     </section>
-  
-   <iframe src="../loader.html" frameborder="0" id="loader"></iframe>
- <iframe src="../success/success.html" frameborder="0" id="success"></iframe>
+
+   <iframe title="loader" src="../loader.html"  id="loader"></iframe>
+ <iframe src="../success/success.html" title="success" id="success"></iframe>
    <div id="toast" class="toast" aria-live="assertive" hidden></div>
-            
+
     <aside id="pin-creation-step" class="form-card active-step">
             <h2> Enter PIN</h2>
 
             <div id="create-pin-form">
                 <div class="input-group">
-                
-                    <input type="password" id="pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" inputmode="numeric">
+
+                    <input  type="password" id="pin" placeholder="••••" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" inputmode="numeric" autocomplete="">
                 </div>
-                
-                
+
+
                 <button  type="button"  id="confirm-btn" class="btn btn-primary" onclick="makePayment()">CONFIRM </button>
                 <button  type="button" id="cancel-btn" class="btn btn-primary" onclick="cancelPayment()">CANCEL </button>
             </div>
 
     </aside>
- 
+
   </main>
-  
+
   </div>
-  
+
 
   <script src="../side-nav.js"></script>
 <script src="app.js"></script>
