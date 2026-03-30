@@ -260,7 +260,7 @@ async function createEvent() {
       quantity_available: stripCommas(document.getElementById("ticket-quantity").value)
  }]
   formData.append(
-      "ticket_types", isFree ? freeTicket : ticket_types);
+      "ticket_types", isFree ? JSON.stringify(freeTicket) : JSON.stringify(ticket_types));
     
   formData.append(
     "ticket_quantity",
