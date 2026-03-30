@@ -168,7 +168,7 @@ transactionPin.addEventListener('input', (e) => {
  
     
   let response = await getRequest(ENDPOINTS.events)   
-  
+  console.log(reponse);
  
 
   let DATA = {
