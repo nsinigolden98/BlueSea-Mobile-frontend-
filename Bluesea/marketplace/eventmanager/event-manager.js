@@ -230,7 +230,7 @@ async function createEvent() {
   );
 
   const isFree = id('free').checked
-  formData.append("is_free", !isFree);
+  formData.append("is_free", false);
 
   // Combine date and time
   const eventDate = document.getElementById("eventDate").value; // e.g., "DD/MM/YYYY"

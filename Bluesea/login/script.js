@@ -329,7 +329,7 @@ function setRefreshToken(token, days) {
   const maxAge = days * 24 * 60 * 60; // Convert days to seconds
   document.cookie = `refreshToken=${encodeURIComponent(
     token
-  )}; max-age=${maxAge}; path=/; SameSite=Strict;  Secure`;
+  )}; max-age=${maxAge}; path=/; SameSite=Strict; Secure`;
 }
 
 async function signInButton(){
