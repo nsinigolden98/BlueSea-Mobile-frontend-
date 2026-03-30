@@ -250,8 +250,8 @@ async function createEvent() {
   const ticket_types = Array.from(ticket_type_list).map((input, index) => {
     return {
       name: input.value,
-      price: ticket_price_list[index] ? stripCommas(ticket_price_list[index].value) : "0",
-      quantity_available: ticket_quantity_list[index] ? stripCommas(ticket_quantity_list[index].value) : "0"
+      price: stripCommas(ticket_price_list[index].value),
+      quantity_available: stripCommas(ticket_quantity_list[index].value) 
     }
   })
   const freeTicket = [{
@@ -299,9 +299,8 @@ async function createEvent() {
     // Maybe refresh event list on marketplace or redirect
   }
   else {
-    console.log(response)
-    showToast(response.error || response.event_date  || "Not a valid Vendor")
-    
+    // console.log(response)
+    showToast(response.error || response.event_date  || response.ticket_types || "Form Not Submitted An Error Occured")
   }
 }
 
@@ -426,7 +425,7 @@ async function loadVendorEvents() {
   showLoader();
   const response = await getRequest(ENDPOINTS.vendor_tickets);
   hideLoader();
-  
+  console.log(response)
   if (response.state && response.event_breakdown) {
     const eventList = document.getElementById('eventList');
     const textEl = document.getElementById('text');
