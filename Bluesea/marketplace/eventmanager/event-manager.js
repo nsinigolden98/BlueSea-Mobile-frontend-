@@ -200,7 +200,6 @@ submitButton.addEventListener('click', () => {
   }
   else if (id('paid').checked &&  (name.includes(false) || price.includes(false) || quantity.includes(false))) {
       id('tickets-helper').textContent = "Incomplete entries"
-      console.log("Incomplete entries")
     
   }
   else {   
@@ -254,14 +253,14 @@ async function createEvent() {
       quantity_available: stripCommas(ticket_quantity_list[index].value) 
     }
   })
-  console.log(ticket_types)
+  
   const freeTicket = [{
       name: 'Free',
       price: 0.001,
       quantity_available: stripCommas(document.getElementById("ticket-quantity").value)
  }]
   formData.append(
-      "ticket_types", isFree ? JSON.stringify(freeTicket) :JSON.stringify(ticket_types));
+      "ticket_types", isFree ? freeTicket : ticket_types);
     
   formData.append(
     "ticket_quantity",
