@@ -186,13 +186,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const googleLogin = useGoogleLogin({
-    onSuccess: async (codeResponse) => {
+    onSuccess: async (tokenResponse) => {
       setState(prev => ({ ...prev, loading: true }));
       const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
       const response = await postRequest(ENDPOINTS.oauthGoogle, {
-        authorization_code: codeResponse.code,
+        authorization_code: tokenResponse.code,
         redirect_uri
       });
+      console.log(tokenResponse.code);
       if (response.success) {
         const get_user = await getRequest(ENDPOINTS.user);
         const get_balance = await getRequest(ENDPOINTS.balance);
@@ -216,7 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCookie('access_token', response.access_token);
       }
     }, 
-    flow:'auth-code'
+    flow:'auth-code',
   });
 
   return (
