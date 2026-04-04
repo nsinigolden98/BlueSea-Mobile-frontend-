@@ -3,7 +3,7 @@ import { Sidebar, Header, Toast, TransactionModal, PinModal, Loader } from '@/co
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';

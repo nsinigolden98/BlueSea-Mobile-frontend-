@@ -79,7 +79,7 @@ export function Data() {
         return;
       }
       
-      const selectedPlanData = dataPlanFunction(selectedNetwork).find(p => p.id === selectedPlan?.id);
+      const selectedPlanData = dataPlanFunction().find(p => p.id === selectedPlan?.id);
       const planPrice = selectedPlanData?.price || 0;
       
       try {

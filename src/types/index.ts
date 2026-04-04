@@ -352,8 +352,6 @@ export const ENDPOINTS = {
   add_to_group: `${API_BASE}/payments/group/add-member/`,
   my_groups: `${API_BASE}/payments/group/my-groups/`,
   group_detail: (id: string) => `${API_BASE}/payments/group/${id}/`,
-  group_payment: `${API_BASE}/payments/group-payment/`,
-  group_payment_history: `${API_BASE}/payments/group-payment/history/`,
   logout: `${API_BASE}/accounts/logout/`,
   events: `${API_BASE}/marketplace/events/all/`,
   create_events: `${API_BASE}/marketplace/events/create/`,
