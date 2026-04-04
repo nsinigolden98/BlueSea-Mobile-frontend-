@@ -1,0 +1,210 @@
+:root{
+  --brand-blue: #0ea5e9;
+    --bg: #f4f7f8;
+  --card: #ffffff;
+  --muted: #5b6670;
+  --text: #0b1720;
+  --input-bg: #ffffff;
+  --border: rgba(11,23,32,0.06);
+  --danger: #ff6b6b;
+  --radius: 10px;
+  --dur-fast: 160ms;
+  --dur-medium: 300ms;
+  --dur-slow: 420ms;
+  --card-width: 520px;
+}
+
+.modalBody{
+  top: 1px;
+  background-color: transparent;
+  position: fixed;
+  width:100%;
+  height: 100%;
+  bottom:1px;
+}
+/* Forgot Password and sign up*/
+.forgot_modal, .modal_panel{
+    background:var(--card); 
+    border-radius:12px; 
+    border:1px solid var(--border);
+    top:25%;
+     position:fixed;
+    left:50%; 
+    font-weight: bold;
+    transform:translateX(-50%); 
+    width:80%;
+    padding:15px; 
+    z-index: 9999;
+    
+}
+.forgot_modal_title, .modal_title{
+    margin:0 0 8px 0; 
+    font-size:18px;
+    padding: 5px 0px;
+}
+    
+.forgot_modal_close, .modal_close {
+    position:absolute; 
+    right:5px; 
+    top:1px; 
+    border:0; 
+    font-weight: 800;
+    background:transparent; 
+    cursor:pointer; 
+    font-size:35px;
+    margin:10px; 
+    color:var(--muted) }
+
+
+/* Fields */
+.field {
+  margin-bottom: 14px;
+}
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  outline: none;
+  transition: box-shadow var(--dur-fast), border-color var(--dur-fast);
+}
+.input::placeholder {
+  opacity: 0.9;
+}
+
+/* Password wrapper & toggles */
+.password_wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.toggle_password,
+.fp_toggle_password {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  width: 32px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.8;
+}
+.toggle_password:hover {
+  opacity: 1;
+}
+.eye_icon {
+  display: block;
+  color: var(--muted);
+}
+.eye_open {
+  display: none;
+}
+.toggle_show .eye_open {
+  display: block;
+}
+.toggle_show .eye_closed {
+  display: none;
+}
+
+/* Focus state */
+.input:focus {
+  border-color: rgba(14, 165, 233, 0.9);
+  box-shadow: 0 6px 30px rgba(14, 165, 233, 0.06);
+}
+
+/* Error */
+.error {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 3px;
+  min-height: 18px;
+  transition: opacity var(--dur-fast);
+}
+
+
+/* Row options */
+.row_options {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  display: inline-flex;
+  width: 100%;
+}
+.forgot-password {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  background: none;
+  border: none;
+  padding: 0;
+
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+
+  color: var(--brand-blue);
+  cursor: pointer;
+
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.forgot-password:hover {
+  color: #0b4edb; /* darker brand blue */
+  text-decoration: underline;
+}
+
+.forgot-password:focus-visible {
+  outline: 2px solid rgba(30, 102, 255, 0.4);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+
+
+/* divider */
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 18px 0 12px 0;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--border);
+  border-radius: 8px;
+}
+
+/* small text */
+.small {
+  font-size: 13px;
+}
+
+/* Password rules container */
+.password-rules {
+  display: none;          /* Hidden on page load */
+  margin: 0px 0px 5px 25px;        /* SMALL spacing (fixed) */
+  font-size: 13px;
+  padding: 0px;
+}
+
+/* Individual rule */
+.password-rules .rule {
+  margin: 2px 0;          /* Tight spacing */
+  color: #c0392b;         /* Red */
+}
+
+/* Valid rule */
+.password-rules .rule.valid {
+  color: #27ae60;         /* Green */
+}
