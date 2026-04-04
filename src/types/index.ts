@@ -380,7 +380,7 @@ export function setCookie(name:string,TOKEN:string) {
     expires: 1,
     path: '/',
     secure: true,
-    sameSite:'strict',
+    sameSite:'lax',
   })
   
 }
