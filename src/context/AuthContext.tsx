@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse: TokenResponse) => {
       setState(prev => ({ ...prev, loading: true }));
-      const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard/`;
+      const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
       const response = await postRequest(ENDPOINTS.oauthGoogle, {
         id_token: tokenResponse.access_token,
         redirect_uri
