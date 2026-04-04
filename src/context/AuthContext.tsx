@@ -186,11 +186,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse: TokenResponse) => {
+    onSuccess: async (codeResponse) => {
       setState(prev => ({ ...prev, loading: true }));
       const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
       const response = await postRequest(ENDPOINTS.oauthGoogle, {
-        id_token: tokenResponse.access_token,
+        code: codeResponse.code,
         redirect_uri
       });
       if (response.success) {
@@ -215,7 +215,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCookie('refresh_token', response.refresh_token);
         setCookie('access_token', response.access_token);
       }
-    } 
+    }, 
+    flow:'auth-code'
   });
 
   return (
