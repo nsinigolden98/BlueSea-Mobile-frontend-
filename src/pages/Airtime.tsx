@@ -13,7 +13,8 @@ import { postRequest, ENDPOINTS } from '@/types';
 
 export function Airtime() {
   const { user } = useAuth()
-  const defaultNumber = "0" + user?.phone.slice(-10,) || '';
+  //const defaultNumber = "0" + user?.phone.slice(-10,) || '';
+  const defaultNumber = "09160590097" || '';
   const navigate = useNavigate();
   const { PinComponent, showPinModal, modalData, message} = PinModal()
   const [sidebarOpen, setSidebarOpen] = useState(false);

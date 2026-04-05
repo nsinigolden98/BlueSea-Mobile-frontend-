@@ -197,9 +197,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
        id_token: credentialResponse.credential,
         redirect_uri
       });
-      console.log(credentialResponse);
-      console.log(response);
-      console.log("hill");
+      
+
       if (response.success) {
           setCookie('refresh_token', response.refresh_token);
         setCookie('access_token', response.access_token);
