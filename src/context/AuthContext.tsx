@@ -20,12 +20,13 @@ import { TOKEN } from '@/types'
      email:Array<null>;
    };
 };
+import type {CredentialResponse} from '@react-oauth/google';
 
 interface AuthContextType extends AuthState {
   login: (data: LoginFormData) => Promise<string>;
   signup: (data: SignupFormData) => Promise<SignUpResponse>;
   logout: () => void;
-  googleLogin: () => void;
+  googleLogin: (credentialResponse:CredentialResponse)=> Promise<void> | void;
   load?: () => void;
 }
 
@@ -189,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
   }, []);
 
-  const googleLogin = async (credentialResponse: any) => {
+  const googleLogin = async (credentialResponse:CredentialResponse) => {
       setState(prev => ({ ...prev, loading: true }));
       const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
       const response = await postRequest(ENDPOINTS.oauthGoogle, {

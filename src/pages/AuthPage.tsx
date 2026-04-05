@@ -158,13 +158,13 @@ export function AuthPage() {
             </button> */}
             <GoogleLogin 
             onSuccess = {googleLogin}
-            theme="outline"le
+            onError={()=>{console.log("Google Login error")}}
+            theme="outline"
             size="large"
-            text= {mode === 'login' ? "signin_width" : "signup_with"}
+            text= {mode === 'login' ? "signin_with" : "signup_with"}
             shape="rectangular"
             width={320}
             logo_alignment="left"
-            disabled={loading}
             />
            
 
@@ -338,7 +338,7 @@ export function AuthPage() {
               <Button 
                 type="submit" 
                 className="w-full rounded-xl bg-sky-500 hover:bg-sky-600 h-11 font-medium"
-                // disabled={loading}
+                 disabled={loading}
                 >
                 { mode === 'login' ? 'Log in' : 'Sign up'}
               </Button>
