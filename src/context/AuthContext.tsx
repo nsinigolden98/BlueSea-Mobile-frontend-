@@ -11,7 +11,7 @@ import {
   ENDPOINTS,
   API_BASE
 } from '@/types';
-import { useGoogleLogin, type TokenResponse} from '@react-oauth/google'
+import { useGoogleLogin} from '@react-oauth/google'
 import { TOKEN } from '@/types'
 
  interface SignUpResponse {
