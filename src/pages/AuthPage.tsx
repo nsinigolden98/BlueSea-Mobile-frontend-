@@ -159,12 +159,14 @@ export function AuthPage() {
             <GoogleLogin 
             onSuccess = {googleLogin}
             onError={()=>{console.log("Google Login error")}}
-            theme="outline"
+            type="standard"
             size="large"
+            theme="filled_blue"
             text= {mode === 'login' ? "signin_with" : "signup_with"}
-            shape="rectangular"
-            width={320}
+            shape="pill"
+            width={400}
             logo_alignment="left"
+            
             />
            
 
