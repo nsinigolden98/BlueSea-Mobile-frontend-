@@ -11,7 +11,7 @@ import {
   ENDPOINTS,
   API_BASE
 } from '@/types';
-import { useGoogleLogin} from '@react-oauth/google'
+import { useGoogleLogin, type TokenResponse} from '@react-oauth/google'
 import { TOKEN } from '@/types'
 
  interface SignUpResponse {
@@ -191,14 +191,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const googleLogin = useGoogleLogin({
-    onSuccess: async (credentialResponse: any) => {
+    onSuccess: async (tokenResponse: TokenResponse) => {
       setState(prev => ({ ...prev, loading: true }));
       const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
       const response = await postRequest(ENDPOINTS.oauthGoogle, {
-       id_token: credentialResponse.credential,
+       id_token: tokenResponse.id_token,
         redirect_uri
       });
-      console.log(credentialResponse);
+      console.log(tokenResponse);
       console.log(response);
       if (response.success) {
           setCookie('refresh_token', response.refresh_token);
