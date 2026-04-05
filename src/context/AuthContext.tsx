@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect} from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import {
   type User,
   type AuthState,
@@ -11,7 +11,7 @@ import {
   ENDPOINTS,
   API_BASE
 } from '@/types';
-import { useGoogleLogin, type CodeResponse } from '@react-oauth/google'
+import { useGoogleLogin} from '@react-oauth/google'
 import { TOKEN } from '@/types'
 
  interface SignUpResponse {
@@ -123,6 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user: user,
           loading: false,
         });
+        window.location.reload();
         return user; // Return user on success
       } else {
         setState({
@@ -183,18 +184,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: null,
       loading: false,
     });
+    window.location.reload();
   }, []);
 
   const googleLogin = useGoogleLogin({
-    onSuccess: async (codeResponse: CodeResponse) => {
+    onSuccess: async (credentialResponse: any) => {
       setState(prev => ({ ...prev, loading: true }));
       const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
       const response = await postRequest(ENDPOINTS.oauthGoogle, {
-        authorization_code: codeResponse.code,
+       id_token: credentialResponse.credential,
         redirect_uri
       });
-      console.log(codeResponse.code);
+      console.log(credentialResponse);
       if (response.success) {
+          setCookie('refresh_token', response.refresh_token);
+        setCookie('access_token', response.access_token);
         const get_user = await getRequest(ENDPOINTS.user);
         const get_balance = await getRequest(ENDPOINTS.balance);
 
@@ -213,11 +217,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user: user,
           loading: false,
         });
-        setCookie('refresh_token', response.refresh_token);
-        setCookie('access_token', response.access_token);
+        
+      }
+      else{
+          setState({
+          isAuthenticated: false,
+          user: null,
+          loading: false,
+        });
       }
     }, 
-    flow:'auth-code',
+
   });
 
   return (

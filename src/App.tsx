@@ -27,6 +27,7 @@ import {
   GOTV,
   Startimes,
   ShowMax,
+  Rewards,
   WAECRegistration,
   WAECResult,
   JAMBRegistration,
