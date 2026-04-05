@@ -10,9 +10,9 @@ import { cn } from '@/lib/utils';
 import { Eye, EyeOff, Lock, Mail, User, Phone } from 'lucide-react';
 import { TOKEN, postRequest,ENDPOINTS } from '@/types'
 import { ForgotPasswordModal } from '@/components/ui-custom/AuthModal';
-
+import {GoogleLogin} from '@react-oauth/google';
 // Google Icon Component
-function GoogleIcon({ className }: { className?: string }) {
+/* function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -22,7 +22,7 @@ function GoogleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-
+ */
 
 type AuthMode = 'login' | 'signup';
 
@@ -145,7 +145,7 @@ export function AuthPage() {
 
             {/* Google Sign In Button */}
            
-            <button
+{/*             <button
               type="button"
               onClick= {googleLogin}
               disabled={loading}
@@ -155,7 +155,17 @@ export function AuthPage() {
               <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
                 Continue with Google
               </span>
-            </button>
+            </button> */}
+            <GoogleLogin 
+            onSuccess = {googleLogin}
+            theme="outline"le
+            size="large"
+            text= {mode === 'login' ? "signin_width" : "signup-with"}
+            shape="rectangular"
+            width={320}
+            logo_alignment="left"
+            disabled={loading}
+            />
            
 
             {/* Divider */}

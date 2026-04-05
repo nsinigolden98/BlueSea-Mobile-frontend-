@@ -11,7 +11,6 @@ import {
   ENDPOINTS,
   API_BASE
 } from '@/types';
-import { useGoogleLogin} from '@react-oauth/google'
 import { TOKEN } from '@/types'
 
  interface SignUpResponse {
@@ -190,17 +189,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
   }, []);
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (codeResponse: any) => {
+  const googleLogin = async (credentialResponse: any) => {
       setState(prev => ({ ...prev, loading: true }));
       const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
       const response = await postRequest(ENDPOINTS.oauthGoogle, {
-       code: codeResponse.code,
+       id_token: credentialResponse.credential,
         redirect_uri
       });
-      console.log(codeResponse);
+      console.log(credentialResponse);
       console.log(response);
-      console.log("hiwe");
+      console.log("hill");
       if (response.success) {
           setCookie('refresh_token', response.refresh_token);
         setCookie('access_token', response.access_token);
@@ -232,10 +230,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           loading: false,
         });
       }
-    }, 
-    flow: 'implicit',
-    scope: 'openid email profile'
-  });
+    }
+    
 
   return (
     <AuthContext.Provider
