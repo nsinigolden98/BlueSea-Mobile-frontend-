@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import {
@@ -32,6 +32,7 @@ import {
   JAMBRegistration,
   TVSubscription,
   AutoTopUp,
+  Marketplace
 } from '@/pages';
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
@@ -117,14 +118,14 @@ function AppRoutes() {
         } 
       />
       {/* Temporarily disabled - coming soon */}
-      {/* <Route 
+      <Route 
         path="/marketplace" 
         element={
           <ProtectedRoute   >
             <Marketplace />
           </ProtectedRoute>
-        } 
-      /> */}
+        }
+      /> 
       <Route 
         path="/services" 
         element={
@@ -174,14 +175,14 @@ function AppRoutes() {
         } 
       />
       {/* Temporarily disabled - coming soon */}
-      {/* <Route 
+      <Route 
         path="/rewards" 
         element={
           <ProtectedRoute  >
             <Rewards />
           </ProtectedRoute>
         } 
-      /> */}
+      /> 
       <Route 
         path="/airtime-buyback" 
         element={
