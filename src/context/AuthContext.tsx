@@ -191,16 +191,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse: any) => {
+    onSuccess: async (codeResponse: any) => {
       setState(prev => ({ ...prev, loading: true }));
       const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
       const response = await postRequest(ENDPOINTS.oauthGoogle, {
-       id_token: tokenResponse.access_token,
+       code: codeResponse.code,
         redirect_uri
       });
-      console.log(tokenResponse);
+      console.log(code);
       console.log(response);
-      console.log("hi");
+      console.log("hiwe");
       if (response.success) {
           setCookie('refresh_token', response.refresh_token);
         setCookie('access_token', response.access_token);
