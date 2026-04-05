@@ -191,7 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse: TokenResponse) => {
+    onSuccess: async (tokenResponse: any) => {
       setState(prev => ({ ...prev, loading: true }));
       const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
       const response = await postRequest(ENDPOINTS.oauthGoogle, {
@@ -200,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       console.log(tokenResponse);
       console.log(response);
+      console.log("hi");
       if (response.success) {
           setCookie('refresh_token', response.refresh_token);
         setCookie('access_token', response.access_token);
@@ -232,7 +233,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
     }, 
-
+    flow: 'implicit',
+    scope: 'openid email profile'
   });
 
   return (
