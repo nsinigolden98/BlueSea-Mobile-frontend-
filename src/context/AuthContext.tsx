@@ -172,19 +172,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      await postRequest(ENDPOINTS.logout, {});
-    } catch (error) {
-      console.log('Logout API error:', error);
-    }
-    deleteCookie("access_token")
-    deleteCookie("refresh_token")
+      setState(prev => ({ ...prev, loading: true }));
+    
+    const response =  await postRequest(ENDPOINTS.logout, {});
+    if(response.state){
+    deleteCookie("access_token");
+    deleteCookie("refresh_token");
     setState({
       isAuthenticated: false,
       user: null,
       loading: false,
     });
     window.location.reload();
+    }else{
+        return response.message
+    }
+    
   }, []);
 
   const googleLogin = useGoogleLogin({
@@ -196,6 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         redirect_uri
       });
       console.log(credentialResponse);
+      console.log(response);
       if (response.success) {
           setCookie('refresh_token', response.refresh_token);
         setCookie('access_token', response.access_token);
@@ -217,6 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user: user,
           loading: false,
         });
+        window.location.reload()
         
       }
       else{
