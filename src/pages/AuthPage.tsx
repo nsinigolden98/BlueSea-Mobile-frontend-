@@ -160,7 +160,7 @@ export function AuthPage() {
             onSuccess = {googleLogin}
             theme="outline"le
             size="large"
-            text= {mode === 'login' ? "signin_width" : "signup-with"}
+            text= {mode === 'login' ? "signin_width" : "signup_with"}
             shape="rectangular"
             width={320}
             logo_alignment="left"
