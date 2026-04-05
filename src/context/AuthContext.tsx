@@ -198,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
        code: codeResponse.code,
         redirect_uri
       });
-      console.log(code);
+      console.log(codeResponse);
       console.log(response);
       console.log("hiwe");
       if (response.success) {
