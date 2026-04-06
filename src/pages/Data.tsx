@@ -22,7 +22,7 @@ const planTypes: { value: PlanType; label: string }[] = [
 
 export function Data() {
   const { user } = useAuth();
-  const defaultNumber = "0" + user?.phone.slice(-10,);
+  const defaultNumber = user?.phone ? "0" + user.phone.slice(-10) : '';
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<Network>('MTN');
