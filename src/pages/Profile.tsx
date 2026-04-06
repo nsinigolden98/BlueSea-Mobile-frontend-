@@ -12,7 +12,7 @@ export function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState(user?.profilePicture || null);
-  const { LoaderComponent } = Loader();
+  const { LoaderComponent, showLoader, hideLoader } = Loader();
   
   const [formData] = useState({
     firstName: user?.firstName || '',
@@ -31,7 +31,7 @@ export function Profile() {
 
     setImagePreview(URL.createObjectURL(file));
     setUploading(true);
-
+    showLoader();
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('image', file);
@@ -44,6 +44,7 @@ export function Profile() {
     } catch (error) {
       console.error('Failed to upload image:', error);
     } finally {
+      hideLoader();
       setUploading(false);
     }
   };
@@ -55,6 +56,9 @@ export function Profile() {
   ];
 
   return (
+    <div>
+
+
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
@@ -126,6 +130,8 @@ export function Profile() {
           </div>
         </div>
       </main>
-    </div>
+      </div>
+      <LoaderComponent />
+      </div>
   );
 }
