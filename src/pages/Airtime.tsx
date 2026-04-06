@@ -13,8 +13,7 @@ import { postRequest, ENDPOINTS } from '@/types';
 
 export function Airtime() {
   const { user } = useAuth()
-  //const defaultNumber = "0" + user?.phone.slice(-10,) || '';
-  const defaultNumber = "09160590097" || '';
+  const defaultNumber = "0" + user?.phone.slice(-10,) || '';
   const navigate = useNavigate();
   const { PinComponent, showPinModal, modalData, message} = PinModal()
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -215,17 +214,7 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
                     >
                       <p className="font-bold text-slate-800 dark:text-white">₦{amount}</p>
                       <p className="text-xs text-slate-500">Airtime</p>
-                      {/* <Button 
-                        size="sm" 
-                        className={cn(
-                          'mt-2 w-full rounded-full text-xs',
-                          selectedAmount === amount
-                            ? 'bg-sky-500 text-white'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        )}
-                      >
-                        RECHARGE NOW
-                      </Button> */}
+
                     </button>
                   ))}
                 </div>
