@@ -468,6 +468,24 @@ export async function putRequest(url: string, payload: object) {
   }
 }
 
+// PATCH REQUEST
+export async function patchRequest(url: string, payload: object) {
+  try {
+    const response = await axios.patch(url,payload,
+      {
+        headers: {
+          "Authorization": `Bearer ${TOKEN}`,
+          "Content-Type": "application/json",
+          "Accept": 'application/json'
+        }
+
+      });
+    return response.data
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 // DELETE REQUEST
 export async function deleteRequest(url: string) {
   try {

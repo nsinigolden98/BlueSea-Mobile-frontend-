@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { ArrowLeft, Camera, Upload } from 'lucide-react';
+import { ArrowLeft, Camera, Upload, Save, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { postFileRequest, ENDPOINTS } from '@/types';
+import { patchRequest, postFileRequest, ENDPOINTS } from '@/types';
 import { Loader } from '@/components/ui-custom';
 
 export function Profile() {
@@ -12,6 +13,8 @@ export function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState(user?.profilePicture || null);
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneValue, setPhoneValue] = useState(user?.phone || '');
   const { LoaderComponent, showLoader, hideLoader } = Loader();
   
   const [formData] = useState({
@@ -49,16 +52,31 @@ export function Profile() {
     }
   };
 
+  const handleSavePhone = async () => {
+    if (!phoneValue) return;
+    
+    showLoader();
+    try {
+      const response = await patchRequest(ENDPOINTS.user, { phone: phoneValue });
+      
+      if (response) {
+        setEditingPhone(false);
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Failed to update phone:', error);
+    } finally {
+      hideLoader();
+    }
+  };
+
   const profileFields = [
     { id: 'fullName', label: 'Full Name', value: `${formData.firstName} ${formData.surname}`, editable: false },
-    { id: 'phone', label: 'Mobile Number', value: formData.phone, editable: false },
+    { id: 'phone', label: 'Mobile Number', value: formData.phone, editable: true, currentValue: phoneValue },
     { id: 'email', label: 'Email', value: formData.email, editable: false },
   ];
 
   return (
-    <div>
-
-
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
@@ -111,7 +129,7 @@ export function Profile() {
             <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Tap camera to change profile picture</p>
           </div>
 
-          {/* Profile Fields - Read Only */}
+          {/* Profile Fields */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-6">
             {profileFields.map((field, index) => (
               <div
@@ -121,17 +139,53 @@ export function Profile() {
                   index !== profileFields.length - 1 && 'border-b border-slate-100 dark:border-slate-800'
                 )}
               >
-                <div className="text-left">
+                <div className="text-left flex-1">
                   <p className="text-sm text-slate-500 dark:text-slate-400">{field.label}</p>
-                  <p className="font-medium text-slate-800 dark:text-white">{field.value || 'Not set'}</p>
+                  {field.id === 'phone' && editingPhone ? (
+                    <div className="flex gap-2 mt-1">
+                      <Input
+                        type="tel"
+                        value={phoneValue}
+                        onChange={(e) => setPhoneValue(e.target.value)}
+                        placeholder="Enter phone number"
+                        className="flex-1"
+                      />
+                      <button
+                        onClick={handleSavePhone}
+                        className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                      >
+                        <Save className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingPhone(false);
+                          setPhoneValue(user?.phone || '');
+                        }}
+                        className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-slate-800 dark:text-white">{field.value || 'Not set'}</p>
+                      {field.editable && !editingPhone && (
+                        <button
+                          onClick={() => setEditingPhone(true)}
+                          className="text-xs text-sky-500 hover:text-sky-600"
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
       </main>
-      </div>
       <LoaderComponent />
-      </div>
+    </div>
   );
 }

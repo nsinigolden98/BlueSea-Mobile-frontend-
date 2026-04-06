@@ -143,7 +143,7 @@ export function AuthPage() {
             theme="filled_blue"
             text= {mode === 'login' ? "signin_with" : "signup_with"}
             shape="pill"
-            width={390}
+            width={380}
             logo_alignment="left"
             
             />
