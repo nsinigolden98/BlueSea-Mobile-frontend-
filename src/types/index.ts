@@ -25,6 +25,7 @@ export interface Transaction {
     amount: number;
     transaction_type: 'CREDIT' | 'DEBIT';
     status: string;
+    reference?: string;
 }
 
 // Network Types
@@ -326,6 +327,18 @@ export const ENDPOINTS = {
   electricity: `${API_BASE}/payments/electricity/`,
   electricity_user: `${API_BASE}/payments/electricity/customer/`,
   notifications: `${API_BASE}/notifications/`,
+  notification_read: (id: string) => `${API_BASE}/notifications/${id}/read/`,
+  notification_mark_all_read: `${API_BASE}/notifications/mark-all-read/`,
+  notification_delete: (id: string) => `${API_BASE}/notifications/${id}/delete/`,
+  support_tickets: `${API_BASE}/support/`,
+  support_ticket_detail: (id: string) => `${API_BASE}/support/${id}/`,
+  loyalty_rewards: `${API_BASE}/loyalty/rewards/`,
+  loyalty_reward_detail: (id: string) => `${API_BASE}/loyalty/rewards/${id}/`,
+  loyalty_redeem: (id: string) => `${API_BASE}/loyalty/rewards/${id}/redeem/`,
+  loyalty_redemptions: `${API_BASE}/loyalty/redemptions/`,
+  bonus_summary: `${API_BASE}/bonus/summary/`,
+  bonus_history: `${API_BASE}/bonus/history/`,
+  bonus_daily_login: `${API_BASE}/bonus/daily-login/`,
   group_payment_history: `${API_BASE}/payments/group-payment/history/`,
   group_payment: `${API_BASE}/payments/group-payment/`,
   group_payment_create: `${API_BASE}/group-payment/create/`,
@@ -400,17 +413,24 @@ export const TOKEN:string = getCookie('access_token') || ''
 
 
 // GET REQUEST
-export async function getRequest(url: string) {
-
+export async function getRequest(url: string, options?: { method?: string }) {
   try {
-    const response = await axios.get(url,
-      {
+    const response = await axios.get(url, 
+      options?.method ? {
+        method: options.method,
         headers: {
           "Authorization": `Bearer ${TOKEN}`,
           "Content-Type": "application/json",
           "Accept": 'application/json'
         }
-      });
+      } : {
+        headers: {
+          "Authorization": `Bearer ${TOKEN}`,
+          "Content-Type": "application/json",
+          "Accept": 'application/json'
+        }
+      }
+    );
     return response.data
   } catch (error: any) {
     console.log(error)

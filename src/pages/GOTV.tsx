@@ -9,7 +9,6 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { postRequest, ENDPOINTS } from '@/types';
 
 const gotvPlans: Record<string, [string, number]> = {
   "GOtv Lite N410": ["gotv-lite", 410],
@@ -21,7 +20,7 @@ const gotvPlans: Record<string, [string, number]> = {
   "GOtv Supa Plus - monthly N15,700": ["gotv-supa-plus", 15700],
 };
 
-const subscriptionTypes = ["gotv-subscription", "addon"];
+const subscriptionTypes = ["change", "renew"];
 
 export function GOTV() {
   const { user } = useAuth();
@@ -29,7 +28,7 @@ export function GOTV() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [smartCardNumber, setSmartCardNumber] = useState('');
   const [selectedPlan, setSelectedPlan] = useState('');
-  const [subscriptionType, setSubscriptionType] = useState('gotv-subscription');
+  const [subscriptionType, setSubscriptionType] = useState('change');
   const [phoneNumber, setPhoneNumber] = useState(defaultPhone);
   const { PinComponent, showPinModal, modalData, message } = PinModal();
   const { LoaderComponent } = Loader();
@@ -74,36 +73,28 @@ export function GOTV() {
         showToast('Please enter a group name');
         return;
       }
+      if (!smartCardNumber) {
+        showToast('Please enter smart card number');
+        return;
+      }
       const memberEmails = inviteMembers.filter(e => e.trim());
       if (memberEmails.length === 0) {
         showToast('Please add at least one member to invite');
         return;
       }
       
-      try {
-        const groupData = {
-          name: groupName,
-          service_type: 'gotv',
-          sub_number: smartCardNumber,
-          target_amount: planPrice,
-          plan: selectedPlan,
-          plan_type: subscriptionType,
-          invite_members: memberEmails.join(','),
-        };
-        
-        const groupResponse = await postRequest(ENDPOINTS.create_group, groupData);
-        
-        if (groupResponse.success) {
-          showToast('Group created successfully! Members will be notified.');
-          setIsGroupPayment(false);
-          setGroupName('');
-          setInviteMembers(['']);
-        } else {
-          showToast(groupResponse.error || 'Failed to create group');
-        }
-      } catch (error: any) {
-        showToast(error?.error || 'Failed to create group');
-      }
+      const groupData = {
+        transaction_pin: '',
+        name: groupName,
+        service_type: 'gotv',
+        sub_number: smartCardNumber,
+        target_amount: planPrice,
+        plan: selectedPlan,
+        plan_type: subscriptionType,
+        invite_members: memberEmails.join(','),
+      };
+      
+      showPinModal({ type: 'group-gotv', value: groupData });
     } else {
       showPinModal();
     }
@@ -131,9 +122,15 @@ export function GOTV() {
     if (message) {
       setIsOpen(true);
       if (message?.success || message?.code === '000') {
-        showToast(message?.response_description || '');
-        setToastMessage(message?.response_description || '');
+        showToast(message?.response_description || message?.message || '');
+        setToastMessage(message?.response_description || message?.message || '');
         setTxStatus(true);
+        
+        if (isGroupPayment) {
+          setIsGroupPayment(false);
+          setGroupName('');
+          setInviteMembers(['']);
+        }
       } else {
         showToast(message?.error || message?.response_description || '');
         setToastMessage(message?.error || message?.response_description || '');
@@ -142,7 +139,7 @@ export function GOTV() {
     } else {
       return;
     }
-  }, [message, showToast]);
+  }, [message, showToast, isGroupPayment]);
 
   return (
     <div>
@@ -206,7 +203,7 @@ export function GOTV() {
                         <SelectContent>
                           {subscriptionTypes.map((type) => (
                             <SelectItem key={type} value={type}>
-                              {type === 'gotv-subscription' ? 'Subscription' : 'Add-on'}
+                              {type === 'change' ? 'change' : 'renew'}
                             </SelectItem>
                           ))}
                         </SelectContent>

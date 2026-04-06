@@ -8,25 +8,26 @@ export const navItems: NavItem[] = [
   { id: 'data', label: 'Buy Data', icon: 'Wifi', path: '/data' },
   { id: 'marketplace', label: 'Market Place', icon: 'Store', path: '/marketplace' },
   { id: 'services', label: 'Services', icon: 'Globe', path: '/services' },
+  { id: 'more-services', label: 'More Services', icon: 'Grid3X3', path: '/more-services' },
   { id: 'rewards', label: 'Rewards', icon: 'Gift', path: '/rewards' },
-  { id: 'notifications', label: 'Notifications', icon: 'Bell', path: '/notifications' },
+  { id: 'support', label: 'Support', icon: 'Headphones', path: '/support' },
 ];
 
 
 
 export const services: Service[] = [
-  { id: '1', name: 'BlueVault', icon: 'Vault', category: 'Special Features', comingSoon: true },
+  { id: '1', name: 'BlueVault', icon: 'Vault', category: 'Special Features' },
   { id: '2', name: 'Group Payment', icon: 'Users', category: 'Special Features' },
-  { id: '3', name: 'Smart-top-up', icon: 'RefreshCw', category: 'Special Features', comingSoon: true },
+  { id: '3', name: 'Smart-top-up', icon: 'RefreshCw', category: 'Special Features' },
   { id: '4', name: 'Airtime', icon: 'Smartphone', category: 'Airtime & Data' },
   { id: '5', name: 'Data', icon: 'Wifi', category: 'Airtime & Data' },
   { id: '6', name: 'Light Bills', icon: 'Zap', category: 'Bills & Utilities' },
   { id: '7', name: 'TV Subscription', icon: 'Tv', category: 'Bills & Utilities' },
   { id: '8', name: 'Wallet', icon: 'Wallet', category: 'Wallet' },
-  { id: '9', name: 'Gift Card', icon: 'Gift', category: 'Wallet', comingSoon: true },
-  { id: '10', name: 'Referral/Reward', icon: 'Share2', category: 'Value Added', comingSoon: true },
-  { id: '11', name: 'Blue Point', icon: 'Coins', category: 'Value Added', comingSoon: true },
-  { id: '12', name: 'Airtime Buyback', icon: 'RefreshCw', category: 'Special Features', comingSoon: true },
+  { id: '9', name: 'Gift Card', icon: 'Gift', category: 'Wallet' },
+  { id: '10', name: 'Referral/Reward', icon: 'Share2', category: 'Value Added' },
+  { id: '11', name: 'Blue Point', icon: 'Coins', category: 'Value Added' },
+  { id: '12', name: 'Airtime Buyback', icon: 'RefreshCw', category: 'Special Features' },
 ];
   
 export const TransactionsData= async ():Promise<Transaction[]> => {
@@ -42,7 +43,7 @@ export const TransactionsData= async ():Promise<Transaction[]> => {
     const pageResults = await Promise.all(
       pages.map(page => getRequest(`${ENDPOINTS.history}?page=${page}`))
     );
-    console.log(pageResults)
+    
 
     // Flatten all results into a single array and filter out any empty/undefined entries
     const allData = pageResults
@@ -178,7 +179,7 @@ export const moreServiceCategories: ServiceCategory[] = [
     services: [
       { id: 't1', name: 'Airtime', icon: 'Smartphone' },
       { id: 't2', name: 'Data Bundle', icon: 'Wifi' },
-      { id: 't3', name: 'Airtime Buyback', icon: 'RefreshCw', comingSoon: true },
+      { id: 't3', name: 'Airtime Buyback', icon: 'RefreshCw' },
       { id: 't4', name: 'Auto Top-Up', icon: 'RefreshCw' },
     ],
   },
@@ -214,20 +215,16 @@ export const moreServiceCategories: ServiceCategory[] = [
     services: [
       { id: 'f1', name: 'Wallet', icon: 'Wallet' },
       { id: 'f2', name: 'Group Payment', icon: 'Users' },
-      { id: 'f3', name: 'BlueVault', icon: 'Vault', comingSoon: true },
+      { id: 'f3', name: 'BlueVault', icon: 'Vault' },
     ],
   },
   {
     id: 'others',
     name: 'Others',
     services: [
-      { id: 'o1', name: 'Blue Points', icon: 'Coins', comingSoon: true },
-      { id: 'o2', name: 'Referral Program', icon: 'Share2', comingSoon: true },
-      { id: 'o3', name: 'Loyalty Rewards', icon: 'Award', comingSoon: true },
-      { id: 'o4', name: 'Rewards', icon: 'Gift', comingSoon: true },
-      { id: 'o5', name: 'Gift Card', icon: 'Gift', comingSoon: true },
+      { id: 'o3', name: 'Loyalty Rewards', icon: 'Award' },
+      { id: 'o4', name: 'Rewards', icon: 'Gift' },
       { id: 'o6', name: 'Support', icon: 'Headphones' },
-      { id: 'o7', name: 'Notifications', icon: 'Bell' },
     ],
   },
 ];

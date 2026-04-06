@@ -93,38 +93,29 @@ export function LightBills() {
         showToast('Please enter a group name');
         return;
       }
+      if (!meterNumber) {
+        showToast('Please enter meter number');
+        return;
+      }
       const memberEmails = inviteMembers.filter(e => e.trim());
       if (memberEmails.length === 0) {
         showToast('Please add at least one member to invite');
         return;
       }
       
-      try {
-        const groupData = {
-          name: groupName,
-          service_type: 'lightbill',
-          sub_number: meterNumber,
-          target_amount: Number(amount),
-          plan: BILLER_NAME[biller as keyof BillerName],
-          plan_type: meterType.toLowerCase(),
-          invite_members: memberEmails.join(','),
-        };
-        
-        const groupResponse = await postRequest(ENDPOINTS.create_group, groupData);
-        
-        if (groupResponse.success) {
-          showToast('Group created successfully! Members will be notified.');
-          setIsGroupPayment(false);
-          setGroupName('');
-          setInviteMembers(['']);
-        } else {
-          showToast(groupResponse.error || 'Failed to create group');
-        }
-        return;
-      } catch (error: any) {
-        showToast(error?.error || 'Failed to create group');
-        return;
-      }
+      const groupData = {
+        transaction_pin: '',
+        name: groupName,
+        service_type: 'lightbill',
+        sub_number: meterNumber,
+        target_amount: Number(amount),
+        plan: BILLER_NAME[biller as keyof BillerName],
+        plan_type: meterType.toLowerCase(),
+        invite_members: memberEmails.join(','),
+      };
+      
+      showPinModal({ type: 'group-lightbill', value: groupData });
+      return;
     }
     else {
       showToast("Searching For Customer ...", 3000)
@@ -166,25 +157,29 @@ export function LightBills() {
   }
 
    useEffect(() => {
+      if (message) {
+        console.log(message)
+        setIsOpen(true)
+        
+        if (message?.success || message?.code === '000') {
+          showToast(message?.response_description || message?.message || '')
+          setToastMessage(message?.response_description || message?.message || '')
+          setTxStatus(true)
           
-        if (message) {
-          console.log(message)
-          setIsOpen(true)
-          
-          if (message?.success || message?.code === '000') {
-            showToast(message?.response_description || '')
-            setToastMessage(message?.response_description || '')
-            setTxStatus(true)
-          } else {
-            showToast(message?.error|| message?.response_description || '')
-            setToastMessage(message?.error || message?.response_description || '')
-            setTxStatus(false)
+          if (isGroupPayment) {
+            setIsGroupPayment(false);
+            setGroupName('');
+            setInviteMembers(['']);
           }
-            
         } else {
-          return
-        };
-      }, [message, showToast]);
+          showToast(message?.error || message?.response_description || '')
+          setToastMessage(message?.error || message?.response_description || '')
+          setTxStatus(false)
+        }
+      } else {
+        return
+      };
+    }, [message, showToast, isGroupPayment]);
   
   return (
     <div>

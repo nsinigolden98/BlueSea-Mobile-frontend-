@@ -33,7 +33,8 @@ import {
   JAMBRegistration,
   TVSubscription,
   AutoTopUp,
-  Marketplace
+  Marketplace,
+  Support
 } from '@/pages';
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
@@ -325,6 +326,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute  >
             <AutoTopUp />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/support" 
+        element={
+          <ProtectedRoute  >
+            <Support />
           </ProtectedRoute>
         } 
       />

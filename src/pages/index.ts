@@ -30,3 +30,4 @@ export { WAECResult } from './WAECResult';
 export { JAMBRegistration } from './JAMBRegistration';
 export { TVSubscription } from './TVSubscription';
 export { AutoTopUp } from './AutoTopUp';
+export { Support } from './Support';

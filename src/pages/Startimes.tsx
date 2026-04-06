@@ -9,7 +9,6 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { postRequest, ENDPOINTS } from '@/types';
 
 const startimesPlans: Record<string, [string, number]> = {
   "Nova - 900 Naira - 1 Month": ["nova", 900],
@@ -78,36 +77,28 @@ export function Startimes() {
         showToast('Please enter a group name');
         return;
       }
+      if (!smartCardNumber) {
+        showToast('Please enter smart card number');
+        return;
+      }
       const memberEmails = inviteMembers.filter(e => e.trim());
       if (memberEmails.length === 0) {
         showToast('Please add at least one member to invite');
         return;
       }
       
-      try {
-        const groupData = {
-          name: groupName,
-          service_type: 'startimes',
-          sub_number: smartCardNumber,
-          target_amount: planPrice,
-          plan: selectedPlan,
-          plan_type: '',
-          invite_members: memberEmails.join(','),
-        };
-        
-        const groupResponse = await postRequest(ENDPOINTS.create_group, groupData);
-        
-        if (groupResponse.success) {
-          showToast('Group created successfully! Members will be notified.');
-          setIsGroupPayment(false);
-          setGroupName('');
-          setInviteMembers(['']);
-        } else {
-          showToast(groupResponse.error || 'Failed to create group');
-        }
-      } catch (error: any) {
-        showToast(error?.error || 'Failed to create group');
-      }
+      const groupData = {
+        transaction_pin: '',
+        name: groupName,
+        service_type: 'startimes',
+        sub_number: smartCardNumber,
+        target_amount: planPrice,
+        plan: selectedPlan,
+        plan_type: '',
+        invite_members: memberEmails.join(','),
+      };
+      
+      showPinModal({ type: 'group-startimes', value: groupData });
     } else {
       showPinModal();
     }
@@ -135,9 +126,15 @@ export function Startimes() {
     if (message) {
       setIsOpen(true);
       if (message?.success || message?.code === '000') {
-        showToast(message?.response_description || '');
-        setToastMessage(message?.response_description || '');
+        showToast(message?.response_description || message?.message || '');
+        setToastMessage(message?.response_description || message?.message || '');
         setTxStatus(true);
+        
+        if (isGroupPayment) {
+          setIsGroupPayment(false);
+          setGroupName('');
+          setInviteMembers(['']);
+        }
       } else {
         showToast(message?.error || message?.response_description || '');
         setToastMessage(message?.error || message?.response_description || '');
@@ -146,7 +143,7 @@ export function Startimes() {
     } else {
       return;
     }
-  }, [message, showToast]);
+  }, [message, showToast, isGroupPayment]);
 
   return (
     <div>

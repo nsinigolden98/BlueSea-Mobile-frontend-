@@ -26,6 +26,7 @@ import {
   FileText,
   GraduationCap,
   Bell,
+  Settings,
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -49,6 +50,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   FileText,
   GraduationCap,
   Bell,
+  Settings,
 };
 
 export function MoreServices() {
@@ -57,12 +59,7 @@ export function MoreServices() {
 
   const currentCategory = moreServiceCategories.find(c => c.id === activeCategory);
 
-  const handleServiceClick = (serviceId: string, comingSoon?: boolean) => {
-    if (comingSoon) {
-      alert('This feature is coming soon!');
-      return;
-    }
-
+  const handleServiceClick = (serviceId: string) => {
     // Map service IDs to routes
     const routeMap: Record<string, string> = {
       // Telecom
@@ -84,11 +81,11 @@ export function MoreServices() {
       // Finance
       'f1': '/wallet',
       'f2': '/group-payment',
+      'f3': '/marketplace',
       // Others
-      'o1': '/rewards',
-      'o2': '/rewards',
       'o3': '/loyalty',
-      'o5': '/notifications',
+      'o4': '/rewards',
+      'o6': '/support',
     };
 
     const route = routeMap[serviceId];
@@ -148,7 +145,7 @@ export function MoreServices() {
                     return (
                       <button
                         key={service.id}
-                        onClick={() => handleServiceClick(service.id, service.comingSoon)}
+                        onClick={() => handleServiceClick(service.id)}
                         className={cn(
                           'group relative p-5 rounded-2xl bg-white dark:bg-slate-900',
                           'border border-slate-100 dark:border-slate-800',
@@ -163,12 +160,6 @@ export function MoreServices() {
                           {service.name}
                         </span>
                         <ChevronRight className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        
-                        {service.comingSoon && (
-                          <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-slate-800 text-white text-[10px] rounded-full">
-                            Soon
-                          </span>
-                        )}
                       </button>
                     );
                   })}
@@ -186,7 +177,7 @@ export function MoreServices() {
                   { name: 'Dashboard', icon: 'Smartphone', path: '/dashboard' },
                   { name: 'Wallet', icon: 'Wallet', path: '/wallet' },
                   { name: 'Rewards', icon: 'Gift', path: '/rewards' },
-                  { name: 'Settings', icon: 'Headphones', path: '/settings' },
+                  { name: 'Settings', icon: 'Settings', path: '/settings' },
                 ].map((item) => {
                   const Icon = iconMap[item.icon] || Smartphone;
                   return (

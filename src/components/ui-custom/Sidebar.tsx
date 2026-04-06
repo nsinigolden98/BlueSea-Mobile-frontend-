@@ -15,6 +15,8 @@ import {
   Settings,
   User,
   Bell,
+  Headphones,
+  Grid3X3,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,6 +33,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Globe,
   Gift,
   Bell,
+  Headphones,
+  Grid3X3,
 };
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {

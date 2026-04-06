@@ -50,12 +50,7 @@ export function Services() {
     return services.filter(service => service.category === category);
   };
 
-  const handleServiceClick = (serviceId: string, comingSoon?: boolean) => {
-    if (comingSoon) {
-      alert('This feature is coming soon!');
-      return;
-    }
-
+  const handleServiceClick = (serviceId: string) => {
     switch (serviceId) {
       case '4': // Airtime
         navigate('/airtime');
@@ -77,6 +72,12 @@ export function Services() {
         break;
       case '2': // Group Payment
         navigate('/group-payment');
+        break;
+      case '3': // Smart-top-up
+        navigate('/auto-topup');
+        break;
+      case '9': // Gift Card
+        navigate('/gift-card');
         break;
       case '10': // Referral/Reward
       case '11': // Blue Point
@@ -120,7 +121,7 @@ export function Services() {
                       return (
                         <button
                           key={service.id}
-                          onClick={() => handleServiceClick(service.id, service.comingSoon)}
+                          onClick={() => handleServiceClick(service.id)}
                           className={cn(
                             'group relative p-6 rounded-2xl bg-white dark:bg-slate-900',
                             'border border-slate-100 dark:border-slate-800',
@@ -134,12 +135,6 @@ export function Services() {
                           <span className="text-sm font-medium text-slate-700 dark:text-slate-300 text-center">
                             {service.name}
                           </span>
-                          
-                          {service.comingSoon && (
-                            <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-slate-800 text-white text-[10px] rounded-full">
-                              Coming soon
-                            </span>
-                          )}
                         </button>
                       );
                     })}

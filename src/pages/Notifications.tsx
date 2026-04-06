@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Sidebar, Header } from '@/components/ui-custom';
-import { getRequest, ENDPOINTS } from '@/types';
-import { Bell, Check, Trash2, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Sidebar, Header, Loader } from '@/components/ui-custom';
+import { getRequest, postRequest, deleteRequest, ENDPOINTS } from '@/types';
+import { Bell, Check, Trash2, Loader2, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Notification {
@@ -17,38 +17,65 @@ export function Notifications() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [count, setCount] = useState(0);
+  const { LoaderComponent, showLoader, hideLoader } = Loader();
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [filter]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (reset = false) => {
     try {
-      setLoading(true);
+      if (reset) {
+        setLoading(true);
+        setPage(1);
+        showLoader();
+      } else {
+        setLoadingMore(true);
+      }
+      
+      const currentPage = reset ? 1 : page;
       const isReadFilter = filter === 'unread' ? 'false' : undefined;
-      const response = await getRequest(
-        isReadFilter ? `${ENDPOINTS.notifications}?is_read=${isReadFilter}` : ENDPOINTS.notifications
-      );
+      const url = isReadFilter 
+        ? `${ENDPOINTS.notifications}?page=${currentPage}&page_size=20&is_read=${isReadFilter}`
+        : `${ENDPOINTS.notifications}?page=${currentPage}&page_size=20`;
+      
+      const response = await getRequest(url);
+      
       if (response) {
-        setNotifications(response.notifications || []);
+        if (reset) {
+          setNotifications(response.results || []);
+        } else {
+          setNotifications(prev => [...prev, ...(response.results || [])]);
+        }
+        setCount(response.count || 0);
+        setHasMore(response.next !== null);
+        if (reset) setPage(2);
       }
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+      if (reset) hideLoader();
     }
   };
 
+  const loadMore = useCallback(() => {
+    if (hasMore && !loadingMore && !loading) {
+      setPage(prev => prev + 1);
+      fetchNotifications();
+    }
+  }, [hasMore, loadingMore, loading]);
+
+  useEffect(() => {
+    setPage(1);
+    fetchNotifications(true);
+  }, [filter]);
+
   const markAsRead = async (notificationId: number) => {
     try {
-      await fetch(`${ENDPOINTS.notifications}${notificationId}/read/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      await postRequest(ENDPOINTS.notification_read(notificationId.toString()), {});
       setNotifications(prev =>
         prev.map(n => (n.id === notificationId ? { ...n, is_read: true } : n))
       );
@@ -59,13 +86,7 @@ export function Notifications() {
 
   const markAllAsRead = async () => {
     try {
-      await fetch(`${ENDPOINTS.notifications}mark-all-read/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      await postRequest(ENDPOINTS.notification_mark_all_read, {});
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
@@ -74,13 +95,13 @@ export function Notifications() {
 
   const deleteNotification = async (notificationId: number) => {
     try {
-      await fetch(`${ENDPOINTS.notifications}${notificationId}/delete/`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      console.log('Deleting notification:', notificationId);
+      const result = await deleteRequest(ENDPOINTS.notification_delete(notificationId.toString()));
+      console.log('Delete result:', result);
+      if (result && result.error) {
+        console.error('Failed to delete notification:', result.error);
+        return;
+      }
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
     } catch (error) {
       console.error('Failed to delete notification:', error);
@@ -128,7 +149,7 @@ export function Notifications() {
       <div className="flex-1 flex flex-col min-w-0">
         <Header
           title="Notifications"
-          subtitle={`${unreadCount} unread`}
+          subtitle={`${count} total, ${unreadCount} unread`}
           onMenuClick={() => setSidebarOpen(true)}
         />
 
@@ -177,7 +198,7 @@ export function Notifications() {
               </div>
             ) : notifications.length === 0 ? (
               <div className="text-center py-12">
-                <Bell className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+                <Bell className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
                 <p className="text-slate-500 dark:text-slate-400">No notifications yet</p>
               </div>
             ) : (
@@ -186,59 +207,66 @@ export function Notifications() {
                   <div
                     key={notification.id}
                     className={cn(
-                      'p-4 rounded-2xl border transition-all',
+                      'p-4 rounded-2xl border transition-colors',
                       notification.is_read
                         ? 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'
-                        : 'bg-sky-50 dark:bg-sky-900/20 border-sky-100 dark:border-sky-800'
+                        : 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800'
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1" onClick={() => markAsRead(notification.id)}>
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-slate-800 dark:text-white truncate">
+                          <h3 className="font-semibold text-slate-800 dark:text-white">
                             {notification.title}
                           </h3>
                           {!notification.is_read && (
-                            <span className="w-2 h-2 bg-sky-500 rounded-full flex-shrink-0" />
+                            <span className="w-2 h-2 bg-sky-500 rounded-full" />
                           )}
                         </div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
+                        <p className="text-sm text-slate-600 dark:text-slate-300">
                           {notification.message}
                         </p>
-                        <div className="flex items-center gap-3 text-xs text-slate-400">
-                          <span className={getTypeColor(notification.notification_type)}>
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="text-xs text-slate-400 dark:text-slate-500">
+                            {formatDate(notification.created_at)}
+                          </span>
+                          <span className={cn('text-xs', getTypeColor(notification.notification_type))}>
                             {notification.notification_type}
                           </span>
-                          <span>{formatDate(notification.created_at)}</span>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {!notification.is_read && (
-                          <button
-                            onClick={() => markAsRead(notification.id)}
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                            title="Mark as read"
-                          >
-                            <Check className="w-4 h-4 text-slate-500" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => deleteNotification(notification.id)}
-                          className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => deleteNotification(notification.id)}
+                        className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ))}
+
+                {hasMore && (
+                  <div className="flex justify-center py-4">
+                    <button
+                      onClick={loadMore}
+                      disabled={loadingMore}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-sky-500 hover:text-sky-600"
+                    >
+                      {loadingMore ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                      Load more
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </main>
       </div>
+      <LoaderComponent />
     </div>
   );
 }

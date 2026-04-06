@@ -9,7 +9,6 @@ import type { Network } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, X, RefreshCw } from 'lucide-react';
-import { postRequest, ENDPOINTS } from '@/types';
 
 export function Airtime() {
   const { user } = useAuth()
@@ -59,34 +58,30 @@ export function Airtime() {
         showToast('Please enter a group name');
         return;
       }
+      if (!phoneNumber) {
+        showToast('Please enter phone number');
+        return;
+      }
       const memberEmails = inviteMembers.filter(e => e.trim());
       if (memberEmails.length === 0) {
         showToast('Please add at least one member to invite');
         return;
       }
-      
-      try {
-        const groupData = {
-          name: groupName,
-          service_type: 'airtime',
-          sub_number: phoneNumber,
-          target_amount: amount,
-          invite_members: memberEmails.join(','),
-        };
-        
-        const groupResponse = await postRequest(ENDPOINTS.create_group, groupData);
-        
-        if (groupResponse.success) {
-          showToast('Group created successfully! Members will be notified.');
-          setIsGroupPayment(false);
-          setGroupName('');
-          setInviteMembers(['']);
-        } else {
-          showToast(groupResponse.error || 'Failed to create group');
-        }
-      } catch (error: any) {
-        showToast(error?.error || 'Failed to create group');
+      if (!user?.pin_is_set) {
+        navigate('/settings');
+        navigate('/pin');
+        return;
       }
+      
+      const groupData = {
+        transaction_pin: '', // Will be filled by pin modal
+        name: groupName,
+        service_type: 'airtime',
+        sub_number: phoneNumber,
+        target_amount: finalAmount,
+        invite_members: memberEmails.join(','),
+      };
+      showPinModal({ type: 'group-airtime', value: groupData });
     } else {
       showPinModal();
     }
@@ -126,25 +121,30 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
   }
 
   useEffect(() => {
+    if (message) {
+      console.log(message)
+      setIsOpen(true)
+      
+      if (message?.success || message?.code === '000') {
+        showToast(message?.response_description || message?.message || '')
+        setToastMessage(message?.response_description || message?.message || '')
+        setTxStatus(true)
         
-      if (message) {
-        console.log(message)
-        setIsOpen(true)
-        
-        if (message?.success || message?.code === '000') {
-          showToast(message?.response_description || '')
-          setToastMessage(message?.response_description || '')
-          setTxStatus(true)
-        } else {
-          showToast(message?.error|| message?.response_description || '')
-          setToastMessage(message?.error || message?.response_description || '')
-          setTxStatus(false)
+        // Reset group payment state on success
+        if (isGroupPayment && message?.success) {
+          setIsGroupPayment(false);
+          setGroupName('');
+          setInviteMembers(['']);
         }
-          
       } else {
-        return
-      };
-    }, [message, showToast]);
+        showToast(message?.error || message?.response_description || '')
+        setToastMessage(message?.error || message?.response_description || '')
+        setTxStatus(false)
+      }
+    } else {
+      return
+    };
+  }, [message, showToast, isGroupPayment]);
       
   return (
     <div>

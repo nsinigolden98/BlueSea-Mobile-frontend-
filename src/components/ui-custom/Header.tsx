@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Menu, Bell, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { notifications } from '@/data';
+import { getRequest, ENDPOINTS } from '@/types';
 
 interface HeaderProps {
   title: string;
@@ -13,7 +14,28 @@ interface HeaderProps {
 
 export function Header({ title, subtitle, onMenuClick, className, showBackButton }: HeaderProps) {
   const navigate = useNavigate();
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await getRequest(`${ENDPOINTS.notifications}?is_read=false&page_size=1`);
+        if (response && response.count !== undefined) {
+          setUnreadCount(response.count);
+        } else if (response && response.unread_count !== undefined) {
+          setUnreadCount(response.unread_count);
+        }
+      } catch (error) {
+        console.error('Failed to fetch notification count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <header 

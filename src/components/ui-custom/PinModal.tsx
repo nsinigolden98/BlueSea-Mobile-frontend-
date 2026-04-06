@@ -14,6 +14,7 @@ interface Message {
   code?: string;
   response_description?: string;
   error?: string;
+  message?: string;
 }
 
 export function PinModal() {
@@ -25,8 +26,12 @@ export function PinModal() {
   
   
   
-  const showPinModal = useCallback(() => {
-    setModalData({visible: true });
+  const showPinModal = useCallback((data?: { type: string; value: object }) => {
+    if (data) {
+      setModalData({ visible: true, ...data });
+    } else {
+      setModalData({ visible: true });
+    }
   }, []);
   const hidePinModal = useCallback(() => {
     
@@ -81,6 +86,20 @@ export function PinModal() {
         } else if (type === 'auto-topup-reactivate') {
           const payload = value as { id: number; transaction_pin: string };
           response = await postRequest(ENDPOINTS.auto_topup_reactivate(payload.id.toString()), { transaction_pin: payload.transaction_pin });
+        } else if (type === 'group-airtime') {
+          response = await postRequest(ENDPOINTS.create_group, value);
+        } else if (type === 'group-data') {
+          response = await postRequest(ENDPOINTS.create_group, value);
+        } else if (type === 'group-gotv') {
+          response = await postRequest(ENDPOINTS.create_group, value);
+        } else if (type === 'group-dstv') {
+          response = await postRequest(ENDPOINTS.create_group, value);
+        } else if (type === 'group-startimes') {
+          response = await postRequest(ENDPOINTS.create_group, value);
+        } else if (type === 'group-showmax') {
+          response = await postRequest(ENDPOINTS.create_group, value);
+        } else if (type === 'group-lightbill') {
+          response = await postRequest(ENDPOINTS.create_group, value);
         }
     return response
 
@@ -90,16 +109,15 @@ export function PinModal() {
 
 
 
-  const PinComponent = ({type,value}:PinComponentProps) => {
+  const PinComponent = ({type, value}: PinComponentProps) => {
     const [pin, setPin] = useState('');
     
-    const makeTransaction = async (type: string, pin: string, value: object) => {
-      
+    const makeTransaction = async () => {
       showLoader();
       
-        const response = await completeTransaction(type, { ...value, transaction_pin: pin });
-        hidePinModal();
-        hideLoader();
+      const response = await completeTransaction(type, { ...value, transaction_pin: pin });
+      hidePinModal();
+      hideLoader();
       setMessage(response);
     }
       
@@ -120,7 +138,7 @@ export function PinModal() {
                 </div>
 
           <button id='make-payment' className="btn btn-primary"
-            onClick={()=>makeTransaction(type,pin,value,)}>CONFIRM </button>
+            onClick={makeTransaction}>CONFIRM </button>
                 <button id='cancel-payment'  className="btn  btn-primary" onClick={hidePinModal}>CANCEL </button>
             </div>
             
