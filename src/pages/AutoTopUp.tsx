@@ -44,7 +44,7 @@ export function AutoTopUp() {
   const [serviceType, setServiceType] = useState<'airtime' | 'data'>('airtime');
   const [selectedNetwork, setSelectedNetwork] = useState('MTN');
   const [selectedPlan, setSelectedPlan] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(user?.phone ? '0'+ user?.phone.slice(-10,) : '');
   const [amount, setAmount] = useState('');
   const [repeatDays, setRepeatDays] = useState('0');
   const [startDate, setStartDate] = useState('');
@@ -312,6 +312,7 @@ export function AutoTopUp() {
                 <Input
                   type="tel"
                   placeholder="08012345678"
+                  maxLength={11}
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                 />

@@ -27,6 +27,9 @@ import {
   GraduationCap,
   Bell,
   Settings,
+  Sparkles,
+  QrCode,
+  Store,
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -51,6 +54,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   GraduationCap,
   Bell,
   Settings,
+  Sparkles,
+  QrCode,
+  Store,
 };
 
 export function MoreServices() {
@@ -86,6 +92,8 @@ export function MoreServices() {
       'o3': '/loyalty',
       'o4': '/rewards',
       'o6': '/support',
+      'o7': '/campaigns',
+      'o8': '/scanner-assignments',
     };
 
     const route = routeMap[serviceId];

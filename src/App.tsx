@@ -34,7 +34,9 @@ import {
   TVSubscription,
   AutoTopUp,
   Marketplace,
-  Support
+  Support,
+  Campaigns,
+  ScannerAssignments
 } from '@/pages';
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
@@ -184,6 +186,14 @@ function AppRoutes() {
             <Rewards />
           </ProtectedRoute>
         } 
+      />
+      <Route 
+        path="/campaigns" 
+        element={
+          <ProtectedRoute  >
+            <Campaigns />
+          </ProtectedRoute>
+        } 
       /> 
       <Route 
         path="/airtime-buyback" 
@@ -238,6 +248,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute  >
             <Scanner />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/scanner-assignments" 
+        element={
+          <ProtectedRoute  >
+            <ScannerAssignments />
           </ProtectedRoute>
         } 
       />

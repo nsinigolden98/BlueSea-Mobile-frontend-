@@ -309,6 +309,9 @@ export const ENDPOINTS = {
   verifyOtp: `${API_BASE}/accounts/verify-email/`,
   forgotReset: `${API_BASE}/accounts/auth/forgot-reset/`,
   oauthGoogle: `${API_BASE}/accounts/auth/google/`,
+  reset_transaction_pin_email:`${API_BASE}/account/transaction/pin/request/`,
+  verify_transaction_pin_email:`${API_BASE}/account/transaction/pin/verify-otp/`,
+  set_transaction_pin_email:`${API_BASE}/accounts/transaction/pin/new/`,
   balance: `${API_BASE}/wallet/balance/`,
   fund: `${API_BASE}/transactions/fund-wallet/`,
   webhook: `${API_BASE}/transactions/webhook/paystack/`,
@@ -318,6 +321,9 @@ export const ENDPOINTS = {
   pin_set: `${API_BASE}/accounts/pin/set/`,
   pin_verify: `${API_BASE}/accounts/pin/verify/`,
   pin_reset: `${API_BASE}/accounts/pin/reset/`,
+  pin_reset_request: `${API_BASE}/accounts/transaction/pin/request/`,
+  pin_reset_verify: `${API_BASE}/accounts/transaction/pin/verify-otp/`,
+  pin_reset_confirm: `${API_BASE}/accounts/transaction/pin/new/`,
   buy_airtime: `${API_BASE}/payments/airtime/`,
   buy_airtel: `${API_BASE}/payments/airtel-data/`,
   buy_mtn: `${API_BASE}/payments/mtn-data/`,
@@ -339,6 +345,7 @@ export const ENDPOINTS = {
   bonus_summary: `${API_BASE}/bonus/summary/`,
   bonus_history: `${API_BASE}/bonus/history/`,
   bonus_daily_login: `${API_BASE}/bonus/daily-login/`,
+  bonus_campaigns: `${API_BASE}/bonus/campaigns/`,
   group_payment_history: `${API_BASE}/payments/group-payment/history/`,
   group_payment: `${API_BASE}/payments/group-payment/`,
   group_payment_create: `${API_BASE}/group-payment/create/`,
@@ -354,7 +361,7 @@ export const ENDPOINTS = {
   waec_registration: `${API_BASE}/payments/waec-registration/`,
   waec_result: `${API_BASE}/payments/waec-result/`,
   jamb_registration: `${API_BASE}/payments/jamb-registration/`,
-  auto_topup_list: `${API_BASE}/autotopup/`,
+  auto_topup_list: `${API_BASE}/autotopup/list/`,
   auto_topup_create: `${API_BASE}/autotopup/create/`,
   auto_topup_details: (id: string) => `${API_BASE}/autotopup/${id}/`,
   auto_topup_cancel: (id: string) => `${API_BASE}/autotopup/${id}/cancel/`,
@@ -381,6 +388,7 @@ export const ENDPOINTS = {
   marketplace_my_tickets: `${API_BASE}/marketplace/tickets/my/`,
   marketplace_my_events: `${API_BASE}/marketplace/events/my/`,
   marketplace_scanner_stats: (id: string) => `${API_BASE}/marketplace/events/${id}/scan-stats/`,
+  marketplace_add_scanner: (id: string) => `${API_BASE}/marketplace/events/${id}/scanner/`,
   marketplace_my_scanner_assignments: `${API_BASE}/marketplace/my-scanner-assignments/`,
   marketplace_ticket_detail: (id: string) => `${API_BASE}/marketplace/tickets/${id}/`,
   marketplace_ticket_transfer: (id: string) => `${API_BASE}/marketplace/tickets/${id}/transfer/`,
@@ -392,7 +400,7 @@ export function setCookie(name:string,TOKEN:string) {
   Cookies.set(name, TOKEN, {
     expires: 1,
     path: '/',
-    secure: true,
+    secure: true, 
     sameSite:'lax',
   })
   
@@ -495,8 +503,8 @@ export async function patchRequest(url: string, payload: object) {
       {
         headers: {
           "Authorization": `Bearer ${TOKEN}`,
-          "Content-Type": "application/json",
-          "Accept": 'application/json'
+          // "Content-Type": "multipart/formdata",
+          // "Accept": 'application/json'
         }
 
       });

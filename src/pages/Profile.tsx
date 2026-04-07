@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ArrowLeft, Camera, Upload, Save, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { patchRequest, postFileRequest, ENDPOINTS } from '@/types';
+import { patchRequest, ENDPOINTS } from '@/types';
 import { Loader } from '@/components/ui-custom';
 
 export function Profile() {
@@ -14,13 +14,13 @@ export function Profile() {
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState(user?.profilePicture || null);
   const [editingPhone, setEditingPhone] = useState(false);
-  const [phoneValue, setPhoneValue] = useState(user?.phone || '');
+  const [phoneValue, setPhoneValue] = useState(user?.phone? '0'+ user?.phone.slice(-10,): '');
   const { LoaderComponent, showLoader, hideLoader } = Loader();
   
   const [formData] = useState({
     firstName: user?.firstName || '',
     surname: user?.surname || '',
-    phone: user?.phone || '',
+    phone: user?.phone? '0'+ user?.phone.slice(-10,): '',
     email: user?.email || '',
   });
 
@@ -39,7 +39,7 @@ export function Profile() {
       const formDataToSend = new FormData();
       formDataToSend.append('image', file);
 
-      const response = await postFileRequest(ENDPOINTS.user, formDataToSend);
+      const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       
       if (response) {
         window.location.reload();
@@ -54,10 +54,13 @@ export function Profile() {
 
   const handleSavePhone = async () => {
     if (!phoneValue) return;
+
+      const formDataToSend = new FormData();
+    formDataToSend.append('phone', phoneValue);
     
     showLoader();
     try {
-      const response = await patchRequest(ENDPOINTS.user, { phone: phoneValue });
+      const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       
       if (response) {
         setEditingPhone(false);
@@ -145,6 +148,7 @@ export function Profile() {
                     <div className="flex gap-2 mt-1">
                       <Input
                         type="tel"
+                        maxLength={11}
                         value={phoneValue}
                         onChange={(e) => setPhoneValue(e.target.value)}
                         placeholder="Enter phone number"

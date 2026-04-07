@@ -17,6 +17,8 @@ import {
   Bell,
   Headphones,
   Grid3X3,
+  Sparkles,
+  QrCode,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -35,6 +37,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Bell,
   Headphones,
   Grid3X3,
+  Sparkles,
+  QrCode,
 };
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -107,7 +111,15 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
             >
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
-                <User className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                {user?.profilePicture ?
+                    <img 
+                  src={user?.profilePicture} 
+                  alt="Profile" 
+                  className="w-10 h-10 rounded-full object-cover  border-white dark:bord-slate-800"
+                />
+                  :
+                  <User className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                }
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-slate-800 dark:text-white truncate">

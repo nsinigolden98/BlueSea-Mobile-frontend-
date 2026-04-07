@@ -29,7 +29,7 @@ const actions: QuickAction[] = [
     id: 'group', 
     label: 'Group Payments', 
     icon: Users, 
-    path: '/services',
+    path: '/group-payment',
     color: 'from-cyan-500 to-cyan-600'
   },
   { 

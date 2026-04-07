@@ -10,13 +10,15 @@ export const navItems: NavItem[] = [
   { id: 'services', label: 'Services', icon: 'Globe', path: '/services' },
   { id: 'more-services', label: 'More Services', icon: 'Grid3X3', path: '/more-services' },
   { id: 'rewards', label: 'Rewards', icon: 'Gift', path: '/rewards' },
+  { id: 'campaigns', label: 'Campaigns', icon: 'Sparkles', path: '/campaigns' },
+  { id: 'scanner', label: 'Scanner', icon: 'QrCode', path: '/scanner-assignments' },
   { id: 'support', label: 'Support', icon: 'Headphones', path: '/support' },
 ];
 
 
 
 export const services: Service[] = [
-  { id: '1', name: 'BlueVault', icon: 'Vault', category: 'Special Features' },
+  { id: '1', name: 'Market Place', icon: 'Store', category: 'Special Features' },
   { id: '2', name: 'Group Payment', icon: 'Users', category: 'Special Features' },
   { id: '3', name: 'Smart-top-up', icon: 'RefreshCw', category: 'Special Features' },
   { id: '4', name: 'Airtime', icon: 'Smartphone', category: 'Airtime & Data' },
@@ -215,7 +217,7 @@ export const moreServiceCategories: ServiceCategory[] = [
     services: [
       { id: 'f1', name: 'Wallet', icon: 'Wallet' },
       { id: 'f2', name: 'Group Payment', icon: 'Users' },
-      { id: 'f3', name: 'BlueVault', icon: 'Vault' },
+      { id: 'f3', name: 'Market Place', icon: 'Store' },
     ],
   },
   {
@@ -225,6 +227,8 @@ export const moreServiceCategories: ServiceCategory[] = [
       { id: 'o3', name: 'Loyalty Rewards', icon: 'Award' },
       { id: 'o4', name: 'Rewards', icon: 'Gift' },
       { id: 'o6', name: 'Support', icon: 'Headphones' },
+      { id: 'o7', name: 'Campaigns', icon: 'Sparkles' },
+      { id: 'o8', name: 'Scanner', icon: 'QrCode' },
     ],
   },
 ];

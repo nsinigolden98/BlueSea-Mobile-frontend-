@@ -3,7 +3,7 @@ import { Sidebar, PinModal, Toast, TransactionModal } from '@/components/ui-cust
 import { Input } from '@/components/ui/input';
 import { Search, Calendar, MapPin, Ticket, Loader2, ChevronRight, MoreHorizontal, QrCode, Shield, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getRequest, ENDPOINTS, API_BASE, type MarketplaceEvent, type MyTicket, type VendorStatus } from '@/types';
+import { getRequest, ENDPOINTS, API_BASE, type MarketplaceEvent, type VendorStatus } from '@/types';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -13,7 +13,6 @@ export function Marketplace() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Events');
   const [events, setEvents] = useState<MarketplaceEvent[]>([]);
-  const [myTickets, setMyTickets] = useState<MyTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<MarketplaceEvent | null>(null);
   const [selectedTicketType, setSelectedTicketType] = useState<string>('');
@@ -38,7 +37,7 @@ export function Marketplace() {
     return '';
   };
 
-  const categories = ['Events', 'Products', 'Tickets', 'Points'];
+  const categories = ['Events', 'Products', 'Points'];
 
   useEffect(() => {
     if (!selectedEvent) {
@@ -49,7 +48,6 @@ export function Marketplace() {
 
   useEffect(() => {
     fetchEvents();
-    fetchMyTickets();
     fetchVendorStatus();
   }, []);
 
@@ -60,7 +58,6 @@ export function Marketplace() {
         showToast(message?.response_description || 'Ticket purchased successfully!');
         setTxMessage(message?.response_description || 'Ticket purchased successfully!');
         setTxStatus(true);
-        fetchMyTickets();
         setSelectedEvent(null);
       } else {
         showToast(message?.error || message?.response_description || 'Failed to purchase ticket');
@@ -80,17 +77,6 @@ export function Marketplace() {
       showToast('Failed to fetch events');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchMyTickets = async () => {
-    try {
-      const data = await getRequest(ENDPOINTS.marketplace_my_tickets);
-      if (data && Array.isArray(data)) {
-        setMyTickets(data);
-      }
-    } catch (err) {
-      console.log('Failed to fetch tickets');
     }
   };
 
@@ -140,8 +126,6 @@ export function Marketplace() {
     switch (activeCategory) {
       case 'Events':
         return selectedEvent ? renderEventDetails() : renderEvents();
-      case 'Tickets':
-        return renderMyTickets();
       default:
         return renderComingSoon();
     }
@@ -380,74 +364,6 @@ export function Marketplace() {
     );
   };
 
-  const renderMyTickets = () => {
-    if (loading) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
-        </div>
-      );
-    }
-
-    if (!myTickets || myTickets.length === 0) {
-      return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-            <Ticket className="w-10 h-10 text-slate-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">
-            No Tickets Yet
-          </h3>
-          <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-            Purchase tickets to events to see them here
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {myTickets.map((ticket) => (
-          <div 
-            key={ticket.id}
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4"
-          >
-            <div className="flex gap-4">
-              <div className="w-20 h-20 bg-slate-200 dark:bg-slate-800 rounded-xl flex-shrink-0 overflow-hidden">
-                {ticket.event_banner ? (
-                  <img src={getImageUrl(ticket.event_banner)} alt={ticket.event_title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Ticket className="w-8 h-8 text-sky-500" />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-slate-800 dark:text-white mb-1 line-clamp-1">
-                  {ticket.event_title}
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                  {ticket.ticket_type?.name || 'Free Entry'}
-                </p>
-                <div className="flex items-center gap-2 text-xs">
-                  <span className={cn(
-                    "px-2 py-1 rounded-full",
-                    ticket.status === 'valid' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
-                    ticket.status === 'used' ? 'bg-slate-100 dark:bg-slate-800 text-slate-500' :
-                    'bg-red-100 dark:bg-red-900/30 text-red-600'
-                  )}>
-                    {ticket.status}
-                  </span>
-                  <span className="text-slate-400">{ticket.qr_code || 'N/A'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   const renderComingSoon = () => (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
       <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -459,7 +375,7 @@ export function Marketplace() {
         Coming Soon
       </h3>
       <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-        The Blue Vault marketplace is being stocked with amazing products and events. Check back soon!
+        The MarketPlace is being stocked with amazing products and events. Check back soon!
       </p>
     </div>
   );
@@ -480,7 +396,7 @@ export function Marketplace() {
               </svg>
             </button>
             <div>
-              <h1 className="text-xl font-bold text-slate-800 dark:text-white">Blue Vault</h1>
+              <h1 className="text-xl font-bold text-slate-800 dark:text-white">Market Place</h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">Buy Smarter & Cheaper</p>
             </div>
           </div>

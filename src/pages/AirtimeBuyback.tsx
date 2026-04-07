@@ -14,23 +14,6 @@ export function AirtimeBuyback() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [step, setStep] = useState<'input' | 'confirm' | 'success'>('input');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async () => {
-    if (!phoneNumber || !amount) {
-      alert('Please fill in all fields');
-      return;
-    }
-    setStep('confirm');
-  };
-
-  const handleConfirm = async () => {
-    setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setLoading(false);
-    setStep('success');
-  };
 
   const conversionRate = 0.9; // 90% conversion rate
   const walletCredit = Number(amount) * conversionRate;
@@ -133,11 +116,10 @@ export function AirtimeBuyback() {
                 )}
 
                 <Button 
-                  onClick={handleSubmit}
-                  className="w-full rounded-xl bg-sky-500 hover:bg-sky-600 py-6"
-                  disabled={!phoneNumber || !amount || Number(amount) < 100}
+                  className="w-full rounded-xl bg-slate-300 dark:bg-slate-700 py-6 cursor-not-allowed"
+                  disabled
                 >
-                  Continue
+                  Coming Soon
                 </Button>
               </div>
             )}
@@ -180,11 +162,10 @@ export function AirtimeBuyback() {
                     Back
                   </Button>
                   <Button 
-                    onClick={handleConfirm}
-                    className="flex-1 rounded-xl bg-sky-500 hover:bg-sky-600 py-6"
-                    disabled={loading}
+                    className="flex-1 rounded-xl bg-slate-300 dark:bg-slate-700 py-6 cursor-not-allowed"
+                    disabled
                   >
-                    {loading ? 'Processing...' : 'Confirm Conversion'}
+                    Coming Soon
                   </Button>
                 </div>
               </div>
@@ -201,15 +182,10 @@ export function AirtimeBuyback() {
                 </p>
                 <div className="flex gap-3 justify-center">
                   <Button 
-                    variant="outline"
-                    onClick={() => {
-                      setStep('input');
-                      setPhoneNumber('');
-                      setAmount('');
-                    }}
-                    className="rounded-xl px-6"
+                    className="rounded-xl bg-slate-300 dark:bg-slate-700 px-6 cursor-not-allowed"
+                    disabled
                   >
-                    Convert More
+                    Coming Soon
                   </Button>
                   <Button 
                     onClick={() => window.location.href = '/wallet'}

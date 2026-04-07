@@ -15,6 +15,7 @@ interface Message {
   response_description?: string;
   error?: string;
   message?: string;
+  state?: boolean;
 }
 
 export function PinModal() {
@@ -100,6 +101,11 @@ export function PinModal() {
           response = await postRequest(ENDPOINTS.create_group, value);
         } else if (type === 'group-lightbill') {
           response = await postRequest(ENDPOINTS.create_group, value);
+        } else if (type === 'add-scanner') {
+          response = await postRequest(ENDPOINTS.marketplace_add_scanner((value as { event_id: string }).event_id), {
+            user_email: (value as { user_email: string }).user_email,
+            transaction_pin: (value as { transaction_pin: string }).transaction_pin,
+          });
         }
     return response
 

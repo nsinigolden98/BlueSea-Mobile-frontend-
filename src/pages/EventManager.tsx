@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Toast, Loader } from '@/components/ui-custom';
+import { Toast, Loader, PinModal } from '@/components/ui-custom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, MapPin, Plus, Loader2, ChevronRight, X, Trash2, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, Plus, Loader2, ChevronRight, X, Trash2, ArrowLeft, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRequest, postRequest, postFileRequest, ENDPOINTS, API_BASE, type MarketplaceEvent, type CreateEventPayload, type VendorStatus } from '@/types';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +30,7 @@ export function EventManager() {
   void vendorStatus; // Keep for future use
   const { showToast, ToastComponent } = Toast();
   const { showLoader, hideLoader, LoaderComponent } = Loader();
+  const { showPinModal, PinComponent, message: pinMessage } = PinModal();
   const [formData, setFormData] = useState<Partial<CreateEventPayload>>({
     event_title: '',
     event_description: '',
@@ -42,6 +43,32 @@ export function EventManager() {
   });
   const [bannerPreview, setBannerPreview] = useState<string>('');
   const [ticketImagePreview, setTicketImagePreview] = useState<string>('');
+  const [showScannerModal, setShowScannerModal] = useState(false);
+  const [scannerEmail, setScannerEmail] = useState('');
+  const [selectedEventForScanner, setSelectedEventForScanner] = useState<MarketplaceEvent | null>(null);
+
+  const openAddScanner = (event: MarketplaceEvent) => {
+    if (!event.is_approved) {
+      showToast('Event must be approved before adding scanners');
+      return;
+    }
+    setSelectedEventForScanner(event);
+    setShowScannerModal(true);
+    setScannerEmail('');
+  };
+
+  useEffect(() => {
+    if (pinMessage) {
+      if (pinMessage.state || pinMessage.success) {
+        showToast(pinMessage.message || 'Scanner added successfully!');
+        setShowScannerModal(false);
+        setScannerEmail('');
+        setSelectedEventForScanner(null);
+      } else {
+        showToast(pinMessage.error || pinMessage.message || 'Failed to add scanner');
+      }
+    }
+  }, [pinMessage]);
 
   const getImageUrl = (path: string | undefined) => {
     if (!path) return '';
@@ -344,6 +371,24 @@ export function EventManager() {
                             {event.tickets_sold}/{event.total_tickets} sold
                           </span>
                         </div>
+                        <div className="mt-3 flex gap-2">
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openAddScanner(event);
+                            }}
+                            disabled={!event.is_approved}
+                            className={cn(
+                              "flex-1 text-sm py-2",
+                              event.is_approved 
+                                ? "bg-sky-500 hover:bg-sky-600" 
+                                : "bg-slate-300 dark:bg-slate-700 cursor-not-allowed"
+                            )}
+                          >
+                            <Users className="w-4 h-4 mr-1" />
+                            {event.is_approved ? 'Add Scanner' : 'Pending Approval'}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -588,6 +633,76 @@ export function EventManager() {
 
       <ToastComponent />
       <LoaderComponent />
+      
+      {showScannerModal && selectedEventForScanner && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-slate-800 dark:text-white">
+                Add Scanner
+              </h2>
+              <button 
+                onClick={() => {
+                  setShowScannerModal(false);
+                  setScannerEmail('');
+                  setSelectedEventForScanner(null);
+                }}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Event</p>
+                <p className="font-medium text-slate-800 dark:text-white">
+                  {selectedEventForScanner.event_title}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Scanner Email</Label>
+                <Input
+                  type="email"
+                  placeholder="Enter scanner's email"
+                  value={scannerEmail}
+                  onChange={(e) => setScannerEmail(e.target.value)}
+                />
+                <p className="text-xs text-slate-500">
+                  Must be a registered user on the platform
+                </p>
+              </div>
+              
+              <Button 
+                onClick={() => {
+                  if (!scannerEmail) {
+                    showToast('Please enter scanner email');
+                    return;
+                  }
+                  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(scannerEmail)) {
+                    showToast('Please enter a valid email');
+                    return;
+                  }
+                  showPinModal({ 
+                    type: 'add-scanner', 
+                    value: { 
+                      event_id: selectedEventForScanner.id, 
+                      user_email: scannerEmail 
+                    } 
+                  });
+                }}
+                disabled={!scannerEmail}
+                className="w-full bg-sky-500 hover:bg-sky-600 py-6"
+              >
+                Add Scanner
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <PinComponent type="add-scanner" value={{ event_id: '', user_email: '' }} />
     </div>
   );
 }

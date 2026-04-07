@@ -229,18 +229,28 @@ export function MyTickets() {
                           <ChevronRight className="w-5 h-5 text-slate-400" />
                         </div>
                         <div className="mt-2 flex items-center gap-2">
-                          <span className={cn(
-                            "px-2 py-1 rounded-full text-xs font-medium",
-                            ticket.status === 'valid' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
-                            ticket.status === 'used' ? 'bg-slate-100 dark:bg-slate-800 text-slate-500' :
-                            ticket.status === 'transferred' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
-                            'bg-red-100 dark:bg-red-900/30 text-red-600'
-                          )}>
-                            {ticket.status}
-                          </span>
-                          <span className="text-xs text-slate-400 font-mono">
-                            {ticket.qr_code}
-                          </span>
+                          {(() => {
+                            const eventDate = new Date(ticket.event_date);
+                            const now = new Date();
+                            const isExpired = eventDate < now && ticket.status === 'valid';
+                            return (
+                              <>
+                                <span className={cn(
+                                  "px-2 py-1 rounded-full text-xs font-medium",
+                                  isExpired ? 'bg-red-100 dark:bg-red-900/30 text-red-600' :
+                                  ticket.status === 'valid' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                                  ticket.status === 'used' ? 'bg-slate-100 dark:bg-slate-800 text-slate-500' :
+                                  ticket.status === 'transferred' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
+                                  'bg-red-100 dark:bg-red-900/30 text-red-600'
+                                )}>
+                                  {isExpired ? 'expired' : ticket.status}
+                                </span>
+                                <span className="text-xs text-slate-400 font-mono">
+                                  {ticket.qr_code}
+                                </span>
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
