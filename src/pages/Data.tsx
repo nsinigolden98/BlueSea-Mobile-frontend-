@@ -47,12 +47,13 @@ export function Data() {
   
   const payload = isGroupPayment ? {
     name: groupName,
-    description: '',
+    description: groupDescription,
     service_type: 'data',
     sub_number: phoneNumber,
     target_amount: Number(selectedPlan?.price || 0),
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
     plan: selectedPlan?.description,
+    plan_type: selectedNetwork === '9mobile' ? 'etisalat': selectedNetwork.toLowerCase()
   } : {
     plan: selectedPlan?.description,
     billersCode: phoneNumber,

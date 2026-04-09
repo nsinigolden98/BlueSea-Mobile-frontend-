@@ -84,6 +84,7 @@ export function AutoTopUp() {
         setAutoTopUps(data);
       }
     } catch (error) {
+      console.log(error)
       showToast('Failed to fetch auto top-ups');
     } finally {
       setLoading(false);
@@ -123,6 +124,7 @@ export function AutoTopUp() {
       showToast('Auto top-up deleted');
       fetchAutoTopUps();
     } catch (error) {
+      console.log(error)
       showToast('Failed to delete auto top-up');
     }
     finally {
@@ -137,8 +139,9 @@ export function AutoTopUp() {
       await postRequest(ENDPOINTS.auto_topup_cancel(id.toString()), {});
       showToast('Auto top-up cancelled');
       fetchAutoTopUps();
-    } catch (error: any) {
-      showToast(error?.error || 'Failed to cancel auto top-up');
+    } catch (error) {
+      console.log(error)
+      showToast('Failed to cancel auto top-up');
     }
     finally {
       hideLoader()

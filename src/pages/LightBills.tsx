@@ -69,7 +69,7 @@ export function LightBills() {
   const payload = isGroupPayment ? {
     name: groupName,
     description: groupDescription,
-    service_type: 'lightbill',
+    service_type: 'electricity',
     sub_number: meterNumber,
     target_amount: Number(amount),
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
