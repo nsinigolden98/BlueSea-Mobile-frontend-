@@ -30,14 +30,8 @@ export function WAECResult() {
 
   const payload = {
     phone_number: phoneNumber,
-    is_group_payment: isGroupPayment,
-    ...(isGroupPayment && {
-      group_name: groupName,
-      invite_members: inviteMembers.filter(e => e.trim()).join(','),
-      service_type: 'waec-result',
-    }),
   };
-
+  
   const handleContinue = async () => {
     if (!phoneNumber) {
       showToast('Please enter your phone number');

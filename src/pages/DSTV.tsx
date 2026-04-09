@@ -45,20 +45,24 @@ export function DSTV() {
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('')
 
   const planPrice = selectedPlan ? dstvPlans[selectedPlan]?.[1] || 0 : 0;
 
-  const payload = {
+  const payload = isGroupPayment ? {
+    name: groupName,
+    description: groupDescription,
+    service_type:'dstv',
+    sub_number: smartCardNumber,
+    target_amount : planPrice,
+    invite_members: inviteMembers.filter(e => e.trim()).join(','),
+    plan: selectedPlan,
+    plan_type: subscriptionType,
+  }:{
     billersCode: smartCardNumber,
     dstv_plan: selectedPlan,
     subscription_type: subscriptionType,
     phone_number: phoneNumber,
-    is_group_payment: isGroupPayment,
-    ...(isGroupPayment && {
-      group_name: groupName,
-      invite_members: inviteMembers.filter(e => e.trim()).join(','),
-      service_type: 'dstv',
-    }),
   };
 
   const handleContinue = async () => {
@@ -87,18 +91,7 @@ export function DSTV() {
         return;
       }
       
-      const groupData = {
-        transaction_pin: '',
-        name: groupName,
-        service_type: 'dstv',
-        sub_number: smartCardNumber,
-        target_amount: planPrice,
-        plan: selectedPlan,
-        plan_type: subscriptionType,
-        invite_members: memberEmails.join(','),
-      };
-      
-      showPinModal({ type: 'group-dstv', value: groupData });
+      showPinModal();
     } else {
       showPinModal();
     }
@@ -218,7 +211,8 @@ export function DSTV() {
                       <Label htmlFor="phoneNumber">Phone Number</Label>
                       <Input
                         id="phoneNumber"
-                        type="text"
+                        type="tel"
+                        maxLength={11}
                         inputMode="numeric"
                         placeholder="Enter phone number"
                         value={phoneNumber}
@@ -238,24 +232,8 @@ export function DSTV() {
                         </div>
                       </div>
                     )}
-
-                    <Button
-                      onClick={handleContinue}
-                      className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
-                      disabled={!smartCardNumber || !selectedPlan || !phoneNumber}
-                    >
-                      Continue Payment
-                    </Button>
-
-                    {/* Auto Top-Up Button */}
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate('/auto-topup')}
-                      className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Set Up Auto Top-Up
-                    </Button>
+                    
+                   
 
                     <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
                       <div className="flex items-center gap-3">
@@ -290,7 +268,15 @@ export function DSTV() {
                             onChange={(e) => setGroupName(e.target.value)}
                           />
                         </div>
-                        
+                        <div className="space-y-2">
+                          <Label htmlFor="groupDescription">Group Description</Label>
+                          <Input
+                            id="groupDescription"
+                            placeholder="Enter description for group payment"
+                            value={groupDescription}
+                            onChange={(e) => setGroupDescription(e.target.value)}
+                          />
+                        </div>
                         <div className="space-y-2">
                           <Label>Invite Members (Email addresses)</Label>
                           {inviteMembers.map((email, index) => (
@@ -326,6 +312,25 @@ export function DSTV() {
                         </div>
                       </div>
                     )}
+
+                        <Button
+                      onClick={handleContinue}
+                      className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
+                      disabled={!smartCardNumber || !selectedPlan || !phoneNumber}
+                    >
+                      Continue Payment
+                    </Button>
+
+                    {/* Auto Top-Up Button */}
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/auto-topup')}
+                      className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Set Up Auto Top-Up
+                    </Button>
+
                   </div>
                 </div>
               </div>
@@ -334,7 +339,7 @@ export function DSTV() {
         </div>
       </div>
       <LoaderComponent />
-      <PinComponent type="dstv" value={payload} />
+      <PinComponent type={isGroupPayment ? "group-dstv" : "dstv"} value={payload} />
       <ToastComponent />
       {isOpen && (
         <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />

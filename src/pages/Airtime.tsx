@@ -29,6 +29,7 @@ export function Airtime() {
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
 
 
   const handleRecharge = (amount: number) => {
@@ -73,15 +74,7 @@ export function Airtime() {
         return;
       }
       
-      const groupData = {
-        transaction_pin: '', // Will be filled by pin modal
-        name: groupName,
-        service_type: 'airtime',
-        sub_number: phoneNumber,
-        target_amount: finalAmount,
-        invite_members: memberEmails.join(','),
-      };
-      showPinModal({ type: 'group-airtime', value: groupData });
+      showPinModal();
     } else {
       showPinModal();
     }
@@ -89,16 +82,18 @@ export function Airtime() {
 
   const finalAmount = selectedAmount || Number(customAmount) || 0;
   
-  const payload = {
+  const payload = isGroupPayment ? {
+    name: groupName,
+    description:groupDescription,
+    service_type: 'airtime',
+    sub_number: phoneNumber,
+    target_amount: finalAmount,
+    invite_members: inviteMembers.filter(e => e.trim()).join(','),
+    plan:selectedNetwork.toLowerCase() !== "9mobile" ? selectedNetwork.toLowerCase() : "etisalat",
+  } : {
     amount: String(finalAmount),
     network: selectedNetwork.toLowerCase() !== "9mobile" ? selectedNetwork.toLowerCase() : "etisalat",
     phone_number: String(phoneNumber),
-    is_group_payment: isGroupPayment,
-    ...(isGroupPayment && {
-      group_name: groupName,
-      invite_members: inviteMembers.filter(e => e.trim()).join(','),
-      service_type: 'airtime',
-    }),
   };
 const bodyDivRef = useRef<HTMLDivElement>(null)
 
@@ -122,7 +117,6 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (message) {
-      console.log(message)
       setIsOpen(true)
       
       if (message?.success || message?.code === '000') {
@@ -268,7 +262,15 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
                       onChange={(e) => setGroupName(e.target.value)}
                     />
                   </div>
-                  
+                  <div className="space-y-2">
+                    <Label htmlFor="groupDescription">Group Description</Label>
+                    <Input
+                      id="groupDescription"
+                      placeholder="Enter a description for the payment"
+                        value={groupDescription}
+                      onChange={(e) => setGroupDescription(e.target.value)}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label>Invite Members (Email addresses)</Label>
                     {inviteMembers.map((email, index) => (
@@ -347,7 +349,7 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
         </main>
       </div>
       </div>
-      <PinComponent type="airtime" value={payload} />
+      <PinComponent type={isGroupPayment ? "group-airtime" : "airtime"} value={payload} />
       <ToastComponent />
       { isOpen &&(
         <TransactionModal isSuccess={txStatus} onClose={()=> setIsOpen(false)} toastMessage={toastMessage} />)}

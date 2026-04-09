@@ -27,7 +27,7 @@ export function CreatePin() {
   const [resetConfirmPin, setResetConfirmPin] = useState(['', '', '', '']);
   
   
-  const currentPin = useRef<(HTMLInputElement)>(null);
+  const currentPin = useRef<HTMLInputElement>(null);
   const newPin = useRef<HTMLInputElement>(null);
   const confirmPin = useRef<HTMLInputElement>(null);
 
@@ -136,6 +136,18 @@ export function CreatePin() {
     }
   };
 
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent)=>{
+     if (e.key === 'Backspace' && otpValues[index] && index > 0) {
+       const newPin = { ...otpValues};
+           newPin[index] = '';
+       setResetConfirmPin(newPin);
+            const input = document.getElementById(`otp${index - 1}`) as HTMLInputElement
+           if (input) {
+             input.focus();
+           };
+         };
+  }
+
   const handleVerifyOtp = async () => {
     showLoader();
     const otp = otpValues.join('');
@@ -162,6 +174,18 @@ export function CreatePin() {
     }
   };
 
+    const handleResetNewPinKeyDown = (index: number, e: React.KeyboardEvent)=>{
+     if (e.key === 'Backspace' && resetNewPin[index] && index > 0) {
+       const newPin = { ...resetNewPin};
+           newPin[index] = '';
+       setResetConfirmPin(newPin);
+            const input = document.getElementById(`resetNew${index - 1}`) as HTMLInputElement
+           if (input) {
+             input.focus();
+           };
+         };
+  }
+
   const handleResetConfirmPinChange = (index: number, value: string) => {
     if (value.length > 1) return;
     const newPin = [...resetConfirmPin];
@@ -173,6 +197,18 @@ export function CreatePin() {
       if (input) input.focus();
     }
   };
+
+  const handleResetConfirmPinKeyDown = (index: number, e: React.KeyboardEvent)=>{
+     if (e.key === 'Backspace' && resetConfirmPin[index] && index > 0) {
+       const newPin = { ...resetConfirmPin};
+           newPin[index] = '';
+       setResetConfirmPin(newPin);
+            const input = document.getElementById(`resetConfirm${index - 1}`) as HTMLInputElement
+           if (input) {
+             input.focus();
+           };
+         };
+  }
 
   const handleConfirmResetPin = async () => {
     showLoader();
@@ -470,6 +506,7 @@ export function CreatePin() {
                       maxLength={1}
                       value={otpValues[index]}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
+                       onKeyDown={(e)=> handleOtpKeyDown(index,e)}
                       className={cn(
                         'w-10 h-12 text-center text-xl font-bold rounded-lg',
                         'border-2 border-slate-200 dark:border-slate-700',
@@ -506,6 +543,7 @@ export function CreatePin() {
                         maxLength={1}
                         value={resetNewPin[index]}
                         onChange={(e) => handleResetNewPinChange(index, e.target.value)}
+                          onKeyDown={(e)=> handleResetNewPinKeyDown(index,e)}
                         className={cn(
                           'w-14 h-14 text-center text-2xl font-bold rounded-xl',
                           'border-2 border-slate-200 dark:border-slate-700',
@@ -531,6 +569,7 @@ export function CreatePin() {
                         maxLength={1}
                         value={resetConfirmPin[index]}
                         onChange={(e) => handleResetConfirmPinChange(index, e.target.value)}
+                        onKeyDown={(e)=> handleResetConfirmPinKeyDown(index,e)}
                         className={cn(
                           'w-14 h-14 text-center text-2xl font-bold rounded-xl',
                           'border-2 border-slate-200 dark:border-slate-700',

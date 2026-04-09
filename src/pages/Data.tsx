@@ -38,22 +38,25 @@ export function Data() {
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
-  
+  const [groupDescription, setGroupDescription] = useState('');
   const dataPlans = dataPlanFunction()
 
   const filteredPlans = dataPlans.filter(
     plan => plan.network === selectedNetwork && plan.planType === selectedPlanType
   );
-  const payload = {
+  
+  const payload = isGroupPayment ? {
+    name: groupName,
+    description: '',
+    service_type: 'data',
+    sub_number: phoneNumber,
+    target_amount: Number(selectedPlan?.price || 0),
+    invite_members: inviteMembers.filter(e => e.trim()).join(','),
+    plan: selectedPlan?.description,
+  } : {
     plan: selectedPlan?.description,
     billersCode: phoneNumber,
     phone_number: phoneNumber,
-    is_group_payment: isGroupPayment,
-    ...(isGroupPayment && {
-      group_name: groupName,
-      invite_members: inviteMembers.filter(e => e.trim()).join(','),
-      service_type: 'data',
-    }),
   }
 
   const handleBuyData = async () => {
@@ -82,21 +85,7 @@ export function Data() {
         return;
       }
       
-      const selectedPlanData = dataPlanFunction().find(p => p.id === selectedPlan?.id);
-      const planPrice = selectedPlanData?.price || 0;
-      
-      const groupData = {
-        transaction_pin: '', // Will be filled by pin modal
-        name: groupName,
-        service_type: 'data',
-        sub_number: phoneNumber,
-        target_amount: planPrice,
-        plan: selectedPlan?.description,
-        plan_type: selectedPlanData?.planType || '',
-        invite_members: memberEmails.join(','),
-      };
-      
-      showPinModal({ type: 'group-data', value: groupData });
+      showPinModal();
     } else {
       console.log(payload)
       showPinModal()
@@ -285,7 +274,15 @@ export function Data() {
                       onChange={(e) => setGroupName(e.target.value)}
                     />
                   </div>
-                  
+                  <div className="space-y-2">
+                    <Label htmlFor="groupDescription">Group Description</Label>
+                    <Input
+                      id="groupDescription"
+                      placeholder="Enter a description for the payment"
+                      value={groupDescription}
+                      onChange={(e) => setGroupDescription(e.target.value)}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label>Invite Members (Email addresses)</Label>
                     {inviteMembers.map((email, index) => (
@@ -364,7 +361,7 @@ export function Data() {
         </main>
       </div>
       </div>
-      <PinComponent type={`data-${selectedPlan?.network}`} value={payload} />
+      <PinComponent type={isGroupPayment ? "group-data" : `data-${selectedPlan?.network}`} value={payload} />
       <ToastComponent />
       { isOpen &&(
         <TransactionModal isSuccess={txStatus} onClose={()=> setIsOpen(false)} toastMessage={toastMessage} />)}

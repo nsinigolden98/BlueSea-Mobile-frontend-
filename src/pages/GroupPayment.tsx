@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sidebar, Header, Toast, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,33 +60,77 @@ export function GroupPayment() {
   const [joining, setJoining] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const { showToast, ToastComponent } = Toast();
-  const { LoaderComponent } = Loader();
-
-  useEffect(() => {
-    fetchGroups();
-  }, []);
-
+  const { LoaderComponent, showLoader, hideLoader } = Loader();
+  const [pin, setPin] = useState({
+      current_pin:['', '','',''],
+    });
+    
+  const Pin = useRef<HTMLInputElement>(null);
+ const handlePinChange = (
+     type: 'current_pin',
+     index: number,
+     value: string
+   ) => {
+     if (value.length > 1) return;
+     
+     const newPins = { ...pin};
+     newPins[type][index] = value;
+     setPin(newPins);
+ 
+     if (value.length === 1 && index < 3) {
+       const input = document.getElementById(`${type}${index + 1}`) as HTMLInputElement;
+       if (input) {
+         input.focus();
+       };
+     };
+   };
+ 
+   const handleKeyDown = (
+     type: 'current_pin',
+     index: number,
+     e: React.KeyboardEvent
+   ) => {
+     if (e.key === 'Backspace' && !pin[type][index] && index > 0) {
+       const newPins = { ...pin};
+       newPins[type][index] = '';
+       setPin(newPins);
+        const input = document.getElementById(`${type}${index - 1}`) as HTMLInputElement
+       if (input) {
+         input.focus();
+       };
+     };
+   };
+ 
+  
   const fetchGroups = async () => {
     try {
-      const response = await getRequest(ENDPOINTS.group_payment_my_groups);
+      const response = await getRequest(ENDPOINTS.my_groups);
+      
       if (response?.groups) {
         setGroups(response.groups);
       }
     } catch (err) {
+      console.log(err);
       showToast('Failed to fetch groups');
     } finally {
       setLoading(false);
-    }
+    };
   };
 
+  useEffect(() => {
+    fetchGroups();
+  }, );
+
   const fetchGroupDetails = async (groupId: string) => {
+
     setDetailsLoading(true);
     try {
-      const response = await getRequest(`${ENDPOINTS.group_payment_details}${groupId}/`);
+      const response = await getRequest(ENDPOINTS.group_detail(groupId));
       if (response?.group) {
         setGroupDetails(response.group);
       }
     } catch (err) {
+      console.log(err);
       showToast('Failed to fetch group details');
     } finally {
       setDetailsLoading(false);
@@ -98,10 +142,17 @@ export function GroupPayment() {
       showToast('Please enter a join code');
       return;
     }
-    
+    if (pin.current_pin.join('').length !== 4) {
+      showToast('Incomplete Pin');
+      return;
+    };
+    showLoader()
     setJoining(true);
     try {
-      const response = await postRequest(ENDPOINTS.group_payment_join, { join_code: joinCode.trim() });
+      const response = await postRequest(ENDPOINTS.join_group, {
+        transaction_pin: pin.current_pin.join(''),
+        join_code: joinCode.trim()
+      });
       if (response?.success) {
         showToast(response.message || 'Successfully joined group!');
         setShowJoinModal(false);
@@ -111,8 +162,10 @@ export function GroupPayment() {
         showToast(response?.error || 'Invalid join code');
       }
     } catch (err) {
+      console.log(err)
       showToast('Failed to join group');
     } finally {
+      hideLoader();
       setJoining(false);
     }
   };
@@ -125,7 +178,7 @@ export function GroupPayment() {
 
   const handleLeaveGroup = async (groupId: string) => {
     try {
-      const response = await postRequest(ENDPOINTS.group_payment_leave, { group_id: groupId });
+      const response = await postRequest(ENDPOINTS.leave_group, { group_id: groupId });
       if (response?.success) {
         showToast('Successfully left the group');
         fetchGroups();
@@ -134,6 +187,7 @@ export function GroupPayment() {
         showToast(response?.error || 'Failed to leave group');
       }
     } catch (err) {
+      console.log(err)
       showToast('Failed to leave group');
     }
   };
@@ -142,7 +196,7 @@ export function GroupPayment() {
     if (!confirm('Are you sure you want to cancel this group payment?')) return;
     
     try {
-      const response = await postRequest(ENDPOINTS.group_payment_cancel, { group_id: groupId });
+      const response = await postRequest(ENDPOINTS.cancel_group, { group_id: groupId });
       if (response?.success) {
         showToast('Group payment canceled');
         fetchGroups();
@@ -151,6 +205,7 @@ export function GroupPayment() {
         showToast(response?.error || 'Failed to cancel group');
       }
     } catch (err) {
+      console.log(err);
       showToast('Failed to cancel group');
     }
   };
@@ -183,7 +238,8 @@ export function GroupPayment() {
   };
 
   const formatStatus = (status: string) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
+    return status
+    // return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   if (selectedGroup) {
@@ -298,7 +354,8 @@ export function GroupPayment() {
                 </div>
 
                 {/* Actions */}
-                {selectedGroup.my_role === 'owner' && selectedGroup.status === 'pending' && (
+                  {selectedGroup.my_role === 'owner' && selectedGroup.status === 'pending' && (
+                    
                   <Button 
                     onClick={() => handleCancelGroup(selectedGroup.id)}
                     className="w-full bg-red-500 hover:bg-red-600 py-6"
@@ -348,7 +405,29 @@ export function GroupPayment() {
               <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
             </div>
           ) : groups.length === 0 ? (
+              <div>
+               <div className="flex gap-3">
+                <Button 
+                  onClick={() => navigate('/services')}
+                  className="flex-1 rounded-xl bg-sky-500 hover:bg-sky-600 py-4"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Create Group Payment
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowJoinModal(true)}
+                  className="flex-1 rounded-xl py-4 border-sky-500 text-sky-500 hover:bg-sky-50"
+                >
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Join with Code
+                  </Button>
+                  <br /><br />
+              </div>
+
+              
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
+              
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                 <Users className="w-10 h-10 text-slate-400" />
               </div>
@@ -359,6 +438,7 @@ export function GroupPayment() {
                 Create a group payment from Airtime, Data, or Light Bills page
               </p>
             </div>
+              </div>
           ) : (
             <div className="max-w-4xl mx-auto space-y-6">
               {/* Action Buttons */}
@@ -467,8 +547,34 @@ export function GroupPayment() {
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                 maxLength={6}
-                className="text-center text-2xl tracking-widest font-mono"
+                className="text-center tracking-widest"
               />
+             <label className="text-sm text-center font-medium text-slate-700 dark:text-slate-300">
+        Enter PIn
+      </label>
+      <div className="flex gap-3 justify-center">
+        {[0, 1, 2, 3].map((index) => (
+          <input
+            key={index}
+            ref={Pin}
+            type="password"
+            id={`current_pin${index}`}
+            inputMode="numeric"
+            maxLength={1}
+            value={pin['current_pin'][index]}
+            onChange={(e) => handlePinChange('current_pin', index, e.target.value)}
+            onKeyDown={(e) => handleKeyDown('current_pin', index, e)}
+            className={cn(
+              'w-14 h-14 text-center text-2xl font-bold rounded-xl',
+              'border-2 border-slate-200 dark:border-slate-700',
+              'focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20',
+              'bg-white dark:bg-slate-800 text-slate-800 dark:text-white',
+              'outline-none transition-all',
+              'current'
+            )}
+          />
+        ))}
+      </div>
               <div className="flex gap-3">
                 <Button
                   variant="outline"
@@ -482,7 +588,7 @@ export function GroupPayment() {
                 </Button>
                 <Button
                   onClick={handleJoinGroup}
-                  disabled={joining || joinCode.length !== 6}
+                  disabled={joining || joinCode.length !== 6 || pin.current_pin.join('').length !== 4}
                   className="flex-1 bg-sky-500 hover:bg-sky-600"
                 >
                   {joining ? 'Joining...' : 'Join Group'}

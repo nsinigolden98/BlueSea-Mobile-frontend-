@@ -62,22 +62,27 @@ export function LightBills() {
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
-
+  const [groupDescription, setGroupDescription] = useState('');
 
   const pricePerUnit = 70;
   const units = amount ? Math.floor(Number(amount) / pricePerUnit) : 0;
-  const payload = {
+  const payload = isGroupPayment ? {
+    name: groupName,
+    description: groupDescription,
+    service_type: 'lightbill',
+    sub_number: meterNumber,
+    target_amount: Number(amount),
+    invite_members: inviteMembers.filter(e => e.trim()).join(','),
+    plan: BILLER_NAME[biller as keyof BillerName],
+    plan_type: meterType.toLowerCase()
+  } : {
     billerCode: meterNumber,
     amount: Number(amount),
     biller_name: BILLER_NAME[biller as keyof BillerName],
     meter_type: meterType.toLowerCase(),
-    is_group_payment: isGroupPayment,
-    ...(isGroupPayment && {
-      group_name: groupName,
-      invite_members: inviteMembers.filter(e => e.trim()).join(','),
-      service_type: 'lightbill',
-    }),
   }
+  
+  
   const handleContinue = async() => {
     if (!meterNumber || !meterType || !biller || !amount) {
       showToast('Please fill in all fields');
@@ -103,18 +108,7 @@ export function LightBills() {
         return;
       }
       
-      const groupData = {
-        transaction_pin: '',
-        name: groupName,
-        service_type: 'lightbill',
-        sub_number: meterNumber,
-        target_amount: Number(amount),
-        plan: BILLER_NAME[biller as keyof BillerName],
-        plan_type: meterType.toLowerCase(),
-        invite_members: memberEmails.join(','),
-      };
-      
-      showPinModal({ type: 'group-lightbill', value: groupData });
+      showPinModal();
       return;
     }
     else {
@@ -286,25 +280,7 @@ export function LightBills() {
                         <span className="font-medium text-sky-500">{units}</span>
                       </div>
                     </div>
-
-                    <Button 
-                      onClick={handleContinue}
-                      className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
-                      disabled={!meterNumber || !meterType || !biller || !amount}
-                    >
-                      Continue Payment
-                    </Button>
-
-                    {/* Auto Top-Up Button */}
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate('/auto-topup')}
-                      className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Set Up Auto Top-Up
-                    </Button>
-
+                    
                     {/* Group Payment Toggle */}
                     <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
                       <div className="flex items-center gap-3">
@@ -340,7 +316,15 @@ export function LightBills() {
                             onChange={(e) => setGroupName(e.target.value)}
                           />
                         </div>
-                        
+                         <div className="space-y-2">
+                          <Label htmlFor="groupDescription">Group Description</Label>
+                          <Input
+                            id="groupDescription"
+                            placeholder="Enter a description for the payment"
+                            value={groupDescription}
+                            onChange={(e) => setGroupDescription(e.target.value)}
+                          />
+                        </div>
                         <div className="space-y-2">
                           <Label>Invite Members (Email addresses)</Label>
                           {inviteMembers.map((email, index) => (
@@ -375,7 +359,27 @@ export function LightBills() {
                           </button>
                         </div>
                       </div>
-                    )}
+                      )}
+                           
+                    <Button 
+                      onClick={handleContinue}
+                      className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
+                      disabled={!meterNumber || !meterType || !biller || !amount}
+                    >
+                      Continue Payment
+                    </Button>
+                      
+
+                    {/* Auto Top-Up Button */}
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/auto-topup')}
+                      className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Set Up Auto Top-Up
+                      </Button>
+
                   </div>
                 </div>
               </div>
@@ -385,7 +389,7 @@ export function LightBills() {
       </div>
       </div>
       <LoaderComponent />
-       <PinComponent type="light" value={payload} />
+       <PinComponent type={isGroupPayment ? "group-lightbill" : "light"} value={payload} />
       <ToastComponent />
       { isOpen &&(
         <TransactionModal isSuccess={txStatus} onClose={()=> setIsOpen(false)} toastMessage={toastMessage} />)}

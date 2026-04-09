@@ -3,7 +3,7 @@ import { PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Ticket, Loader2, ChevronRight, Share2, X, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getRequest, postRequest, ENDPOINTS, API_BASE, type MyTicket } from '@/types';
+import { getRequest, postRequest, ENDPOINTS, type MyTicket } from '@/types';
 import QRCode from 'react-qr-code';
 import { useNavigate } from 'react-router-dom';
 
@@ -22,12 +22,6 @@ export function MyTickets() {
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [txMessage, setTxMessage] = useState('');
-
-  const getImageUrl = (path: string | undefined) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    return `${API_BASE}${path}`;
-  };
 
   useEffect(() => {
     fetchTickets();
@@ -55,6 +49,7 @@ export function MyTickets() {
       const data = await getRequest(ENDPOINTS.marketplace_my_tickets);
       if (data) {
         setTickets(data);
+        console.log(data)
       }
     } catch (err) {
       showToast('Failed to fetch tickets');
@@ -71,7 +66,7 @@ export function MyTickets() {
       
       switch (activeFilter) {
         case 'upcoming':
-          return eventDate > now && ticket.status === 'valid';
+          return eventDate > now ;
         case 'used':
           return ticket.status === 'used';
         case 'expired':
@@ -198,13 +193,11 @@ export function MyTickets() {
                   >
                     <div className="flex gap-4">
                       <div className="w-20 h-20 bg-slate-200 dark:bg-slate-800 rounded-xl flex-shrink-0 overflow-hidden">
-                        {ticket.event_banner ? (
-                          <img src={getImageUrl(ticket.event_banner)} alt={ticket.event_title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Ticket className="w-8 h-8 text-sky-500" />
-                          </div>
-                        )}
+                       <QRCode 
+                      value={ticket.qr_code} 
+                      size={100}
+                      level="H"
+                    />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
@@ -230,9 +223,10 @@ export function MyTickets() {
                         </div>
                         <div className="mt-2 flex items-center gap-2">
                           {(() => {
-                            const eventDate = new Date(ticket.event_date);
-                            const now = new Date();
-                            const isExpired = eventDate < now && ticket.status === 'valid';
+                          console.log(ticket)
+                            const eventDate = new Date(ticket.event_date).getTime();
+                            const now = new Date().getTime();  
+                            const isExpired = eventDate < now ;
                             return (
                               <>
                                 <span className={cn(
@@ -243,11 +237,9 @@ export function MyTickets() {
                                   ticket.status === 'transferred' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
                                   'bg-red-100 dark:bg-red-900/30 text-red-600'
                                 )}>
-                                  {isExpired ? 'expired' : ticket.status}
+                                  {isExpired ? 'expired' : 'upcoming'}
                                 </span>
-                                <span className="text-xs text-slate-400 font-mono">
-                                  {ticket.qr_code}
-                                </span>
+                                
                               </>
                             );
                           })()}
@@ -320,14 +312,23 @@ export function MyTickets() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 dark:text-slate-400">Status</span>
-                  <span className={cn(
-                    "font-medium",
-                    selectedTicket.status === 'valid' ? 'text-green-500' :
-                    selectedTicket.status === 'used' ? 'text-slate-500' :
-                    'text-red-500'
-                  )}>
-                    {selectedTicket.status}
-                  </span>
+                  {(() => {
+                    const eventDate = new Date(selectedTicket.event_date).getTime();
+                    const now = new Date().getTime();
+                    const isExpired = eventDate < now ;
+                    return (
+                      <span className={cn(
+                        "font-medium",
+                        isExpired ? 'text-red-500' :
+                        selectedTicket.status === 'valid' ? 'text-green-500' :
+                        selectedTicket.status === 'used' ? 'text-slate-500' :
+                        selectedTicket.status === 'transferred' ? 'text-blue-500' :
+                        'text-red-500'
+                      )}>
+                        {isExpired ? 'expired' : selectedTicket.status}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 dark:text-slate-400">Purchased</span>
