@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sidebar, Header, Toast, PinModal } from '@/components/ui-custom';
+import { Sidebar, Header, Toast, PinModal, Loader, useConfirm} from '@/components/ui-custom';
 import { getRequest, postRequest, deleteRequest, ENDPOINTS } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -50,6 +50,8 @@ export function AutoTopUp() {
   const [startDate, setStartDate] = useState('');
   const { showToast, ToastComponent } = Toast();
   const { showPinModal, PinComponent, message } = PinModal();
+  const { showLoader, hideLoader, LoaderComponent} = Loader();
+  const { confirm, ConfirmComponent: ConfirmDialog } = useConfirm();
 
   const dataPlans: Record<string, string[]> = {
     MTN: ['MTN10GB', 'MTN20GB', 'MTN50GB', 'MTN100GB'],
@@ -64,7 +66,7 @@ export function AutoTopUp() {
 
   useEffect(() => {
     if (message) {
-      if (message.success || message.code === '000') {
+      if (message.is_active || message.code === '000') {
         showToast(message.response_description || 'Auto top-up created successfully');
         fetchAutoTopUps();
         setShowCreateModal(false);
@@ -105,8 +107,17 @@ export function AutoTopUp() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this auto top-up?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Auto Top-Up',
+      message: 'Are you sure you want to delete this auto top-up? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'danger',
+    });
+    
+    if (!confirmed) return;
 
+    showLoader()
     try {
       await deleteRequest(ENDPOINTS.auto_topup_details(id.toString()));
       showToast('Auto top-up deleted');
@@ -114,15 +125,23 @@ export function AutoTopUp() {
     } catch (error) {
       showToast('Failed to delete auto top-up');
     }
+    finally {
+      
+      hideLoader()
+    }
   };
 
   const handleCancel = async (id: number) => {
+    showLoader()
     try {
       await postRequest(ENDPOINTS.auto_topup_cancel(id.toString()), {});
       showToast('Auto top-up cancelled');
       fetchAutoTopUps();
     } catch (error: any) {
       showToast(error?.error || 'Failed to cancel auto top-up');
+    }
+    finally {
+      hideLoader()
     }
   };
 
@@ -291,7 +310,7 @@ export function AutoTopUp() {
                 </Select>
               </div>
 
-              {serviceType === 'data' && (
+              
                 <div className="space-y-2">
                   <Label>Network</Label>
                   <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
@@ -305,7 +324,7 @@ export function AutoTopUp() {
                     </SelectContent>
                   </Select>
                 </div>
-              )}
+              
 
               <div className="space-y-2">
                 <Label>Phone Number</Label>
@@ -375,35 +394,42 @@ export function AutoTopUp() {
               </Button>
             </div>
           </div>
-        </div>
-      )}
+
+
+    
 
       {pinActionType === 'create' && (
         <PinComponent 
-          type="auto-topup" 
-          value={{
-            service_type: serviceType,
-            phone_number: phoneNumber,
+        type="auto-topup" 
+        value={{
+          service_type: serviceType,
+          phone_number: phoneNumber,
             amount: parseFloat(amount),
-            network: serviceType === 'data' ? selectedNetwork : undefined,
+            network: selectedNetwork ,
             plan: serviceType === 'data' ? selectedPlan : undefined,
             repeat_days: parseInt(repeatDays),
             start_date: startDate || new Date().toISOString(),
             is_active: true,
           }} 
-        />
-      )}
+            />
+          
+        )}
+        
 
       {pinActionType === 'reactivate' && (
         <PinComponent 
-          type="auto-topup-reactivate" 
-          value={{
-            id: selectedReactivateId,
-          }} 
+        type="auto-topup-reactivate" 
+        value={{
+          id: selectedReactivateId,
+        }} 
         />
       )}
+      </div>
+    )}
 
       <ToastComponent />
+      <LoaderComponent />
+      <ConfirmDialog />
     </div>
   );
 }

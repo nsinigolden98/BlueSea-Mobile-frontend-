@@ -89,7 +89,7 @@ export function Profile() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-bold text-slate-800 dark:text-white">My Profile</h1>
+        <h1 className="text   -xl font-bold text-slate-800 dark:text-white">My Profile</h1>
       </div>
 
       <main className="p-4 md:p-6">

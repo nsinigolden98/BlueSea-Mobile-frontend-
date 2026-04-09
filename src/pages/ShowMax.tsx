@@ -41,22 +41,28 @@ export function ShowMax() {
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
+  const [groupDescripition, setGroupDescription] = useState('');
 
   const planPrice = selectedPlan ? showmaxPlans[selectedPlan]?.[1] || 0 : 0;
 
-  const payload = {
+  const payload = isGroupPayment ? {
+    name: groupName,
+    description: groupDescripition,
+    service_type:'showmax',
+    sub_number: phoneNumber,
+    target_amount : planPrice,
+    invite_members: inviteMembers.filter(e => e.trim()).join(','),
+    plan: selectedPlan,
+
+  }: {
     showmax_plan: selectedPlan,
     phone_number: phoneNumber,
-    is_group_payment: isGroupPayment,
-    ...(isGroupPayment && {
-      group_name: groupName,
-      invite_members: inviteMembers.filter(e => e.trim()).join(','),
-      service_type: 'showmax',
-    }),
   };
+  
+  
 
   const handleContinue = async () => {
-    if (!selectedPlan || !phoneNumber) {
+    if (!selectedPlan || phoneNumber.length < 11 ) {
       showToast('Please fill in all fields');
       return;
     }
@@ -81,18 +87,7 @@ export function ShowMax() {
         return;
       }
       
-      const groupData = {
-        transaction_pin: '',
-        name: groupName,
-        service_type: 'showmax',
-        sub_number: phoneNumber,
-        target_amount: planPrice,
-        plan: selectedPlan,
-        plan_type: '',
-        invite_members: memberEmails.join(','),
-      };
-      
-      showPinModal({ type: 'group-showmax', value: groupData });
+      showPinModal();
     } else {
       showPinModal();
     }
@@ -161,6 +156,7 @@ export function ShowMax() {
                       <Input
                         id="phoneNumber"
                         type="text"
+                        maxLength={11}
                         inputMode="numeric"
                         placeholder="Enter phone number"
                         value={phoneNumber}
@@ -205,24 +201,6 @@ export function ShowMax() {
                       </div>
                     )}
 
-                    <Button
-                      onClick={handleContinue}
-                      className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
-                      disabled={!selectedPlan || !phoneNumber}
-                    >
-                      Continue Payment
-                    </Button>
-
-                    {/* Auto Top-Up Button */}
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate('/auto-topup')}
-                      className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Set Up Auto Top-Up
-                    </Button>
-
                     <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
                       <div className="flex items-center gap-3">
                         <Users className="w-5 h-5 text-sky-500" />
@@ -254,6 +232,15 @@ export function ShowMax() {
                             placeholder="e.g., Family ShowMax"
                             value={groupName}
                             onChange={(e) => setGroupName(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="groupDescription">Group Description</Label>
+                          <Input
+                            id="groupDescription"
+                            placeholder="Enter group description"
+                            value={groupDescripition}
+                            onChange={(e) => setGroupDescription(e.target.value)}
                           />
                         </div>
                         
@@ -292,6 +279,25 @@ export function ShowMax() {
                         </div>
                       </div>
                     )}
+
+
+                    <Button
+                      onClick={handleContinue}
+                      className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
+                      disabled={!selectedPlan || !phoneNumber}
+                    >
+                      Continue Payment
+                    </Button>
+
+                    {/* Auto Top-Up Button */}
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/auto-topup')}
+                      className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Set Up Auto Top-Up
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -300,7 +306,7 @@ export function ShowMax() {
         </div>
       </div>
       <LoaderComponent />
-      <PinComponent type="showmax" value={payload} />
+      <PinComponent type={isGroupPayment ? "group-showmax" : "showmax"} value={payload} />
       <ToastComponent />
       {isOpen && (
         <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />

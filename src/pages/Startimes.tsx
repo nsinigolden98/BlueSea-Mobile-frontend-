@@ -46,23 +46,28 @@ export function Startimes() {
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
 
   const planPrice = selectedPlan ? startimesPlans[selectedPlan]?.[1] || 0 : 0;
 
-  const payload = {
+  const payload = isGroupPayment ? {
+    name: groupName,
+    description: groupDescription,
+    service_type:'dstv',
+    sub_number: smartCardNumber,
+    target_amount : planPrice,
+    invite_members: inviteMembers.filter(e => e.trim()).join(','),
+    plan: selectedPlan,
+  }:{
     billersCode: smartCardNumber,
     startimes_plan: selectedPlan,
     phone_number: phoneNumber,
-    is_group_payment: isGroupPayment,
-    ...(isGroupPayment && {
-      group_name: groupName,
-      invite_members: inviteMembers.filter(e => e.trim()).join(','),
-      service_type: 'startimes',
-    }),
   };
+  
+  
 
   const handleContinue = async () => {
-    if (!smartCardNumber || !selectedPlan || !phoneNumber) {
+    if (!smartCardNumber || !selectedPlan || phoneNumber.length < 11) {
       showToast('Please fill in all fields');
       return;
     }
@@ -87,18 +92,7 @@ export function Startimes() {
         return;
       }
       
-      const groupData = {
-        transaction_pin: '',
-        name: groupName,
-        service_type: 'startimes',
-        sub_number: smartCardNumber,
-        target_amount: planPrice,
-        plan: selectedPlan,
-        plan_type: '',
-        invite_members: memberEmails.join(','),
-      };
-      
-      showPinModal({ type: 'group-startimes', value: groupData });
+      showPinModal();
     } else {
       showPinModal();
     }
@@ -223,24 +217,6 @@ export function Startimes() {
                       </div>
                     )}
 
-                    <Button
-                      onClick={handleContinue}
-                      className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
-                      disabled={!smartCardNumber || !selectedPlan || !phoneNumber}
-                    >
-                      Continue Payment
-                    </Button>
-
-                    {/* Auto Top-Up Button */}
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate('/auto-topup')}
-                      className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Set Up Auto Top-Up
-                    </Button>
-
                     <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
                       <div className="flex items-center gap-3">
                         <Users className="w-5 h-5 text-sky-500" />
@@ -274,6 +250,16 @@ export function Startimes() {
                             onChange={(e) => setGroupName(e.target.value)}
                           />
                         </div>
+                         <div className="space-y-2">
+                          <Label htmlFor="groupDescription">Group Name</Label>
+                          <Input
+                            id="groupDescription"
+                            placeholder="Enter payment description"
+                            value={groupDescription}
+                            onChange={(e) => setGroupDescription(e.target.value)}
+                          />
+                        </div>
+                        
                         
                         <div className="space-y-2">
                           <Label>Invite Members (Email addresses)</Label>
@@ -310,6 +296,28 @@ export function Startimes() {
                         </div>
                       </div>
                     )}
+
+
+
+                    <Button
+                      onClick={handleContinue}
+                      className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
+                      disabled={!smartCardNumber || !selectedPlan || !phoneNumber}
+                    >
+                      Continue Payment
+                    </Button>
+
+                    {/* Auto Top-Up Button */}
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/auto-topup')}
+                      className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Set Up Auto Top-Up
+                    </Button>
+
+
                   </div>
                 </div>
               </div>
@@ -318,7 +326,7 @@ export function Startimes() {
         </div>
       </div>
       <LoaderComponent />
-      <PinComponent type="startimes" value={payload} />
+      <PinComponent type={isGroupPayment ? "group-startimes" : "startimes"} value={payload} />
       <ToastComponent />
       {isOpen && (
         <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />

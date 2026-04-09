@@ -76,6 +76,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({ isSuccess, o
   const handleClose = () => {
     setIsExiting(true);
     setTimeout(onClose, 400); // Wait for the fade-out animation
+    window.location.reload()
   };
 
   return (

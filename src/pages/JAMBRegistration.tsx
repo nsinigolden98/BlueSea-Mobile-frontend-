@@ -44,14 +44,8 @@ export function JAMBRegistration() {
     exam_type: examType,
     billersCode: '',
     phone_number: phoneNumber,
-    is_group_payment: isGroupPayment,
-    ...(isGroupPayment && {
-      group_name: groupName,
-      invite_members: inviteMembers.filter(e => e.trim()).join(','),
-      service_type: 'jamb',
-    }),
   };
-
+  
   const handleContinue = async () => {
     if (!phoneNumber || !examType) {
       showToast('Please fill in all fields');
