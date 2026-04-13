@@ -108,9 +108,17 @@ export function PinModal() {
         response = await postRequest(ENDPOINTS.create_group, value);
         
         } else if (type === 'add-scanner') {
-          response = await postRequest(ENDPOINTS.marketplace_add_scanner((value as { event_id: string }).event_id), {
-            user_email: (value as { user_email: string }).user_email,
-            transaction_pin: (value as { transaction_pin: string }).transaction_pin,
+          const payload = value as { event_id: string; user_email: string };
+          response = await postRequest(ENDPOINTS.marketplace_add_scanner(payload.event_id), { user_email: payload.user_email });
+        } else if (type === 'event-withdraw') {
+          const payload = value as { event_id: string; account_name: string; account_number: string; bank_code: string; bank_name: string; amount: string };
+          response = await postRequest(ENDPOINTS.event_withdraw, {
+            event_id: payload.event_id,
+            account_name: payload.account_name,
+            account_number: payload.account_number,
+            bank_code: payload.bank_code,
+            bank_name: payload.bank_name,
+            amount: payload.amount,
           });
         }
     console.log(response) 
