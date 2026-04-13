@@ -372,13 +372,13 @@ export function LightBills() {
 
                     {/* Auto Top-Up Button */}
                     <Button 
-                      variant="outline"
-                      onClick={() => navigate('/auto-topup')}
+variant="outline"
+                      onClick={() => navigate(`/auto-topup?service_type=lightbill&network=${BILLER_NAME[biller as keyof BillerName] || biller}&phone_number=${meterNumber}&amount=${amount}`)}
                       className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
                     >
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Set Up Auto Top-Up
-                      </Button>
+                    </Button>
 
                   </div>
                 </div>

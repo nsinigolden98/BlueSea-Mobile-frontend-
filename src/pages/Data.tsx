@@ -351,8 +351,9 @@ export function Data() {
               {/* Auto Top-Up Button */}
               <Button 
                 variant="outline"
-                onClick={() => navigate('/auto-topup')}
+                onClick={() => navigate(`/auto-topup?service_type=data&network=${selectedNetwork.toLowerCase()}&phone_number=${phoneNumber}&amount=${selectedPlan?.price || ''}&plan=${selectedPlan?.description || ''}`)}
                 className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
+                disabled={!phoneNumber || !selectedPlan}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Set Up Auto Top-Up

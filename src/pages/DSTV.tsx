@@ -324,8 +324,9 @@ export function DSTV() {
                     {/* Auto Top-Up Button */}
                     <Button 
                       variant="outline"
-                      onClick={() => navigate('/auto-topup')}
+                      onClick={() => navigate(`/auto-topup?service_type=dstv&network=dstv&phone_number=${smartCardNumber}&amount=${dstvPlans[selectedPlan]?.[1] || ''}&plan=${selectedPlan}`)}
                       className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
+                      disabled={!smartCardNumber || !selectedPlan}
                     >
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Set Up Auto Top-Up

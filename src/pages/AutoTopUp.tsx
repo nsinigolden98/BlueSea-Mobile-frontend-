@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar, Header, Toast, PinModal, Loader, useConfirm} from '@/components/ui-custom';
 import { getRequest, postRequest, deleteRequest, ENDPOINTS } from '@/types';
 import { useAuth } from '@/context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, X, RefreshCw, Clock, Trash2, Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ interface AutoTopUp {
   created_at: string;
 }
 
-const networks = ['MTN', 'GLO', 'AIRTEL', '9mobile'];
+ // const networks = ['MTN', 'GLO', 'AIRTEL', '9mobile'];
 const repeatOptions = [
   { value: '0', label: 'One-time' },
   { value: '7', label: 'Every 7 days' },
@@ -37,11 +37,12 @@ const repeatOptions = [
 export function AutoTopUp() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [autoTopUps, setAutoTopUps] = useState<AutoTopUp[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [serviceType, setServiceType] = useState<'airtime' | 'data'>('airtime');
+  const [serviceType, setServiceType] = useState<'airtime' | 'data' | 'dstv' | 'gotv' | 'showmax' | 'startimes' | 'lightbill'>('airtime');
   const [selectedNetwork, setSelectedNetwork] = useState('MTN');
   const [selectedPlan, setSelectedPlan] = useState('');
   const [phoneNumber, setPhoneNumber] = useState(user?.phone ? '0'+ user?.phone.slice(-10,) : '');
@@ -53,16 +54,49 @@ export function AutoTopUp() {
   const { showLoader, hideLoader, LoaderComponent} = Loader();
   const { confirm, ConfirmComponent: ConfirmDialog } = useConfirm();
 
-  const dataPlans: Record<string, string[]> = {
-    MTN: ['MTN10GB', 'MTN20GB', 'MTN50GB', 'MTN100GB'],
-    GLO: ['GLO10GB', 'GLO20GB', 'GLO50GB'],
-    AIRTEL: ['AIRTEL10GB', 'AIRTEL20GB', 'AIRTEL50GB'],
-    '9mobile': ['9MOBILE10GB', '9MOBILE20GB'],
-  };
+  
+  //const dataPlans: Record<string, string[]> = {
+  //   MTN: ['MTN10GB', 'MTN20GB', 'MTN50GB', 'MTN100GB'],
+  //   GLO: ['GLO10GB', 'GLO20GB', 'GLO50GB'],
+  //   AIRTEL: ['AIRTEL10GB', 'AIRTEL20GB', 'AIRTEL50GB'],
+  //   '9mobile': ['9MOBILE10GB', '9MOBILE20GB'],
+  // };
 
   useEffect(() => {
     fetchAutoTopUps();
   }, []);
+
+  useEffect(() => {
+    // Check for URL params from payment pages
+    const serviceTypeParam = searchParams.get('service_type') as 'airtime' | 'data' | 'dstv' | 'gotv' | 'showmax' | 'startimes' | 'lightbill' | null;
+    const networkParam = searchParams.get('network');
+    const phoneParam = searchParams.get('phone_number');
+    const amountParam = searchParams.get('amount');
+    const planParam = searchParams.get('plan');
+
+    if (serviceTypeParam) {
+      setServiceType(serviceTypeParam);
+    }
+    if (networkParam) {
+      setSelectedNetwork(networkParam.toUpperCase());
+    }
+    if (phoneParam) {
+      setPhoneNumber(phoneParam);
+    }
+    if (amountParam) {
+      setAmount(amountParam);
+    }
+    if (planParam) {
+      setSelectedPlan(planParam);
+    }
+
+    // If coming from payment page with params, show the create modal automatically
+    if (serviceTypeParam && phoneParam && amountParam) {
+      setShowCreateModal(true);
+    }
+  }, [searchParams]);
+
+  const isPreFilled = searchParams.get('service_type') !== null;
 
   useEffect(() => {
     if (message) {
@@ -183,7 +217,7 @@ export function AutoTopUp() {
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-3xl mx-auto">
             <Button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => navigate('/services')}
               className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6 mb-6"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -294,49 +328,46 @@ export function AutoTopUp() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Create Auto Top-Up</h2>
-              <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+              <button onClick={() => {
+                setShowCreateModal(false);
+                if (isPreFilled) {
+                  navigate(-1);
+                }
+              }} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
+            {/* Read-only fields when pre-filled from payment page */}
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Service Type</Label>
-                <Select value={serviceType} onValueChange={(v) => setServiceType(v as 'airtime' | 'data')}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="airtime">Airtime</SelectItem>
-                    <SelectItem value="data">Data</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  value={serviceType.toUpperCase()}
+                  disabled
+                  className="bg-slate-50 dark:bg-slate-800"
+                />
               </div>
 
-              
+              {serviceType !== 'lightbill' && (
                 <div className="space-y-2">
                   <Label>Network</Label>
-                  <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {networks.map((network) => (
-                        <SelectItem key={network} value={network}>{network}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    value={selectedNetwork}
+                    disabled
+                    className="bg-slate-50 dark:bg-slate-800"
+                  />
                 </div>
-              
+              )}
 
               <div className="space-y-2">
                 <Label>Phone Number</Label>
                 <Input
                   type="tel"
-                  placeholder="08012345678"
-                  maxLength={11}
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  disabled={isPreFilled}
+                  onChange={(e) => !isPreFilled && setPhoneNumber(e.target.value)}
+                  className={isPreFilled ? "bg-slate-50 dark:bg-slate-800" : ""}
                 />
               </div>
 
@@ -344,25 +375,21 @@ export function AutoTopUp() {
                 <Label>Amount (₦)</Label>
                 <Input
                   type="number"
-                  placeholder="100"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  disabled={isPreFilled}
+                  onChange={(e) => !isPreFilled && setAmount(e.target.value)}
+                  className={isPreFilled ? "bg-slate-50 dark:bg-slate-800" : ""}
                 />
               </div>
 
-              {serviceType === 'data' && (
+              {(serviceType === 'data' || selectedPlan) && (
                 <div className="space-y-2">
                   <Label>Data Plan</Label>
-                  <Select value={selectedPlan} onValueChange={setSelectedPlan}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select plan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {dataPlans[selectedNetwork]?.map((plan) => (
-                        <SelectItem key={plan} value={plan}>{plan}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    value={selectedPlan || 'N/A'}
+                    disabled
+                    className="bg-slate-50 dark:bg-slate-800"
+                  />
                 </div>
               )}
 
@@ -389,7 +416,7 @@ export function AutoTopUp() {
                 />
               </div>
 
-              <Button
+            <Button
                 onClick={handleCreate}
                 className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
               >
@@ -397,9 +424,8 @@ export function AutoTopUp() {
               </Button>
             </div>
           </div>
-
-
-    
+        </div>
+      )}
 
       {pinActionType === 'create' && (
         <PinComponent 
@@ -407,17 +433,15 @@ export function AutoTopUp() {
         value={{
           service_type: serviceType,
           phone_number: phoneNumber,
-            amount: parseFloat(amount),
-            network: selectedNetwork ,
-            plan: serviceType === 'data' ? selectedPlan : undefined,
-            repeat_days: parseInt(repeatDays),
-            start_date: startDate || new Date().toISOString(),
-            is_active: true,
-          }} 
-            />
-          
-        )}
-        
+          amount: parseFloat(amount),
+          network: selectedNetwork,
+          plan: serviceType === 'data' ? selectedPlan : undefined,
+          repeat_days: parseInt(repeatDays),
+          start_date: startDate || new Date().toISOString(),
+          is_active: true,
+        }} 
+        />
+      )}
 
       {pinActionType === 'reactivate' && (
         <PinComponent 
@@ -427,8 +451,6 @@ export function AutoTopUp() {
         }} 
         />
       )}
-      </div>
-    )}
 
       <ToastComponent />
       <LoaderComponent />
