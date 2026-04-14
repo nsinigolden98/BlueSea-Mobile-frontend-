@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Sidebar, Header, TransactionList, LoadingSpinner } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
-import { postRequest, ENDPOINTS } from '@/types';
-import { Copy, Check, Send, Landmark, User, ShieldCheck, Search, ChevronRight } from 'lucide-react';
+import { postRequest } from '@/types';
+import { Copy, Check, Send, Landmark, ShieldCheck, Search, ChevronRight } from 'lucide-react';
 
 // --- VERCEL BUILD SAFETY ---
-// We define these as local constants to prevent the TS2339 "Property does not exist" error
-const PATH_DEDICATED_ACC = '/api/wallet/dedicated-account';
 const PATH_TRANSFER = '/api/wallet/transfer';
 
 export function Wallet() {
@@ -23,7 +21,7 @@ export function Wallet() {
 
   // --- TRANSFER MODAL STATE ---
   const [transferModalOpen, setTransferModalOpen] = useState(false);
-  const [transferStep, setTransferStep] = useState(1); // 1: Inputs, 2: 4-Digit PIN
+  const [transferStep, setTransferStep] = useState(1); 
   const [transferData, setTransferData] = useState({
     recipient: '',
     amount: '',
@@ -41,10 +39,8 @@ export function Wallet() {
     setTimeout(() => setCopyStatus(null), 2000);
   };
 
-  // Simulate user discovery logic
   useEffect(() => {
     if (transferData.recipient.length >= 5) {
-      // Simulate API finding a user
       setFoundUser({
         name: "Nsini Golden",
         email: "nsini@bluesea.com",
@@ -60,7 +56,6 @@ export function Wallet() {
     setProcessing(true);
     setTransferError('');
     try {
-      // Use the safe constant instead of ENDPOINTS object to pass Vercel build
       const response = await postRequest(PATH_TRANSFER, {
         recipient: transferData.recipient,
         amount: Number(transferData.amount),
@@ -96,10 +91,10 @@ export function Wallet() {
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           <div className="max-w-6xl mx-auto space-y-8">
             
-            {/* 1️⃣ THE TWO-CARD LAYOUT */}
+            {/* 1️⃣ TWO-CARD GRID */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               
-              {/* CARD 1: FUNDING ACCOUNT (Simulated) */}
+              {/* CARD 1: FUNDING DETAILS */}
               <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] p-7 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-center mb-8">
@@ -120,7 +115,6 @@ export function Wallet() {
 
               {/* CARD 2: BALANCE & TRANSFER PANEL */}
               <div className="lg:col-span-3 flex flex-col gap-6">
-                {/* Balance Area */}
                 <div className="bg-slate-900 dark:bg-sky-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-xl h-full flex flex-col justify-center border border-slate-800 dark:border-sky-500">
                   <div className="relative z-10">
                     <p className="text-sky-200/60 text-xs font-bold uppercase tracking-[0.2em]">Current Balance</p>
@@ -133,7 +127,6 @@ export function Wallet() {
                   <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
                 </div>
 
-                {/* Internal Transfer Trigger */}
                 <button 
                   onClick={() => setTransferModalOpen(true)}
                   className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] p-6 flex items-center justify-between hover:shadow-lg transition-all active:scale-[0.98]"
@@ -164,7 +157,7 @@ export function Wallet() {
         </main>
       </div>
 
-      {/* --- SINGLE MODAL: RECIPIENT & AMOUNT ON ONE SCREEN --- */}
+      {/* --- TRANSFER MODAL --- */}
       {transferModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60 animate-in fade-in duration-300">
           <div className="absolute inset-0" onClick={() => !processing && setTransferModalOpen(false)} />
@@ -180,7 +173,6 @@ export function Wallet() {
             <div className="space-y-6">
               {transferStep === 1 && (
                 <div className="animate-in slide-in-from-bottom-4 space-y-5">
-                  {/* Recipient Input */}
                   <div className="relative group">
                     <label className="text-[10px] font-black uppercase text-slate-400 absolute left-5 top-3 z-10">Recipient ID / Email / Phone</label>
                     <input
@@ -192,7 +184,6 @@ export function Wallet() {
                     <Search className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
                   </div>
 
-                  {/* Amount Input */}
                   <div className="relative group">
                     <label className="text-[10px] font-black uppercase text-slate-400 absolute left-5 top-3 z-10">Amount (₦)</label>
                     <input
@@ -204,7 +195,6 @@ export function Wallet() {
                     />
                   </div>
 
-                  {/* USER PREVIEW (Dynamic) */}
                   {foundUser && (
                     <div className="p-5 bg-sky-500/5 border border-sky-500/10 rounded-[2rem] flex items-center gap-4 animate-in fade-in zoom-in-95">
                       <div className="h-12 w-12 bg-sky-500 rounded-2xl flex items-center justify-center text-white font-black">
@@ -219,7 +209,6 @@ export function Wallet() {
                 </div>
               )}
 
-              {/* 4-DIGIT PIN STEP */}
               {transferStep === 2 && (
                 <div className="animate-in slide-in-from-bottom-4 text-center">
                   <div className="mb-6">
@@ -285,5 +274,5 @@ function AccountDetailRow({ label, value, onCopy, isCopied }: any) {
       </button>
     </div>
   );
-            }
-                    
+      }
+                      
