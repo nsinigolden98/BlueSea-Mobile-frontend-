@@ -124,14 +124,12 @@ export function Loyalty() {
                     <p className="text-3xl font-bold">{totalPoints.toLocaleString()}</p>
                   </div>
                 </div>
-               <Button 
-                  variant="secondary" 
-                  className="bg-white/20 hover:bg-white/30 text-white border-0"
-                  onClick={() => navigate('/rewards')}
+               <button
+                  onClick={fetchRewards}
+                  className="p-2 bg-white/20 rounded-lg hover:bg-white/30"
                 >
-                  Reward
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                  <RefreshCw className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
