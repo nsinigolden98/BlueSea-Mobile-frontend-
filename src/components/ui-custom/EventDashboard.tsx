@@ -541,7 +541,8 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
                       setAccountVerified(false);
                       setAccountName('');
                       if (val.length >= 3) {
-                        const matched = NIGERIAN_BANKS.filter(b => val.startsWith(b.code));
+                        const prefix = val.slice(0, 3);
+                        const matched = NIGERIAN_BANKS.filter(b => b.code.startsWith(prefix));
                         if (matched.length > 0) {
                           setSelectedBank(matched[0].code);
                         }
