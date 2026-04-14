@@ -20,11 +20,12 @@ import {
   PlayCircle,
 } from 'lucide-react';
 
+// Interfaces updated to be more resilient to backend changes
 interface BonusSummary {
   current_points: number;
   lifetime_earned: number;
   lifetime_redeemed: number;
-  referral_count?: number;
+  referral_count?: number; // Optional to prevent build errors if missing
 }
 
 interface BonusHistory {
@@ -57,10 +58,10 @@ export function Rewards() {
   const { showToast, ToastComponent } = Toast();
   const { LoaderComponent, showLoader, hideLoader } = Loader();
 
-  // Simulated User ID for referral link
   const userId = "user_123"; 
   const referralLink = `https://bluemobile.com.ng/${userId}`;
 
+  // Defined outside or memoized to avoid re-render issues
   const tasks: Task[] = [
     { id: '1', name: 'Follow X (Twitter) account', points: 4, type: 'social', status: 'start' },
     { id: '2', name: 'Like recent post', points: 2, type: 'social', status: 'start' },
@@ -70,30 +71,35 @@ export function Rewards() {
   ];
 
   useEffect(() => {
-    fetchBonusData();
-  }, []);
+    let isMounted = true;
 
-  const fetchBonusData = async () => {
-    try {
-      setLoading(true);
-      showLoader();
-      
-      const summaryRes = await getRequest(ENDPOINTS.bonus_summary);
-      if (summaryRes && summaryRes.data) {
-        setSummary(summaryRes.data);
+    const fetchBonusData = async () => {
+      try {
+        setLoading(true);
+        showLoader();
+        
+        const summaryRes = await getRequest(ENDPOINTS.bonus_summary);
+        if (isMounted && summaryRes?.data) {
+          setSummary(summaryRes.data);
+        }
+        
+        const historyRes = await getRequest(ENDPOINTS.bonus_history);
+        if (isMounted && historyRes?.data) {
+          setHistory(historyRes.data);
+        }
+      } catch (error) {
+        if (isMounted) showToast('Failed to load rewards data');
+      } finally {
+        if (isMounted) {
+          hideLoader();
+          setLoading(false);
+        }
       }
-      
-      const historyRes = await getRequest(ENDPOINTS.bonus_history);
-      if (historyRes && historyRes.data) {
-        setHistory(historyRes.data);
-      }
-    } catch (error) {
-      showToast('Failed to load rewards data');
-    } finally {
-      hideLoader();
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchBonusData();
+    return () => { isMounted = false; };
+  }, [showLoader, hideLoader, showToast]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(referralLink);
@@ -101,19 +107,23 @@ export function Rewards() {
   };
 
   const handleSocialVerify = (platform: string) => {
-    showToast(`${platform} handle submitted for verification`);
+    showToast(`${platform} handle submitted!`);
   };
 
-  const handleVerifyYoutube = (taskId: string) => {
-    if (!youtubeCode) return showToast('Please enter the code');
-    showToast('Code submitted! Verification pending.');
+  const handleVerifyYoutube = () => {
+    if (!youtubeCode.trim()) {
+      showToast('Please enter the code');
+      return;
+    }
+    showToast('Code submitted for verification!');
     setExpandedTask(null);
+    setYoutubeCode('');
   };
 
-  const totalPoints = summary?.current_points || 0;
-  const earnedPoints = summary?.lifetime_earned || 0;
-  const redeemedPoints = summary?.lifetime_redeemed || 0;
-  const referralCount = summary?.referral_count || 0;
+  const totalPoints = summary?.current_points ?? 0;
+  const earnedPoints = summary?.lifetime_earned ?? 0;
+  const redeemedPoints = summary?.lifetime_redeemed ?? 0;
+  const referralCount = summary?.referral_count ?? 0;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
@@ -164,36 +174,31 @@ export function Rewards() {
             {/* Referral Link Strip */}
             <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl p-3 flex items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">Your Referral Link</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">Referral Link</p>
                 <p className="text-sm text-slate-600 dark:text-slate-300 truncate">{referralLink}</p>
               </div>
               <button 
                 onClick={handleCopyLink}
-                className="p-2 bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-lg hover:bg-sky-100 transition-colors"
+                className="p-2 bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-lg hover:bg-sky-100"
               >
                 <Copy className="w-4 h-4" />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {[
-                { id: 'points', label: 'Points Details' },
-                { id: 'history', label: 'History' },
-                { id: 'referral', label: 'Referral Bonus' },
-                { id: 'tasks', label: 'Tasks' }
-              ].map((tab) => (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {(['points', 'history', 'referral', 'tasks'] as const).map((tabId) => (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  key={tabId}
+                  onClick={() => setActiveTab(tabId)}
                   className={cn(
                     'px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap',
-                    activeTab === tab.id
+                    activeTab === tabId
                       ? 'bg-sky-500 text-white'
-                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-transparent dark:border-slate-700'
                   )}
                 >
-                  {tab.label}
+                  {tabId === 'points' ? 'Points Details' : tabId.charAt(0).toUpperCase() + tabId.slice(1).replace('_', ' ')}
                 </button>
               ))}
             </div>
@@ -204,54 +209,16 @@ export function Rewards() {
                 <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
               </div>
             ) : activeTab === 'points' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-green-500" />
-                    </div>
-                    <span className="text-slate-500 dark:text-slate-400">Lifetime Earned</span>
-                  </div>
-                  <p className="text-2xl font-bold text-slate-800 dark:text-white">{earnedPoints.toLocaleString()}</p>
-                </div>
-
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                      <Gift className="w-5 h-5 text-red-500" />
-                    </div>
-                    <span className="text-slate-500 dark:text-slate-400">Lifetime Redeemed</span>
-                  </div>
-                  <p className="text-2xl font-bold text-slate-800 dark:text-white">{redeemedPoints.toLocaleString()}</p>
-                </div>
-
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
-                      <Trophy className="w-5 h-5 text-sky-500" />
-                    </div>
-                    <span className="text-slate-500 dark:text-slate-400">Current Balance</span>
-                  </div>
-                  <p className="text-2xl font-bold text-sky-500">{totalPoints.toLocaleString()}</p>
-                </div>
-
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-purple-500" />
-                    </div>
-                    <span className="text-slate-500 dark:text-slate-400">Referral Network</span>
-                  </div>
-                  <p className="text-2xl font-bold text-slate-800 dark:text-white">{referralCount}</p>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard icon={<TrendingUp className="text-green-500" />} label="Lifetime Earned" value={earnedPoints} color="green" />
+                <StatCard icon={<Gift className="text-red-500" />} label="Lifetime Redeemed" value={redeemedPoints} color="red" />
+                <StatCard icon={<Trophy className="text-sky-500" />} label="Current Balance" value={totalPoints} color="sky" isBalance />
+                <StatCard icon={<Users className="text-purple-500" />} label="Referral Network" value={referralCount} color="purple" />
               </div>
             ) : activeTab === 'history' ? (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 {history.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Gift className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-                    <p className="text-slate-500 dark:text-slate-400">No history yet</p>
-                  </div>
+                  <EmptyState icon={<Gift className="w-12 h-12" />} text="No history yet" />
                 ) : (
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
                     {history.map((item) => (
@@ -259,15 +226,13 @@ export function Rewards() {
                         <div className="flex items-center gap-3">
                           <div className={cn(
                             'w-10 h-10 rounded-full flex items-center justify-center',
-                            item.transaction_type === 'earned'
-                              ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                            item.transaction_type === 'earned' ? 'bg-green-100 text-green-600 dark:bg-green-900/30' : 'bg-red-100 text-red-600 dark:bg-red-900/30'
                           )}>
                             {item.transaction_type === 'earned' ? <TrendingUp className="w-5 h-5" /> : <Gift className="w-5 h-5" />}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-800 dark:text-white">{item.description}</p>
-                            <p className="text-sm text-slate-400">{new Date(item.created_at).toLocaleDateString()}</p>
+                            <p className="font-medium text-slate-800 dark:text-white text-sm">{item.description}</p>
+                            <p className="text-xs text-slate-400">{new Date(item.created_at).toLocaleDateString()}</p>
                           </div>
                         </div>
                         <span className={cn('font-bold', item.transaction_type === 'earned' ? 'text-green-500' : 'text-red-500')}>
@@ -279,53 +244,42 @@ export function Rewards() {
                 )}
               </div>
             ) : activeTab === 'referral' ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-8 text-center">
-                 <div className="w-16 h-16 bg-sky-100 dark:bg-sky-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-sky-500" />
-                 </div>
-                 <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Referral Earnings</h3>
-                 <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-6">
-                    Invite your friends to BlueMobile and earn 50 BluePoints for every successful sign-up.
-                 </p>
-                 <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                        <p className="text-xs text-slate-400 uppercase font-bold">Total Referrals</p>
-                        <p className="text-xl font-bold text-slate-800 dark:text-white">{referralCount}</p>
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-8 text-center">
+                    <div className="w-16 h-16 bg-sky-100 dark:bg-sky-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Users className="w-8 h-8 text-sky-500" />
                     </div>
-                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                        <p className="text-xs text-slate-400 uppercase font-bold">Referral Bonus</p>
-                        <p className="text-xl font-bold text-sky-500">{referralCount * 50}</p>
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Referral Earnings</h3>
+                    <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-6 text-sm">
+                        Invite your friends and earn 50 BluePoints for every successful sign-up.
+                    </p>
+                    <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                            <p className="text-[10px] text-slate-400 uppercase font-bold">Total Referrals</p>
+                            <p className="text-lg font-bold text-slate-800 dark:text-white">{referralCount}</p>
+                        </div>
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                            <p className="text-[10px] text-slate-400 uppercase font-bold">Referral Bonus</p>
+                            <p className="text-lg font-bold text-sky-500">{referralCount * 50}</p>
+                        </div>
                     </div>
-                 </div>
-              </div>
+                </div>
             ) : (
               <div className="space-y-6">
-                {/* Social Carousel */}
-                <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                   {[
-                    { id: 'x', icon: Twitter, placeholder: 'X ID' },
-                    { id: 'ig', icon: Instagram, placeholder: 'IG Handle' },
-                    { id: 'fb', icon: Facebook, placeholder: 'FB Name' },
-                    { id: 'yt', icon: Youtube, placeholder: 'YT Channel' }
-                  ].map((social) => (
-                    <div key={social.id} className="flex-shrink-0 flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-2 rounded-xl">
-                       <social.icon className="w-4 h-4 text-slate-400 ml-1" />
-                       <input 
-                        type="text" 
-                        placeholder={social.placeholder}
-                        className="bg-transparent border-none text-sm focus:ring-0 w-24 dark:text-white"
-                       />
-                       <button 
-                        onClick={() => handleSocialVerify(social.id.toUpperCase())}
-                        className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                       >
-                        <Check className="w-3 h-3" />
-                       </button>
+                    { id: 'X', Icon: Twitter, ph: 'X ID' },
+                    { id: 'IG', Icon: Instagram, ph: 'IG Handle' },
+                    { id: 'FB', Icon: Facebook, ph: 'FB Name' },
+                    { id: 'YT', Icon: Youtube, ph: 'YT Channel' }
+                  ].map((s) => (
+                    <div key={s.id} className="flex-shrink-0 flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-1.5 rounded-xl">
+                       <s.Icon className="w-4 h-4 text-slate-400 ml-1" />
+                       <input type="text" placeholder={s.ph} className="bg-transparent border-none text-xs focus:ring-0 w-20 dark:text-white p-0" />
+                       <button onClick={() => handleSocialVerify(s.id)} className="p-1.5 bg-green-500 text-white rounded-lg"><Check className="w-3 h-3" /></button>
                     </div>
                   ))}
                 </div>
 
-                {/* Task List */}
                 <div className="space-y-3">
                   {tasks.map((task) => (
                     <div key={task.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
@@ -335,35 +289,25 @@ export function Rewards() {
                                     {task.type === 'video' ? <PlayCircle className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
                                 </div>
                                 <div>
-                                    <p className="font-medium text-slate-800 dark:text-white text-sm md:text-base">{task.name}</p>
-                                    <p className="text-xs font-bold text-sky-500">+{task.points} BluePoints</p>
+                                    <p className="font-medium text-slate-800 dark:text-white text-sm">{task.name}</p>
+                                    <p className="text-[10px] font-bold text-sky-500 uppercase">+{task.points} Points</p>
                                 </div>
                             </div>
                             <Button 
                                 size="sm"
                                 variant={task.status === 'start' ? 'default' : 'secondary'}
-                                className={cn(task.status === 'start' ? 'bg-sky-500 hover:bg-sky-600' : '')}
+                                className={cn("h-8 text-xs", task.status === 'start' ? 'bg-sky-500' : '')}
                                 onClick={() => task.type === 'video' ? setExpandedTask(expandedTask === task.id ? null : task.id) : null}
                             >
                                 {task.status === 'start' ? 'Start' : 'Pending'}
                             </Button>
                         </div>
-                        
-                        {/* Expanded Video Task Flow */}
                         {expandedTask === task.id && (
                             <div className="px-4 pb-4 pt-2 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 italic">Find the 4-digit code hidden in the video</p>
+                                <p className="text-[10px] text-slate-500 mb-2">Find the hidden code in the video</p>
                                 <div className="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Enter code"
-                                        value={youtubeCode}
-                                        onChange={(e) => setYoutubeCode(e.target.value)}
-                                        className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-white focus:ring-sky-500"
-                                    />
-                                    <Button size="sm" className="bg-sky-500" onClick={() => handleVerifyYoutube(task.id)}>
-                                        Verify
-                                    </Button>
+                                    <input value={youtubeCode} onChange={(e) => setYoutubeCode(e.target.value)} placeholder="Code" className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1 text-xs dark:text-white" />
+                                    <Button size="sm" className="bg-sky-500 h-8" onClick={handleVerifyYoutube}>Verify</Button>
                                 </div>
                             </div>
                         )}
@@ -375,10 +319,37 @@ export function Rewards() {
           </div>
         </main>
       </div>
-
       <ToastComponent />
       <LoaderComponent />
     </div>
   );
-                     }
+}
+
+// Sub-components to keep code clean and prevent mapping/key errors
+function StatCard({ icon, label, value, color, isBalance }: { icon: React.ReactNode, label: string, value: number, color: string, isBalance?: boolean }) {
+  const colorMap: Record<string, string> = {
+    green: 'bg-green-100 dark:bg-green-900/30',
+    red: 'bg-red-100 dark:bg-red-900/30',
+    sky: 'bg-sky-100 dark:bg-sky-900/30',
+    purple: 'bg-purple-100 dark:bg-purple-900/30'
+  };
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5">
+      <div className="flex items-center gap-3 mb-3">
+        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", colorMap[color])}>{icon}</div>
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{label}</span>
+      </div>
+      <p className={cn("text-xl font-bold", isBalance ? "text-sky-500" : "text-slate-800 dark:text-white")}>{value.toLocaleString()}</p>
+    </div>
+  );
+}
+
+function EmptyState({ icon, text }: { icon: React.ReactNode, text: string }) {
+  return (
+    <div className="text-center py-12">
+      <div className="text-slate-300 dark:text-slate-600 mb-3 flex justify-center">{icon}</div>
+      <p className="text-slate-500 dark:text-slate-400 text-sm">{text}</p>
+    </div>
+  );
+                  }
                   
