@@ -137,6 +137,17 @@ export function Rewards() {
               >
                 History
               </button>
+              <button
+                onClick={() => setActiveTab('referal')}
+                className={cn(
+                  'px-4 py-2 rounded-full text-sm font-medium transition-colors',
+                  activeTab === 'referal'
+                    ? 'bg-sky-500 text-white'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                )}
+              >
+                Referal Bonus
+              </button>
             </div>
 
             {/* Content */}
