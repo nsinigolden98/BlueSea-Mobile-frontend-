@@ -59,7 +59,7 @@ export function Rewards() {
   const { LoaderComponent, showLoader, hideLoader } = Loader();
 
   const userId = "user_123"; 
-  const referralLink = `https://bluemobile.com.ng/${userId}`;
+  const referralLink = `https://blueseamobile.com.ng/${userId}`;
 
   // Defined outside or memoized to avoid re-render issues
   const tasks: Task[] = [
