@@ -36,7 +36,7 @@ const actions: QuickAction[] = [
     id: 'bills', 
     label: 'Pay Bills', 
     icon: Lightbulb, 
-    path: '/services',
+    path: '/LightBills',
     color: 'from-teal-500 to-teal-600'
   },
 ];
