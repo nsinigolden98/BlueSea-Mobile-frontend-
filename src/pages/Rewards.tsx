@@ -6,9 +6,7 @@ import { getRequest, ENDPOINTS } from '@/types';
 import { cn } from '@/lib/utils';
 import { 
   Gift, 
-  TrendingUp, 
   ArrowRight,
-  Trophy,
   Loader2,
   Copy,
   Check,
@@ -36,7 +34,6 @@ export function Rewards() {
   const [activeTab, setActiveTab] = useState<'points' | 'history' | 'referral' | 'tasks'>('points');
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<BonusSummary | null>(null);
-  const [history, setHistory] = useState<BonusHistory[]>([]);
   const [copied, setCopied] = useState(false);
   const [youtubeOpen, setYoutubeOpen] = useState(false);
   const [youtubeCode, setYoutubeCode] = useState('');
@@ -56,9 +53,6 @@ export function Rewards() {
       
       const summaryRes = await getRequest(ENDPOINTS.bonus_summary);
       if (summaryRes?.data) setSummary(summaryRes.data);
-      
-      const historyRes = await getRequest(ENDPOINTS.bonus_history);
-      if (historyRes?.data) setHistory(historyRes.data);
 
     } catch {
       showToast('Failed to load rewards data');
@@ -84,9 +78,9 @@ export function Rewards() {
     }
   };
 
-  const sendHandle = (type: string, value: string) => {
+  const sendHandle = (type: string, val: string) => {
+    if (!val) return;
     showToast(`${type} submitted`);
-    // 🔥 connect backend here later
   };
 
   return (
@@ -103,7 +97,7 @@ export function Rewards() {
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-4xl mx-auto space-y-6">
 
-            {/* ORIGINAL TOP CARD */}
+            {/* ORIGINAL CARD */}
             <div className="bg-gradient-to-br from-sky-400 via-sky-500 to-sky-600 rounded-2xl p-6 text-white shadow-lg shadow-sky-500/25">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -126,7 +120,7 @@ export function Rewards() {
               </div>
             </div>
 
-            {/* REFERRAL STRIP (FIXED STYLE) */}
+            {/* REFERRAL */}
             <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
               <span className="truncate">{referralLink}</span>
               <button onClick={copyLink} className="text-sky-500 flex items-center gap-1">
@@ -134,7 +128,7 @@ export function Rewards() {
               </button>
             </div>
 
-            {/* TABS (UNCHANGED STYLE) */}
+            {/* TABS */}
             <div className="flex gap-2">
               {['points','history','referral','tasks'].map(tab => (
                 <button
@@ -160,7 +154,6 @@ export function Rewards() {
             ) : activeTab === 'points' ? (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-                {/* ORIGINAL CARDS */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6">
                   <p className="text-slate-500 dark:text-slate-400 mb-2">Lifetime Earned</p>
                   <p className="text-2xl font-bold">{earnedPoints}</p>
@@ -176,7 +169,6 @@ export function Rewards() {
                   <p className="text-2xl font-bold text-sky-500">{totalPoints}</p>
                 </div>
 
-                {/* NEW */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6">
                   <p className="text-slate-500 dark:text-slate-400 mb-2">Referral Network</p>
                   <p className="text-2xl font-bold">{referralsCount}</p>
@@ -186,7 +178,6 @@ export function Rewards() {
             ) : activeTab === 'tasks' ? (
               <div className="space-y-4">
 
-                {/* HANDLE INPUT WITH TICK */}
                 {['X','Instagram','Facebook','YouTube'].map((item) => (
                   <div key={item} className="flex items-center gap-2">
                     <input
@@ -200,7 +191,6 @@ export function Rewards() {
                   </div>
                 ))}
 
-                {/* TASK ITEMS */}
                 <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex justify-between">
                   <span>Follow Account (+4)</span>
                   <Button size="sm">Start</Button>
@@ -211,7 +201,6 @@ export function Rewards() {
                   <Button size="sm">Start</Button>
                 </div>
 
-                {/* YOUTUBE FLOW */}
                 <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
                   <div className="flex justify-between">
                     <span>Watch YouTube (+8)</span>
@@ -242,4 +231,4 @@ export function Rewards() {
       <LoaderComponent />
     </div>
   );
-                  }
+}
