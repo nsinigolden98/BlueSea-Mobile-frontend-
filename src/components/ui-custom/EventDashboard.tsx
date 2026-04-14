@@ -263,6 +263,7 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
   const [scannerEmail, setScannerEmail] = useState('');
   const [addingScanner, setAddingScanner] = useState(false);
   const [selectedBank, setSelectedBank] = useState('');
+  const [bankSearch, setBankSearch] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -540,30 +541,33 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
                       setAccountNumber(val);
                       setAccountVerified(false);
                       setAccountName('');
-                      if (val.length >= 3) {
-                        const prefix = val.slice(0, 3);
-                        const matched = NIGERIAN_BANKS.filter(b => b.code.startsWith(prefix));
-                        if (matched.length > 0) {
-                          setSelectedBank(matched[0].code);
-                        }
-                      }
                     }}
                     maxLength={10}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-700 dark:text-slate-300">Select Bank</Label>
+                  <Input
+                    type="text"
+                    placeholder="Search bank name..."
+                    value={bankSearch}
+                    onChange={(e) => setBankSearch(e.target.value)}
+                    className="mb-2"
+                  />
                   <select
                     value={selectedBank}
                     onChange={(e) => {
                       setSelectedBank(e.target.value);
                       setAccountVerified(false);
                       setAccountName('');
+                      setBankSearch('');
                     }}
                     className="w-full p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                   >
                     <option value="">Select bank</option>
-                    {NIGERIAN_BANKS.map((bank) => (
+                    {NIGERIAN_BANKS.filter(b => 
+                      bankSearch === '' || b.name.toLowerCase().includes(bankSearch.toLowerCase())
+                    ).map((bank) => (
                       <option key={bank.code} value={bank.code}>
                         {bank.name}
                       </option>

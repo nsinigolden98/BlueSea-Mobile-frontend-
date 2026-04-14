@@ -120,8 +120,8 @@ export function PinModal() {
             bank_name: payload.bank_name,
             amount: payload.amount,
           });
-        }
-    console.log(response) 
+        } 
+    // console.log(response) 
     return response
 
   };

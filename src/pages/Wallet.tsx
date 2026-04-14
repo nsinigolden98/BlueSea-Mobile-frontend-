@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Sidebar, Header, TransactionList, LoadingSpinner } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
-import { postRequest } from '@/types';
+import { postRequest, ENDPOINTS, API_BASE } from '@/types';
 import { Copy, Check, Send, Landmark, ShieldCheck, Search, ChevronRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 // --- VERCEL BUILD SAFETY ---
-const PATH_TRANSFER = '/api/wallet/transfer';
+// const PATH_TRANSFER = '/api/wallet/transfer';
 
 export function Wallet() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
   
   // --- SIMULATED DATA ---
   const simulatedAccount = {
@@ -21,16 +23,27 @@ export function Wallet() {
 
   // --- TRANSFER MODAL STATE ---
   const [transferModalOpen, setTransferModalOpen] = useState(false);
-  const [transferStep, setTransferStep] = useState(1); 
+  const [transferStep, setTransferStep] = useState(1);
   const [transferData, setTransferData] = useState({
     recipient: '',
     amount: '',
     pin: ''
   });
   
-  const [foundUser, setFoundUser] = useState<any>(null);
+  interface FoundUser {
+    email: string | Promise<string>;
+    name: string | Promise<string>;
+    image?: string | Promise<string>;
+  }
+  
+  const [foundUser, setFoundUser] = useState<FoundUser>(
+  {  name: '',
+      email: ''
+    }
+  );
   const [transferError, setTransferError] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
 
   // --- LOGIC ---
   const handleCopy = (text: string, field: string) => {
@@ -39,27 +52,71 @@ export function Wallet() {
     setTimeout(() => setCopyStatus(null), 2000);
   };
 
-  useEffect(() => {
-    if (transferData.recipient.length >= 5) {
+  const lookupUser = async (email: string) => {
+    if (!email || email.length < 5 ) {
       setFoundUser({
-        name: "Nsini Golden",
-        email: "nsini@bluesea.com",
-        id: "BS-88291",
-        phone: "08123456789"
+        name: '',
+        email:'',
       });
-    } else {
-      setFoundUser(null);
+      setTransferError('Invalid email')
+      return;
     }
+    if (email == user?.email) {
+     setFoundUser({
+        name: '',
+        email:'',
+      });
+      setTransferError('Cannot transfer to self')
+      return; 
+    }
+    setLookingUp(true);
+    try {
+      
+      const response =  await postRequest(ENDPOINTS.user_lookup, {email: transferData.recipient} )
+      if (response?.found) {
+        
+        setFoundUser(
+          {
+            email: response.email,
+            name: response.name,
+            image: response.image
+          }
+        )
+      }
+      
+    } catch (error) {
+      console.error('Lookup failed:', error);
+      setFoundUser({
+        name: '',
+        email: ''
+      });
+    } finally {
+      setLookingUp(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (transferData.recipient.length >= 5) {
+        lookupUser(transferData.recipient);
+      } else {
+        setFoundUser({
+          name: '',
+          email: ''
+        });
+      }
+    }, 500);
+    return () => clearTimeout(timer);
   }, [transferData.recipient]);
 
   const handleTransferSubmit = async () => {
     setProcessing(true);
     setTransferError('');
     try {
-      const response = await postRequest(PATH_TRANSFER, {
-        recipient: transferData.recipient,
+      const response = await postRequest(ENDPOINTS.internal_transfer, {
+        email: transferData.recipient,
         amount: Number(transferData.amount),
-        pin: transferData.pin
+        transaction_pin: transferData.pin
       });
 
       if (response.success) {
@@ -68,9 +125,10 @@ export function Wallet() {
         setTransferData({ recipient: '', amount: '', pin: '' });
         window.location.reload(); 
       } else {
-        setTransferError(response.message || 'Transfer failed. Check PIN.');
+        setTransferError(response.error || 'Transfer failed. Check PIN.');
       }
     } catch (error) {
+      console.log(error)
       setTransferError('Connection error. Please try again.');
     } finally {
       setProcessing(false);
@@ -118,7 +176,7 @@ export function Wallet() {
                 <div className="bg-slate-900 dark:bg-sky-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-xl h-full flex flex-col justify-center border border-slate-800 dark:border-sky-500">
                   <div className="relative z-10">
                     <p className="text-sky-200/60 text-xs font-bold uppercase tracking-[0.2em]">Current Balance</p>
-                    <h2 className="text-5xl md:text-6xl font-black mt-4 mb-3 tracking-tight">₦34,650.00</h2>
+                    <h2 className="text-5xl md:text-6xl font-black mt-4 mb-3 tracking-tight">{ user?.balance}</h2>
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase">
                       <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                       Verified Account
@@ -174,7 +232,7 @@ export function Wallet() {
               {transferStep === 1 && (
                 <div className="animate-in slide-in-from-bottom-4 space-y-5">
                   <div className="relative group">
-                    <label className="text-[10px] font-black uppercase text-slate-400 absolute left-5 top-3 z-10">Recipient ID / Email / Phone</label>
+                    <label className="text-[10px] font-black uppercase text-slate-400 absolute left-5 top-3 z-10">Email </label>
                     <input
                       placeholder="Enter details..."
                       className="w-full pl-5 pr-12 pt-8 pb-4 rounded-3xl border-none bg-slate-100 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-slate-900 dark:text-white font-bold"
@@ -198,12 +256,18 @@ export function Wallet() {
                   {foundUser && (
                     <div className="p-5 bg-sky-500/5 border border-sky-500/10 rounded-[2rem] flex items-center gap-4 animate-in fade-in zoom-in-95">
                       <div className="h-12 w-12 bg-sky-500 rounded-2xl flex items-center justify-center text-white font-black">
-                        {foundUser.name.charAt(0)}
+                        {foundUser.image ? `${API_BASE}${foundUser.image}`: foundUser.name.charAt(0)}
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-bold text-slate-900 dark:text-white truncate">{foundUser.name}</h4>
-                        <p className="text-[10px] font-bold text-slate-500 uppercase">{foundUser.id} • {foundUser.email}</p>
+                        <p className="text-[10px] font-bold text-slate-500">{foundUser.email}</p>
                       </div>
+                    </div>
+                  )}
+
+                  {lookingUp && (
+                    <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-[2rem] text-center">
+                      <p className="text-sm text-slate-500">Looking up user...</p>
                     </div>
                   )}
                 </div>
@@ -215,7 +279,7 @@ export function Wallet() {
                     <div className="h-16 w-16 bg-sky-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                       <ShieldCheck className="h-8 w-8 text-sky-500" />
                     </div>
-                    <p className="text-sm text-slate-500">Confirm payment of <span className="font-black text-slate-900 dark:text-white">₦{transferData.amount}</span> to <span className="font-bold text-sky-500">{foundUser?.name}</span></p>
+                    <p className="text-sm text-slate-500">Confirm payment of <span className="font-black text-slate-900 dark:text-white">₦{transferData.amount}</span> to <span className="font-bold text-sky-500">{foundUser.name}</span></p>
                   </div>
                   
                   <div className="max-w-[220px] mx-auto">

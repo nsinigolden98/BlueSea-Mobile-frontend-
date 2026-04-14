@@ -334,6 +334,8 @@ export const ENDPOINTS = {
   event_withdraw: `${API_BASE}/marketplace/withdraw/`,
   electricity: `${API_BASE}/payments/electricity/`,
   electricity_user: `${API_BASE}/payments/electricity/customer/`,
+  internal_transfer: `${API_BASE}/payments/internal-transfer/`,
+  user_lookup: `${API_BASE}/accounts/user/lookup/`,
   notifications: `${API_BASE}/notifications/`,
   notification_read: (id: string) => `${API_BASE}/notifications/${id}/read/`,
   notification_mark_all_read: `${API_BASE}/notifications/mark-all-read/`,
@@ -439,7 +441,7 @@ export async function getRequest(url: string, options?: { method?: string }) {
       }
     );
     return response.data
-  } catch (error: any) {
+  } catch (error) {
     console.log(error)
     return {}
   }
