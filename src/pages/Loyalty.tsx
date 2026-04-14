@@ -124,7 +124,7 @@ export function Loyalty() {
                     <p className="text-3xl font-bold">{totalPoints.toLocaleString()}</p>
                   </div>
                 </div>
-                <button
+               <button
                   onClick={fetchRewards}
                   className="p-2 bg-white/20 rounded-lg hover:bg-white/30"
                 >
