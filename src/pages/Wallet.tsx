@@ -79,7 +79,7 @@ export function Wallet() {
           {
             email: response.email,
             name: response.name,
-            image: response.image
+            image: response.image ? `${API_BASE}${response.image}` : response.name.charAt(0)
           }
         )
       }
@@ -134,6 +134,8 @@ export function Wallet() {
       setProcessing(false);
     }
   };
+
+  
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex transition-colors duration-200">
@@ -256,7 +258,7 @@ export function Wallet() {
                   {foundUser && (
                     <div className="p-5 bg-sky-500/5 border border-sky-500/10 rounded-[2rem] flex items-center gap-4 animate-in fade-in zoom-in-95">
                       <div className="h-12 w-12 bg-sky-500 rounded-2xl flex items-center justify-center text-white font-black">
-                        {foundUser.image ? `${API_BASE}${foundUser.image}`: foundUser.name.charAt(0)}
+                        {foundUser.image }
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-bold text-slate-900 dark:text-white truncate">{foundUser.name}</h4>
