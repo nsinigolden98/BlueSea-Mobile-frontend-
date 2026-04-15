@@ -289,6 +289,7 @@ export function Wallet() {
                       type="password"
                       maxLength={4}
                       placeholder="••••"
+                      inputMode='numeric'
                       className="w-full px-4 py-5 rounded-2xl bg-slate-100 dark:bg-slate-800 border-none focus:ring-2 focus:ring-sky-500 outline-none text-center text-4xl tracking-[1.5rem] font-black"
                       value={transferData.pin}
                       onChange={(e) => setTransferData({...transferData, pin: e.target.value.replace(/\D/g, '')})}
