@@ -93,7 +93,7 @@ export function Support() {
     showLoader();
     try {
       const response = await postRequest(
-        `${ENDPOINTS.support_tickets}${selectedTicket.id}/`,
+        ENDPOINTS.support_ticket_detail(String(selectedTicket.id)),
         { message: newMessage }
       );
 
@@ -113,7 +113,7 @@ export function Support() {
 
   const fetchTicketDetail = async (ticketId: number) => {
     try {
-      const response = await getRequest(`${ENDPOINTS.support_tickets}${ticketId}/`);
+      const response = await getRequest(ENDPOINTS.support_ticket_detail(String(ticketId)));
       if (response) {
         setSelectedTicket(response);
       }

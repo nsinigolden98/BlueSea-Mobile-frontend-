@@ -17,11 +17,12 @@ import {
   Coins,
   Grid3X3,
   ArrowRight,
+  Store,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Vault,
+  Store,
   Users,
   RefreshCw,
   Smartphone,

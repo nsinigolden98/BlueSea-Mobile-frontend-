@@ -402,7 +402,7 @@ export function setCookie(name:string,TOKEN:string) {
   Cookies.set(name, TOKEN, {
     expires: 1,
     path: '/',
-    secure: true, 
+    secure: false, 
     sameSite:'lax',
   })
 }

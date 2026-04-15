@@ -17,6 +17,7 @@ interface TicketTypeForm {
 
 const CATEGORIES = ['Music', 'Conference', 'Sports', 'Networking', 'Workshop', 'Party', 'Other'];
 
+
 export function EventManager() {
   const navigate = useNavigate();
   const [myEvents, setMyEvents] = useState<MarketplaceEvent[]>([]);
@@ -92,9 +93,10 @@ export function EventManager() {
 
   const fetchMyEvents = async () => {
     try {
-      const data = await getRequest(ENDPOINTS.marketplace_events);
-      if (data) {
-        setMyEvents(data);
+      const response = await getRequest(ENDPOINTS.vendor_tickets);
+      if (response) {
+        console.log(response)
+        setMyEvents(response.data);
       }
     } catch (err) {
       console.log(err)
@@ -160,11 +162,11 @@ export function EventManager() {
         event_date: new Date(formData.event_date as string).toISOString(),
         ticket_types: isFree ? [] : ticketTypes.map(tt => ({
           name: tt.name,
-          price: tt.price || '0',
+          price: Number(tt.price) || 0,
           quantity_available: Number(tt.quantity_available) || 0,
         })),
       };
-
+      console.log(payload)
       // Check if we have files to upload
       const hasFiles = formData.event_banner || formData.ticket_image;
 
@@ -210,7 +212,7 @@ export function EventManager() {
         console.log('Create event response:', response);
         hideLoader();
         
-        if (response?.id || response?.success) {
+        if (response?.state || response?.success) {
           showToast('Event created successfully!');
           setShowModal(false);
           fetchMyEvents();
