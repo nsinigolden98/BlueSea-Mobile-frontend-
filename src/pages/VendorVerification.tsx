@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { XCircle, Clock, Upload, Loader2, Shield, QrCode, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getRequest, postRequest, ENDPOINTS, type VendorStatus, type CreateVendorPayload } from '@/types';
+import { getRequest, postFileRequest,ENDPOINTS, type VendorStatus, type CreateVendorPayload } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -73,6 +73,7 @@ export function VendorVerification() {
         setVendorStatus(null);
       }
     } catch (err) {
+      console.log(err);
       console.log('No vendor status found');
     } finally {
       setLoading(false);
@@ -101,19 +102,22 @@ export function VendorVerification() {
     setSubmitting(true);
 
     try {
-      const payload = {
-        brand_name: formData.brand_name,
-        business_type: formData.business_type,
-        residential_address: accountability.residential_address,
-        state_city: accountability.state_city,
-        id_type: accountability.id_type,
-        monthly_volume: accountability.monthly_volume,
-        business_description: accountability.business_description,
-        id_document: accountability.id_document,
-        proof_of_address: accountability.proof_of_address,
-      };
 
-      const response = await postRequest(ENDPOINTS.create_vendor, payload);
+      const payload = new FormData();
+      
+        payload.append("brand_name", formData.brand_name)
+        payload.append('business_type', formData.business_type || '')
+        payload.append('residential_address', accountability.residential_address)
+        payload.append('state',accountability.state_city)
+        payload.append('id_type',accountability.id_type)
+        payload.append('monthly_volume',accountability.monthly_volume)
+        payload.append('business_description',accountability.business_description)
+        payload.append('id_document',accountability.id_document || '')
+        payload.append('proof_of_address', accountability.proof_of_address || '')
+      
+      console.log(payload);
+      
+      const response = await postFileRequest(ENDPOINTS.create_vendor, payload);
 
       if (response?.id || response?.success) {
         showToast('Verification request submitted successfully!');
@@ -123,6 +127,7 @@ export function VendorVerification() {
         showToast(response?.error || 'Failed to submit verification request');
       }
     } catch (err) {
+      console.log(err);
       showToast('Failed to submit verification request');
     } finally {
       setSubmitting(false);
@@ -370,10 +375,10 @@ export function VendorVerification() {
                     <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
                       <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
                       <p className="text-sm text-slate-500">Upload ID document (PDF, JPG, PNG)</p>
-                      <input
+                      <Input
                         type="file"
                         accept="image/*,.pdf"
-                        className="hidden"
+                        // className="hidden"
                         onChange={(e) => handleAccountabilityChange('id_document', e.target.files?.[0] || null)}
                       />
                     </div>
@@ -384,10 +389,10 @@ export function VendorVerification() {
                     <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
                       <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
                       <p className="text-sm text-slate-500">Upload proof of address</p>
-                      <input
+                      <Input
                         type="file"
                         accept="image/*,.pdf"
-                        className="hidden"
+                        // className="hidden"
                         onChange={(e) => handleAccountabilityChange('proof_of_address', e.target.files?.[0] || null)}
                       />
                     </div>
