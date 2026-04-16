@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Sidebar, Header, TransactionList, LoadingSpinner } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
-import { Landmark, Send, ChevronRight, User, ShieldCheck, Search } from 'lucide-react';
+import { Landmark, Send, X,ChevronRight, User, ShieldCheck, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { PinModal,Toast, TransactionModal } from '@/components/ui-custom';
+import { NIGERIAN_BANKS } from '@/data'
+
 
 export function Wallet() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -29,7 +34,46 @@ export function Wallet() {
     amount: '',
     pin: ''
   });
+
+  // 4. Withdrawal states
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [selectedBank, setSelectedBank] = useState('');
+  const [bankSearch, setBankSearch] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [accountName, setAccountName] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [verifyingAccount, setVerifyingAccount] = useState(false);
+  const [accountVerified, setAccountVerified] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+    const { showPinModal, PinComponent, message} = PinModal();
+  const { ToastComponent, showToast } = Toast();
+  const [isOpen, setIsOpen] = useState(false);
+    const [txStatus, setTxStatus] = useState<boolean | null>(null);
+    const [toastMessage, setToastMessage] = useState('')
   
+  
+  
+  useEffect(() => {
+    if (message) {
+      setIsOpen(true)
+      if (message?.success) {
+        showToast(message?.message || '')
+        setToastMessage(message?.message || '')
+        setTxStatus(true)
+        setWithdrawing(false)
+        setShowWithdrawModal(false)
+      }
+      else {
+        setToastMessage(message?.message || '')
+        setWithdrawing(false)
+        setTxStatus(false)
+      }
+    }
+       else {
+        return
+      };
+    
+  }, [message, showToast]);
   interface FoundUser {
     email: string;
     name: string;
@@ -80,6 +124,7 @@ export function Wallet() {
         setDepositError('Wallet funding error. Please try again.');
       }
     } catch (error) {
+      console.log(error);
       setProcessing(false);
       setDepositing(false);
       setDepositError('Wallet funding error. Please try again.');
@@ -94,9 +139,7 @@ export function Wallet() {
     setProcessing(false);
   };
 
-  const handleWithdraw = () => {
-    alert('Withdraw feature coming soon!');
-  };
+  const balance = Number(user?.balance.slice(1,).replaceAll(',',''))
 
   useEffect(() => {
     const lookupUser = async () => {
@@ -123,6 +166,7 @@ export function Wallet() {
           setFoundUser(null);
         }
       } catch (error) {
+        console.log(error);
         setFoundUser(null);
       } finally {
         setLookingUp(false);
@@ -154,11 +198,46 @@ export function Wallet() {
         setTransferError(response.error || 'Transfer failed. Check PIN.');
       }
     } catch (error) {
+      console.log(error);
       setTransferError('Connection error. Please try again.');
     } finally {
       setTransferProcessing(false);
     }
   };
+
+  const handleVerifyAccount = async () => {
+      if (!selectedBank || !accountNumber || accountNumber.length !== 10) return;
+      setVerifyingAccount(true);
+      setAccountName('');
+      setAccountVerified(false);
+      try {
+        const payload =  {
+            account_number: accountNumber,
+            bank_code: selectedBank,
+          }
+        const response = await postRequest(ENDPOINTS.verify_account_name, payload);
+        
+        if (response.success) {
+          setAccountName(response.account_name);
+          setAccountVerified(true);
+        } else {
+          showToast(response.message || 'Failed to verify account');
+        }
+      } catch (error) {
+        console.error('Verify failed:', error);
+      } finally {
+        setVerifyingAccount(false);
+      }
+    };
+  
+    const handleConfirmWithdraw = () => {
+      if (!accountVerified || !withdrawAmount) {
+        showToast('Missing Fields')
+        return
+      };
+      setWithdrawing(true);
+      showPinModal();
+    };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex transition-colors duration-200">
@@ -231,7 +310,7 @@ export function Wallet() {
                       Deposit
                     </Button>
                     <Button 
-                      onClick={handleWithdraw}
+                       onClick={() => setShowWithdrawModal(true)}
                       className="flex-1 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 h-12 font-bold"
                     >
                       Withdraw
@@ -244,7 +323,7 @@ export function Wallet() {
             {/* Internal Transfer Button */}
             <button 
               onClick={() => setTransferModalOpen(true)}
-              className="group w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] p-6 flex items-center justify-between hover:shadow-lg transition-all active:scale-[0.98]"
+              className="group w-full bg-white dark:bg-slate-900 b95order border-slate-100 dark:border-slate-800 rounded-[2rem] p-6 flex items-center justify-between hover:shadow-lg transition-all active:scale-[0.98]"
             >
               <div className="flex items-center gap-5">
                 <div className="p-4 bg-sky-500 text-white rounded-2xl shadow-lg shadow-sky-500/20 group-hover:bg-sky-600 transition-colors">
@@ -277,6 +356,110 @@ export function Wallet() {
           </div>
         </main>
       </div>
+
+      {/* Withdraw Modal */}
+              {showWithdrawModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Withdraw Funds</h3>
+                      <button onClick={() => setShowWithdrawModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-slate-700 dark:text-slate-300">Account Number</Label>
+                        <Input
+                  type="text"
+                  inputMode='numeric'
+                          placeholder="Enter account number"
+                          value={accountNumber}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            setAccountNumber(val);
+                            setAccountVerified(false);
+                            setAccountName('');
+                          }}
+                          maxLength={10}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-700 dark:text-slate-300">Select Bank</Label>
+                        <Input
+                          type="text"
+                          placeholder="Search bank name..."
+                          value={bankSearch}
+                          onChange={(e) => setBankSearch(e.target.value)}
+                          className="mb-2"
+                        />
+                        <select
+                          value={selectedBank}
+                          onChange={(e) => {
+                            setSelectedBank(e.target.value);
+                            setAccountVerified(false);
+                            setAccountName('');
+                            setBankSearch('');
+                          }}
+                          className="w-full p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
+                        >
+                          <option value="">Select bank</option>
+                          {NIGERIAN_BANKS.filter(b => 
+                            bankSearch === '' || b.name.toLowerCase().includes(bankSearch.toLowerCase())
+                          ).map((bank) => (
+                            <option key={bank.code} value={bank.code}>
+                              {bank.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {selectedBank && accountNumber.length === 10 && (
+                        <Button
+                          onClick={handleVerifyAccount}
+                          disabled={verifyingAccount}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          {verifyingAccount ? 'Verifying...' : 'Verify Account'}
+                        </Button>
+                      )}
+                      {accountVerified && (
+                        <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <p className="text-sm text-green-600 dark:text-green-400">{accountName}</p>
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <Label className="text-slate-700 dark:text-slate-300">Amount (₦)</Label>
+                        <Input
+                          type="number"
+                          placeholder="Enter amount"
+                          value={withdrawAmount}
+                          onChange={(e) => setWithdrawAmount(e.target.value)}
+                        />
+                        <p className="text-xs text-slate-500">Available: ₦{balance.toLocaleString()}</p>
+                      </div>
+                      <Button
+                        onClick={handleConfirmWithdraw}
+                        disabled={withdrawing || !accountVerified || !withdrawAmount || Number(withdrawAmount) > balance}
+                        className="w-full bg-green-500 hover:bg-green-600"
+                      >
+                        {withdrawing ? 'Processing...' : 'Confirm Withdrawal'}
+                      </Button>
+                    </div>
+                  </div>
+                        { isOpen &&(
+        <TransactionModal isSuccess={txStatus} onClose={()=> setIsOpen(false)} toastMessage={toastMessage} />)}
+                  <ToastComponent />
+                    <PinComponent type="withdrawal" value={  {
+              account_name: accountName,
+              account_number: accountNumber,
+              bank_code: selectedBank,
+              bank_name: NIGERIAN_BANKS.find(b => b.code === selectedBank)?.name || '',
+              amount: withdrawAmount,
+            }} />
+      
+                </div>
+              )}
 
       {/* Deposit Modal */}
       {depositModalOpen && (

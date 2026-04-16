@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef} from 'react';
 import { ENDPOINTS, postRequest } from '@/types';
 import { Loader } from '@/components/ui-custom'
-import './PinModal.css'
 import { cn } from '@/lib/utils';
+import { Button } from '../ui/button';
 
 interface PinComponentProps {
   type: string;
@@ -110,24 +110,13 @@ export function PinModal() {
         } else if (type === 'add-scanner') {
           const payload = value as { event_id: string; user_email: string };
           response = await postRequest(ENDPOINTS.marketplace_add_scanner(payload.event_id), { user_email: payload.user_email });
-        } else if (type === 'event-withdraw') {
-          const payload = value as { event_id: string; account_name: string; account_number: string; bank_code: string; bank_name: string; amount: string };
-          response = await postRequest(ENDPOINTS.event_withdraw, {
-            event_id: payload.event_id,
-            account_name: payload.account_name,
-            account_number: payload.account_number,
-            bank_code: payload.bank_code,
-            bank_name: payload.bank_name,
-            amount: payload.amount,
-          });
+        } else if (type === 'withdrawal') {
+          response = await postRequest(ENDPOINTS.withdrawal, value);
         } 
-    // console.log(response) 
+    console.log(response) 
     return response
 
   };
- 
-    
-
 
 
   const PinComponent = ({type, value}: PinComponentProps) => {
@@ -186,11 +175,13 @@ export function PinModal() {
 
     return (
         
-      <div>
-      <div id="pin-creation-step" className="form-card active-step  dark:bg-slate-600 daek:text-white">
-            <h2 className='dark:text-white'> ENTER PIN</h2>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div id="" className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md">
+          <div className="p-6 space-y-4">
 
-          <div id="create-pin-form">
+          
+            <h3 className='text-lg text-center font-semibold text-slate-800 dark:text-white'> Enter Pin</h3>
+
             
              <div className="flex gap-3 justify-center">
                     {[0, 1, 2, 3].map((index) => (
@@ -214,16 +205,19 @@ export function PinModal() {
                         )}
                       />
                     ))}
-                  </div>
+              
+                </div>
+              <div className='flex gap-3'>
+                
 
-
-          <button id='make-payment' className="btn btn-primary"
-            onClick={makeTransaction}>CONFIRM </button>
-                <button id='cancel-payment'  className="btn  btn-primary" onClick={hidePinModal}>CANCEL </button>
+                <Button variant='outline'  className="flex-1" onClick={hidePinModal}>Cancel </Button>
+          <Button className="flex-1 bg-sky-500 hover:bg-sky-600"
+            onClick={makeTransaction}>Confirm </Button>
             </div>
             
              
             
+            </div>
             </div>
         <LoaderComponent />
         </div>
