@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar, Header, TransactionList, LoadingSpinner } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
-import { Copy, Check, Send, Landmark, ShieldCheck, Search, ChevronRight } from 'lucide-react';
+import { Copy, Check, Send, Landmark, ShieldCheck, Search, ChevronRight, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 // --- VERCEL BUILD SAFETY ---
@@ -33,12 +33,13 @@ export function Wallet() {
   interface FoundUser {
     email: string | Promise<string>;
     name: string | Promise<string>;
-    image?: string | Promise<string>;
+    image: string;
   }
   
   const [foundUser, setFoundUser] = useState<FoundUser>(
   {  name: '',
-      email: ''
+      email: '',
+      image:'',
     }
   );
   const [transferError, setTransferError] = useState('');
@@ -56,15 +57,16 @@ export function Wallet() {
     if (!email || email.length < 5 ) {
       setFoundUser({
         name: '',
-        email:'',
-      });
+        email: '',
+        image: '',      });
       setTransferError('Invalid email')
       return;
     }
     if (email == user?.email) {
      setFoundUser({
         name: '',
-        email:'',
+       email: '',
+        image:'',
       });
       setTransferError('Cannot transfer to self')
       return; 
@@ -79,7 +81,7 @@ export function Wallet() {
           {
             email: response.email,
             name: response.name,
-            image: response.image ? `${API_BASE}${response.image}` : response.name.charAt(0)
+            image: response.image
           }
         )
       }
@@ -88,7 +90,8 @@ export function Wallet() {
       console.error('Lookup failed:', error);
       setFoundUser({
         name: '',
-        email: ''
+        email: '',
+        image:'',
       });
     } finally {
       setLookingUp(false);
@@ -102,7 +105,8 @@ export function Wallet() {
       } else {
         setFoundUser({
           name: '',
-          email: ''
+          email: '',
+          image: ''
         });
       }
     }, 500);
@@ -258,7 +262,18 @@ export function Wallet() {
                   {foundUser && (
                     <div className="p-5 bg-sky-500/5 border border-sky-500/10 rounded-[2rem] flex items-center gap-4 animate-in fade-in zoom-in-95">
                       <div className="h-12 w-12 bg-sky-500 rounded-2xl flex items-center justify-center text-white font-black">
-                        {foundUser.image }
+                    
+                      
+                  {foundUser?.image ?
+                    <img 
+                    src={`${API_BASE}${foundUser.image}`} 
+                  alt="Profile" 
+                  className="w-10 h-10 rounded-full object-cover  border-white dark:bord-slate-800"
+                />
+                  :
+                  <User className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                }
+                       
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-bold text-slate-900 dark:text-white truncate">{foundUser.name}</h4>
