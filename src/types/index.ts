@@ -156,6 +156,7 @@ export interface TicketType {
   name: string;
   price: string;
   quantity_available: number;
+  initial_quantity?: number;
   description?: string;
 }
 

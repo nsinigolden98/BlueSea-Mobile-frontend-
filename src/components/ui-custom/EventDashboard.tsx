@@ -97,7 +97,7 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
     if (evt.ticket_types && evt.ticket_types.length > 0) {
       evt.ticket_types.forEach(tt => {
         const available = Number(tt.quantity_available);
-        const sold = Math.floor(available * 0.3);
+        const sold = Number(tt.initial_quantity) - available
         total += sold * Number(tt.price);
       });
     }
@@ -108,7 +108,6 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
   const soldPercent = event.total_tickets > 0 
   ? (event.tickets_sold / event.total_tickets * 100).toFixed(1) 
   : '0';
-  const balance = (Number(soldPercent)  * profit) / 100
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -161,7 +160,7 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
               <span className="text-sm text-slate-500"> Profit</span>
             </div>
             <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-              ₦{balance.toLocaleString()}
+              ₦{profit.toLocaleString()}
             </p>
             <p className="text-xs text-slate-500">
               {soldPercent}% sold
@@ -174,8 +173,8 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
             <h4 className="font-semibold text-slate-800 dark:text-white mb-3">Ticket Types</h4>
             <div className="space-y-3">
               {event.ticket_types.map((tt, idx) => {
-                const sold = Number(tt.quantity_available) ;
-                // const profit = sold * Number(tt.price);
+                const not_sold = Number(tt.quantity_available) ;
+                const profit = (Number(tt.initial_quantity) - not_sold) * Number(tt.price);
                 return (
                   <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
                     <div>
@@ -183,8 +182,8 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
                       <p className="text-sm text-slate-500">₦{Number(tt.price).toLocaleString()} each</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-slate-800 dark:text-white">{sold} ticket(s) available</p>
-                      {/* <p className="text-sm text-green-600">+₦{profit.toLocaleString()}</p> */}
+                      <p className="font-semibold text-slate-800 dark:text-white">{not_sold} ticket(s) available</p>
+                      <p className="text-sm text-green-600">+₦{profit.toLocaleString()}</p>
                     </div>
                   </div>
                 );

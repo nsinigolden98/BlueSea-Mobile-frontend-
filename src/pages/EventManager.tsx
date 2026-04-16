@@ -164,9 +164,10 @@ export function EventManager() {
           name: tt.name,
           price: Number(tt.price) || 0,
           quantity_available: Number(tt.quantity_available) || 0,
+          initial_quantity: Number(tt.quantity_available) || 0,
         })),
       };
-      console.log(payload)
+      // console.log(payload)
       // Check if we have files to upload
       const hasFiles = formData.event_banner || formData.ticket_image;
 
