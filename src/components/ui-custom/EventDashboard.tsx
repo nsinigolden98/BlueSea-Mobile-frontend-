@@ -418,8 +418,8 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
             <h4 className="font-semibold text-slate-800 dark:text-white mb-3">Ticket Types</h4>
             <div className="space-y-3">
               {event.ticket_types.map((tt, idx) => {
-                const sold = Math.floor(Number(tt.quantity_available) * 0.3);
-                const profit = sold * Number(tt.price);
+                const sold = Number(tt.quantity_available) ;
+                // const profit = sold * Number(tt.price);
                 return (
                   <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
                     <div>
@@ -427,8 +427,8 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
                       <p className="text-sm text-slate-500">₦{Number(tt.price).toLocaleString()} each</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-slate-800 dark:text-white">{sold} sold</p>
-                      <p className="text-sm text-green-600">+₦{profit.toLocaleString()}</p>
+                      <p className="font-semibold text-slate-800 dark:text-white">{sold} tickets available</p>
+                      {/* <p className="text-sm text-green-600">+₦{profit.toLocaleString()}</p> */}
                     </div>
                   </div>
                 );
