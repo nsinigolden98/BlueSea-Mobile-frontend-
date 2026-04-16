@@ -8,21 +8,20 @@ import { useAuth } from '@/context/AuthContext';
 export function Wallet() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
-  const [loading] = useState(false);
 
-  // --- States for the layout from the screenshot ---
+  // --- States for the layout ---
   // 1. Funding Details (Request Account)
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountRequested, setAccountRequested] = useState(false);
 
-  // 2. Deposit states (from light current code, user says are working)
+  // 2. Deposit states
   const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositError, setDepositError] = useState('');
   const [depositing, setDepositing] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  // 3. Internal Transfer states (user says working)
+  // 3. Internal Transfer states
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferStep, setTransferStep] = useState(1);
   const [transferData, setTransferData] = useState({
@@ -96,23 +95,22 @@ export function Wallet() {
   };
 
   const handleWithdraw = () => {
-    // Handle withdraw
     alert('Withdraw feature coming soon!');
   };
 
-  // Internal transfer lookup logic (user says works, so keep it)
   useEffect(() => {
-    const lookupUser = async (email: string) => {
-      if (!email || email.length < 5) {
+    const lookupUser = async () => {
+      if (!transferData.recipient || transferData.recipient.length < 5) {
         setFoundUser(null);
         return;
       }
-      if (email.trim() === user?.email.trim()) {
+      if (transferData.recipient.trim() === user?.email?.trim()) {
         setFoundUser(null);
         setTransferError('Cannot transfer to self');
         return;
       }
       setLookingUp(true);
+      setTransferError('');
       try {
         const response = await postRequest(ENDPOINTS.user_lookup, { email: transferData.recipient });
         if (response?.found) {
@@ -125,7 +123,6 @@ export function Wallet() {
           setFoundUser(null);
         }
       } catch (error) {
-        console.error('Lookup failed:', error);
         setFoundUser(null);
       } finally {
         setLookingUp(false);
@@ -133,11 +130,7 @@ export function Wallet() {
     };
 
     const timer = setTimeout(() => {
-      if (transferData.recipient.length >= 5) {
-        lookupUser(transferData.recipient);
-      } else {
-        setFoundUser(null);
-      }
+      lookupUser();
     }, 500);
     return () => clearTimeout(timer);
   }, [transferData.recipient, user?.email]);
@@ -168,7 +161,7 @@ export function Wallet() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 flex transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex transition-colors duration-200">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -181,47 +174,46 @@ export function Wallet() {
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           <div className="max-w-6xl mx-auto space-y-8">
             
-            {/* The 2-card grid for funding details and balance card */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               
-              {/* CARD 1: FUNDING DETAILS (as a distinct card) */}
-              <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] p-7 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+              {/* CARD 1: FUNDING DETAILS */}
+              <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[2.5rem] p-7 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between min-h-[250px]">
                 <div>
                   <div className="flex justify-between items-center mb-8">
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Funding Details</h3>
                     <Landmark className="h-5 w-5 text-sky-500" />
                   </div>
-                  {/* The Request Account flow from light current code is moved here to fit the new layout */}
+                  
                   {accountRequested ? (
-                    <div className="text-center p-6 border-2 border-dashed border-sky-200 bg-sky-50 rounded-2xl animate-in fade-in zoom-in-95">
+                    <div className="text-center p-6 bg-sky-50/50 dark:bg-sky-500/5 rounded-2xl animate-in fade-in zoom-in-95">
                       <p className="text-sky-600 font-bold">Dedicated account coming soon</p>
                       <p className="text-xs text-slate-400 mt-1">We are processing your request</p>
                     </div>
                   ) : (
                     <div className="text-center space-y-3">
                       <Landmark className="h-10 w-10 text-sky-500 mx-auto" />
-                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">Get a dedicated virtual account</h4>
-                      <p className="text-sm text-slate-500 max-w-sm mx-auto">Click below to request an account number for your wallet.</p>
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">Request account number</h4>
+                      <p className="text-xs text-slate-500 max-w-[200px] mx-auto">Get a dedicated virtual account for automated funding.</p>
                       <Button 
                         onClick={handleRequestAccount}
                         disabled={accountLoading}
-                        className="bg-sky-500 hover:bg-sky-600 text-white rounded-xl mt-4 px-6"
+                        className="bg-sky-500 hover:bg-sky-600 text-white rounded-xl mt-4 px-6 h-12"
                       >
-                        {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Dedicated Account'}
+                        {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Account'}
                       </Button>
                     </div>
                   )}
                 </div>
+                <p className="mt-6 text-[10px] text-slate-400 text-center font-bold uppercase tracking-tighter">
+                  Automated Wallet Funding
+                </p>
               </div>
 
-              {/* CARD 2: BALANCE & ACTIONS (Second large card) */}
-              {/* Fix: This card should be LIGHT themed to match the other cards and UI. The visual inconsistency of a dark card is the bug. I will style it consistently with other light theme components. The user has also asked to remove the toggle function. */}
-              
+              {/* CARD 2: BALANCE & ACTIONS */}
               <div className="lg:col-span-3 flex flex-col gap-6">
                 <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 text-slate-900 dark:text-white relative overflow-hidden shadow-sm h-full flex flex-col justify-center border border-slate-100 dark:border-slate-800">
                   <div className="relative z-10">
                     <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">Current Balance</p>
-                    {/* Reverted the change that added balance dots and the overlay. The balance is now always shown. */}
                     <h2 className="text-5xl md:text-6xl font-black mt-4 mb-3 tracking-tight">{user?.balance || '₦0.00'}</h2>
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300">
                       <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
@@ -229,21 +221,18 @@ export function Wallet() {
                     </div>
                   </div>
                   
-                  {/* Decorative elements - adjust colors for light background */}
                   <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-sky-50 dark:bg-white/5 rounded-full blur-3xl" />
                   
-                  {/* Deposit/Withdraw buttons are moved to this light card, similar to the light current code, to maintain design logic. The user has stated that features like deposit flow were working. I assume that with this light Wallet.tsx, the intended design logic for always showing the balance and its actions on this card is restored. */}
-                  <div className="mt-8 flex gap-3">
+                  <div className="mt-8 flex gap-3 relative z-10">
                     <Button 
                       onClick={handleDeposit}
-                      className="flex-1 rounded-xl bg-sky-500 hover:bg-sky-600 text-white"
+                      className="flex-1 rounded-xl bg-sky-500 hover:bg-sky-600 text-white h-12 font-bold"
                     >
                       Deposit
                     </Button>
                     <Button 
                       onClick={handleWithdraw}
-                      variant="secondary"
-                      className="flex-1 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                      className="flex-1 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 h-12 font-bold"
                     >
                       Withdraw
                     </Button>
@@ -252,7 +241,7 @@ export function Wallet() {
               </div>
             </div>
 
-            {/* Internal Transfer Button - positioned outside the grid, like in old code and screenshot */}
+            {/* Internal Transfer Button */}
             <button 
               onClick={() => setTransferModalOpen(true)}
               className="group w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] p-6 flex items-center justify-between hover:shadow-lg transition-all active:scale-[0.98]"
@@ -269,7 +258,7 @@ export function Wallet() {
               <ChevronRight className="h-6 w-6 text-slate-300 group-hover:text-sky-500 transition-colors" />
             </button>
 
-            {/* Recent Transactions List */}
+            {/* History Section */}
             <div className="space-y-4 pt-4">
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">History</h3>
@@ -277,11 +266,19 @@ export function Wallet() {
               </div>
               <TransactionList />
             </div>
+
+            <Button 
+              variant="secondary" 
+              className="w-full rounded-xl py-6 bg-sky-500/10 text-sky-600 hover:bg-sky-500/20"
+              disabled
+            >
+              Withdrawal Not Available (Coming Soon)
+            </Button>
           </div>
         </main>
       </div>
 
-      {/* --- Deposit Modal (User says works, keep logic) --- */}
+      {/* Deposit Modal */}
       {depositModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-black/50 animate-in fade-in duration-300">
           <div className="absolute inset-0" onClick={() => !processing && setDepositModalOpen(false)} />
@@ -289,9 +286,6 @@ export function Wallet() {
             {processing ? (
               <div className="flex flex-col items-center justify-center py-8">
                 <LoadingSpinner size="lg" text="Processing payment..." />
-                <p className="mt-4 text-slate-600 dark:text-slate-400 text-center text-sm">
-                  Please wait while we redirect you to payment page...
-                </p>
               </div>
             ) : (
               <>
@@ -328,12 +322,7 @@ export function Wallet() {
                       {depositing ? <LoadingSpinner size="sm" /> : 'Confirm & Proceed'}
                     </Button>
                     {!depositing && (
-                      <button 
-                        onClick={handleCancelDeposit} 
-                        className="text-slate-400 text-xs font-black uppercase tracking-widest hover:text-slate-600 dark:hover:text-slate-200 py-3"
-                      >
-                        Cancel
-                      </button>
+                      <button onClick={handleCancelDeposit} className="text-slate-400 text-xs font-black uppercase tracking-widest py-3">Cancel</button>
                     )}
                   </div>
                 </div>
@@ -343,7 +332,7 @@ export function Wallet() {
         </div>
       )}
 
-      {/* --- Internal Transfer Modal (User says works, keep logic) --- */}
+      {/* Internal Transfer Modal */}
       {transferModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-black/50 animate-in fade-in duration-300">
           <div className="absolute inset-0" onClick={() => !transferProcessing && setTransferModalOpen(false)} />
@@ -382,14 +371,10 @@ export function Wallet() {
                   </div>
 
                   {foundUser && (
-                    <div className="p-5 bg-sky-500/5 border border-sky-500/10 rounded-3xl flex items-center gap-4 animate-in fade-in zoom-in-95">
+                    <div className="p-5 bg-sky-500/5 border border-sky-500/10 rounded-3xl flex items-center gap-4">
                       <div className="h-12 w-12 bg-sky-500 rounded-2xl flex items-center justify-center text-white font-black overflow-hidden">
                         {foundUser.image ? (
-                          <img 
-                            src={`${API_BASE}${foundUser.image}`} 
-                            alt="Profile" 
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={`${API_BASE}${foundUser.image}`} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
                           <User className="w-5 h-5 text-white" />
                         )}
@@ -401,11 +386,7 @@ export function Wallet() {
                     </div>
                   )}
 
-                  {lookingUp && (
-                    <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-3xl text-center">
-                      <p className="text-sm text-slate-500">Looking up user...</p>
-                    </div>
-                  )}
+                  {lookingUp && <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-3xl text-center text-sm text-slate-500">Looking up user...</div>}
                 </div>
               )}
 
@@ -415,10 +396,10 @@ export function Wallet() {
                     <div className="h-16 w-16 bg-sky-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                       <ShieldCheck className="h-8 w-8 text-sky-500" />
                     </div>
-                    <p className="text-sm text-slate-500">Confirm payment of <span className="font-black text-slate-900 dark:text-white">₦{transferData.amount}</span> to <span className="font-bold text-sky-500">{foundUser?.name}</span></p>
+                    <p className="text-sm text-slate-500">Confirm <span className="font-black text-slate-900 dark:text-white">₦{transferData.amount}</span> to <span className="font-bold text-sky-500">{foundUser?.name}</span></p>
                   </div>
                   
-          <div className="max-w-[220px] mx-auto">
+                  <div className="max-w-[220px] mx-auto">
                     <input
                       type="password"
                       maxLength={4}
@@ -433,24 +414,18 @@ export function Wallet() {
                 </div>
               )}
 
-              {transferError && <p className="text-red-500 text-xs font-bold text-center px-4 animate-shake">{transferError}</p>}
+              {transferError && <p className="text-red-500 text-xs font-bold text-center px-4">{transferError}</p>}
 
               <div className="flex flex-col gap-3 pt-4">
                 <Button 
                   className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl py-8 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
                   disabled={transferProcessing || (transferStep === 1 && (!transferData.amount || !foundUser))}
-                  onClick={() => {
-                    if (transferStep === 1) setTransferStep(2);
-                    else handleTransferSubmit();
-                  }}
+                  onClick={() => transferStep === 1 ? setTransferStep(2) : handleTransferSubmit()}
                 >
                   {transferProcessing ? <LoadingSpinner size="sm" /> : transferStep === 1 ? 'Verify Transaction' : 'Confirm & Pay'}
                 </Button>
                 {!transferProcessing && (
-                  <button 
-                    onClick={() => transferStep === 2 ? setTransferStep(1) : setTransferModalOpen(false)} 
-                    className="text-slate-400 text-xs font-black uppercase tracking-widest hover:text-slate-600 dark:hover:text-slate-200 py-3"
-                  >
+                  <button onClick={() => transferStep === 2 ? setTransferStep(1) : setTransferModalOpen(false)} className="text-slate-400 text-xs font-black uppercase tracking-widest py-3">
                     {transferStep === 2 ? 'Go Back' : 'Close'}
                   </button>
                 )}
@@ -461,4 +436,4 @@ export function Wallet() {
       )}
     </div>
   );
-      }
+}
