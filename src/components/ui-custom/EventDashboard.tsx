@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { MarketplaceEvent } from '@/types';
-import { ENDPOINTS } from '@/types';
-import { PinModal } from '@/components/ui-custom';
+import { ENDPOINTS, postRequest,TOKEN } from '@/types';
+import { PinModal,Toast } from '@/components/ui-custom';
 
 const NIGERIAN_BANKS = [
   { code: '40195', name: '78 Finance Company Ltd' },
@@ -271,15 +271,15 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
   const [accountVerified, setAccountVerified] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const { showPinModal, PinComponent } = PinModal();
+  const { ToastComponent, showToast} = Toast();
 
   const handleExportAttendees = async () => {
     if (!event) return;
     setExporting(true);
     try {
-      const token = localStorage.getItem('access_token');
       const response = await fetch(ENDPOINTS.export_attendees(event!.id), {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${TOKEN}`,
         },
       });
       const blob = await response.blob();
@@ -300,10 +300,7 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
   const handleConfirmAddScanner = () => {
     if (!event || !scannerEmail) return;
     setAddingScanner(true);
-    showPinModal({
-      type: 'add-scanner',
-      value: { event_id: event.id, user_email: scannerEmail }
-    });
+    showPinModal();
   };
 
   const handleVerifyAccount = async () => {
@@ -312,24 +309,17 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
     setAccountName('');
     setAccountVerified(false);
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${ENDPOINTS.verify_account_name}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const payload =  {
           account_number: accountNumber,
           bank_code: selectedBank,
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setAccountName(data.account_name);
+        }
+      const response = await postRequest(ENDPOINTS.verify_account_name, payload);
+      
+      if (response.success) {
+        setAccountName(response.account_name);
         setAccountVerified(true);
       } else {
-        alert(data.message || 'Failed to verify account');
+        showToast(response.message || 'Failed to verify account');
       }
     } catch (error) {
       console.error('Verify failed:', error);
@@ -341,17 +331,7 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
   const handleConfirmWithdraw = () => {
     if (!event || !accountVerified || !withdrawAmount) return;
     setWithdrawing(true);
-    showPinModal({
-      type: 'event-withdraw',
-      value: {
-        event_id: event.id,
-        account_name: accountName,
-        account_number: accountNumber,
-        bank_code: selectedBank,
-        bank_name: NIGERIAN_BANKS.find(b => b.code === selectedBank)?.name || '',
-        amount: withdrawAmount,
-      }
-    });
+    showPinModal();
   };
 
   if (!event) return null;
@@ -370,8 +350,9 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
 
   const profit = calculateProfit(event);
   const soldPercent = event.total_tickets > 0 
-    ? (event.tickets_sold / event.total_tickets * 100).toFixed(1) 
-    : '0';
+  ? (event.tickets_sold / event.total_tickets * 100).toFixed(1) 
+  : '0';
+  const balance = (Number(soldPercent)  * profit) / 100
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -421,10 +402,10 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
           <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-5 h-5 text-green-500" />
-              <span className="text-sm text-slate-500">Total Profit</span>
+              <span className="text-sm text-slate-500"> Profit</span>
             </div>
             <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-              ₦{profit.toLocaleString()}
+              ₦{balance.toLocaleString()}
             </p>
             <p className="text-xs text-slate-500">
               {soldPercent}% sold
@@ -514,10 +495,10 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
                 </Button>
               </div>
             </div>
+            <PinComponent type="add-scanner" value={ { event_id: event.id, user_email: scannerEmail }} />
           </div>
         )}
 
-        <PinComponent type="add-scanner" value={{ event_id: '', user_email: '' }} />
 
         {/* Withdraw Modal */}
         {showWithdrawModal && (
@@ -608,10 +589,19 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
                 </Button>
               </div>
             </div>
+            <ToastComponent />
+              <PinComponent type="event-withdraw" value={  {
+        event_id: event.id,
+        account_name: accountName,
+        account_number: accountNumber,
+        bank_code: selectedBank,
+        bank_name: NIGERIAN_BANKS.find(b => b.code === selectedBank)?.name || '',
+        amount: withdrawAmount,
+      }} />
+
           </div>
         )}
 
-        <PinComponent type="event-withdraw" value={{ event_id: '', account_name: '', account_number: '', bank_code: '', bank_name: '', amount: '' }} />
       </div>
     </div>
   );
