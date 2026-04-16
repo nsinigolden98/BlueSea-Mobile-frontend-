@@ -15,7 +15,7 @@ interface TicketTypeForm {
   quantity_available: string;
 }
 
-const CATEGORIES = ['Music', 'Conference', 'Sports', 'Networking', 'Workshop', 'Party', 'Other'];
+const CATEGORIES = ['Music', 'Conference', 'Sports', 'Networking', 'Workshop', 'Party', 'Others'];
 
 
 export function EventManager() {
