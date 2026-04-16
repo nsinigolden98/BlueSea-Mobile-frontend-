@@ -62,7 +62,7 @@ export function Wallet() {
       setTransferError('Invalid email')
       return;
     }
-    if (email == user?.email) {
+    if (email.trim() === user?.email.trim()) {
      setFoundUser({
         name: '',
        email: '',
