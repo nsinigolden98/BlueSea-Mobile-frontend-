@@ -1,27 +1,33 @@
 import { useState, useEffect } from 'react';
-import { Sidebar, Header, TransactionList, LoadingSpinner } from '@/components/ui-custom';
+import { Sidebar, Header, BalanceCard, TransactionList, LoadingSpinner } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
-import { Copy, Check, Send, Landmark, ShieldCheck, Search, ChevronRight, User } from 'lucide-react';
+import { Eye, EyeOff, Send, ChevronRight, User, ShieldCheck, Search, Landmark } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-
-// --- VERCEL BUILD SAFETY ---
-// const PATH_TRANSFER = '/api/wallet/transfer';
 
 export function Wallet() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const [loading] = useState(false);
   
-  // --- SIMULATED DATA ---
-  const simulatedAccount = {
-    bank_name: "BlueSea Microfinance Bank",
-    account_number: "9023485112",
-    account_name: "BLUESEA / NSINI GOLDEN"
-  };
+  // Balance Toggle State
+  const [showBalance, setShowBalance] = useState(() => {
+    const saved = localStorage.getItem('wallet_balance_visible');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
 
-  const [copyStatus, setCopyStatus] = useState<string | null>(null);
+  // Deposit Flow States
+  const [depositModalOpen, setDepositModalOpen] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositError, setDepositError] = useState('');
+  const [depositing, setDepositing] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
-  // --- TRANSFER MODAL STATE ---
+  // Dedicated Account States
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountRequested, setAccountRequested] = useState(false);
+
+  // Internal Transfer States (from OLD CODE)
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferStep, setTransferStep] = useState(1);
   const [transferData, setTransferData] = useState({
@@ -31,90 +37,113 @@ export function Wallet() {
   });
   
   interface FoundUser {
-    email: string | Promise<string>;
-    name: string | Promise<string>;
+    email: string;
+    name: string;
     image: string;
   }
   
-  const [foundUser, setFoundUser] = useState<FoundUser>(
-  {  name: '',
-      email: '',
-      image:'',
-    }
-  );
+  const [foundUser, setFoundUser] = useState<FoundUser | null>(null);
   const [transferError, setTransferError] = useState('');
-  const [processing, setProcessing] = useState(false);
+  const [transferProcessing, setTransferProcessing] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
 
-  // --- LOGIC ---
-  const handleCopy = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
-    setCopyStatus(field);
-    setTimeout(() => setCopyStatus(null), 2000);
-  };
+  // Persistence for Balance Toggle
+  useEffect(() => {
+    localStorage.setItem('wallet_balance_visible', JSON.stringify(showBalance));
+  }, [showBalance]);
 
-  const lookupUser = async (email: string) => {
-    if (!email || email.length < 5 ) {
-      setFoundUser({
-        name: '',
-        email: '',
-        image: '',      });
-      setTransferError('Invalid email')
-      return;
-    }
-    if (email.trim() === user?.email.trim()) {
-     setFoundUser({
-        name: '',
-       email: '',
-        image:'',
-      });
-      setTransferError('Cannot transfer to self')
-      return; 
-    }
-    setLookingUp(true);
-    try {
-      
-      const response =  await postRequest(ENDPOINTS.user_lookup, {email: transferData.recipient} )
-      if (response?.found) {
-        
-        setFoundUser(
-          {
+  // Internal Transfer Lookup Logic (from OLD CODE)
+  useEffect(() => {
+    const lookupUser = async (email: string) => {
+      if (!email || email.length < 5) {
+        setFoundUser(null);
+        return;
+      }
+      if (email.trim() === user?.email.trim()) {
+        setFoundUser(null);
+        setTransferError('Cannot transfer to self');
+        return;
+      }
+      setLookingUp(true);
+      setTransferError('');
+      try {
+        const response = await postRequest(ENDPOINTS.user_lookup, { email: transferData.recipient });
+        if (response?.found) {
+          setFoundUser({
             email: response.email,
             name: response.name,
             image: response.image
-          }
-        )
+          });
+        } else {
+          setFoundUser(null);
+        }
+      } catch (error) {
+        setFoundUser(null);
+      } finally {
+        setLookingUp(false);
       }
-      
-    } catch (error) {
-      console.error('Lookup failed:', error);
-      setFoundUser({
-        name: '',
-        email: '',
-        image:'',
-      });
-    } finally {
-      setLookingUp(false);
-    }
-  };
+    };
 
-  useEffect(() => {
     const timer = setTimeout(() => {
       if (transferData.recipient.length >= 5) {
         lookupUser(transferData.recipient);
       } else {
-        setFoundUser({
-          name: '',
-          email: '',
-          image: ''
-        });
+        setFoundUser(null);
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [transferData.recipient]);
+  }, [transferData.recipient, user?.email]);
+
+  const handleDeposit = () => {
+    setDepositModalOpen(true);
+    setDepositAmount('');
+    setDepositError('');
+  };
+
+  const handleWithdraw = () => {
+    alert('Withdraw feature coming soon!');
+  };
+
+  const handleFund = async () => {
+    const amount = Number(depositAmount.replace(/,/g, ''));
+    
+    if (amount < 100) {
+      setDepositError('Amount must be more than ₦100.00');
+      return;
+    }
+
+    setDepositing(true);
+    setDepositError('');
+    setProcessing(true);
+
+    try {
+      const response = await postRequest(ENDPOINTS.fund, { amount });
+      
+      if (response.success) {
+        setProcessing(false);
+        window.location.href = response.authorization_url;
+      } else {
+        setProcessing(false);
+        setDepositing(false);
+        setDepositError('Wallet funding error. Please try again.');
+      }
+    } catch (error) {
+      setProcessing(false);
+      setDepositing(false);
+      setDepositError('Wallet funding error. Please try again.');
+    }
+  };
+
+  const handleCancelDeposit = () => {
+    setDepositModalOpen(false);
+    setDepositAmount('');
+    setDepositError('');
+    setDepositing(false);
+    setProcessing(false);
+  };
 
   const handleTransferSubmit = async () => {
-    setProcessing(true);
+    setTransferProcessing(true);
     setTransferError('');
     try {
       const response = await postRequest(ENDPOINTS.internal_transfer, {
@@ -132,100 +161,202 @@ export function Wallet() {
         setTransferError(response.error || 'Transfer failed. Check PIN.');
       }
     } catch (error) {
-      console.log(error)
       setTransferError('Connection error. Please try again.');
     } finally {
-      setProcessing(false);
+      setTransferProcessing(false);
     }
   };
 
-  
+  const handleRequestAccount = () => {
+    setAccountLoading(true);
+    setTimeout(() => {
+      setAccountLoading(false);
+      setAccountRequested(true);
+    }, 1500);
+  };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 flex transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+      {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
+      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         <Header 
           title="Wallet" 
-          subtitle="Manage your BlueSea funds"
+          subtitle="Buy Smarter & Cheaper"
           onMenuClick={() => setSidebarOpen(true)} 
         />
 
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-          <div className="max-w-6xl mx-auto space-y-8">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+          <div className="max-w-5xl mx-auto space-y-6">
             
-            {/* 1️⃣ TWO-CARD GRID */}
+            {/* Wallet Section Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               
-              {/* CARD 1: FUNDING DETAILS */}
-              <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900 rounded-[2.5rem] p-7 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Funding Details</h3>
-                    <Landmark className="h-5 w-5 text-sky-500" />
-                  </div>
-
-                  <div className="space-y-3">
-                    <AccountDetailRow label="Bank" value={simulatedAccount.bank_name} onCopy={() => handleCopy(simulatedAccount.bank_name, 'b')} isCopied={copyStatus === 'b'} />
-                    <AccountDetailRow label="Account Number" value={simulatedAccount.account_number} onCopy={() => handleCopy(simulatedAccount.account_number, 'n')} isCopied={copyStatus === 'n'} />
-                    <AccountDetailRow label="Account Name" value={simulatedAccount.account_name} onCopy={() => handleCopy(simulatedAccount.account_name, 'a')} isCopied={copyStatus === 'a'} />
-                  </div>
+              {/* CARD 1: DEDICATED ACCOUNT SECTION */}
+              <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-center min-h-[200px]">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Funding Details</h3>
+                  <Landmark className="h-5 w-5 text-sky-500" />
                 </div>
+
+                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+                  {accountRequested ? (
+                    <div className="animate-in fade-in zoom-in-95">
+                      <p className="text-sky-600 font-bold">Dedicated account coming soon</p>
+                      <p className="text-xs text-slate-400 mt-1">We are processing your request</p>
+                    </div>
+                  ) : (
+                    <Button 
+                      onClick={handleRequestAccount}
+                      disabled={accountLoading}
+                      className="bg-sky-500 hover:bg-sky-600 text-white rounded-xl px-6"
+                    >
+                      {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Dedicated Account'}
+                    </Button>
+                  )}
+                </div>
+                
                 <p className="mt-6 text-[10px] text-slate-400 text-center font-bold uppercase tracking-tighter">
-                  Automated Wallet Funding Enabled
+                  Automated Wallet Funding
                 </p>
               </div>
 
-              {/* CARD 2: BALANCE & TRANSFER PANEL */}
-              <div className="lg:col-span-3 flex flex-col gap-6">
-                <div className="bg-slate-900 dark:bg-sky-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-xl h-full flex flex-col justify-center border border-slate-800 dark:border-sky-500">
-                  <div className="relative z-10">
-                    <p className="text-sky-200/60 text-xs font-bold uppercase tracking-[0.2em]">Current Balance</p>
-                    <h2 className="text-5xl md:text-6xl font-black mt-4 mb-3 tracking-tight">{ user?.balance}</h2>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase">
-                      <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                      Verified Account
+              {/* CARD 2: BALANCE & ACTIONS */}
+              <div className="lg:col-span-3 space-y-4">
+                <div className="relative group">
+                  <BalanceCard 
+                    showActions 
+                    onDeposit={handleDeposit}
+                    onWithdraw={handleWithdraw}
+                  />
+                  {/* Balance Toggle Button */}
+                  <button 
+                    onClick={() => setShowBalance(!showBalance)}
+                    className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  >
+                    {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                  
+                  {/* Visual overlay to hide balance if toggled */}
+                  {!showBalance && (
+                    <div className="absolute inset-0 bg-slate-900 dark:bg-sky-600 rounded-2xl flex items-center justify-center pointer-events-none z-10 border border-slate-800 dark:border-sky-500">
+                      <div className="text-center">
+                        <p className="text-sky-200/60 text-xs font-bold uppercase tracking-[0.2em]">Current Balance</p>
+                        <h2 className="text-4xl md:text-5xl font-black mt-2 text-white">••••••••</h2>
+                      </div>
                     </div>
-                  </div>
-                  <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
+                  )}
                 </div>
 
                 <button 
                   onClick={() => setTransferModalOpen(true)}
-                  className="group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] p-6 flex items-center justify-between hover:shadow-lg transition-all active:scale-[0.98]"
+                  className="w-full group bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 flex items-center justify-between hover:shadow-md transition-all active:scale-[0.98]"
                 >
-                  <div className="flex items-center gap-5">
-                    <div className="p-4 bg-sky-500 text-white rounded-2xl shadow-lg shadow-sky-500/20 group-hover:bg-sky-600 transition-colors">
-                      <Send className="h-6 w-6" />
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-sky-500 text-white rounded-xl shadow-lg shadow-sky-500/20 group-hover:bg-sky-600 transition-colors">
+                      <Send className="h-5 w-5" />
                     </div>
                     <div className="text-left">
-                      <h3 className="text-lg font-black text-slate-900 dark:text-white">Internal Transfer</h3>
-                      <p className="text-slate-400 text-sm">Instant send to BlueSea users</p>
+                      <h3 className="text-md font-bold text-slate-900 dark:text-white">Internal Transfer</h3>
+                      <p className="text-slate-400 text-xs">Send to BlueSea users</p>
                     </div>
                   </div>
-                  <ChevronRight className="h-6 w-6 text-slate-300 group-hover:text-sky-500 transition-colors" />
+                  <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-sky-500 transition-colors" />
                 </button>
               </div>
             </div>
 
-            {/* 2️⃣ TRANSACTIONS LIST */}
-            <div className="space-y-4 pt-4">
-              <div className="flex items-center justify-between px-2">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">History</h3>
-                <button className="text-sky-500 text-sm font-bold hover:underline">See All</button>
+            {/* Recent Transactions */}
+            {loading ? (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12">
+                <LoadingSpinner />
               </div>
+            ) : (
               <TransactionList />
-            </div>
+            )}
+
+            {/* Withdrawal Not Available Button */}
+            <Button 
+              variant="secondary" 
+              className="w-full rounded-xl py-6 bg-sky-500/10 text-sky-600 hover:bg-sky-500/20"
+              disabled
+            >
+              Withdrawal Not Available (Coming Soon)
+            </Button>
           </div>
         </main>
       </div>
 
-      {/* --- TRANSFER MODAL --- */}
+      {/* Deposit Modal */}
+      {depositModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {processing ? (
+            <div className="absolute inset-0 bg-black/50" />
+          ) : (
+            <div className="absolute inset-0 bg-black/50" onClick={handleCancelDeposit} />
+          )}
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
+            {processing ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <LoadingSpinner size="lg" text="Processing payment..." />
+                <p className="mt-4 text-slate-600 dark:text-slate-400 text-center">
+                  Please wait while we redirect you to payment page...
+                </p>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Deposit Funds</h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      Amount
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={depositAmount}
+                      onChange={(e) => {
+                        setDepositAmount(e.target.value.replace(/\D/g, ''));
+                        setDepositError('');
+                      }}
+                      placeholder="Enter amount"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    />
+                    {depositError && (
+                      <p className="mt-2 text-sm text-red-500">{depositError}</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleFund}
+                      disabled={depositing || !depositAmount}
+                      className="flex-1 py-3 px-4 bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {depositing ? 'Processing...' : 'Confirm'}
+                    </button>
+                    <button
+                      onClick={handleCancelDeposit}
+                      className="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-xl transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Internal Transfer Modal (from OLD CODE) */}
       {transferModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60 animate-in fade-in duration-300">
-          <div className="absolute inset-0" onClick={() => !processing && setTransferModalOpen(false)} />
-          <div className="relative bg-white dark:bg-slate-900 rounded-[3rem] p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-black/50 animate-in fade-in duration-300">
+          <div className="absolute inset-0" onClick={() => !transferProcessing && setTransferModalOpen(false)} />
+          <div className="relative bg-white dark:bg-slate-900 rounded-3xl p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
             
             <header className="mb-8 text-center">
               <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -260,20 +391,17 @@ export function Wallet() {
                   </div>
 
                   {foundUser && (
-                    <div className="p-5 bg-sky-500/5 border border-sky-500/10 rounded-[2rem] flex items-center gap-4 animate-in fade-in zoom-in-95">
-                      <div className="h-12 w-12 bg-sky-500 rounded-2xl flex items-center justify-center text-white font-black">
-                    
-                      
-                  {foundUser?.image ?
-                    <img 
-                    src={`${API_BASE}${foundUser.image}`} 
-                  alt="Profile" 
-                  className="w-10 h-10 rounded-full object-cover  border-white dark:bord-slate-800"
-                />
-                  :
-                  <User className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-                }
-                       
+                    <div className="p-5 bg-sky-500/5 border border-sky-500/10 rounded-3xl flex items-center gap-4 animate-in fade-in zoom-in-95">
+                      <div className="h-12 w-12 bg-sky-500 rounded-2xl flex items-center justify-center text-white font-black overflow-hidden">
+                        {foundUser.image ? (
+                          <img 
+                            src={`${API_BASE}${foundUser.image}`} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-5 h-5 text-white" />
+                        )}
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-bold text-slate-900 dark:text-white truncate">{foundUser.name}</h4>
@@ -283,7 +411,7 @@ export function Wallet() {
                   )}
 
                   {lookingUp && (
-                    <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-[2rem] text-center">
+                    <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-3xl text-center">
                       <p className="text-sm text-slate-500">Looking up user...</p>
                     </div>
                   )}
@@ -296,7 +424,7 @@ export function Wallet() {
                     <div className="h-16 w-16 bg-sky-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                       <ShieldCheck className="h-8 w-8 text-sky-500" />
                     </div>
-                    <p className="text-sm text-slate-500">Confirm payment of <span className="font-black text-slate-900 dark:text-white">₦{transferData.amount}</span> to <span className="font-bold text-sky-500">{foundUser.name}</span></p>
+                    <p className="text-sm text-slate-500">Confirm payment of <span className="font-black text-slate-900 dark:text-white">₦{transferData.amount}</span> to <span className="font-bold text-sky-500">{foundUser?.name}</span></p>
                   </div>
                   
                   <div className="max-w-[220px] mx-auto">
@@ -304,7 +432,7 @@ export function Wallet() {
                       type="password"
                       maxLength={4}
                       placeholder="••••"
-                      inputMode='numeric'
+                      inputMode="numeric"
                       className="w-full px-4 py-5 rounded-2xl bg-slate-100 dark:bg-slate-800 border-none focus:ring-2 focus:ring-sky-500 outline-none text-center text-4xl tracking-[1.5rem] font-black"
                       value={transferData.pin}
                       onChange={(e) => setTransferData({...transferData, pin: e.target.value.replace(/\D/g, '')})}
@@ -314,20 +442,20 @@ export function Wallet() {
                 </div>
               )}
 
-              {transferError && <p className="text-red-500 text-xs font-bold text-center px-4 animate-shake">{transferError}</p>}
+              {transferError && <p className="text-red-500 text-xs font-bold text-center px-4">{transferError}</p>}
 
               <div className="flex flex-col gap-3 pt-4">
                 <Button 
                   className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl py-8 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
-                  disabled={processing || (transferStep === 1 && (!transferData.amount || !foundUser))}
+                  disabled={transferProcessing || (transferStep === 1 && (!transferData.amount || !foundUser))}
                   onClick={() => {
                     if (transferStep === 1) setTransferStep(2);
                     else handleTransferSubmit();
                   }}
                 >
-                  {processing ? <LoadingSpinner size="sm" /> : transferStep === 1 ? 'Verify Transaction' : 'Confirm & Pay'}
+                  {transferProcessing ? <LoadingSpinner size="sm" /> : transferStep === 1 ? 'Verify Transaction' : 'Confirm & Pay'}
                 </Button>
-                {!processing && (
+                {!transferProcessing && (
                   <button 
                     onClick={() => transferStep === 2 ? setTransferStep(1) : setTransferModalOpen(false)} 
                     className="text-slate-400 text-xs font-black uppercase tracking-widest hover:text-slate-600 dark:hover:text-slate-200 py-3"
@@ -343,18 +471,3 @@ export function Wallet() {
     </div>
   );
 }
-
-function AccountDetailRow({ label, value, onCopy, isCopied }: any) {
-  return (
-    <div className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-      <div className="min-w-0 mr-2">
-        <p className="text-[9px] uppercase font-black text-slate-400 tracking-tighter mb-0.5">{label}</p>
-        <p className="text-sm font-mono font-bold text-slate-800 dark:text-slate-100 truncate">{value}</p>
-      </div>
-      <button onClick={onCopy} className="p-2 hover:bg-sky-50 dark:hover:bg-sky-900/40 rounded-xl transition-all flex-shrink-0">
-        {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-slate-300" />}
-      </button>
-    </div>
-  );
-      }
-                      
