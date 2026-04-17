@@ -139,7 +139,8 @@ export function Wallet() {
     setProcessing(false);
   };
   const lockedBalance = user?.lockedBalance || '₦0.00';
-  const balance = Number(user?.balance.slice(1,).replaceAll(',',''))  + Number(lockedBalance.slice(1,).replaceAll(',','')) 
+  const current_balance = Number(user?.balance.slice(1,).replaceAll(',', '')) + Number(lockedBalance.slice(1,).replaceAll(',', '')) 
+  const balance = Number(user?.balance.slice(1,).replaceAll(',', '')) 
 
   useEffect(() => {
     const lookupUser = async () => {
@@ -293,7 +294,7 @@ export function Wallet() {
                 <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 text-slate-900 dark:text-white relative overflow-hidden shadow-sm h-full flex flex-col justify-center border border-slate-100 dark:border-slate-800">
                   <div className="relative z-10">
                     <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">Current Balance</p>
-                    <h2 className="text-5xl md:text-6xl font-black mt-4 mb-3 tracking-tight">{user?.balance || '₦0.00'}</h2>
+                    <h2 className="text-5xl md:text-6xl font-black mt-4 mb-3 tracking-tight"> ₦{current_balance.toLocaleString()}</h2>
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300">
                       <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                       Verified Account
