@@ -20,7 +20,7 @@ export function BalanceCard({
   const { user } = useAuth();
   
   const lockedBalance = user?.lockedBalance || '₦0.00';
-  const availableBalance = user?.availableBalance || '₦0.00';
+  const availableBalance = user?.balance || '₦0.00';
 
   return (
     <div 
