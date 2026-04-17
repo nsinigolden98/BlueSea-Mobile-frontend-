@@ -138,8 +138,8 @@ export function Wallet() {
     setDepositing(false);
     setProcessing(false);
   };
-
-  const balance = Number(user?.balance.slice(1,).replaceAll(',',''))
+  const lockedBalance = user?.lockedBalance || '₦0.00';
+  const balance = Number(user?.balance.slice(1,).replaceAll(',',''))  + Number(lockedBalance.slice(1,).replaceAll(',','')) 
 
   useEffect(() => {
     const lookupUser = async () => {
