@@ -399,6 +399,8 @@ export const ENDPOINTS = {
   marketplace_ticket_cancel: (id: string) => `${API_BASE}/marketplace/tickets/${id}/cancel/`,
 };
 
+
+
 // Save Access Token In Cookie
 export function setCookie(name:string,TOKEN:string) {
   Cookies.set(name, TOKEN, {
@@ -477,7 +479,7 @@ export async function postFileRequest(url: string,payload: object) {
       });
     return response.data
   } catch (error) {
-    console.log(error)
+    return error?.response?.data || {}
   }
 }
 
@@ -496,6 +498,7 @@ export async function putRequest(url: string, payload: object) {
     return response.data
   } catch (error) {
     console.log(error)
+    return error?.response?.data || {}
   }
 }
 
@@ -514,6 +517,7 @@ export async function patchRequest(url: string, payload: object) {
     return response.data
   } catch (error) {
     console.log(error)
+    return error?.response?.data || {}
   }
 }
 
