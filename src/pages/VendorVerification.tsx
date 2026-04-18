@@ -101,7 +101,7 @@ export function VendorVerification() {
 
     setSubmitting(true);
 
-    try {
+   
 
       const payload = new FormData();
       
@@ -115,23 +115,16 @@ export function VendorVerification() {
         payload.append('id_document',accountability.id_document || '')
         payload.append('proof_of_address', accountability.proof_of_address || '')
       
-      console.log(payload);
-      
       const response = await postFileRequest(ENDPOINTS.create_vendor, payload);
-
-      if (response?.id || response?.success) {
+      console.log(response)
+      if (response?.success) {
         showToast('Verification request submitted successfully!');
         setShowForm(false);
         fetchVendorStatus();
       } else {
         showToast(response?.error || 'Failed to submit verification request');
       }
-    } catch (err) {
-      console.log(err);
-      showToast('Failed to submit verification request');
-    } finally {
       setSubmitting(false);
-    }
   };
 
   if (loading) {
