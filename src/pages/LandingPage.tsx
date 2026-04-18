@@ -17,7 +17,8 @@ import {
   Facebook,
   Youtube,
   Twitter,
-  MessageCircle
+  MessageCircle,
+  type LucideProps
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -322,8 +323,16 @@ export function LandingPage() {
                 { 
                   name: 'TikTok', 
                   link: 'https://www.tiktok.com/@blueseamobile?_r=1&_t=ZS-95djVbThdkz',
-                  icon: (props) => (
-                    <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  icon: (props: LucideProps) => (
+                    <svg 
+                      {...props} 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
                       <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
                     </svg>
                   )
@@ -363,5 +372,4 @@ export function LandingPage() {
       </footer>
     </div>
   );
-        }
-                
+}
