@@ -465,6 +465,7 @@ export async function postRequest(url: string, payload: object) {
       });
     return response.data
   } catch (error: any) {
+    console.log(error)
     return error?.response?.data
   }
 }
@@ -479,6 +480,7 @@ export async function postFileRequest(url: string,payload: object) {
       });
     return response.data
   } catch (error) {
+    console.log(error);
     return error?.response?.data
   }
 }
@@ -535,6 +537,7 @@ export async function deleteRequest(url: string) {
       });
     return response.data
   } catch (error: any) {
+    console.log(error);
     return error?.response?.data 
   }
 }
