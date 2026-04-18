@@ -465,7 +465,7 @@ export async function postRequest(url: string, payload: object) {
       });
     return response.data
   } catch (error: any) {
-    return error?.response?.data || {}
+    return error?.response?.data
   }
 }
 // POST REQUEST (FILES)
