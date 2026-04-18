@@ -479,7 +479,7 @@ export async function postFileRequest(url: string,payload: object) {
         },
       });
     return response.data
-  } catch (error) {
+  } catch (error: any) {
     console.log(error);
     return error?.response?.data
   }
@@ -498,7 +498,7 @@ export async function putRequest(url: string, payload: object) {
 
       });
     return response.data
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
     return error?.response?.data
   }
@@ -517,7 +517,7 @@ export async function patchRequest(url: string, payload: object) {
 
       });
     return response.data
-  } catch (error) {
+  } catch (error: any) {
     console.log(error)
     return error?.response?.data
   }
