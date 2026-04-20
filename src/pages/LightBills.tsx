@@ -210,8 +210,8 @@ export function LightBills() {
                       <Label htmlFor="meterNumber">Meter Number</Label>
                       <Input
                         id="meterNumber"
-                        type='text'
-                        inputMode='numeric'
+                          type='text'
+                          maxLength={15}
                         placeholder="Enter meter number"
                         value={meterNumber}
                         onChange={(e) => setMeterNumber(e.target.value)}
