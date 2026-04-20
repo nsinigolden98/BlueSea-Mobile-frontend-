@@ -1,7 +1,25 @@
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
-import { Play, ArrowRight, Smartphone, Wifi, Users, Lightbulb, RefreshCw, ShoppingCart, TrendingUp, Zap, Gift } from 'lucide-react';
+import { 
+  Play, 
+  ArrowRight, 
+  Smartphone, 
+  Wifi, 
+  Users, 
+  Lightbulb, 
+  RefreshCw, 
+  ShoppingCart, 
+  TrendingUp, 
+  Zap, 
+  Gift,
+  Instagram,
+  Facebook,
+  Youtube,
+  Twitter,
+  MessageCircle,
+  type LucideProps
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const features = [
@@ -298,15 +316,44 @@ export function LandingPage() {
             </div>
             
             <div className="flex flex-wrap justify-center gap-3">
-              {['WhatsApp', 'Facebook', 'Instagram', 'TikTok', 'X', 'LinkedIn', 'YouTube'].map((social) => (
-                <button 
-                  key={social}
-                  className="w-10 h-10 rounded-full bg-slate-800 hover:bg-sky-500 flex items-center justify-center transition-all hover:scale-110"
-                  title={social}
-                >
-                  <span className="text-xs font-medium">{social[0]}</span>
-                </button>
-              ))}
+              {[
+                { name: 'WhatsApp', icon: MessageCircle, link: '#' },
+                { name: 'Facebook', icon: Facebook, link: '#' },
+                { name: 'Instagram', icon: Instagram, link: '#' },
+                { 
+                  name: 'TikTok', 
+                  link: 'https://www.tiktok.com/@blueseamobile?_r=1&_t=ZS-95djVbThdkz',
+                  icon: (props: LucideProps) => (
+                    <svg 
+                      {...props} 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                    </svg>
+                  )
+                },
+                { name: 'X', icon: Twitter, link: 'https://x.com/BlueseaMobile' },
+                { name: 'YouTube', icon: Youtube, link: 'https://youtube.com/@blueseamobile?si=NU0mzFOxSbpJRU8d' },
+              ].map((social) => {
+                const Icon = social.icon;
+                return (
+                  <a 
+                    key={social.name}
+                    href={social.link}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-slate-800 hover:bg-sky-500 flex items-center justify-center transition-all hover:scale-110"
+                    title={social.name}
+                  >
+                    <Icon className="w-5 h-5 text-white" />
+                  </a>
+                );
+              })}
             </div>
           </div>
           
