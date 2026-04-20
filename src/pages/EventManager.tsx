@@ -387,6 +387,13 @@ export function EventManager() {
             </div>
             
             <div className="p-4 space-y-4">
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                <p className="text-sm text-amber-700 dark:text-amber-400">
+                  <strong>Important:</strong> A 10% platform fee will be deducted from your event earnings when you withdraw. 
+                  You will receive 90% of your ticket sales in your wallet.
+                </p>
+              </div>
+              
               <div className="space-y-2">
                 <Label>Event Title *</Label>
                 <Input

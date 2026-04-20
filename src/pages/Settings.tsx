@@ -37,7 +37,7 @@ export function Settings() {
       id: 'transactions', 
       label: 'Transactions', 
       icon: CreditCard, 
-      action: () => navigate('/transactions'),
+      action: () => navigate('/transaction-history'),
       showArrow: true 
     },
     { 

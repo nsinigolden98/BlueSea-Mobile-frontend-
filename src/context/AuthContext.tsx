@@ -9,7 +9,8 @@ import {
   getRequest,
   setCookie,
   ENDPOINTS,
-  API_BASE
+  API_BASE,
+  getCookie,
 } from '@/types';
 import { TOKEN } from '@/types'
 
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           lockedBalance: get_balance.locked_balance,
           availableBalance: get_balance.available_balance,
           pin_is_set: get_user.pin_is_set,
+          referral_code: get_user.referral_code,
         };
        
         setState({
@@ -94,7 +96,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   loadUser()
        
   },[]);
-  
+   
+  const referral = async () => {
+    const refCode = getCookie('ref');
+    if (!refCode) return;
+    
+    const payload = {
+      referral_code: refCode,
+    }
+    const response =  await postRequest(ENDPOINTS.referral, payload)
+    if (response?.success) {
+      deleteCookie('ref');
+      console.log('Referral applied:', response.message);
+    } else {
+      console.log('Referral error:', response?.error);
+    }
+  }
+
   const login = useCallback(async (_data: LoginFormData) => {
     setState(prev => ({ ...prev, loading: true }));
 
@@ -105,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.user.email_verified) {
         setCookie('access_token',response.access_token);
         setCookie('refresh_token', response.refresh_token); 
-        
+        referral()
         const get_user = await getRequest(ENDPOINTS.user);
         const get_balance = await getRequest(ENDPOINTS.balance);
         const user: User = {
@@ -116,7 +134,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           phone: get_user.phone,
           profilePicture: getImageUrl(get_user.image),
           balance: get_balance.balance,
-          pin_is_set: get_user.pin_is_set
+          pin_is_set: get_user.pin_is_set,
+          referral_code: get_user.referral_code
         }; 
         setState({
           isAuthenticated: true,
@@ -153,6 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       surname: data.surname,
       balance: "0",
       pin_is_set: false,
+      referral_code : '',
     }
     setState({
         isAuthenticated: false,
@@ -204,7 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCookie('access_token', response.access_token);
         const get_user = await getRequest(ENDPOINTS.user);
         const get_balance = await getRequest(ENDPOINTS.balance);
-
+        referral()
         const user: User = {
           id: get_user.id,
           email: get_user.email,
@@ -214,6 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           profilePicture: getImageUrl(get_user.image),
           balance: get_balance.balance,
           pin_is_set: get_user.pin_is_set,
+          referral_code: get_user.referral_code,
         }; 
         setState({
           isAuthenticated: true,

@@ -19,13 +19,15 @@ import {
   Youtube,
   PlayCircle,
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 // Interfaces updated to be more resilient to backend changes
 interface BonusSummary {
   current_points: number;
   lifetime_earned: number;
   lifetime_redeemed: number;
-  referral_count?: number; // Optional to prevent build errors if missing
+  referral_count?: number;
+  completed_referrals?: number;
 }
 
 interface BonusHistory {
@@ -57,9 +59,9 @@ export function Rewards() {
   const navigate = useNavigate();
   const { showToast, ToastComponent } = Toast();
   const { LoaderComponent, showLoader, hideLoader } = Loader();
+  const {user} = useAuth()
 
-  const userId = "user_123"; 
-  const referralLink = `https://blueseamobile.com.ng/${userId}`;
+  const referralLink = `https://blueseamobile.com.ng/login?ref=${user?.referral_code}`;
 
   // Defined outside or memoized to avoid re-render issues
   const tasks: Task[] = [
@@ -88,6 +90,7 @@ export function Rewards() {
           setHistory(historyRes.data);
         }
       } catch (error) {
+        console.log(error);
         if (isMounted) showToast('Failed to load rewards data');
       } finally {
         if (isMounted) {
@@ -124,6 +127,8 @@ export function Rewards() {
   const earnedPoints = summary?.lifetime_earned ?? 0;
   const redeemedPoints = summary?.lifetime_redeemed ?? 0;
   const referralCount = summary?.referral_count ?? 0;
+  const completedReferrals = summary?.completed_referrals ?? 0;
+  // const pendingReferrals = referralCount - completedReferrals;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
@@ -250,16 +255,20 @@ export function Rewards() {
                     </div>
                     <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Referral Earnings</h3>
                     <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-6 text-sm">
-                        Invite your friends and earn 50 BluePoints for every successful sign-up.
+                        Invite friends and earn 50 BluePoints when they complete their first transaction.
                     </p>
-                    <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                    <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
                         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                            <p className="text-[10px] text-slate-400 uppercase font-bold">Total Referrals</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold">Total</p>
                             <p className="text-lg font-bold text-slate-800 dark:text-white">{referralCount}</p>
                         </div>
                         <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                            <p className="text-[10px] text-slate-400 uppercase font-bold">Referral Bonus</p>
-                            <p className="text-lg font-bold text-sky-500">{referralCount * 50}</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold">Completed</p>
+                            <p className="text-lg font-bold text-green-500">{completedReferrals}</p>
+                        </div>
+                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                            <p className="text-[10px] text-slate-400 uppercase font-bold">Bonus Earned</p>
+                            <p className="text-lg font-bold text-sky-500">{completedReferrals * 50}</p>
                         </div>
                     </div>
                 </div>

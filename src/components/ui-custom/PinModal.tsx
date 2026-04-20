@@ -112,7 +112,9 @@ export function PinModal() {
           response = await postRequest(ENDPOINTS.marketplace_add_scanner(payload.event_id), { user_email: payload.user_email });
         } else if (type === 'withdrawal') {
           response = await postRequest(ENDPOINTS.withdrawal, value);
-        } 
+      } else if (type === 'event-withdraw') {
+        response = await postRequest(ENDPOINTS.event_withdraw, value)
+        }
     console.log(response) 
     return response
 

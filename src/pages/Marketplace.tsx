@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Sidebar, PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { Input } from '@/components/ui/input';
 import { Search, Calendar, MapPin, Ticket, Loader2, ChevronRight, MoreHorizontal, QrCode, Shield, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRequest, ENDPOINTS, API_BASE, type MarketplaceEvent, type VendorStatus } from '@/types';
-import { useNavigate } from 'react-router-dom';
+
 
 
 export function Marketplace() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Events');
@@ -72,8 +74,18 @@ export function Marketplace() {
       const data = await getRequest(ENDPOINTS.marketplace_events);
       if (data) {
         setEvents(data);
+        
+        // Check for event query param and auto-select
+        const eventId = searchParams.get('event');
+        if (eventId) {
+          const foundEvent = data.find((e: MarketplaceEvent) => e.id === eventId);
+          if (foundEvent) {
+            setSelectedEvent(foundEvent);
+          }
+        }
       }
     } catch (err) {
+      console.log(err)
       showToast('Failed to fetch events');
     } finally {
       setLoading(false);
@@ -89,6 +101,7 @@ export function Marketplace() {
         setVendorStatus(null);
       }
     } catch (err) {
+      console.log(err)
       setVendorStatus(null);
     }
   };

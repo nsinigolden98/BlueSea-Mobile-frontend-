@@ -15,6 +15,7 @@ export interface User {
   pin_is_set: boolean;
   bluePoints?: number;
   transactions?: Transaction[];
+  referral_code: string;
 }
 
 // Transaction Types
@@ -332,6 +333,7 @@ export const ENDPOINTS = {
   buy_etisalat: `${API_BASE}/payments/etisalat-data/`,
   account_name: `${API_BASE}/transactions/account-name/`,
   verify_account_name: `${API_BASE}/marketplace/verify-account-name/`,
+  event_public: (id: string) => `${API_BASE}/marketplace/events/public/${id}/`,
   event_withdraw: `${API_BASE}/marketplace/withdraw/`,
   withdrawal: `${API_BASE}/payments/withdrawal/`,
   electricity: `${API_BASE}/payments/electricity/`,
@@ -397,6 +399,7 @@ export const ENDPOINTS = {
   marketplace_ticket_detail: (id: string) => `${API_BASE}/marketplace/tickets/${id}/`,
   marketplace_ticket_transfer: (id: string) => `${API_BASE}/marketplace/tickets/${id}/transfer/`,
   marketplace_ticket_cancel: (id: string) => `${API_BASE}/marketplace/tickets/${id}/cancel/`,
+  referral: `${API_BASE}/bonus/referral/`
 };
 
 
@@ -406,13 +409,13 @@ export function setCookie(name:string,TOKEN:string) {
   Cookies.set(name, TOKEN, {
     expires: 1,
     path: '/',
-    secure: true, 
+    secure: false, 
     sameSite:'lax',
   })
 }
 
 // Get Cookie
-function getCookie(name:string){
+export function getCookie(name:string){
   const cookie:string|undefined = Cookies.get(name);
     return cookie
 }
@@ -542,4 +545,7 @@ export async function deleteRequest(url: string) {
   }
 }
 
+export const stripCommas = (amount:string) => {
+  return Number(amount.replaceAll(',',''))
+}
 

@@ -33,3 +33,5 @@ export { AutoTopUp } from './AutoTopUp';
 export { Support } from './Support';
 export { Campaigns } from './Campaigns';
 export { ScannerAssignments } from './ScannerAssignments';
+export { TransactionFilterPage } from './TransactionFilterPage';
+export { EventPublic } from './EventPublic';

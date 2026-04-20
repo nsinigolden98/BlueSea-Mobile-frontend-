@@ -100,7 +100,10 @@ export function CreatePin() {
       if (response.state) {
         
         showToast(response.message);
-        setTimeout(()=>{    navigate(-1);}, 3000)
+        setTimeout(() => {
+          window.location.reload();
+          navigate(-1);
+        }, 3000)
 
       } else {
         showToast(response.message);  

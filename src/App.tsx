@@ -36,7 +36,9 @@ import {
   Marketplace,
   Support,
   Campaigns,
-  ScannerAssignments
+  ScannerAssignments,
+  EventPublic,
+  TransactionFilterPage
 } from '@/pages';
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
@@ -86,6 +88,10 @@ function AppRoutes() {
             <AuthPage />
           </PublicRoute>
         } 
+      />
+      <Route 
+        path="/event/:eventId" 
+        element={<EventPublic />}
       />
 
       {/* Protected Routes */}
@@ -184,6 +190,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute  >
             <Rewards />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/transaction-history" 
+        element={
+          <ProtectedRoute  >
+            <TransactionFilterPage />
           </ProtectedRoute>
         } 
       />

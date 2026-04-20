@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Calendar, MapPin, X, Ticket, TrendingUp, QrCode, Download, Wallet } from 'lucide-react';
+import { Calendar, MapPin, X, Ticket, TrendingUp, QrCode, Download, Wallet, Share2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {Input } from '@/components/ui/input';
 import type { MarketplaceEvent } from '@/types';
-import { ENDPOINTS, postRequest,TOKEN } from '@/types';
+import { ENDPOINTS,TOKEN } from '@/types';
 import { PinModal,Toast } from '@/components/ui-custom';
-import { NIGERIAN_BANKS } from '@/data'
+
 interface EventDashboardProps {
   event: MarketplaceEvent | null;
   onClose: () => void;
@@ -18,16 +18,19 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [scannerEmail, setScannerEmail] = useState('');
   const [addingScanner, setAddingScanner] = useState(false);
-  const [selectedBank, setSelectedBank] = useState('');
-  const [bankSearch, setBankSearch] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [accountName, setAccountName] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [verifyingAccount, setVerifyingAccount] = useState(false);
-  const [accountVerified, setAccountVerified] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const { showPinModal, PinComponent } = PinModal();
   const { ToastComponent, showToast} = Toast();
+
+  const handleShareEvent = () => {
+    if (!event) return;
+    const shareUrl = `${window.location.origin}/event/${event.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    setShareCopied(true);
+    showToast('Event link copied to clipboard!');
+    setTimeout(() => setShareCopied(false), 2000);
+  };
 
   const handleExportAttendees = async () => {
     if (!event) return;
@@ -59,33 +62,10 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
     showPinModal();
   };
 
-  const handleVerifyAccount = async () => {
-    if (!selectedBank || !accountNumber || accountNumber.length !== 10) return;
-    setVerifyingAccount(true);
-    setAccountName('');
-    setAccountVerified(false);
-    try {
-      const payload =  {
-          account_number: accountNumber,
-          bank_code: selectedBank,
-        }
-      const response = await postRequest(ENDPOINTS.verify_account_name, payload);
-      
-      if (response.success) {
-        setAccountName(response.account_name);
-        setAccountVerified(true);
-      } else {
-        showToast(response.message || 'Failed to verify account');
-      }
-    } catch (error) {
-      console.error('Verify failed:', error);
-    } finally {
-      setVerifyingAccount(false);
-    }
-  };
+
 
   const handleConfirmWithdraw = () => {
-    if (!event || !accountVerified || !withdrawAmount) return;
+    if (!event || profit <= 0) return;
     setWithdrawing(true);
     showPinModal();
   };
@@ -220,6 +200,16 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
           <Wallet className="w-4 h-4 mr-2" />
           Withdraw
         </Button>
+        {event.is_approved && (
+          <Button
+            variant="outline"
+            onClick={handleShareEvent}
+            className="w-full mt-3"
+          >
+            {shareCopied ? <Check className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
+            {shareCopied ? 'Link Copied!' : 'Share Event'}
+          </Button>
+        )}
 
         {/* Add Scanner Modal */}
         {showScannerModal && (
@@ -255,7 +245,7 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
         )}
 
 
-        {/* Withdraw Modal */}
+{/* Withdraw Modal */}
         {showWithdrawModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md">
@@ -266,97 +256,40 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
                 </button>
               </div>
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-slate-700 dark:text-slate-300">Account Number</Label>
-                  <Input
-                    type="text"
-                    placeholder="Enter account number"
-                    value={accountNumber}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                      setAccountNumber(val);
-                      setAccountVerified(false);
-                      setAccountName('');
-                    }}
-                    maxLength={10}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-slate-700 dark:text-slate-300">Select Bank</Label>
-                  <Input
-                    type="text"
-                    placeholder="Search bank name..."
-                    value={bankSearch}
-                    onChange={(e) => setBankSearch(e.target.value)}
-                    className="mb-2"
-                  />
-                  <select
-                    value={selectedBank}
-                    onChange={(e) => {
-                      setSelectedBank(e.target.value);
-                      setAccountVerified(false);
-                      setAccountName('');
-                      setBankSearch('');
-                    }}
-                    className="w-full p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
-                  >
-                    <option value="">Select bank</option>
-                    {NIGERIAN_BANKS.filter(b => 
-                      bankSearch === '' || b.name.toLowerCase().includes(bankSearch.toLowerCase())
-                    ).map((bank) => (
-                      <option key={bank.code} value={bank.code}>
-                        {bank.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {selectedBank && accountNumber.length === 10 && (
-                  <Button
-                    onClick={handleVerifyAccount}
-                    disabled={verifyingAccount}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {verifyingAccount ? 'Verifying...' : 'Verify Account'}
-                  </Button>
-                )}
-                {accountVerified && (
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <p className="text-sm text-green-600 dark:text-green-400">{accountName}</p>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">Total Earned</span>
+                    <span className="font-semibold text-slate-800 dark:text-white">₦{profit.toLocaleString()}</span>
                   </div>
-                )}
-                <div className="space-y-2">
-                  <Label className="text-slate-700 dark:text-slate-300">Amount (₦)</Label>
-                  <Input
-                    type="number"
-                    placeholder="Enter amount"
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                  />
-                  <p className="text-xs text-slate-500">Available: ₦{profit.toLocaleString()}</p>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">Platform Fee (10%)</span>
+                    <span className="font-semibold text-red-500">-₦{(profit * 0.1).toLocaleString()}</span>
+                  </div>
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">You'll Receive</span>
+                    <span className="font-bold text-green-600 text-lg">₦{(profit * 0.9).toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                    Enter your pin to withdraw all available funds to your wallet.
+                  </p>
                 </div>
                 <Button
                   onClick={handleConfirmWithdraw}
-                  disabled={withdrawing || !accountVerified || !withdrawAmount || Number(withdrawAmount) > profit}
+                  disabled={withdrawing || profit <= 0}
                   className="w-full bg-green-500 hover:bg-green-600"
                 >
-                  {withdrawing ? 'Processing...' : 'Confirm Withdrawal'}
+                  {withdrawing ? 'Processing...' : 'Withdraw All to Wallet'}
                 </Button>
               </div>
             </div>
+            <PinComponent type={'event-withdraw'} value={{
+              event_id: event.id
+            }}  />
             <ToastComponent />
-              <PinComponent type="event-withdraw" value={  {
-        event_id: event.id,
-        account_name: accountName,
-        account_number: accountNumber,
-        bank_code: selectedBank,
-        bank_name: NIGERIAN_BANKS.find(b => b.code === selectedBank)?.name || '',
-        amount: withdrawAmount,
-      }} />
-
           </div>
         )}
-
       </div>
     </div>
   );

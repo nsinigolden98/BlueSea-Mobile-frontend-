@@ -1,5 +1,5 @@
-import { useState} from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState} from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Logo,Toast, AuthEmailModal, Loader,AuthLoader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,15 +8,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff, Lock, Mail, User, Phone } from 'lucide-react';
-import { TOKEN, postRequest,ENDPOINTS } from '@/types'
+import { TOKEN, postRequest,ENDPOINTS,setCookie } from '@/types'
 import { ForgotPasswordModal } from '@/components/ui-custom/AuthModal';
 import {GoogleLogin} from '@react-oauth/google';
-
 
 type AuthMode = 'login' | 'signup';
 
 export function AuthPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, signup, googleLogin, loading } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,6 +36,12 @@ export function AuthPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
+  useEffect(()=>{
+    const refCode = searchParams.get('ref')
+    if (refCode) {
+      setCookie('ref',refCode)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

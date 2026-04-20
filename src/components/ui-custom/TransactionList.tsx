@@ -30,7 +30,7 @@ export function TransactionList({
 
   const displayData: Array<Transaction> = transactionArray;
   const transactions = displayData.slice(0, limit);
-  const redirect = () => (window.location.href = '/transactions');
+  const redirect = () => (window.location.href = '/transaction-history');
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
