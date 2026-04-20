@@ -4,7 +4,7 @@ import { Sidebar, PinModal, Toast, TransactionModal } from '@/components/ui-cust
 import { Input } from '@/components/ui/input';
 import { Search, Calendar, MapPin, Ticket, Loader2, ChevronRight, MoreHorizontal, QrCode, Shield, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getRequest, ENDPOINTS, API_BASE, type MarketplaceEvent, type VendorStatus } from '@/types';
+import { getRequest, ENDPOINTS, API_BASE, type MarketplaceEvent} from '@/types';
 
 
 
@@ -19,7 +19,7 @@ export function Marketplace() {
   const [selectedEvent, setSelectedEvent] = useState<MarketplaceEvent | null>(null);
   const [selectedTicketType, setSelectedTicketType] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
-  const [vendorStatus, setVendorStatus] = useState<VendorStatus | null>(null);
+  const [vendorStatus, setVendorStatus] = useState<boolean>(false);
   const [showMenu, setShowMenu] = useState(false);
   const { PinComponent, showPinModal, message } = PinModal();
   const { showToast, ToastComponent } = Toast();
@@ -95,14 +95,15 @@ export function Marketplace() {
   const fetchVendorStatus = async () => {
     try {
       const response = await getRequest(ENDPOINTS.vendor_status);
+      console.log(response)
       if (response?.vendor) {
-        setVendorStatus(response.vendor);
+        setVendorStatus(response.vendor.is_verified);
       } else {
-        setVendorStatus(null);
+        setVendorStatus(false);
       }
     } catch (err) {
       console.log(err)
-      setVendorStatus(null);
+      setVendorStatus(false);
     }
   };
 
@@ -446,7 +447,7 @@ export function Marketplace() {
                   <Ticket className="w-4 h-4" />
                   My Tickets
                 </button>
-                {vendorStatus?.is_verified ? (
+                {vendorStatus? (
                   <>
                     <button
                       onClick={() => {
