@@ -255,6 +255,22 @@ export function EventManager() {
     });
   };
 
+  const getEventLink = (event: MarketplaceEvent) => {
+    const slug = event.event_title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return `https://blueseamobile.com.ng/event/${slug}/${event.id}`;
+  };
+
+  const handleCopyLink = (e: React.MouseEvent, event: MarketplaceEvent) => {
+    e.stopPropagation();
+    const link = getEventLink(event);
+    navigator.clipboard.writeText(link)
+      .then(() => showToast('Link copied to clipboard'))
+      .catch(() => showToast('Failed to copy link'));
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
       <div className="flex-1 flex flex-col min-w-0">
@@ -357,8 +373,22 @@ export function EventManager() {
                             {event.tickets_sold}/{event.total_tickets} sold
                           </span>
                         </div>
-                        <div className="mt-3 flex gap-2">
-                        
+                        <div className="mt-3 flex gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Input
+                            readOnly
+                            value={getEventLink(event)}
+                            className="h-9 text-xs bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus-visible:ring-0"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-4 text-xs font-medium shrink-0"
+                            onClick={(e) => handleCopyLink(e, event)}
+                          >
+                            Copy Link
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -387,13 +417,6 @@ export function EventManager() {
             </div>
             
             <div className="p-4 space-y-4">
-              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                <p className="text-sm text-amber-700 dark:text-amber-400">
-                  <strong>Important:</strong> A 10% platform fee will be deducted from your event earnings when you withdraw. 
-                  You will receive 90% of your ticket sales in your wallet.
-                </p>
-              </div>
-              
               <div className="space-y-2">
                 <Label>Event Title *</Label>
                 <Input
@@ -522,66 +545,68 @@ export function EventManager() {
                 </div>
               </div>
 
-              {isFree && (
+              {isFree ? (
                 <div className="space-y-2">
-                  <Label htmlFor="quantity">Number of Participants</Label>
+                  <Label>Total Participants *</Label>
                   <Input
-                    id="quantity"
                     type="number"
-                    min="1"
                     value={formData.quantity || ''}
                     onChange={(e) => handleInputChange('quantity', e.target.value)}
-                    placeholder="Enter number of participants"
+                    placeholder="Enter max number of participants"
                   />
                 </div>
-              )}
-
-              {!isFree && (
+              ) : (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label>Ticket Types</Label>
-                    <button 
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={addTicketType}
-                      className="text-sm text-sky-500 flex items-center gap-1"
                     >
-                      <Plus className="w-4 h-4" /> Add
-                    </button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Type
+                    </Button>
                   </div>
                   
                   {ticketTypes.map((ticket, index) => (
-                    <div 
-                      key={index}
-                      className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl space-y-3"
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Ticket {index + 1}</span>
-                        {ticketTypes.length > 1 && (
-                          <button 
-                            onClick={() => removeTicketType(index)}
-                            className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        <Input
-                          placeholder="Name (e.g., VIP)"
-                          value={ticket.name}
-                          onChange={(e) => updateTicketType(index, 'name', e.target.value)}
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Price (₦)"
-                          value={ticket.price}
-                          onChange={(e) => updateTicketType(index, 'price', e.target.value)}
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Quantity"
-                          value={ticket.quantity_available}
-                          onChange={(e) => updateTicketType(index, 'quantity_available', e.target.value)}
-                        />
+                    <div key={index} className="p-4 border border-slate-100 dark:border-slate-800 rounded-xl space-y-3 relative">
+                      {ticketTypes.length > 1 && (
+                        <button
+                          onClick={() => removeTicketType(index)}
+                          className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Name</Label>
+                          <Input
+                            placeholder="Regular"
+                            value={ticket.name}
+                            onChange={(e) => updateTicketType(index, 'name', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Price (₦)</Label>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            value={ticket.price}
+                            onChange={(e) => updateTicketType(index, 'price', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Quantity</Label>
+                          <Input
+                            type="number"
+                            placeholder="100"
+                            value={ticket.quantity_available}
+                            onChange={(e) => updateTicketType(index, 'quantity_available', e.target.value)}
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -593,31 +618,33 @@ export function EventManager() {
                 <Textarea
                   value={formData.event_description}
                   onChange={(e) => handleInputChange('event_description', e.target.value)}
-                  placeholder="Describe your event..."
-                  rows={4}
+                  placeholder="Tell us more about the event"
+                  className="h-32"
                 />
               </div>
 
-              <Button 
-                onClick={handleCreateEvent}
-                className="w-full bg-sky-500 hover:bg-sky-600 py-6"
-              >
-                Create Event
-              </Button>
+              <div className="pt-4">
+                <Button 
+                  onClick={handleCreateEvent}
+                  className="w-full bg-sky-500 hover:bg-sky-600"
+                >
+                  Create Event
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {selectedEventForDashboard && (
+        <EventDashboard 
+          event={selectedEventForDashboard} 
+          onClose={() => setSelectedEventForDashboard(null)} 
+        />
+      )}
+
       <ToastComponent />
       <LoaderComponent />
-      
-
-      <EventDashboard 
-        event={selectedEventForDashboard} 
-        onClose={() => setSelectedEventForDashboard(null)}
-      />
-
     </div>
   );
 }
