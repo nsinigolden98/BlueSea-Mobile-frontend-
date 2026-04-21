@@ -256,10 +256,6 @@ export function EventManager() {
   };
 
   const getEventLink = (event: MarketplaceEvent) => {
-    const slug = event.event_title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
     return `https://blueseamobile.com.ng/event/${event.id}`;
   };
 
