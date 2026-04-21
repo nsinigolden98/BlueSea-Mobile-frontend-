@@ -260,7 +260,7 @@ export function EventManager() {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
-    return `https://blueseamobile.com.ng/event/${slug}/${event.id}`;
+    return `https://blueseamobile.com.ng/event/${event.id}`;
   };
 
   const handleCopyLink = (e: React.MouseEvent, event: MarketplaceEvent) => {
