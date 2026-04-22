@@ -2,11 +2,60 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Sidebar, PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { Input } from '@/components/ui/input';
-import { Search, Calendar, MapPin, Ticket, Loader2, ChevronRight, MoreHorizontal, QrCode, Shield, Plus, User, CheckCircle2 } from 'lucide-react';
+import { 
+  Search, 
+  Calendar, 
+  MapPin, 
+  Ticket, 
+  Loader2, 
+  ChevronRight, 
+  MoreHorizontal, 
+  QrCode, 
+  Shield, 
+  Plus, 
+  User, 
+  CheckCircle2, 
+  ShoppingCart,
+  Star,
+  ChevronLeft,
+  Package,
+  Check
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRequest, ENDPOINTS, API_BASE, type MarketplaceEvent} from '@/types';
 
-// Points Data Definition
+// --- UNIVERSAL COMPONENTS ---
+
+const VerifiedBadge = ({ className }: { className?: string }) => (
+  <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider", className)}>
+    <CheckCircle2 className="w-3 h-3" />
+    Verified
+  </span>
+);
+
+// --- PRODUCT DATA DEFINITION ---
+
+const PRODUCT_CATEGORIES = ['All', 'Bulk', 'Electronics', 'Shoes', 'Makeup'];
+
+const PRODUCTS = [
+  // Bulk
+  { id: 'b1', category: 'Bulk', name: 'Premium Rice 50kg', price: 45000, sellerName: 'Alhaji & Sons', sellerId: 's1', stock: 12, condition: 'New', images: ['https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80', 'https://images.unsplash.com/photo-1591117207239-7ad59a057fd6?w=800&q=80'], description: 'Long grain parboiled rice, stone-free and high quality.', badge: 'Hot' },
+  { id: 'b2', category: 'Bulk', name: 'Vegetable Oil 25L', price: 32000, sellerName: 'Uyo Food Mart', sellerId: 's2', stock: 5, condition: 'New', images: ['https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800&q=80'], description: 'Pure refined vegetable oil for all cooking purposes.', badge: 'Bulk' },
+  { id: 'b3', category: 'Bulk', name: 'Carton of Indomie', price: 12500, sellerName: 'Alhaji & Sons', sellerId: 's1', stock: 50, condition: 'New', images: ['https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80'], description: 'Standard carton containing 40 packs of delicious noodles.', badge: 'New' },
+  // Electronics
+  { id: 'e1', category: 'Electronics', name: 'iPhone 15 Pro Max', price: 1850000, sellerName: 'Gadget Hub', sellerId: 's3', stock: 2, condition: 'New', images: ['https://images.unsplash.com/photo-1696446701796-da61225697cc?w=800&q=80', 'https://images.unsplash.com/photo-1696423602352-75d1653f5344?w=800&q=80'], description: 'Titanium design, A17 Pro chip, Pro camera system.', badge: 'Hot' },
+  { id: 'e2', category: 'Electronics', name: 'MacBook Air M2', price: 1200000, sellerName: 'Elite Tech', sellerId: 's4', stock: 4, condition: 'New', images: ['https://images.unsplash.com/photo-1611186871348-b1ec696e5237?w=800&q=80'], description: 'Supercharged by M2, 13-inch Liquid Retina display.', badge: 'Sale' },
+  { id: 'e3', category: 'Electronics', name: 'Sony WH-1000XM5', price: 450000, sellerName: 'Gadget Hub', sellerId: 's3', stock: 0, condition: 'New', images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&q=80'], description: 'Industry-leading noise cancellation headphones.', badge: 'Out' },
+  // Shoes
+  { id: 's1', category: 'Shoes', name: 'Nike Air Jordan 1', price: 120000, sellerName: 'Sneaker Head', sellerId: 's5', stock: 8, condition: 'New', images: ['https://images.unsplash.com/photo-1584000302558-ce0ad2ee920e?w=800&q=80'], description: 'Iconic basketball sneakers in classic red and black.', badge: 'Hot' },
+  { id: 's2', category: 'Shoes', name: 'Adidas Ultraboost', price: 95000, sellerName: 'Runners World', sellerId: 's6', stock: 15, condition: 'New', images: ['https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?w=800&q=80'], description: 'Ultimate comfort and energy return for long distance running.', badge: 'New' },
+  { id: 's3', category: 'Shoes', name: 'Formal Leather Shoes', price: 45000, sellerName: 'Uyo Footwear', sellerId: 's7', stock: 20, condition: 'New', images: ['https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=800&q=80'], description: 'Handcrafted Italian leather shoes for professional look.', badge: 'Classic' },
+  // Makeup
+  { id: 'm1', category: 'Makeup', name: 'Fenty Beauty Foundation', price: 42000, sellerName: 'Glamour Shop', sellerId: 's8', stock: 25, condition: 'New', images: ['https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=800&q=80'], description: 'Pro Filt\'r Soft Matte Longwear Foundation in 50 shades.', badge: 'Hot' },
+  { id: 'm2', category: 'Makeup', name: 'Matte Liquid Lipstick', price: 8500, sellerName: 'Glamour Shop', sellerId: 's8', stock: 100, condition: 'New', images: ['https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=800&q=80'], description: 'Non-drying, long-lasting matte finish liquid lipstick.', badge: 'Sale' },
+  { id: 'm3', category: 'Makeup', name: 'Eyeshadow Palette', price: 15000, sellerName: 'Beauty Haven', sellerId: 's9', stock: 12, condition: 'New', images: ['https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=800&q=80'], description: 'Professional palette with 12 highly pigmented shades.', badge: 'Trending' },
+];
+
 const POINTS_PROVIDERS = [
   { id: 'cod', name: 'COD Mobile', image: '🎮', color: 'bg-slate-800', packages: [{ id: 1, name: '80 CP', price: 900 }, { id: 2, name: '420 CP', price: 4500 }, { id: 3, name: '880 CP', price: 9000 }] },
   { id: 'freefire', name: 'Free Fire', image: '🔥', color: 'bg-orange-500', packages: [{ id: 1, name: '100 Diamonds', price: 800 }, { id: 2, name: '310 Diamonds', price: 2400 }, { id: 3, name: '520 Diamonds', price: 4000 }] },
@@ -40,6 +89,13 @@ export function Marketplace() {
   const [selectedPointPackage, setSelectedPointPackage] = useState<number | null>(null);
   const [isPointLoading, setIsPointLoading] = useState(false);
   const [pointError, setPointError] = useState('');
+
+  // --- PRODUCT SYSTEM STATES ---
+  const [selectedProduct, setSelectedProduct] = useState<typeof PRODUCTS[0] | null>(null);
+  const [productQuantity, setProductQuantity] = useState(1);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [activeProductSubCategory, setActiveProductSubCategory] = useState('All');
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const getImageUrl = (path: string | undefined) => {
     if (!path) return '';
@@ -76,6 +132,7 @@ export function Marketplace() {
         setTxStatus(true);
         setSelectedEvent(null);
         setSelectedPointProvider(null);
+        setSelectedProduct(null);
       } else {
         showToast(message?.error || message?.response_description || 'Transaction failed');
         setTxMessage(message?.error || message?.response_description || 'Transaction failed');
@@ -128,28 +185,64 @@ export function Marketplace() {
     showPinModal();
   };
 
-  // Simulated Points Purchase
-  const handlePointPurchase = async () => {
-    if (!pointPlayerId.trim()) {
-      setPointError('Player ID is required');
-      return;
-    }
-    setPointError('');
-    setIsPointLoading(true);
+  // --- PRODUCT LOGIC ---
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  const handleAddToCart = async () => {
+    if (!selectedProduct || selectedProduct.stock <= 0) return;
+    
+    setIsAddingToCart(true);
+    
+    // Preparation for history system
+    const historyData = {
+        type: "product",
+        status: "pending",
+        productId: selectedProduct.id,
+        quantity: productQuantity,
+        total: selectedProduct.price * productQuantity
+    };
+    console.log("History Data Prepared:", historyData);
 
-    // Reuse existing Pin Modal flow
-    setIsPointLoading(false);
-    showPinModal();
+    const cartItem = {
+      productId: selectedProduct.id,
+      name: selectedProduct.name,
+      price: selectedProduct.price,
+      quantity: productQuantity,
+      totalPrice: selectedProduct.price * productQuantity,
+      sellerId: selectedProduct.sellerId,
+      sellerName: selectedProduct.sellerName,
+      image: selectedProduct.images[0],
+      category: selectedProduct.category,
+      createdAt: new Date().toISOString()
+    };
+
+    // TODO: Send cart data to backend API
+    // await postRequest(ENDPOINTS.add_to_cart, cartItem);
+    
+    setTimeout(() => {
+        setIsAddingToCart(false);
+        showToast("✅ Added to cart");
+        setSelectedProduct(null);
+    }, 800);
   };
+
+  // --- SEARCH FILTER LOGIC ---
 
   const filteredEvents = events.filter(event => 
     event.event_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event.event_location.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const filteredPoints = POINTS_PROVIDERS.filter(p => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredProducts = PRODUCTS.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          p.sellerName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = activeProductSubCategory === 'All' || p.category === activeProductSubCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -164,22 +257,270 @@ export function Marketplace() {
     return new Date(eventDate) < new Date();
   };
 
+  // --- RENDERERS ---
+
   const renderContent = () => {
     switch (activeCategory) {
       case 'Events':
         return selectedEvent ? renderEventDetails() : renderEvents();
       case 'Points':
         return selectedPointProvider ? renderPointDetails() : renderPoints();
+      case 'Products':
+        return selectedProduct ? renderProductDetails() : renderProducts();
       default:
         return renderComingSoon();
     }
   };
 
-  const renderPoints = () => {
-    const filteredPoints = POINTS_PROVIDERS.filter(p => 
-      p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+  const renderProducts = () => {
+    return (
+      <div className="space-y-6">
+        {/* Sub-Category Filter */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {PRODUCT_CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveProductSubCategory(cat)}
+              className={cn(
+                "px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors",
+                activeProductSubCategory === cat 
+                  ? "bg-slate-800 text-white dark:bg-white dark:text-slate-900" 
+                  : "bg-white dark:bg-slate-800 text-slate-500 border border-slate-100 dark:border-slate-700"
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
 
+        {filteredProducts.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
+            <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">No products available</h3>
+            <p className="text-slate-500">Check back later for new arrivals in this category.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredProducts.map((product) => (
+              <div 
+                key={product.id}
+                onClick={() => {
+                    setSelectedProduct(product);
+                    setProductQuantity(1);
+                    setCurrentImageIndex(0);
+                }}
+                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-all cursor-pointer group"
+              >
+                <div className="aspect-square relative overflow-hidden bg-slate-100 dark:bg-slate-800">
+                  <img 
+                    src={product.images[0]} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                  />
+                  {product.badge && (
+                    <div className="absolute top-2 left-2 px-2 py-1 rounded-lg text-[10px] font-bold bg-sky-500 text-white shadow-lg">
+                        {product.badge}
+                    </div>
+                  )}
+                  {product.stock === 0 && (
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                        <span className="bg-red-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase">Out of Stock</span>
+                    </div>
+                  )}
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center gap-1 mb-1">
+                    <span className="text-[10px] text-slate-400 line-clamp-1">{product.sellerName}</span>
+                    <VerifiedBadge className="scale-75 origin-left" />
+                  </div>
+                  <h3 className="font-semibold text-slate-800 dark:text-white text-sm line-clamp-1 mb-1">
+                    {product.name}
+                  </h3>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sky-500 font-bold text-sm">₦{product.price.toLocaleString()}</span>
+                    <div className="w-7 h-7 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-sky-500 group-hover:text-white transition-colors">
+                        <Plus className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderProductDetails = () => {
+    if (!selectedProduct) return null;
+
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <button 
+          onClick={() => setSelectedProduct(null)}
+          className="flex items-center gap-2 text-sky-500 font-medium"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to Products
+        </button>
+
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+          {/* Image Slider */}
+          <div className="aspect-square md:aspect-video relative bg-slate-100 dark:bg-slate-800">
+            <img 
+              src={selectedProduct.images[currentImageIndex]} 
+              alt={selectedProduct.name} 
+              className="w-full h-full object-cover" 
+            />
+            
+            {selectedProduct.images.length > 1 && (
+              <>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex(prev => prev === 0 ? selectedProduct.images.length - 1 : prev - 1);
+                  }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40 transition-colors"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex(prev => prev === selectedProduct.images.length - 1 ? 0 : prev + 1);
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40 transition-colors"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {selectedProduct.images.map((_, i) => (
+                    <div 
+                      key={i} 
+                      className={cn(
+                        "w-2 h-2 rounded-full transition-all",
+                        currentImageIndex === i ? "bg-white w-4" : "bg-white/40"
+                      )} 
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-0.5 rounded-lg bg-sky-50 text-sky-500 text-[10px] font-bold uppercase tracking-wider">
+                    {selectedProduct.category}
+                  </span>
+                  <span className="text-xs text-slate-400">•</span>
+                  <span className="text-xs text-slate-500">{selectedProduct.condition}</span>
+                </div>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white leading-tight">
+                    {selectedProduct.name}
+                </h2>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-400 mb-1">Price per unit</p>
+                <span className="text-2xl font-black text-sky-500">₦{selectedProduct.price.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* Seller Block */}
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+               <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-500 font-bold">
+                    {selectedProduct.sellerName.charAt(0)}
+                 </div>
+                 <div>
+                    <div className="flex items-center gap-1.5">
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">{selectedProduct.sellerName}</h4>
+                        <VerifiedBadge />
+                    </div>
+                    <p className="text-[10px] text-slate-500">Sold by Verified Seller</p>
+                 </div>
+               </div>
+               <div className="text-right">
+                    <div className="flex items-center gap-0.5 text-yellow-500 mb-0.5">
+                        <Star className="w-3 h-3 fill-current" />
+                        <span className="text-xs font-bold">4.8</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400">Location: Uyo</p>
+               </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-semibold text-slate-800 dark:text-white">Description</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                {selectedProduct.description}
+              </p>
+            </div>
+
+            {/* Quantity and Dynamic Price */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Quantity</h4>
+                        <p className={cn(
+                            "text-xs mt-0.5",
+                            selectedProduct.stock > 5 ? "text-slate-400" : "text-orange-500 font-medium"
+                        )}>
+                            {selectedProduct.stock > 0 ? `In Stock: ${selectedProduct.stock} left` : 'Out of Stock'}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                        <button 
+                            disabled={productQuantity <= 1}
+                            onClick={() => setProductQuantity(q => q - 1)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-700 shadow-sm disabled:opacity-50"
+                        >
+                            -
+                        </button>
+                        <span className="text-sm font-bold w-4 text-center">{productQuantity}</span>
+                        <button 
+                            disabled={productQuantity >= selectedProduct.stock}
+                            onClick={() => setProductQuantity(q => q + 1)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-700 shadow-sm disabled:opacity-50"
+                        >
+                            +
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between py-3 border-y border-dashed border-slate-200 dark:border-slate-700">
+                    <span className="text-sm text-slate-500">₦{selectedProduct.price.toLocaleString()} × {productQuantity}</span>
+                    <span className="text-lg font-bold text-slate-800 dark:text-white">₦{(selectedProduct.price * productQuantity).toLocaleString()}</span>
+                </div>
+            </div>
+
+            {/* Action Button */}
+            <button
+              onClick={handleAddToCart}
+              disabled={selectedProduct.stock <= 0 || isAddingToCart}
+              className="w-full py-4 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
+            >
+              {isAddingToCart ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Adding...
+                </>
+              ) : selectedProduct.stock <= 0 ? (
+                'Out of Stock'
+              ) : (
+                <>
+                  <ShoppingCart className="w-5 h-5" />
+                  Add to Cart
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderPoints = () => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPoints.map((provider) => (
@@ -223,7 +564,7 @@ export function Marketplace() {
           onClick={() => setSelectedPointProvider(null)}
           className="flex items-center gap-2 text-sky-500 font-medium"
         >
-          <ChevronRight className="w-4 h-4 rotate-180" />
+          <ChevronLeft className="w-4 h-4" />
           Back to Providers
         </button>
 
@@ -300,6 +641,24 @@ export function Marketplace() {
         </div>
       </div>
     );
+  };
+
+  // Simulated Points Purchase
+  const handlePointPurchase = async () => {
+    if (!pointPlayerId.trim()) {
+      setPointError('Player ID is required');
+      return;
+    }
+    setPointError('');
+    setIsPointLoading(true);
+
+    // TODO: Send topup data to backend API
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Reuse existing Pin Modal flow
+    setIsPointLoading(false);
+    showPinModal();
   };
 
   const renderEvents = () => {
@@ -389,7 +748,7 @@ export function Marketplace() {
           onClick={() => setSelectedEvent(null)}
           className="flex items-center gap-2 text-sky-500 font-medium"
         >
-          <ChevronRight className="w-4 h-4 rotate-180" />
+          <ChevronLeft className="w-4 h-4" />
           Back to Events
         </button>
 
@@ -451,7 +810,6 @@ export function Marketplace() {
                     </div>
                   ))}
                 </div>
-
                 {selectedTicketType && !selectedEvent.is_free && (
                   <div className="mt-4">
                     <label className="text-sm text-slate-500 dark:text-slate-400 mb-2 block">Quantity</label>
@@ -493,7 +851,7 @@ export function Marketplace() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-between px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+        <header className="flex items-center justify-between px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg></button>
             <div>
@@ -502,7 +860,10 @@ export function Marketplace() {
             </div>
           </div>
           
-          <div className="relative">
+          <div className="relative flex items-center gap-2">
+            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative">
+              <ShoppingCart className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            </button>
             <button onClick={() => setShowMenu(!showMenu)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
               <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
             </button>
@@ -531,7 +892,7 @@ export function Marketplace() {
           <div className="max-w-5xl mx-auto space-y-6">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <Input type="text" placeholder={`Search ${activeCategory.toLowerCase()}...`} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 py-6 rounded-xl" />
+              <Input type="text" placeholder={`Search ${activeCategory.toLowerCase()}...`} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 py-6 rounded-xl border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800" />
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -542,10 +903,12 @@ export function Marketplace() {
                     setActiveCategory(category);
                     setSelectedEvent(null);
                     setSelectedPointProvider(null);
+                    setSelectedProduct(null);
+                    setSearchQuery('');
                   }}
                   className={cn(
-                    'px-4 py-2 rounded-full text-sm font-medium transition-all',
-                    activeCategory === category ? 'bg-sky-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100'
+                    'px-6 py-2.5 rounded-full text-sm font-bold transition-all',
+                    activeCategory === category ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100'
                   )}
                 >
                   {category}
@@ -559,9 +922,9 @@ export function Marketplace() {
       </div>
 
       <PinComponent type="marketplace" value={{ 
-        event_id: selectedEvent?.id || selectedPointProvider?.id, 
-        ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || selectedPointProvider?.packages.find(p => p.id === selectedPointPackage)?.name || '', 
-        quantity,
+        event_id: selectedEvent?.id || selectedPointProvider?.id || selectedProduct?.id, 
+        ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || selectedPointProvider?.packages.find(p => p.id === selectedPointPackage)?.name || 'Product Purchase', 
+        quantity: activeCategory === 'Products' ? productQuantity : quantity,
         player_id: pointPlayerId 
       }} />
       <ToastComponent />
@@ -570,5 +933,4 @@ export function Marketplace() {
       )}
     </div>
   );
-}
-  
+    }
