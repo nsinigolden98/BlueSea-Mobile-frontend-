@@ -844,7 +844,7 @@ export function Marketplace() {
   <div className="relative flex items-center gap-2">
     {/* Corrected Cart Button */}
     <button 
-      onClick={() => navigate('/CartPage')} 
+      onClick={() => navigate('/cart')} 
       className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative"
     >
       <ShoppingCart className="w-5 h-5 text-slate-600 dark:text-slate-400" />
