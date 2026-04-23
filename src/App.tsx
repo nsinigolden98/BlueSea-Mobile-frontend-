@@ -40,7 +40,6 @@ import {
   EventPublic,
   // 🚨 FIXED: Capitalized to match component usage and added BlueSphere
   CartPage, 
-  BlueSphere,
   TransactionFilterPage
 } from '@/pages';
 import './App.css';
@@ -116,15 +115,7 @@ function AppRoutes() {
         } 
       />
 
-      {/* 🔵 BlueSphere Route - Added */}
-      <Route 
-        path="/bluesphere" 
-        element={
-          <ProtectedRoute>
-            <BlueSphere />
-          </ProtectedRoute>
-        } 
-      />
+ 
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
