@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
@@ -261,7 +261,6 @@ export default function CartPage() {
               onClick={() => {
                 // TODO: Connect checkout page
                 // TODO: Send to history system
-                // const historyData = { type: "product", status: "pending", items: cartItems, total: calculateSubtotal() };
                 showToast("Checkout logic coming soon");
               }}
             >
@@ -276,9 +275,3 @@ export default function CartPage() {
     </div>
   );
 }
-
-// --- ROUTING NOTE ---
-// In your App.tsx or routing configuration file:
-// import CartPage from './pages/CartPage';
-// <Route path="/cart" element={<CartPage />} />
-        
