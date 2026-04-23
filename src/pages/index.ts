@@ -35,4 +35,4 @@ export { Campaigns } from './Campaigns';
 export { ScannerAssignments } from './ScannerAssignments';
 export { TransactionFilterPage } from './TransactionFilterPage';
 export { EventPublic } from './EventPublic';
-export { Cart } from './Cart';
+export { Cart } from './CartPage';
