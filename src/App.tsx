@@ -38,6 +38,7 @@ import {
   Campaigns,
   ScannerAssignments,
   EventPublic,
+  cart,
   TransactionFilterPage
 } from '@/pages';
 import './App.css';
@@ -369,6 +370,12 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/cart" 
+        element={
+        <Cart />
+        } 
+        />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
