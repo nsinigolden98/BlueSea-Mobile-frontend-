@@ -836,7 +836,9 @@ export function Marketplace() {
           
           <div className="relative flex items-center gap-2">
             <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative">
-              <ShoppingCart className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              <ShoppingCart 
+                onClick={() => { navigate('/cart');
+                className="w-5 h-5 text-slate-600 dark:text-slate-400" />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center">
                   {cartCount}
