@@ -39,7 +39,7 @@ import {
   ScannerAssignments,
   EventPublic,
   // 🚨 FIXED: Capitalized to match component usage and added BlueSphere
-  CartPage, 
+  cart, 
   TransactionFilterPage
 } from '@/pages';
 import './App.css';
@@ -110,7 +110,7 @@ function AppRoutes() {
         path="/cart" 
         element={
           <ProtectedRoute>
-            <CartPage />
+            <cart />
           </ProtectedRoute>
         } 
       />
