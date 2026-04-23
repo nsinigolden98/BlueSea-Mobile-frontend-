@@ -826,64 +826,78 @@ export function Marketplace() {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="flex items-center justify-between px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg></button>
-            <div>
-              <h1 className="text-xl font-bold text-slate-800 dark:text-white">Market Place</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Buy Smarter & Cheaper</p>
-            </div>
-          </div>
-          
-          <div className="relative flex items-center gap-2">
-            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative">
-              <ShoppingCart 
-                onClick={() => { navigate('/cart');
-                className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
+  <div className="flex items-center gap-3">
+    <button 
+      onClick={() => setSidebarOpen(true)} 
+      className="lg:hidden p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+    >
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+    <div>
+      <h1 className="text-xl font-bold text-slate-800 dark:text-white">Market Place</h1>
+      <p className="text-sm text-slate-500 dark:text-slate-400">Buy Smarter & Cheaper</p>
+    </div>
+  </div>
+  
+  <div className="relative flex items-center gap-2">
+    {/* Corrected Cart Button */}
+    <button 
+      onClick={() => navigate('/cart')} 
+      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative"
+    >
+      <ShoppingCart className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+      {cartCount > 0 && (
+        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center">
+          {cartCount}
+        </span>
+      )}
+    </button>
+
+    <button 
+      onClick={() => setShowMenu(!showMenu)} 
+      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+    >
+      <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+    </button>
+
+    {showMenu && (
+      <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-2 z-50">
+        {!vendorStatus ? (
+          <>
+            <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+              <Shield className="w-4 h-4 text-sky-500" /> Become Verified Seller
             </button>
-            <button onClick={() => setShowMenu(!showMenu)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-              <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+             <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+              <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
             </button>
-            {showMenu && (
-              <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-2 z-50">
-                {!vendorStatus ? (
-                  <>
-                    <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <Shield className="w-4 h-4 text-sky-500" /> Become Verified Seller
-                    </button>
-                     <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
-                    </button>
-                    <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <Plus className="w-4 h-4 text-sky-500" /> Create Event
-                    </button>
-                    <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <QrCode className="w-4 h-4 text-sky-500" /> Scan QR Code
-                    </button>
-                    <button onClick={() => { navigate('/post-product'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <FilePlus className="w-4 h-4 text-sky-500" /> Post Product
-                    </button>
-                    <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <History className="w-4 h-4 text-sky-500" /> History
-                    </button>
-                    {/* TODO: Post Product Page */}
-                    {/* TODO: History Page */}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </header>
+          </>
+        ) : (
+          <>
+            <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+              <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
+            </button>
+            <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+              <Plus className="w-4 h-4 text-sky-500" /> Create Event
+            </button>
+            <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+              <QrCode className="w-4 h-4 text-sky-500" /> Scan QR Code
+            </button>
+            <button onClick={() => { navigate('/post-product'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+              <FilePlus className="w-4 h-4 text-sky-500" /> Post Product
+            </button>
+            <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+              <History className="w-4 h-4 text-sky-500" /> History
+            </button>
+          </>
+        )}
+      </div>
+    )}
+  </div>
+</header>
+        
+        
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-6">
