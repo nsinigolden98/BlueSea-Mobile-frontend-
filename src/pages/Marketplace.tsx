@@ -853,12 +853,12 @@ export function Marketplace() {
                     <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
                       <Shield className="w-4 h-4 text-sky-500" /> Become Verified Seller
                     </button>
-                    <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
-                    </button>
                   </>
                 ) : (
                   <>
+                    <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                      <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
+                    </button>
                     <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
                       <Plus className="w-4 h-4 text-sky-500" /> Create Event
                     </button>
