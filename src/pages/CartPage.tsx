@@ -39,7 +39,7 @@ const VerifiedBadge = ({ className }: { className?: string }) => (
   </span>
 );
 
-export default function CartPage() {
+export const Cart = () => {
   const navigate = useNavigate();
   const { showToast, ToastComponent } = Toast();
   
