@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -12,10 +12,8 @@ import {
   MapPin, 
   CheckCircle2, 
   AlertCircle,
-  MoreVertical,
   Layers,
   Truck,
-  ExternalLink,
   Loader2
 } from 'lucide-react';
 
