@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
-import { ThemeProvider } from '@/context/ThemeContext';
+import { ThemeContext, ThemeProvider } from '@/context/ThemeContext';
 import {
   LandingPage,
   AuthPage,
@@ -38,9 +38,10 @@ import {
   Campaigns,
   ScannerAssignments,
   EventPublic,
-  // 🚨 FIXED: Capitalized to match component usage and added BlueSphere
-  Cart, 
-  TransactionFilterPage
+  TransactionFilterPage,
+  // 🚨 ADDED BOTH HERE
+  Cart,
+  BlueSphere 
 } from '@/pages';
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
@@ -105,17 +106,11 @@ function AppRoutes() {
       <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
       <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
 
-      {/* 🛒 Cart Route - Fixed component name */}
-      <Route 
-        path="/cart" 
-        element={
-          <ProtectedRoute>
-            <Cart />
-          </ProtectedRoute>
-        } 
-      />
+      {/* 🛒 Cart Route */}
+      <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
 
- 
+      {/* 🔵 BlueSphere Route */}
+      <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
@@ -136,3 +131,4 @@ function App() {
 }
 
 export default App;
+      
