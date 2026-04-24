@@ -39,8 +39,7 @@ const VerifiedBadge = ({ className }: { className?: string }) => (
   </span>
 );
 
-// Renamed from Cart to Bluesphere to match your filename
-export const Bluesphere = () => {
+export default function CartPage() {
   const navigate = useNavigate();
   const { showToast, ToastComponent } = Toast();
   
@@ -51,6 +50,7 @@ export const Bluesphere = () => {
 
   // --- CART LOGIC ---
 
+  // Defined loadCart before useEffect so the compiler sees the reference clearly
   const loadCart = () => {
     try {
       const savedCart = localStorage.getItem('market_cart');
@@ -64,7 +64,6 @@ export const Bluesphere = () => {
     }
   };
 
-  // This is where useEffect is used
   useEffect(() => {
     loadCart();
   }, []);
@@ -155,6 +154,7 @@ export const Bluesphere = () => {
                   expandedItemId === item.productId ? "ring-2 ring-sky-500 ring-offset-2 dark:ring-offset-slate-900 shadow-xl" : "shadow-sm"
                 )}
               >
+                {/* COLLAPSED VIEW / CARD HEADER */}
                 <div 
                   onClick={() => setExpandedItemId(expandedItemId === item.productId ? null : item.productId)}
                   className="p-3 flex items-center gap-4 cursor-pointer"
@@ -176,12 +176,14 @@ export const Bluesphere = () => {
                   </div>
                 </div>
 
+                {/* EXPANDABLE SECTION */}
                 <div className={cn(
                   "grid transition-all duration-300 ease-in-out",
                   expandedItemId === item.productId ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                 )}>
                   <div className="overflow-hidden">
                     <div className="p-4 border-t border-slate-50 dark:border-slate-700 space-y-4">
+                      {/* Detailed Info */}
                       <div className="flex gap-4">
                         <div className="w-24 h-24 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-600">
                           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -192,12 +194,13 @@ export const Bluesphere = () => {
                           </span>
                           <h4 className="font-bold text-slate-800 dark:text-white">Product Details</h4>
                           <div className="flex items-center gap-2 text-xs text-slate-500">
-                            <Info className="w-3 h-3" />
+                            <span className="w-3 h-3"><Info className="w-3 h-3" /></span>
                             Unit Price: ₦{item.price.toLocaleString()}
                           </div>
                         </div>
                       </div>
 
+                      {/* Quantity Controls & Remove */}
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-1.5 rounded-xl border border-slate-100 dark:border-slate-700">
                           <button 
@@ -270,4 +273,5 @@ export const Bluesphere = () => {
       <ToastComponent />
     </div>
   );
-                            }
+                                      }
+          
