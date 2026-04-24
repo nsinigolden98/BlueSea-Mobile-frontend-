@@ -41,3 +41,5 @@ export { default as Cart } from './CartPage';
 
 // 🔵 BlueSphere (Engagement) Page Export
 export { default as BlueSphere } from './Bluesphere'; 
+// src/pages/index.ts
+export { default as SellerProductManager } from './SellerProductManager';
