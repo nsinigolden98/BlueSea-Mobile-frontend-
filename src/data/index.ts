@@ -239,135 +239,392 @@ export const networks = ['MTN', 'Glo', 'Airtel', '9mobile'] as const;
 
 
 const mtn_dict = {
-            "N100 100MB - 24 hrs": ["mtn-10mb-100", 100],
-            "N200 200MB - 2 days": ["mtn-50mb-200", 200],
-            "N1000 1.5GB - 30 days": ["mtn-100mb-1000", 1000],
-            "N2000 4.5GB - 30 days": ["mtn-500mb-2000", 2000],
-            "N1500 6GB - 7 days": ["mtn-20hrs-1500", 1500],
-            "N2500 6GB - 30 days": ["mtn-3gb-2500", 2500],
-            "N3000 8GB - 30 days": ["mtn-data-3000", 3000],
-            "N3500 10GB - 30 days": ["mtn-1gb-3500", 3500],
-            "N5000 15GB - 30 days": ["mtn-100hr-5000", 5000],
-            "N6000 20GB - 30 days": ["mtn-3gb-6000", 6000],
-            "N10000 40GB - 30 days": ["mtn-40gb-10000", 10000],
-            "N15000 75GB - 30 days": ["mtn-75gb-15000", 15000],
-            "N20000 110GB - 30 days": ["mtn-110gb-20000", 20000],
-            "N1500 3GB - 30 days": ["mtn-3gb-1500", 1500],
-            "N10000 25GB SME - 1 month": ["mtn-25gb-sme-10000", 10000],
-            "N50000 165GB SME - 2 months": ["mtn-165gb-sme-50000", 50000],
-            "N100000 360GB SME - 3 months": ["mtn-360gb-sme-100000", 100000],
-            "N450000 4.5TB - 1 year": ["mtn-4-5tb-450000", 450000],
-            "N110000 1TB - 1 year": ["mtn-1tb-110000", 110000],
-            "N600 2.5GB - 2 days": ["mtn-2-5gb-600", 600],
-            "N22000 120GB + 80mins - 30 days": ["mtn-120gb-22000", 22000],
-            "N20000 100GB - 2 months": ["mtn-100gb-20000", 20000],
-            "N30000 160GB - 2 months": ["mtn-160gb-30000", 30000],
-            "N50000 400GB - 3 months": ["mtn-400gb-50000", 50000],
-            "N75000 600GB - 3 months": ["mtn-600gb-75000", 75000],
-            "N300 Xtratalk Weekly": ["mtn-xtratalk-300", 300],
-            "N500 Xtratalk Weekly": ["mtn-xtratalk-500", 500],
-            "N1000 Xtratalk Monthly": ["mtn-xtratalk-1000", 1000],
-            "N2000 Xtratalk Monthly": ["mtn-xtratalk-2000", 2000],
-            "N5000 Xtratalk Monthly": ["mtn-xtratalk-5000", 5000],
-            "N10000 Xtratalk Monthly": ["mtn-xtratalk-10000", 10000],
-            "N15000 Xtratalk Monthly": ["mtn-xtratalk-15000", 15000],
-            "N20000 Xtratalk Monthly": ["mtn-xtratalk-20000", 20000],
-            "N800 3GB - 2 days": ["mtn-3gb-800", 800],
-            "N2000 7GB - 7 days": ["mtn-7gb-2000", 2000],
-            "N200 Xtradata": ["mtn-xtradata-200", 200],
+  "N100 100MB - 24 hrs": [
+    "mtn-10mb-100",
+    100
+  ],
+  "N200 200MB - 2 days": [
+    "mtn-50mb-200",
+    200
+  ],
+  "N1000 1.5GB - 30 days": [
+    "mtn-100mb-1000",
+    1000
+  ],
+  "N2000 4.5GB - 30 days": [
+    "mtn-500mb-2000",
+    2000
+  ],
+  "N1500 6GB - 7 days": [
+    "mtn-20hrs-1500",
+    1500
+  ],
+  "N2500 6GB - 30 days": [
+    "mtn-3gb-2500",
+    2500
+  ],
+  "N3000 8GB - 30 days": [
+    "mtn-data-3000",
+    3000
+  ],
+  "N3500 10GB - 30 days": [
+    "mtn-1gb-3500",
+    3500
+  ],
+  "N5000 15GB - 30 days": [
+    "mtn-100hr-5000",
+    5000
+  ],
+  "N6000 20GB - 30 days": [
+    "mtn-3gb-6000",
+    6000
+  ],
+  "N10000 40GB - 30 days": [
+    "mtn-40gb-10000",
+    10000
+  ],
+  "N15000 75GB - 30 days": [
+    "mtn-75gb-15000",
+    15000
+  ],
+  "N20000 110GB - 30 days": [
+    "mtn-110gb-20000",
+    20000
+  ],
+  "N1500 3GB - 30 days": [
+    "mtn-3gb-1500",
+    1500
+  ],
+  "N10000 25GB SME - 1 month": [
+    "mtn-25gb-sme-10000",
+    10000
+  ],
+  "N50000 165GB SME - 2 months": [
+    "mtn-165gb-sme-50000",
+    50000
+  ],
+  "N100000 360GB SME - 3 months": [
+    "mtn-360gb-sme-100000",
+    100000
+  ],
+  "N110000 1TB - 1 year": [
+    "mtn-1tb-110000",
+    110000
+  ],
+  "N600 2.5GB - 2 days": [
+    "mtn-2-5gb-600",
+    600
+  ],
+  "N22000 120GB + 80mins - 30 days": [
+    "mtn-120gb-22000",
+    22000
+  ],
+  "N20000 100GB - 2 months": [
+    "mtn-100gb-20000",
+    20000
+  ],
+  "N30000 160GB - 2 months": [
+    "mtn-160gb-30000",
+    30000
+  ],
+  "N50000 400GB - 3 months": [
+    "mtn-400gb-50000",
+    50000
+  ],
+  "N75000 600GB - 3 months": [
+    "mtn-600gb-75000",
+    75000
+  ],
+  "N300 Xtratalk Weekly": [
+    "mtn-xtratalk-300",
+    300
+  ],
+  "N500 Xtratalk Weekly": [
+    "mtn-xtratalk-500",
+    500
+  ],
+  "N1000 Xtratalk Monthly": [
+    "mtn-xtratalk-1000",
+    1000
+  ],
+  "N2000 Xtratalk Monthly": [
+    "mtn-xtratalk-2000",
+    2000
+  ],
+  "N5000 Xtratalk Monthly": [
+    "mtn-xtratalk-5000",
+    5000
+  ],
+  "N10000 Xtratalk Monthly": [
+    "mtn-xtratalk-10000",
+    10000
+  ],
+  "N15000 Xtratalk Monthly": [
+    "mtn-xtratalk-15000",
+    15000
+  ],
+  "N20000 Xtratalk Monthly": [
+    "mtn-xtratalk-20000",
+    20000
+  ],
+  "N800 3GB - 2 days": [
+    "mtn-3gb-800",
+    800
+  ],
+  "N200 Xtradata": [
+    "mtn-xtradata-200",
+    200
+  ]
 }
-        
+
 const airtel_dict = {
-            "N50 25MB - 1 day": ["airt-50", 50],
-            "N100 75MB - 1 day": ["airt-100", 100],
-            "N200 200MB - 3 days": ["airt-200", 200],
-            "N300 350MB - 7 days": ["airt-300", 300],
-            "N500 750MB - 14 days": ["airt-500", 500],
-            "N1000 1.5GB - 30 days": ["airt-1000", 1000],
-            "N1500 3GB - 30 days": ["airt-1500", 1500],
-            "N2000 4.5GB - 30 days": ["airt-2000", 2000],
-            "N3000 8GB - 30 days": ["airt-3000", 3000],
-            "N4000 11GB - 30 days": ["airt-4000", 4000],
-            "N5000 15GB - 30 days": ["airt-5000", 5000],
-            "N1500 6GB Binge - 7 days": ["airt-1500-2", 1500],
-            "N10000 40GB - 30 days": ["airt-10000", 10000],
-            "N15000 75GB - 30 days": ["airt-15000", 15000],
-            "N20000 110GB - 30 days": ["airt-20000", 20000],
-            "N600 1GB - 14 days": ["airt-600", 600],
-            "N1000 1.5GB - 7 days": ["airt-1000-7", 1000],
-            "N2000 7GB - 7 days": ["airt-2000-7", 2000],
-            "N5000 25GB - 7 days": ["airt-5000-7", 5000],
-            "N400 1.5GB - 1 day": ["airt-400-1", 400],
-            "N800 3.5GB - 2 days": ["airt-800-2", 800],
-            "N6000 23GB - 30 days": ["airt-6000-30", 6000],
+  "N50 25MB - 1 day": [
+    "airt-50",
+    50
+  ],
+  "N100 75MB - 1 day": [
+    "airt-100",
+    100
+  ],
+  "N200 200MB - 3 days": [
+    "airt-200",
+    200
+  ],
+  "N300 350MB - 7 days": [
+    "airt-300",
+    300
+  ],
+  "N500 750MB - 14 days": [
+    "airt-500",
+    500
+  ],
+  "N1000 1.5GB - 30 days": [
+    "airt-1000",
+    1000
+  ],
+  "N1500 3GB - 30 days": [
+    "airt-1500",
+    1500
+  ],
+  "N2000 4.5GB - 30 days": [
+    "airt-2000",
+    2000
+  ],
+  "N3000 8GB - 30 days": [
+    "airt-3000",
+    3000
+  ],
+  "N4000 11GB - 30 days": [
+    "airt-4000",
+    4000
+  ],
+  "N5000 15GB - 30 days": [
+    "airt-5000",
+    5000
+  ],
+  "N1500 6GB Binge - 7 days": [
+    "airt-1500-2",
+    1500
+  ],
+  "N10000 40GB - 30 days": [
+    "airt-10000",
+    10000
+  ],
+  "N15000 75GB - 30 days": [
+    "airt-15000",
+    15000
+  ],
+  "N20000 110GB - 30 days": [
+    "airt-20000",
+    20000
+  ],
+  "N600 1GB - 14 days": [
+    "airt-600",
+    600
+  ],
+  "N1000 1.5GB - 7 days": [
+    "airt-1000-7",
+    1000
+  ],
+  "N2000 7GB - 7 days": [
+    "airt-2000-7",
+    2000
+  ],
+  "N5000 25GB - 7 days": [
+    "airt-5000-7",
+    5000
+  ],
+  "N400 1.5GB - 1 day": [
+    "airt-400-1",
+    400
+  ],
+  "N800 3.5GB - 2 days": [
+    "airt-800-2",
+    800
+  ],
+  "N6000 23GB - 30 days": [
+    "airt-6000-30",
+    6000
+  ]
 }
         
 const glo_dict = {
-            "N100 105MB - 2 days": ["glo100", 100],
-            "N200 350MB - 4 days": ["glo200", 200],
-            "N500 1.05GB - 14 days": ["glo500", 500],
-            "N1000 2.5GB - 30 days": ["glo1000", 1000],
-            "N2000 5.8GB - 30 days": ["glo2000", 2000],
-            "N2500 7.7GB - 30 days": ["glo2500", 2500],
-            "N3000 10GB - 30 days": ["glo3000", 3000],
-            "N4000 13.25GB - 30 days": ["glo4000", 4000],
-            "N5000 18.25GB - 30 days": ["glo5000", 5000],
-            "N8000 29.5GB - 30 days": ["glo8000", 8000],
-            "N10000 50GB - 30 days": ["glo10000", 10000],
-            "N15000 93GB - 30 days": ["glo15000", 15000],
-            "N18000 119GB - 30 days": ["glo18000", 18000],
-            "N1500 4.1GB - 30 days": ["glo1500", 1500],
-            "N20000 138GB - 30 days": ["glo20000", 20000],
-            "N70 200MB SME - 14 days": ["glo-dg-70", 70],
-            "N320 1GB SME - 30 days": ["glo-dg-320", 320],
-            "N960 3GB SME - 30 days": ["glo-dg-960", 960],
-            "N3100 10GB SME - 30 days": ["glo-dg-3100", 3100],
-            "N640 2GB SME - 30 days": ["glo-dg-640", 640],
-            "N160 500MB SME - 14 days": ["glo-dg-160-14", 160],
-            "N1600 5GB SME - 30 days": ["glo-dg-1600", 1600],
-            "N50 45MB + 5MB Night - 1 day": ["glo-daily-50", 50],
-            "N100 115MB + 35MB Night - 1 day": ["glo-daily-100", 100],
-            "N200 240MB + 110MB Night - 2 days": ["glo-2days-200", 200],
-            "N500 800MB + 1GB Night - 2 weeks": ["glo-2weeks-500", 500],
-            "N1000 1.9GB + 2GB Night - 30 days": ["glo-monthly-1000", 1000],
-            "N1500 3.5GB + 4GB Night - 30 days": ["glo-monthly-1500", 1500],
-            "N2000 5.2GB + 4GB Night - 30 days": ["glo-monthly-2000", 2000],
-            "N2500 6.8GB + 4GB Night - 30 days": ["glo-monthly-2500", 2500],
-            "N3000 10GB + 4GB Night - 30 days": ["glo-monthly-3000", 3000],
-            "N4000 14GB + 4GB Night - 30 days": ["glo-monthly-4000", 4000],
-            "N5000 20GB + 4GB Night - 30 days": ["glo-monthly-5000", 5000],
-            "N8000 27.5GB + 2GB Night - 30 days": ["glo-monthly-8000", 8000],
-            "N10000 46GB + 4GB Night - 30 days": ["glo-monthly-10000", 10000],
-            "N15000 86GB + 7GB Night - 30 days": ["glo-monthly-15000", 15000],
-            "N18000 109GB + 10GB Night - 30 days": ["glo-monthly-18000", 18000],
-            "N20000 126GB + 12GB Night - 30 days": ["glo-monthly-20000", 20000],
-            "N300 1GB Special": ["glo-special-300", 300],
-            "N500 2GB Special": ["glo-special-500", 500],
+  "N100 105MB - 2 days": [
+    "glo100",
+    100
+  ],
+  "N200 350MB - 4 days": [
+    "glo200",
+    200
+  ],
+  "N500 1.05GB - 14 days": [
+    "glo500",
+    500
+  ],
+  "N1000 2.5GB - 30 days": [
+    "glo1000",
+    1000
+  ],
+  "N2000 5.8GB - 30 days": [
+    "glo2000",
+    2000
+  ],
+  "N5000 18.25GB - 30 days": [
+    "glo5000",
+    5000
+  ],
+  "N8000 29.5GB - 30 days": [
+    "glo8000",
+    8000
+  ],
+  "N10000 50GB - 30 days": [
+    "glo10000",
+    10000
+  ],
+  "N15000 93GB - 30 days": [
+    "glo15000",
+    15000
+  ],
+  "N18000 119GB - 30 days": [
+    "glo18000",
+    18000
+  ],
+  "N1500 4.1GB - 30 days": [
+    "glo1500",
+    1500
+  ],
+  "N20000 138GB - 30 days": [
+    "glo20000",
+    20000
+  ],
+  "N50 45MB + 5MB Night - 1 day": [
+    "glo-daily-50",
+    50
+  ],
+  "N100 115MB + 35MB Night - 1 day": [
+    "glo-daily-100",
+    100
+  ],
+  "N200 240MB + 110MB Night - 2 days": [
+    "glo-2days-200",
+    200
+  ],
+  "N500 800MB + 1GB Night - 2 weeks": [
+    "glo-2weeks-500",
+    500
+  ],
+  "N1000 1.9GB + 2GB Night - 30 days": [
+    "glo-monthly-1000",
+    1000
+  ],
+  "N1500 3.5GB + 4GB Night - 30 days": [
+    "glo-monthly-1500",
+    1500
+  ],
+  "N2000 5.2GB + 4GB Night - 30 days": [
+    "glo-monthly-2000",
+    2000
+  ],
+  "N2500 6.8GB + 4GB Night - 30 days": [
+    "glo-monthly-2500",
+    2500
+  ],
+  "N3000 10GB + 4GB Night - 30 days": [
+    "glo-monthly-3000",
+    3000
+  ],
+  "N4000 14GB + 4GB Night - 30 days": [
+    "glo-monthly-4000",
+    4000
+  ],
+  "N5000 20GB + 4GB Night - 30 days": [
+    "glo-monthly-5000",
+    5000
+  ],
+  "N8000 27.5GB + 2GB Night - 30 days": [
+    "glo-monthly-8000",
+    8000
+  ],
+  "N15000 86GB + 7GB Night - 30 days": [
+    "glo-monthly-15000",
+    15000
+  ],
+  "N18000 109GB + 10GB Night - 30 days": [
+    "glo-monthly-18000",
+    18000
+  ],
+  "N20000 126GB + 12GB Night - 30 days": [
+    "glo-monthly-20000",
+    20000
+  ]
 }
-         
+
 const  etisalat_dict = {
-            "N100 100MB - 1 day": ["eti-100", 100],
-            "N200 650MB - 1 day": ["eti-200", 200],
-            "N500 500MB - 30 days": ["eti-500", 500],
-            "N1000 1.5GB - 30 days": ["eti-1000", 1000],
-            "N2000 4.5GB - 30 days": ["eti-2000", 2000],
-            "N5000 15GB - 30 days": ["eti-5000", 5000],
-            "N10000 40GB - 30 days": ["eti-10000", 10000],
-            "N15000 75GB - 30 days": ["eti-15000", 15000],
-            "N27500 30GB - 90 days": ["eti-27500", 27500],
-            "N55000 60GB - 180 days": ["eti-55000", 55000],
-            "N110000 120GB - 365 days": ["eti-110000", 110000],
-            "N300 1GB + 100MB - 1 day": ["eti-300", 300],
-            "N2500 11GB - 30 days": ["eti-2500", 2500],
-            "N7000 35GB - 30 days": ["eti-7000", 7000],
-            "N20000 125GB - 30 days": ["eti-20000", 20000],
-            "N1000 4GB - 30 days": ["eti-1000", 1000],
-            "N1500 7GB - 7 days": ["eti-1500-7", 1500],
-            "N150 200MB - 1 day": ["eti-150-1", 150],
+  "N100 100MB - 1 day": [
+    "eti-100",
+    100
+  ],
+  "N200 650MB - 1 day": [
+    "eti-200",
+    200
+  ],
+  "N1000 1.5GB - 30 days": [
+    "eti-1000",
+    1000
+  ],
+  "N2000 4.5GB - 30 days": [
+    "eti-2000",
+    2000
+  ],
+  "N10000 40GB - 30 days": [
+    "eti-10000",
+    10000
+  ],
+  "N27500 30GB - 90 days": [
+    "eti-27500",
+    27500
+  ],
+  "N55000 60GB - 180 days": [
+    "eti-55000",
+    55000
+  ],
+  "N300 1GB + 100MB - 1 day": [
+    "eti-300",
+    300
+  ],
+  "N2500 11GB - 30 days": [
+    "eti-2500",
+    2500
+  ],
+  "N20000 125GB - 30 days": [
+    "eti-20000",
+    20000
+  ],
+  "N1500 7GB - 7 days": [
+    "eti-1500-7",
+    1500
+  ]
 }
-        
-
-
 
  function parsePlanDetails(planName:string) {
         // Default values
