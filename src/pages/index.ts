@@ -35,4 +35,9 @@ export { Campaigns } from './Campaigns';
 export { ScannerAssignments } from './ScannerAssignments';
 export { TransactionFilterPage } from './TransactionFilterPage';
 export { EventPublic } from './EventPublic';
+
+// 🛒 Cart Page Export
 export { default as Cart } from './CartPage';
+
+// 🔵 BlueSphere (Engagement) Page Export
+export { default as BlueSphere } from './Bluesphere'; 
