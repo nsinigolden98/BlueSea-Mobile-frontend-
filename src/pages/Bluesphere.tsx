@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { 
   Search, 
   Gamepad2, 
-  Trophy, 
+  // Trophy, 
   Users, 
   ChevronDown, 
   ChevronUp, 

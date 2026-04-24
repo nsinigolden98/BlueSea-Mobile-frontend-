@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
-import { ThemeContext, ThemeProvider } from '@/context/ThemeContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import {
   LandingPage,
   AuthPage,
