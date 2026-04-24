@@ -41,6 +41,7 @@ import {
   TransactionFilterPage,
   // 🚨 ADDED BOTH HERE
   Cart,
+  SellerProductManager,
   BlueSphere 
 } from '@/pages';
 import './App.css';
@@ -112,6 +113,9 @@ function AppRoutes() {
       {/* 🔵 BlueSphere Route */}
       <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
 
+ {/* New Seller Route */}
+        <Route path="/products" element={<SellerProductManager />} />
+      
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
