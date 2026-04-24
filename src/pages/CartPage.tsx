@@ -39,7 +39,8 @@ const VerifiedBadge = ({ className }: { className?: string }) => (
   </span>
 );
 
-export const Cart = () => {
+// Renamed from Cart to Bluesphere to match your filename
+export const Bluesphere = () => {
   const navigate = useNavigate();
   const { showToast, ToastComponent } = Toast();
   
@@ -49,10 +50,6 @@ export const Cart = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // --- CART LOGIC ---
-
-  useEffect(() => {
-    loadCart();
-  }, []);
 
   const loadCart = () => {
     try {
@@ -66,6 +63,11 @@ export const Cart = () => {
       setIsLoading(false);
     }
   };
+
+  // This is where useEffect is used
+  useEffect(() => {
+    loadCart();
+  }, []);
 
   const saveCart = (items: CartItem[]) => {
     localStorage.setItem('market_cart', JSON.stringify(items));
@@ -153,7 +155,6 @@ export const Cart = () => {
                   expandedItemId === item.productId ? "ring-2 ring-sky-500 ring-offset-2 dark:ring-offset-slate-900 shadow-xl" : "shadow-sm"
                 )}
               >
-                {/* COLLAPSED VIEW / CARD HEADER */}
                 <div 
                   onClick={() => setExpandedItemId(expandedItemId === item.productId ? null : item.productId)}
                   className="p-3 flex items-center gap-4 cursor-pointer"
@@ -175,14 +176,12 @@ export const Cart = () => {
                   </div>
                 </div>
 
-                {/* EXPANDABLE SECTION */}
                 <div className={cn(
                   "grid transition-all duration-300 ease-in-out",
                   expandedItemId === item.productId ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                 )}>
                   <div className="overflow-hidden">
                     <div className="p-4 border-t border-slate-50 dark:border-slate-700 space-y-4">
-                      {/* Detailed Info */}
                       <div className="flex gap-4">
                         <div className="w-24 h-24 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-600">
                           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -199,11 +198,10 @@ export const Cart = () => {
                         </div>
                       </div>
 
-                      {/* Quantity Controls & Remove */}
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/50 p-1.5 rounded-xl border border-slate-100 dark:border-slate-700">
                           <button 
-                            onClick={() => updateQuantity(item.productId, -1)}
+                            onClick={(e) => { e.stopPropagation(); updateQuantity(item.productId, -1); }}
                             disabled={item.quantity <= 1}
                             className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-800 shadow-sm disabled:opacity-30 transition-all active:scale-90"
                           >
@@ -213,7 +211,7 @@ export const Cart = () => {
                             {item.quantity}
                           </span>
                           <button 
-                            onClick={() => updateQuantity(item.productId, 1)}
+                            onClick={(e) => { e.stopPropagation(); updateQuantity(item.productId, 1); }}
                             className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-800 shadow-sm transition-all active:scale-90"
                           >
                             <Plus className="w-4 h-4" />
@@ -221,7 +219,7 @@ export const Cart = () => {
                         </div>
 
                         <button 
-                          onClick={() => removeItem(item.productId)}
+                          onClick={(e) => { e.stopPropagation(); removeItem(item.productId); }}
                           className="flex items-center gap-2 px-4 py-2 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 font-medium text-sm transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -259,8 +257,6 @@ export const Cart = () => {
             <button 
               className="w-full py-4 rounded-2xl bg-sky-500 text-white font-bold flex items-center justify-center gap-2 hover:bg-sky-600 transition-all shadow-lg shadow-sky-500/20 active:scale-[0.98]"
               onClick={() => {
-                // TODO: Connect checkout page
-                // TODO: Send to history system
                 showToast("Checkout logic coming soon");
               }}
             >
@@ -274,4 +270,4 @@ export const Cart = () => {
       <ToastComponent />
     </div>
   );
-}
+                            }
