@@ -42,6 +42,7 @@ import {
   // 🚨 ADDED BOTH HERE
   Cart,
   SellerProductManager,
+  HistoryPage,
   BlueSphere 
 } from '@/pages';
 import './App.css';
@@ -115,6 +116,9 @@ function AppRoutes() {
 
  {/* New Seller Route */}
         <Route path="/products" element={<SellerProductManager />} />
+
+      <Route path="/history" element={<HistoryPage />} />
+      
       
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
