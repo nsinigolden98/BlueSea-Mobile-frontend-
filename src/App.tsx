@@ -40,7 +40,7 @@ import {
   EventPublic,
   TransactionFilterPage,
   GiftCards,
-  Cart,
+  CartPage,
   SellerProductManager,
   Checkout,
   BlueSphere 
