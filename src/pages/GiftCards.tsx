@@ -13,15 +13,11 @@ import { Label } from '@/components/ui/label';
 import { 
   ChevronLeft, 
   Plus, 
-  History, 
   Gift, 
   CreditCard, 
-  Globe, 
   Mail, 
   Camera, 
   X, 
-  CheckCircle2, 
-  AlertCircle,
   ArrowRightLeft,
   ChevronRight,
   Info
@@ -70,7 +66,6 @@ export default function GiftCardPage() {
   // Modal States
   const [buyModalOpen, setBuyModalOpen] = useState(false);
   const [redeemModalOpen, setRedeemModalOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'form' | 'pin'>('form');
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Form States - Buy
@@ -103,7 +98,6 @@ export default function GiftCardPage() {
   const resetForms = () => {
     setBuyModalOpen(false);
     setRedeemModalOpen(false);
-    setCurrentStep('form');
     setBuyData({ brand: '', region: '', amount: 0, qty: 1, email: '' });
     setRedeemData({ brand: '', region: '', code: '', value: '', image: null });
   };
@@ -241,7 +235,6 @@ export default function GiftCardPage() {
                 ))}
               </div>
             </section>
-
           </div>
         </main>
       </div>
@@ -344,11 +337,14 @@ export default function GiftCardPage() {
               </div>
 
               <Button 
-                onClick={() => showPinModal()}
-                disabled={!validateBuy()}
+                onClick={() => {
+                  setIsProcessing(true);
+                  showPinModal();
+                }}
+                disabled={!validateBuy() || isProcessing}
                 className="w-full py-8 rounded-[2rem] bg-sky-500 hover:bg-sky-600 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
               >
-                Proceed to Checkout
+                {isProcessing ? <LoadingSpinner className="w-6 h-6" /> : 'Proceed to Checkout'}
               </Button>
             </div>
           </div>
@@ -377,7 +373,7 @@ export default function GiftCardPage() {
                       className="w-full p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border-none focus:ring-2 focus:ring-sky-500 outline-none font-bold text-slate-700 dark:text-slate-200"
                       onChange={(e) => setRedeemData({...redeemData, brand: e.target.value})}
                     >
-                      <option value="">Select Brand</option>
+                                            <option value="">Select Brand</option>
                       {GIFT_CARD_BRANDS.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
                     </select>
                   </div>
@@ -451,11 +447,14 @@ export default function GiftCardPage() {
               </div>
 
               <Button 
-                onClick={() => showPinModal()}
-                disabled={!validateRedeem()}
+                onClick={() => {
+                  setIsProcessing(true);
+                  showPinModal();
+                }}
+                disabled={!validateRedeem() || isProcessing}
                 className="w-full py-8 rounded-[2rem] bg-sky-500 hover:bg-sky-600 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
               >
-                Submit Redeem Request
+                {isProcessing ? <LoadingSpinner className="w-6 h-6" /> : 'Submit Redeem Request'}
               </Button>
             </div>
           </div>
@@ -478,6 +477,7 @@ export default function GiftCardPage() {
           isSuccess={txStatus} 
           onClose={() => {
             setIsTxModalOpen(false);
+            setIsProcessing(false);
             setTransactions(prev => [
               { 
                 id: Math.random().toString(), 
@@ -490,10 +490,11 @@ export default function GiftCardPage() {
               },
               ...prev
             ]);
+            showToast(txStatus ? 'Transaction successful!' : 'Transaction failed');
           }} 
           toastMessage={txMessage} 
         />
       )}
     </div>
   );
-                    }
+}
