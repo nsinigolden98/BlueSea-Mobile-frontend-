@@ -25,7 +25,6 @@ interface CartItem {
   createdAt: string;
   deliveryLocation: string | null;
 }
-
 const VerifiedBadge = ({ className }: { className?: string }) => (
   <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider", className)}>
     <CheckCircle2 className="w-3 h-3" />
