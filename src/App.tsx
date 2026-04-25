@@ -39,7 +39,7 @@ import {
   ScannerAssignments,
   EventPublic,
   TransactionFilterPage,
-  // 🚨 ADDED BOTH HERE
+  GiftCards,
   Cart,
   SellerProductManager,
   BlueSphere 
@@ -118,6 +118,7 @@ function AppRoutes() {
         <Route path="/products" element={<SellerProductManager />} />
 
       <Route path="/history" element={<HistoryPage />} />
+       <Route path="/gift-cards" element={<GiftCards />} />
       
       
       {/* Fallback */}
