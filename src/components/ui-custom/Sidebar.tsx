@@ -19,6 +19,7 @@ import {
   Grid3X3,
   Sparkles,
   QrCode,
+  Orbit,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -39,6 +40,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Grid3X3,
   Sparkles,
   QrCode,
+  Orbit,
 };
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
