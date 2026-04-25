@@ -42,6 +42,7 @@ import {
   GiftCards,
   Cart,
   SellerProductManager,
+  Checkout,
   BlueSphere 
 } from '@/pages';
 import HistoryPage from '@/pages/History';
@@ -107,7 +108,7 @@ function AppRoutes() {
       <Route path="/tv-subscription" element={<ProtectedRoute><TVSubscription /></ProtectedRoute>} />
       <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
       <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
-
+ <Route path="/checkout" element={<Checkout />} />
       {/* 🛒 Cart Route */}
       <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
 
