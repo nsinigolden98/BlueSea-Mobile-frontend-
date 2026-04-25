@@ -18,6 +18,7 @@ import {
   Grid3X3,
   ArrowRight,
   Store,
+  Orbit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -33,6 +34,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Gift,
   Share2,
   Coins,
+  Orbit,
 };
 
 const serviceCategories = [
@@ -86,6 +88,9 @@ export function Services() {
         break;
       case '12': // Airtime Buyback
         navigate('/airtime-buyback');
+        break;
+        case '13': // bluesphere
+        navigate('/bluesphere');
         break;
       default:
         alert('Feature coming soon!');
