@@ -43,10 +43,11 @@ import {
   CartPage,
   SellerProductManager,
   Checkout,
-  Flights,
   BlueSphere 
 } from '@/pages';
 import HistoryPage from '@/pages/History';
+import Flights from '@/pages/Flights';   // ✅ Correct — default import
+
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
 import { AuthLoader } from '@/components/ui-custom';
