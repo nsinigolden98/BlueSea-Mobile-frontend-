@@ -45,4 +45,6 @@ export { default as BlueSphere } from './Bluesphere';
 export { default as SellerProductManager } from './SellerProductManager';
 export { default } from './History';
 export { default as GiftCards } from './GiftCards';
+// Add this line to your existing exports
+export * from './Checkout';
 
