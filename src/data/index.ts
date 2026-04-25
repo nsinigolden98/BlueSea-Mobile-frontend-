@@ -13,6 +13,7 @@ export const navItems: NavItem[] = [
   { id: 'campaigns', label: 'Campaigns', icon: 'Sparkles', path: '/campaigns' },
   { id: 'scanner', label: 'Scanner', icon: 'QrCode', path: '/scanner-assignments' },
   { id: 'support', label: 'Support', icon: 'Headphones', path: '/support' },
+    { id: 'bluespere', label: 'BlueSpere', icon: 'Orbit', path: '/bluesphere' },
 ];
 
 
@@ -30,6 +31,7 @@ export const services: Service[] = [
   { id: '10', name: 'Referral/Reward', icon: 'Share2', category: 'Value Added' },
   { id: '11', name: 'Blue Point', icon: 'Coins', category: 'Value Added' },
   { id: '12', name: 'Airtime Buyback', icon: 'RefreshCw', category: 'Special Features' },
+  { id: '13', name: 'BlueSpere', icon: 'Orbit', category: 'Value Added' },
 ];
   
 export const TransactionsData= async ():Promise<Transaction[]> => {
