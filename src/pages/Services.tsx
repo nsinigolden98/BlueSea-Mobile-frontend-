@@ -78,7 +78,7 @@ export function Services() {
         navigate('/auto-topup');
         break;
       case '9': // Gift Card
-        navigate('/gift-card');
+        navigate('/gift-cards');
         break;
       case '10': // Referral/Reward
       case '11': // Blue Point
