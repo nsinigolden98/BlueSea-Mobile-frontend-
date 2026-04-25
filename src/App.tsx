@@ -43,6 +43,7 @@ import {
   CartPage,
   SellerProductManager,
   Checkout,
+  Flights,
   BlueSphere 
 } from '@/pages';
 import HistoryPage from '@/pages/History';
@@ -120,7 +121,7 @@ function AppRoutes() {
 
       <Route path="/history" element={<HistoryPage />} />
        <Route path="/gift-cards" element={<GiftCards />} />
-      
+      <Route path="/flights" element={<Flights />} />
       
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
