@@ -44,5 +44,5 @@ export { default as BlueSphere } from './Bluesphere';
 // src/pages/index.ts
 export { default as SellerProductManager } from './SellerProductManager';
 export { default } from './History';
-
+export { default as GiftCards } from './GiftCards';
 
