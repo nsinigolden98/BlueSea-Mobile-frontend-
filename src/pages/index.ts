@@ -37,7 +37,7 @@ export { TransactionFilterPage } from './TransactionFilterPage';
 export { EventPublic } from './EventPublic';
 
 // 🛒 Cart Page Export
-export {Cart } from './CartPage';
+export {CartPage } from './CartPage';
 
 // 🔵 BlueSphere (Engagement) Page Export
 export { default as BlueSphere } from './Bluesphere'; 
