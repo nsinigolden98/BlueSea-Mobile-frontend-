@@ -26,7 +26,6 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
 // --- TYPES ---
 
 type TripType = 'one-way' | 'round-trip';
