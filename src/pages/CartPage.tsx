@@ -6,10 +6,8 @@ import {
   Plus, 
   Minus, 
   CheckCircle2, 
-  
   ArrowRight,
   Package,
-  
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Toast } from '@/components/ui-custom';
