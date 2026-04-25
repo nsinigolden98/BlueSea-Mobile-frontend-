@@ -6,10 +6,10 @@ import {
   Plus, 
   Minus, 
   CheckCircle2, 
-  ShoppingBag,
+  
   ArrowRight,
   Package,
-  Info
+  
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Toast } from '@/components/ui-custom';
