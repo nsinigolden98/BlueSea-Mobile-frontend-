@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowUpRight, ArrowDownLeft, X, Copy, Check, Printer, ChevronDown} from 'lucide-react';
-import { getRequest, ENDPOINTS, type Transaction } from '@/types';
+import {type Transaction } from '@/types';
 import { cn } from '@/lib/utils';
+import { TransactionsData } from '@/data';
 
 type DateFilter = 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'last_year' | 'custom' | 'all';
 
@@ -29,20 +30,8 @@ export function TransactionFilterPage() {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        
-        // Fetch all pages
-        const firstPage = await getRequest(ENDPOINTS.history);
-        const pageLength = Math.ceil((firstPage.count || 0) / 20);
-        const pageResults = await Promise.all(
-          Array.from({ length: pageLength }, (_, i) => 
-            getRequest(`${ENDPOINTS.history}?page=${i + 1}`)
-          )
-        );
-        
-        const allTransactions = pageResults
-          .flatMap(page => page.results || [])
-          .filter(item => item !== undefined);
-        
+        setTransactions([])
+         const allTransactions = await TransactionsData();
         setTransactions(allTransactions);
       } catch (error) {
         console.error('Failed to fetch transactions:', error);
@@ -53,7 +42,7 @@ export function TransactionFilterPage() {
     };
 
     fetchTransactions();
-  }, []);
+  }, [showToast]);
 
   // Calculate date range based on filter
   const getDateRange = () => {
