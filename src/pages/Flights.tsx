@@ -174,6 +174,7 @@ export default function FlightsPage() {
     setTimeout(() => {
       setIsProcessingPayment(false);
       setPaymentSuccess(true);
+      showToast('Ticket booked successfully! We\'ve sent the details to your email.', 'success');
     }, 2000);
   };
 
@@ -272,6 +273,7 @@ export default function FlightsPage() {
                   </p>
                 </div>
               </div>
+
               {/* Date & Passenger Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="grid grid-cols-2 gap-2">
@@ -280,19 +282,28 @@ export default function FlightsPage() {
                     className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"
                   >
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Departure</p>
-                    <p className="text-sm font-bold text-slate-800 dark:text-white">{departureDate || "Set Date"}</p>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-slate-400" />
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">{departureDate || "Set Date"}</p>
+                    </div>
                   </div>
                   <div 
-                    onClick={() => setTripType('round-trip')}
+                    onClick={() => {
+                      setTripType('round-trip');
+                      if (!returnDate) setActiveModal('date');
+                    }}
                     className={cn(
                       "p-4 rounded-xl border transition-colors cursor-pointer",
                       tripType === 'round-trip' ? "border-slate-200 dark:border-slate-700" : "bg-slate-50 dark:bg-slate-900 border-transparent opacity-60"
                     )}
                   >
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Return</p>
-                    <p className="text-sm font-bold text-slate-800 dark:text-white">
-                      {tripType === 'round-trip' ? (returnDate || "Set Date") : "---"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-slate-400" />
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">
+                        {tripType === 'round-trip' ? (returnDate || "Set Date") : "---"}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -316,7 +327,12 @@ export default function FlightsPage() {
                 disabled={isSearchDisabled || isSearching}
                 className="w-full py-4 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
               >
-                {isSearching ? <span className="animate-pulse">Searching...</span> : "Search Flights"}
+                {isSearching ? <span className="animate-pulse">Searching...</span> : (
+                  <span className="flex items-center gap-2">
+                    <Search className="w-5 h-5" />
+                    Search Flights
+                  </span>
+                )}
               </button>
             </div>
 
@@ -343,8 +359,9 @@ export default function FlightsPage() {
                     <h3 className="text-lg font-bold">Find hotels at your destination</h3>
                     <p className="text-sky-100 text-sm">Save up to 20% when you book a flight and hotel together.</p>
                   </div>
-                  <button className="px-5 py-2.5 bg-white text-sky-600 rounded-xl font-bold text-sm hover:bg-sky-50 transition-colors">
+                  <button className="px-5 py-2.5 bg-white text-sky-600 rounded-xl font-bold text-sm hover:bg-sky-50 transition-colors flex items-center gap-2">
                     Explore Hotels
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                </div>
                <Plane className="absolute -right-10 -bottom-10 w-48 h-48 opacity-10 rotate-12" />
@@ -365,7 +382,7 @@ export default function FlightsPage() {
                 <h3 className="font-bold text-slate-800 dark:text-white leading-tight">
                   {fromLocation?.city} → {toLocation?.city}
                 </h3>
-                <p className="text-xs text-slate-500">{departureDate} • {passengers} Traveleller</p>
+                <p className="text-xs text-slate-500">{departureDate} • {passengers} Traveller</p>
               </div>
             </div>
             <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -439,9 +456,10 @@ export default function FlightsPage() {
                         setSelectedFlight(flight);
                         setShowCheckout(true);
                       }}
-                      className="w-full py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm"
+                      className="w-full py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm flex items-center justify-center gap-2"
                     >
                       Select Flight
+                      <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 )}
@@ -481,14 +499,17 @@ export default function FlightsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Gender</label>
-                    <select 
-                      className="w-full h-10 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent px-3 text-sm"
-                      value={passengerDetails.gender}
-                      onChange={(e) => setPassengerDetails({...passengerDetails, gender: e.target.value})}
-                    >
-                      <option>Male</option>
-                      <option>Female</option>
-                    </select>
+                    <div className="relative">
+                      <select 
+                        className="w-full h-10 rounded-lg border border-slate-200 dark:border-slate-800 bg-transparent px-3 text-sm appearance-none"
+                        value={passengerDetails.gender}
+                        onChange={(e) => setPassengerDetails({...passengerDetails, gender: e.target.value})}
+                      >
+                        <option>Male</option>
+                        <option>Female</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Date of Birth</label>
@@ -510,13 +531,22 @@ export default function FlightsPage() {
                 </div>
 
                 <div className="flex items-center gap-3 p-1">
-                  <input 
-                    type="checkbox" 
-                    className="w-5 h-5 accent-sky-500" 
-                    checked={passengerDetails.sendToEmail}
-                    onChange={(e) => setPassengerDetails({...passengerDetails, sendToEmail: e.target.checked})}
-                  />
-                  <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">Send ticket to email</span>
+                  <div className="relative flex items-center">
+                    <input 
+                      type="checkbox" 
+                      className="w-5 h-5 accent-sky-500 opacity-0 absolute" 
+                      checked={passengerDetails.sendToEmail}
+                      onChange={(e) => setPassengerDetails({...passengerDetails, sendToEmail: e.target.checked})}
+                      id="send-email"
+                    />
+                    <div className={cn(
+                      "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
+                      passengerDetails.sendToEmail ? "bg-sky-500 border-sky-500" : "border-slate-300 dark:border-slate-600"
+                    )}>
+                      {passengerDetails.sendToEmail && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                  </div>
+                  <label htmlFor="send-email" className="text-sm text-slate-600 dark:text-slate-400 font-medium cursor-pointer">Send ticket to email</label>
                 </div>
               </div>
             </div>
@@ -590,9 +620,9 @@ export default function FlightsPage() {
                   <p className="text-xs text-slate-500">Number of people traveling</p>
                 </div>
                 <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                  <button onClick={() => setPassengers(Math.max(1, passengers - 1))} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700">-</button>
+                  <button onClick={() => setPassengers(Math.max(1, passengers - 1))} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center">-</button>
                   <span className="font-bold w-4 text-center">{passengers}</span>
-                  <button onClick={() => setPassengers(passengers + 1)} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700">+</button>
+                  <button onClick={() => setPassengers(passengers + 1)} className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center">+</button>
                 </div>
               </div>
 
@@ -636,7 +666,11 @@ export default function FlightsPage() {
                   <button 
                     key={d}
                     onClick={() => {
-                      setDepartureDate(new Date(d).toDateString());
+                      if (tripType === 'round-trip' && !returnDate && departureDate) {
+                        setReturnDate(new Date(d).toDateString());
+                      } else {
+                        setDepartureDate(new Date(d).toDateString());
+                      }
                       setActiveModal(null);
                     }}
                     className="p-4 border border-slate-100 dark:border-slate-800 rounded-xl text-left font-bold flex justify-between items-center"
@@ -673,4 +707,5 @@ function LoaderIcon({ className }: { className?: string }) {
       <path d="M21 12a9 9 0 1 1-6.219-8.56" />
     </svg>
   );
-}
+      }
+                
