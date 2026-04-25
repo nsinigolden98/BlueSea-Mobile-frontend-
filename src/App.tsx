@@ -110,7 +110,8 @@ function AppRoutes() {
       <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
  <Route path="/checkout" element={<Checkout />} />
       {/* 🛒 Cart Route */}
-      <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+      <Route path="/cart" element={<CartPage />} />
+ />
 
       {/* 🔵 BlueSphere Route */}
       <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
