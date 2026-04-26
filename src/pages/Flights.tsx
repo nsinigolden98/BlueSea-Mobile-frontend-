@@ -173,7 +173,7 @@ export default function FlightsPage() {
     setTimeout(() => {
       setIsProcessingPayment(false);
       setPaymentSuccess(true);
-      showToast('Ticket booked successfully! We\'ve sent the details to your email.', 'success');
+      showToast('Ticket booked successfully! We\'ve sent the details to your email.');
     }, 2000);
   };
 
