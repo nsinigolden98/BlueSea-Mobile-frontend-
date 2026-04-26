@@ -17,7 +17,7 @@ import {
   Bell,
   Headphones,
   Grid3X3,
-  Sparkles,
+  PlaneTakeoff,
   QrCode,
   Orbit,
 } from 'lucide-react';
@@ -38,7 +38,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Bell,
   Headphones,
   Grid3X3,
-  Sparkles,
+  PlaneTakeoff,
   QrCode,
   Orbit,
 };
