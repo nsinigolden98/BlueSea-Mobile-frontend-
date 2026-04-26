@@ -209,7 +209,7 @@ export default function FlightsPage() {
         setCountries(formatted);
       } catch (err) {
         setCountryError(true);
-        showToast('Could not load countries. Please check your connection.', 'error');
+        showToast('Could not load countries. Please check your connection.');
       } finally {
         setLoadingCountries(false);
       }
@@ -242,7 +242,7 @@ export default function FlightsPage() {
       const airports = await fetchAirportsByCountry(country.code);
       setAirportsList(airports);
     } catch (err) {
-      showToast('Error fetching airports for this region', 'error');
+      showToast('Error fetching airports for this region');
     } finally {
       setLoadingAirports(false);
     }
@@ -261,7 +261,7 @@ export default function FlightsPage() {
     setTimeout(() => {
       setIsProcessingPayment(false);
       setPaymentSuccess(true);
-      showToast('Ticket booked successfully!', 'success');
+      showToast('Ticket booked successfully!');
     }, 2000);
   };
 
