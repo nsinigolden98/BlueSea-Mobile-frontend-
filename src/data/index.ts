@@ -10,7 +10,7 @@ export const navItems: NavItem[] = [
   { id: 'services', label: 'Services', icon: 'Globe', path: '/services' },
   { id: 'more-services', label: 'More Services', icon: 'Grid3X3', path: '/more-services' },
   { id: 'rewards', label: 'Rewards', icon: 'Gift', path: '/rewards' },
-  { id: 'campaigns', label: 'flights', icon: 'Plane', path: '/flights' },
+  { id: 'campaigns', label: 'Flights', icon: 'PlaneTakeoff', path: '/flights' },
   { id: 'scanner', label: 'Scanner', icon: 'QrCode', path: '/scanner-assignments' },
   { id: 'support', label: 'Support', icon: 'Headphones', path: '/support' },
     { id: 'bluespere', label: 'BlueSpere', icon: 'Orbit', path: '/bluesphere' },
