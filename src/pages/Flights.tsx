@@ -768,7 +768,8 @@ export default function FlightsPage() {
 
               <div className="grid grid-cols-1 gap-2">
                 {calendarDays.map((date, idx) => {
-                  const isPast = dateSelectionTarget === 'return' && departureDate && date < departureDate;
+                  const isPast = !!(dateSelectionTarget === 'return' && departureDate && date < departureDate);
+
                   const isSelected = dateSelectionTarget === 'departure' 
                     ? departureDate?.toDateString() === date.toDateString()
                     : returnDate?.toDateString() === date.toDateString();
