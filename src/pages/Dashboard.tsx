@@ -101,7 +101,7 @@ export function Dashboard() {
       <div className="flex-1 flex flex-col min-w-0 bg-slate-950">
         <Header
           title="Dashboard"
-          subtitle="Precision Fintech"
+          subtitle="The Trusted Way To Stay Connected"
           onMenuClick={() => setSidebarOpen(true)}
         />
 
