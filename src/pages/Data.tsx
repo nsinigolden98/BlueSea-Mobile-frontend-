@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import type { Network, DataPlan } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Users, Plus, X, RefreshCw, ArrowRight } from 'lucide-react';
+import { Users, Plus, X, RefreshCw } from 'lucide-react';
 
 type PlanType = 'Daily' | 'Weekly' | 'Monthly' | 'Extravalue';
 
@@ -40,9 +40,6 @@ export function Data() {
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
   const dataPlans = dataPlanFunction()
-
-  // --- STEP 2: Points System ---
-  const pointsEarned = Math.floor((selectedPlan?.price || 0) / 100);
 
   const filteredPlans = dataPlans.filter(
     plan => plan.network === selectedNetwork && plan.planType === selectedPlanType
@@ -158,9 +155,7 @@ export function Data() {
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
-            {/* STEP 3: Enhanced Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
-              
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6">
               {/* Network Selection */}
               <div className="space-y-3">
                 <Label>Select Network</Label>
@@ -170,9 +165,9 @@ export function Data() {
                       key={network}
                       onClick={() => setSelectedNetwork(network)}
                       className={cn(
-                        'px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
+                        'px-4 py-2 rounded-full text-sm font-medium transition-all',
                         selectedNetwork === network
-                          ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2 dark:ring-offset-slate-900'
+                          ? 'bg-sky-500 text-white'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                       )}
                     >
@@ -192,7 +187,6 @@ export function Data() {
                   placeholder="Enter phone number"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="transition-all focus:ring-2 focus:ring-sky-400"
                 />
               </div>
 
@@ -205,9 +199,9 @@ export function Data() {
                       key={type.value}
                       onClick={() => setSelectedPlanType(type.value)}
                       className={cn(
-                        'px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
+                        'px-4 py-2 rounded-full text-sm font-medium transition-all',
                         selectedPlanType === type.value
-                          ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2 dark:ring-offset-slate-900'
+                          ? 'bg-sky-500 text-white'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                       )}
                     >
@@ -224,9 +218,9 @@ export function Data() {
                     key={plan.id}
                     onClick={() => setSelectedPlan(plan)}
                     className={cn(
-                      'p-4 rounded-xl border-2 transition-all text-center active:scale-95 shadow-sm hover:shadow-md relative overflow-hidden',
+                      'p-4 rounded-xl border-2 transition-all text-center',
                       selectedPlan?.id === plan.id
-                        ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-400'
+                        ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
                         : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
                     )}
                   >
@@ -235,11 +229,11 @@ export function Data() {
                       {plan.network} ₦{plan.price} {plan.size} - {plan.validity}
                     </p>
                     <div className="flex gap-1">
-                      <span className="flex-1 bg-sky-500 text-white text-[10px] py-1 rounded">
-                        ₦{plan.price}
+                      <span className="flex-1 bg-sky-500 text-white text-xs py-1 rounded">
+                        PRICE ₦{plan.price}
                       </span>
-                      <span className="flex-1 bg-slate-600 text-white text-[10px] py-1 rounded uppercase">
-                        {plan.validity}
+                      <span className="flex-1 bg-sky-500 text-white text-xs py-1 rounded">
+                        VALIDITY {plan.validity.toUpperCase()}
                       </span>
                     </div>
                   </button>
@@ -247,7 +241,7 @@ export function Data() {
               </div>
 
               {/* Group Payment Toggle */}
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5 text-sky-500" />
                   <div>
@@ -271,7 +265,7 @@ export function Data() {
 
               {/* Group Payment Details */}
               {isGroupPayment && (
-                <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl animate-in slide-in-from-top-2 duration-200">
+                <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
                   <div className="space-y-2">
                     <Label htmlFor="groupName">Group Name</Label>
                     <Input
@@ -318,7 +312,7 @@ export function Data() {
                     ))}
                     <button
                       onClick={() => setInviteMembers([...inviteMembers, ''])}
-                      className="text-sm text-sky-500 flex items-center gap-1 active:scale-95 transition-transform"
+                      className="text-sm text-sky-500 flex items-center gap-1"
                     >
                       <Plus className="w-4 h-4" /> Add another
                     </button>
@@ -327,8 +321,8 @@ export function Data() {
               )}
 
               {/* Summary */}
-              <div className="bg-slate-50 dark:bg-slate-800/80 rounded-xl p-5 space-y-3 border border-slate-100 dark:border-slate-700/50">
-                <h3 className="font-semibold text-slate-800 dark:text-white mb-1">Summary</h3>
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
+                <h3 className="font-semibold text-slate-800 dark:text-white mb-3">Summary</h3>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Network</span>
                   <span className="font-medium">{selectedNetwork}</span>
@@ -343,22 +337,12 @@ export function Data() {
                   <span className="text-slate-500">Recipient ID</span>
                   <span className="font-medium">{phoneNumber || '-'}</span>
                 </div>
-
-                {/* STEP 2 UI: Points System */}
-                {selectedPlan && (
-                  <div className="pt-2 mt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                    <span className="text-sm text-slate-500">Points Earned</span>
-                    <span className="text-xs font-bold bg-sky-100 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 px-2 py-1 rounded-full">
-                      +{pointsEarned} pts
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* Buy Button */}
               <Button 
                 onClick={handleBuyData}
-                className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6 active:scale-95 transition-transform shadow-lg shadow-sky-500/20"
+                className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
                 disabled={!phoneNumber || !selectedPlan}
               >
                 Buy Now
@@ -368,7 +352,7 @@ export function Data() {
               <Button 
                 variant="outline"
                 onClick={() => navigate(`/auto-topup?service_type=data&network=${selectedNetwork.toLowerCase()}&phone_number=${phoneNumber}&amount=${selectedPlan?.price || ''}&plan=${selectedPlan?.description || ''}`)}
-                className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50 active:scale-95 transition-transform"
+                className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
                 disabled={!phoneNumber || !selectedPlan}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
@@ -378,15 +362,6 @@ export function Data() {
           </div>
         </main>
       </div>
-
-      {/* STEP 1: Floating Page Switcher */}
-      <button 
-        onClick={() => navigate('/airtime')}
-        className="fixed right-4 bottom-20 z-50 flex items-center gap-2 px-6 py-3 rounded-full bg-sky-500 text-white font-semibold shadow-xl hover:bg-sky-600 hover:scale-105 active:scale-95 transition-all duration-300 animate-in slide-in-from-right-10"
-      >
-        Airtime <ArrowRight className="w-4 h-4" />
-      </button>
-
       </div>
       <PinComponent type={isGroupPayment ? "group-data" : `data-${selectedPlan?.network}`} value={payload} />
       <ToastComponent />
