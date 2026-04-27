@@ -60,7 +60,7 @@ export function BalanceCard({
 
         {/* Locked Balance Display */}
         {user?.lockedBalance && user.lockedBalance !== '₦0.00' && (
-          <div className="flex items-center gap-2 mb-4 p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+          <div className="flex w-fit px-4 py-2 text-xs rounded-full items-center gap-2 mb-4 p-3 bg-white/10 rounded-xl backdrop-blur-sm">
             <Lock className="w-4 h-4 text-sky-200" />
             <span className="text-sm text-sky-100">Locked:</span>
             <span className="text-sm font-medium text-white">
