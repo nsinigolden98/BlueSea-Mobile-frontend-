@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import type { Network } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Users, Plus, X, RefreshCw } from 'lucide-react';
+import { Users, Plus, X, RefreshCw, ArrowRight } from 'lucide-react';
 
 export function Airtime() {
   const { user } = useAuth()
@@ -31,6 +31,9 @@ export function Airtime() {
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
 
+  // --- STEP 2: Points System ---
+  const finalAmount = selectedAmount || Number(customAmount) || 0;
+  const pointsEarned = Math.floor(finalAmount / 100);
 
   const handleRecharge = (amount: number) => {
     setSelectedAmount(amount);
@@ -80,8 +83,6 @@ export function Airtime() {
     }
   };
 
-  const finalAmount = selectedAmount || Number(customAmount) || 0;
-  
   const payload = isGroupPayment ? {
     name: groupName,
     description:groupDescription,
@@ -156,7 +157,9 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6">
+            {/* STEP 3: Improved Card Styling */}
+            <div className="bg-white dark:bg-slate-900/95 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-8 shadow-sm hover:shadow-md transition-all duration-200">
+              
               {/* Network Selection */}
               <div className="space-y-3">
                 <Label>Select Network</Label>
@@ -166,9 +169,9 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
                       key={network}
                       onClick={() => setSelectedNetwork(network)}
                       className={cn(
-                        'px-4 py-2 rounded-full text-sm font-medium transition-all',
+                        'px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
                         selectedNetwork === network
-                          ? 'bg-sky-500 text-white'
+                          ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2 dark:ring-offset-slate-900'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                       )}
                     >
@@ -188,6 +191,7 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
                     maxLength={11}
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="transition-all focus:ring-2 focus:ring-sky-400"
                 />
               </div>
 
@@ -200,9 +204,9 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
                       key={amount}
                       onClick={() => handleRecharge(amount)}
                       className={cn(
-                        'p-4 rounded-xl border-2 transition-all text-center',
+                        'p-4 rounded-xl border-2 transition-all text-center active:scale-95 shadow-sm hover:shadow-md',
                         selectedAmount === amount
-                          ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
+                          ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-400'
                           : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
                       )}
                     >
@@ -224,11 +228,12 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
                   value={customAmount}
                   onChange={(e) => handleCustomAmount(e.target.value)}
                   min={50}
+                  className="transition-all focus:ring-2 focus:ring-sky-400"
                 />
               </div>
 
               {/* Group Payment Toggle */}
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5 text-sky-500" />
                   <div>
@@ -252,7 +257,7 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
 
               {/* Group Payment Details */}
               {isGroupPayment && (
-                <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl animate-in slide-in-from-top-2 duration-200">
                   <div className="space-y-2">
                     <Label htmlFor="groupName">Group Name</Label>
                     <Input
@@ -299,7 +304,7 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
                     ))}
                     <button
                       onClick={() => setInviteMembers([...inviteMembers, ''])}
-                      className="text-sm text-sky-500 flex items-center gap-1"
+                      className="text-sm text-sky-500 flex items-center gap-1 active:scale-95 transition-transform"
                     >
                       <Plus className="w-4 h-4" /> Add another
                     </button>
@@ -308,8 +313,8 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
               )}
 
               {/* Summary */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
-                <h3 className="font-semibold text-slate-800 dark:text-white mb-3">Summary</h3>
+              <div className="bg-slate-50 dark:bg-slate-800/80 rounded-xl p-5 space-y-3 border border-slate-100 dark:border-slate-700/50">
+                <h3 className="font-semibold text-slate-800 dark:text-white mb-1">Summary</h3>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Network</span>
                   <span className="font-medium">{selectedNetwork}</span>
@@ -324,12 +329,22 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
                   <span className="text-slate-500">Recipient ID</span>
                   <span className="font-medium">{phoneNumber || '-'}</span>
                 </div>
+                
+                {/* STEP 2 UI: Points System */}
+                {finalAmount > 0 && (
+                  <div className="pt-2 mt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Points Earned</span>
+                    <span className="text-xs font-bold bg-sky-100 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 px-2 py-1 rounded-full">
+                      +{pointsEarned} pts
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Buy Button */}
               <Button 
                 onClick={handleBuyAirtime}
-                className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
+                className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6 active:scale-95 transition-transform shadow-lg shadow-sky-500/20"
                 disabled={!phoneNumber || finalAmount < 50}
               >
                 Buy Airtime
@@ -339,7 +354,7 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
               <Button 
                 variant="outline"
                 onClick={() => navigate(`/auto-topup?service_type=airtime&network=${selectedNetwork.toLowerCase()}&phone_number=${phoneNumber}&amount=${finalAmount}`)}
-                className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
+                className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50 active:scale-95 transition-transform"
                 disabled={!phoneNumber || finalAmount < 50}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
@@ -349,6 +364,15 @@ const bodyDivRef = useRef<HTMLDivElement>(null)
           </div>
         </main>
       </div>
+      
+      {/* STEP 1: Floating Page Switcher */}
+      <button 
+        onClick={() => navigate('/data')}
+        className="fixed right-4 bottom-20 z-50 flex items-center gap-2 px-6 py-3 rounded-full bg-sky-500 text-white font-semibold shadow-xl hover:bg-sky-600 hover:scale-105 active:scale-95 transition-all duration-300 animate-in slide-in-from-right-10"
+      >
+        Data <ArrowRight className="w-4 h-4" />
+      </button>
+
       </div>
       <PinComponent type={isGroupPayment ? "group-airtime" : "airtime"} value={payload} />
       <ToastComponent />
