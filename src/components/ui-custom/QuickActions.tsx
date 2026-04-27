@@ -44,7 +44,7 @@ const actions: QuickAction[] = [
     label: 'Flight', 
     icon: Plane, 
     path: '/flights',
-    color: 'from-teal-500 to-teal-600'
+    color: 'from-violet-500 to-violet-600'
   },
 
   { 
@@ -52,7 +52,7 @@ const actions: QuickAction[] = [
     label: 'Gift Card', 
     icon: Gift, 
     path: '/gift-cards',
-    color: 'from-teal-500 to-teal-600'
+    color: 'from-indigo-500 to-indigo-600'
   },
 
 ];
