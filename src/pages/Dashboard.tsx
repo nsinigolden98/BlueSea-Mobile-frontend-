@@ -6,7 +6,8 @@ import {
   QuickActions, 
   TransactionList 
 } from '@/components/ui-custom';
-import { announcements, TransactionsData, type Transaction } from '@/data'; 
+import { announcements, TransactionsData } from '@/data'; 
+import {type Transaction } from '@/types';
 import { 
   Megaphone, 
   X, 
