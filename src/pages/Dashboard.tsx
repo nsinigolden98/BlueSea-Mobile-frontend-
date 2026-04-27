@@ -6,12 +6,10 @@ import {
   QuickActions, 
   TransactionList 
 } from '@/components/ui-custom';
-// Added Transaction type import here, removed cn import
 import { announcements, TransactionsData } from '@/data'; 
-import {type Transaction } from '@/types';
+import { type Transaction } from '@/types';
 import { 
   Megaphone, 
-  X, 
   ChevronRight, 
   Wallet, 
   Plane, 
@@ -19,7 +17,7 @@ import {
   Ticket, 
   Calendar, 
   Shield,
-  // Removed Transaction from here
+  X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,14 +27,13 @@ export function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const navigate = useNavigate();
 
-  // Fetch transaction data for Weekly Summary logic
   useEffect(() => {
     const loadData = async () => {
       try {
         const data = await TransactionsData();
         setTransactions(data);
       } catch (error) {
-        console.error("Error loading transactions for summary:", error);
+        console.error("Sync failed:", error);
       }
     };
     loadData();
@@ -46,11 +43,6 @@ export function Dashboard() {
     a => !dismissedAnnouncements.includes(a.id) && a.priority === 'high'
   );
 
-  const dismissAnnouncement = (id: string) => {
-    setDismissedAnnouncements([...dismissedAnnouncements, id]);
-  };
-
-  // Weekly Summary Logic (Last 7 days)
   const weeklyStats = useMemo(() => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -75,7 +67,7 @@ export function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+    <div className="min-h-screen bg-slate-950 text-slate-200 flex overflow-hidden">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes marquee {
           0% { transform: translateX(0); }
@@ -84,118 +76,113 @@ export function Dashboard() {
         .animate-marquee {
           display: flex;
           width: max-content;
-          animation: marquee 25s linear infinite;
+          animation: marquee 30s linear infinite;
         }
-        .animate-marquee:hover {
-          animation-play-state: paused;
+        .animate-marquee:hover { animation-play-state: paused; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Enforcing QuickAction Item constraints */
+        .quick-action-item {
+          width: 80px !important;
+          height: 80px !important;
+          background: #1e293b !important; /* bg-slate-800 */
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          border-radius: 1rem !important;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
         }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .quick-action-item:hover { background: rgba(255,255,255,0.1) !important; }
       ` }} />
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-950">
         <Header
           title="Dashboard"
-          subtitle="Buy Smarter & Cheaper"
+          subtitle="Precision Fintech"
           onMenuClick={() => setSidebarOpen(true)}
         />
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          <div className="max-w-5xl mx-auto space-y-5">
-            
-            {/* Auto-scroll Billboard */}
-            {activeAnnouncements.length > 0 && (
-              <div className="relative bg-white dark:bg-slate-800 border-y border-slate-100 dark:border-slate-800 overflow-hidden py-2 -mx-4 md:mx-0 md:rounded-xl md:border-x">
-                <div className="animate-marquee gap-8 items-center px-4">
-                  {[...activeAnnouncements, ...activeAnnouncements].map((announcement, idx) => (
-                    <div key={`${announcement.id}-${idx}`} className="flex items-center gap-3 whitespace-nowrap">
-                      <Megaphone className="w-3.5 h-3.5 text-orange-500" />
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                        {announcement.title}: {announcement.content}
-                      </span>
-                      <button 
-                        onClick={() => dismissAnnouncement(announcement.id)}
-                        className="text-slate-400 hover:text-slate-600 p-1"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Balance Card Section */}
-            <div className="space-y-4">
-              <div className="relative group">
-                <BalanceCard />
-                <div className="absolute bottom-4 right-4 z-10 flex flex-col items-end">
-                  <div className="mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all pointer-events-none">
-                    Wallet
-                  </div>
-                  <button
-                    onClick={() => navigate('/wallet')}
-                    className="w-10 h-10 bg-white/20 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-colors shadow-lg"
+        {/* 1. AUTO-SCROLL BILLBOARD */}
+        {activeAnnouncements.length > 0 && (
+          <div className="bg-slate-900/50 border-y border-white/5 py-2 overflow-hidden group">
+            <div className="animate-marquee flex items-center">
+              {[...activeAnnouncements, ...activeAnnouncements].map((announcement, idx) => (
+                <div key={`${announcement.id}-${idx}`} className="flex items-center gap-3 px-8 border-r border-white/5">
+                  <Megaphone className="w-3 h-3 text-sky-400" />
+                  <span className="text-[11px] font-medium tracking-wide text-slate-400">
+                    {announcement.title}: {announcement.content}
+                  </span>
+                  <button 
+                    onClick={() => setDismissedAnnouncements([...dismissedAnnouncements, announcement.id])}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <Wallet className="w-5 h-5" />
+                    <X className="w-3 h-3 text-slate-600 hover:text-white" />
                   </button>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
+          <div className="max-w-4xl mx-auto space-y-4">
+            
+            {/* 2. BALANCE CARD & WEEKLY SUMMARY */}
+            <div className="space-y-3">
+              <div className="relative group">
+                <BalanceCard />
+                <button
+                  onClick={() => navigate('/wallet')}
+                  className="absolute bottom-4 right-4 w-10 h-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-xl active:scale-95"
+                >
+                  <Wallet className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Weekly Summary */}
-              <div className="bg-slate-100 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200/50 dark:border-slate-700/50">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Weekly Spending</p>
-                    <p className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                      ₦{weeklyStats.amount.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Activity</p>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {weeklyStats.count} Transactions
-                    </p>
-                  </div>
+              {/* Refactored Weekly Summary Bar */}
+              <div className="bg-slate-800 border border-white/5 rounded-xl px-4 py-3 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+                  <p className="text-sm font-semibold text-slate-200">
+                    ₦{weeklyStats.amount.toLocaleString()} <span className="text-slate-500 font-normal ml-1">spent • {weeklyStats.count} transactions</span>
+                  </p>
                 </div>
+                <ChevronRight className="w-4 h-4 text-slate-600" />
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <section>
-              <div className="flex items-center justify-between mb-3 px-1">
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Quick Services</h3>
-              </div>
-              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
-                <div className="flex gap-3 min-w-max">
-                  <div className="scale-[0.96] origin-left">
+            {/* 3. QUICK ACTIONS (Horizontal Scroll) */}
+            <section className="pt-2">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3 px-1">Quick Actions</h3>
+              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+                <div className="flex gap-3 pb-2 w-max pr-10">
+                  {/* Applying internal layout logic for standard sizing */}
+                  <div className="flex gap-3">
                     <QuickActions />
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* Explore Services Grid */}
-            <section className="space-y-3">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 px-1">Explore Services</h3>
+            {/* 4. EXPLORE SERVICES GRID */}
+            <section className="space-y-3 pt-2">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 px-1">Explore Services</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {exploreServices.map((service) => (
                   <div
                     key={service.label}
                     onClick={() => navigate(service.path)}
-                    className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-750 transition-all cursor-pointer group"
+                    className="flex items-center gap-3 p-3 bg-slate-800 border border-white/5 rounded-xl hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-sm"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <service.icon className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                    <div className="w-8 h-8 rounded-lg bg-slate-700/50 flex items-center justify-center group-hover:bg-sky-500/10 transition-colors">
+                      <service.icon className="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-colors" />
                     </div>
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                    <span className="text-xs font-bold text-slate-300">
                       {service.label}
                     </span>
                   </div>
@@ -203,27 +190,29 @@ export function Dashboard() {
               </div>
             </section>
 
-            {/* Rewards Teaser */}
+            {/* REWARDS (The only remaining gradient) */}
             <div
               onClick={() => navigate('/rewards')}
-              className="bg-gradient-to-r from-sky-500 to-sky-600 rounded-2xl p-4 text-white cursor-pointer hover:shadow-md transition-all active:scale-[0.99]"
+              className="bg-gradient-to-br from-sky-500 to-sky-700 rounded-2xl p-4 text-white cursor-pointer hover:shadow-lg hover:shadow-sky-500/20 transition-all active:scale-[0.98]"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                    <span className="text-xl">🎁</span>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
+                    🎁
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm">Earn BluePoints</h3>
-                    <p className="text-xs text-sky-100">Complete tasks and earn rewards</p>
+                    <h3 className="font-bold text-sm">BluePoints Reward</h3>
+                    <p className="text-[11px] text-sky-100 opacity-80">Check your loyalty progress</p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4" />
+                <div className="bg-white/10 p-1 rounded-full">
+                  <ChevronRight className="w-4 h-4" />
+                </div>
               </div>
             </div>
 
-            {/* Recent Transactions */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-1">
+            {/* 5. TRANSACTION LIST */}
+            <div className="bg-slate-900 rounded-2xl border border-white/5 p-1 shadow-2xl">
                <TransactionList />
             </div>
           </div>
@@ -231,5 +220,5 @@ export function Dashboard() {
       </div>
     </div>
   );
-                                      }
+                  }
               
