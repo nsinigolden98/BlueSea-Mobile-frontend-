@@ -14,8 +14,8 @@ import {
   Wallet, 
   Plane, 
   Hotel, 
-  Ticket, 
-  Calendar, 
+  Ticket,
+  Shield,
   X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
