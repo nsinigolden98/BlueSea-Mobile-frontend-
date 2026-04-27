@@ -6,7 +6,6 @@ import {
   QuickActions, 
   TransactionList 
 } from '@/components/ui-custom';
-// Added Transaction type import here, removed cn import
 import { announcements, TransactionsData, type Transaction } from '@/data'; 
 import { 
   Megaphone, 
@@ -17,8 +16,7 @@ import {
   Hotel, 
   Ticket, 
   Calendar, 
-  Shield,
-  // Removed Transaction from here
+  Shield 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,14 +26,13 @@ export function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const navigate = useNavigate();
 
-  // Fetch transaction data for Weekly Summary logic
   useEffect(() => {
     const loadData = async () => {
       try {
         const data = await TransactionsData();
         setTransactions(data);
       } catch (error) {
-        console.error("Error loading transactions for summary:", error);
+        console.error("Error loading transactions:", error);
       }
     };
     loadData();
@@ -49,7 +46,6 @@ export function Dashboard() {
     setDismissedAnnouncements([...dismissedAnnouncements, id]);
   };
 
-  // Weekly Summary Logic (Last 7 days)
   const weeklyStats = useMemo(() => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -109,7 +105,6 @@ export function Dashboard() {
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-5">
             
-            {/* Auto-scroll Billboard */}
             {activeAnnouncements.length > 0 && (
               <div className="relative bg-white dark:bg-slate-800 border-y border-slate-100 dark:border-slate-800 overflow-hidden py-2 -mx-4 md:mx-0 md:rounded-xl md:border-x">
                 <div className="animate-marquee gap-8 items-center px-4">
@@ -131,7 +126,6 @@ export function Dashboard() {
               </div>
             )}
 
-            {/* Balance Card Section */}
             <div className="space-y-4">
               <div className="relative group">
                 <BalanceCard />
@@ -148,7 +142,6 @@ export function Dashboard() {
                 </div>
               </div>
 
-              {/* Weekly Summary */}
               <div className="bg-slate-100 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200/50 dark:border-slate-700/50">
                 <div className="flex items-center justify-between">
                   <div>
@@ -167,7 +160,6 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* Quick Actions */}
             <section>
               <div className="flex items-center justify-between mb-3 px-1">
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Quick Services</h3>
@@ -181,7 +173,6 @@ export function Dashboard() {
               </div>
             </section>
 
-            {/* Explore Services Grid */}
             <section className="space-y-3">
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 px-1">Explore Services</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -202,7 +193,6 @@ export function Dashboard() {
               </div>
             </section>
 
-            {/* Rewards Teaser */}
             <div
               onClick={() => navigate('/rewards')}
               className="bg-gradient-to-r from-sky-500 to-sky-600 rounded-2xl p-4 text-white cursor-pointer hover:shadow-md transition-all active:scale-[0.99]"
@@ -221,7 +211,6 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* Recent Transactions */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-1">
                <TransactionList />
             </div>
@@ -230,4 +219,4 @@ export function Dashboard() {
       </div>
     </div>
   );
-                      }
+}
