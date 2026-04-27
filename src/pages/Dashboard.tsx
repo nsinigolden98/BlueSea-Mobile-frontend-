@@ -6,8 +6,8 @@ import {
   QuickActions, 
   TransactionList 
 } from '@/components/ui-custom';
-import { announcements, TransactionsData } from '@/data';
-import { cn } from '@/lib/utils';
+// Added Transaction type import here, removed cn import
+import { announcements, TransactionsData, type Transaction } from '@/data'; 
 import { 
   Megaphone, 
   X, 
@@ -18,7 +18,7 @@ import {
   Ticket, 
   Calendar, 
   Shield,
-  type Transaction
+  // Removed Transaction from here
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -35,7 +35,7 @@ export function Dashboard() {
         const data = await TransactionsData();
         setTransactions(data);
       } catch (error) {
-        console.error("Error loading transactions for summary:");
+        console.error("Error loading transactions for summary:", error);
       }
     };
     loadData();
@@ -75,7 +75,6 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
-      {/* Animation Styles for Billboard */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes marquee {
           0% { transform: translateX(0); }
@@ -110,7 +109,7 @@ export function Dashboard() {
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-5">
             
-            {/* Auto-scroll Billboard / Announcement Strip */}
+            {/* Auto-scroll Billboard */}
             {activeAnnouncements.length > 0 && (
               <div className="relative bg-white dark:bg-slate-800 border-y border-slate-100 dark:border-slate-800 overflow-hidden py-2 -mx-4 md:mx-0 md:rounded-xl md:border-x">
                 <div className="animate-marquee gap-8 items-center px-4">
@@ -132,11 +131,10 @@ export function Dashboard() {
               </div>
             )}
 
-            {/* Balance Card Section with Wallet Update */}
+            {/* Balance Card Section */}
             <div className="space-y-4">
               <div className="relative group">
                 <BalanceCard />
-                {/* Wallet Action Overlay */}
                 <div className="absolute bottom-4 right-4 z-10 flex flex-col items-end">
                   <div className="mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all pointer-events-none">
                     Wallet
@@ -150,7 +148,7 @@ export function Dashboard() {
                 </div>
               </div>
 
-              {/* Weekly Summary - Directly below BalanceCard */}
+              {/* Weekly Summary */}
               <div className="bg-slate-100 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200/50 dark:border-slate-700/50">
                 <div className="flex items-center justify-between">
                   <div>
@@ -169,7 +167,7 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* Quick Actions - Horizontal Scroll Container */}
+            {/* Quick Actions */}
             <section>
               <div className="flex items-center justify-between mb-3 px-1">
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Quick Services</h3>
@@ -232,4 +230,4 @@ export function Dashboard() {
       </div>
     </div>
   );
-              }
+                      }
