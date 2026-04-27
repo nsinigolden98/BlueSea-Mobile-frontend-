@@ -4,7 +4,7 @@ import { ENDPOINTS, getRequest} from '@/types';
 export const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'LayoutGrid', path: '/dashboard' },
   { id: 'wallet', label: 'Wallet', icon: 'Wallet', path: '/wallet' },
-  { id: 'airtime', id: 'data', label: 'Buy Airtime & Data', icon: 'Smartphone', path: '/airtime' },
+  { id: ['airtime', 'data'], label: 'Buy Airtime & Data', icon: 'Smartphone', path: '/airtime' },
 //  { id: 'data', label: 'Buy Data', icon: 'Wifi', path: '/data' },
   { id: 'marketplace', label: 'Market Place', icon: 'Store', path: '/marketplace' },
   { id: 'services', label: 'Services', icon: 'Globe', path: '/services' },

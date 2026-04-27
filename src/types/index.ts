@@ -54,7 +54,7 @@ export interface Service {
 
 // Navigation Types
 export interface NavItem {
-  id: string;
+  id: string | string[];
   label: string;
   icon: string;
   path: string;
