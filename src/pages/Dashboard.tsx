@@ -16,7 +16,6 @@ import {
   Hotel, 
   Ticket, 
   Calendar, 
-  Shield,
   X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
