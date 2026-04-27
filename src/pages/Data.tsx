@@ -45,6 +45,9 @@ export function Data() {
     plan => plan.network === selectedNetwork && plan.planType === selectedPlanType
   );
   
+  // ADDED: Points Calculation
+  const pointsEarned = Math.floor((selectedPlan?.price || 0) / 100);
+
   const payload = isGroupPayment ? {
     name: groupName,
     description: groupDescription,
@@ -155,7 +158,8 @@ export function Data() {
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6">
+            {/* ENHANCED: Card styles */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
               {/* Network Selection */}
               <div className="space-y-3">
                 <Label>Select Network</Label>
@@ -165,9 +169,9 @@ export function Data() {
                       key={network}
                       onClick={() => setSelectedNetwork(network)}
                       className={cn(
-                        'px-4 py-2 rounded-full text-sm font-medium transition-all',
+                        'px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
                         selectedNetwork === network
-                          ? 'bg-sky-500 text-white'
+                          ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                       )}
                     >
@@ -187,21 +191,22 @@ export function Data() {
                   placeholder="Enter phone number"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="focus:ring-2 focus:ring-sky-400"
                 />
               </div>
 
               {/* Plan Type Selection */}
               <div className="space-y-3">
-                <Label>Select Plan</Label>
+                <Label>Select Plan Type</Label>
                 <div className="flex flex-wrap gap-2">
                   {planTypes.map((type) => (
                     <button
                       key={type.value}
                       onClick={() => setSelectedPlanType(type.value)}
                       className={cn(
-                        'px-4 py-2 rounded-full text-sm font-medium transition-all',
+                        'px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
                         selectedPlanType === type.value
-                          ? 'bg-sky-500 text-white'
+                          ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                       )}
                     >
@@ -218,10 +223,10 @@ export function Data() {
                     key={plan.id}
                     onClick={() => setSelectedPlan(plan)}
                     className={cn(
-                      'p-4 rounded-xl border-2 transition-all text-center',
+                      'p-4 rounded-xl border-2 transition-all text-center active:scale-95',
                       selectedPlan?.id === plan.id
-                        ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
+                        ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-400'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-sky-300 shadow-sm'
                     )}
                   >
                     <p className="font-bold text-slate-800 dark:text-white">{plan.size}</p>
@@ -241,7 +246,7 @@ export function Data() {
               </div>
 
               {/* Group Payment Toggle */}
-              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 transition-colors">
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5 text-sky-500" />
                   <div>
@@ -265,7 +270,7 @@ export function Data() {
 
               {/* Group Payment Details */}
               {isGroupPayment && (
-                <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="space-y-2">
                     <Label htmlFor="groupName">Group Name</Label>
                     <Input
@@ -303,7 +308,7 @@ export function Data() {
                               const newMembers = inviteMembers.filter((_, i) => i !== index);
                               setInviteMembers(newMembers);
                             }}
-                            className="p-2 text-red-500"
+                            className="p-2 text-red-500 hover:scale-110 transition-transform"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -312,7 +317,7 @@ export function Data() {
                     ))}
                     <button
                       onClick={() => setInviteMembers([...inviteMembers, ''])}
-                      className="text-sm text-sky-500 flex items-center gap-1"
+                      className="text-sm text-sky-500 flex items-center gap-1 hover:underline"
                     >
                       <Plus className="w-4 h-4" /> Add another
                     </button>
@@ -321,7 +326,7 @@ export function Data() {
               )}
 
               {/* Summary */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2 border border-slate-100 dark:border-slate-700">
                 <h3 className="font-semibold text-slate-800 dark:text-white mb-3">Summary</h3>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Network</span>
@@ -337,12 +342,20 @@ export function Data() {
                   <span className="text-slate-500">Recipient ID</span>
                   <span className="font-medium">{phoneNumber || '-'}</span>
                 </div>
+
+                {/* ADDED: Points Display */}
+                {selectedPlan && (
+                  <div className="flex justify-between text-sm pt-2 border-t border-slate-200 dark:border-slate-700 mt-2">
+                    <span className="text-sky-600 font-medium">Points Earned</span>
+                    <span className="font-bold text-sky-500">+{pointsEarned} pts</span>
+                  </div>
+                )}
               </div>
 
               {/* Buy Button */}
               <Button 
                 onClick={handleBuyData}
-                className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
+                className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6 active:scale-95 transition-transform"
                 disabled={!phoneNumber || !selectedPlan}
               >
                 Buy Now
@@ -352,7 +365,7 @@ export function Data() {
               <Button 
                 variant="outline"
                 onClick={() => navigate(`/auto-topup?service_type=data&network=${selectedNetwork.toLowerCase()}&phone_number=${phoneNumber}&amount=${selectedPlan?.price || ''}&plan=${selectedPlan?.description || ''}`)}
-                className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
+                className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50 active:scale-95 transition-transform"
                 disabled={!phoneNumber || !selectedPlan}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
@@ -363,6 +376,16 @@ export function Data() {
         </main>
       </div>
       </div>
+
+      {/* ADDED: Floating Switch Button */}
+      <button 
+        onClick={() => navigate('/airtime')}
+        className="fixed right-4 bottom-20 z-50 bg-sky-500 text-white rounded-full px-6 py-3 shadow-lg hover:bg-sky-600 transition-all duration-200 active:scale-95 flex items-center gap-2 animate-in fade-in slide-in-from-right-4"
+      >
+        <span className="font-medium">Airtime</span>
+        <span>→</span>
+      </button>
+
       <PinComponent type={isGroupPayment ? "group-data" : `data-${selectedPlan?.network}`} value={payload} />
       <ToastComponent />
       { isOpen &&(
