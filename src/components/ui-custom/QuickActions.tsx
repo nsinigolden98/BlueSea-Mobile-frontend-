@@ -34,11 +34,27 @@ const actions: QuickAction[] = [
   },
   { 
     id: 'bills', 
-    label: 'Pay Bills', 
+    label: 'Light Bills', 
     icon: Lightbulb, 
     path: '/light-bills',
     color: 'from-teal-500 to-teal-600'
   },
+  { 
+    id: 'flight', 
+    label: 'Flight, 
+    icon: Plane, 
+    path: '/flights',
+    color: 'from-teal-500 to-teal-600'
+  },
+
+  { 
+    id: 'gift', 
+    label: 'Gift Card', 
+    icon: Gift, 
+    path: '/gift-cards',
+    color: 'from-teal-500 to-teal-600'
+  },
+];
 ];
 
 interface QuickActionsProps {
