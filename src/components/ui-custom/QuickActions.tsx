@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, Wifi, Users, Lightbulb } from 'lucide-react';
+import { Smartphone, Wifi, Users, Plane, Gift, Lightbulb } from 'lucide-react';
 
 interface QuickAction {
   id: string;
@@ -41,7 +41,7 @@ const actions: QuickAction[] = [
   },
   { 
     id: 'flight', 
-    label: 'Flight, 
+    label: 'Flight', 
     icon: Plane, 
     path: '/flights',
     color: 'from-teal-500 to-teal-600'
@@ -54,7 +54,7 @@ const actions: QuickAction[] = [
     path: '/gift-cards',
     color: 'from-teal-500 to-teal-600'
   },
-];
+
 ];
 
 interface QuickActionsProps {
