@@ -35,7 +35,7 @@ export function Dashboard() {
         const data = await TransactionsData();
         setTransactions(data);
       } catch (error) {
-        console.error("Error loading transactions for summary:", error);
+        console.error("Error loading transactions for summary:");
       }
     };
     loadData();
