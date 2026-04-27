@@ -61,8 +61,7 @@ export function Dashboard() {
   const exploreServices = [
     { label: 'Flights', icon: Plane, path: '/flights' },
     { label: 'Hotels', icon: Hotel, path: '/hotels' },
-    { label: 'Tickets', icon: Ticket, path: '/marketplace' },
-    { label: 'Events', icon: Calendar, path: '/events' },
+    { label: 'Events', icon: Ticket, path: '/marketplace' },
     { label: 'Insurance', icon: Shield, path: '/insurance' },
   ];
 
@@ -158,7 +157,7 @@ export function Dashboard() {
 
             {/* 3. QUICK ACTIONS (Horizontal Scroll) */}
             <section className="pt-2">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-3 px-1">Quick Actions</h3>
+              
               <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
                 <div className="flex gap-3 pb-2 w-max pr-10">
                   {/* Applying internal layout logic for standard sizing */}
