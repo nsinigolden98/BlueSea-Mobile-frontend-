@@ -34,7 +34,6 @@ export function Data() {
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [toastMessage, setToastMessage] = useState('')
   
-  // Group payment state
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
@@ -45,7 +44,6 @@ export function Data() {
     plan => plan.network === selectedNetwork && plan.planType === selectedPlanType
   );
   
-  // ADDED: Points Calculation
   const pointsEarned = Math.floor((selectedPlan?.price || 0) / 100);
 
   const payload = isGroupPayment ? {
@@ -91,7 +89,6 @@ export function Data() {
       
       showPinModal();
     } else {
-      console.log(payload)
       showPinModal()
     }
   };
@@ -101,7 +98,6 @@ export function Data() {
     const hidePaymentModal = () => {
       if (bodyDivRef.current) {
         bodyDivRef.current.style.opacity = '1'
-        
       }
     }
       const showPaymentModal = () => {
@@ -118,15 +114,12 @@ export function Data() {
   
    useEffect(() => {
       if (message) {
-        console.log(message)
         setIsOpen(true)
-        
         if (message?.success || message?.code === '000') {
           showToast(message?.response_description || message?.message || '')
           setToastMessage(message?.response_description || message?.message || '')
           setTxStatus(true)
           
-          // Reset group payment state on success
           if (isGroupPayment && message?.success) {
             setIsGroupPayment(false);
             setGroupName('');
@@ -145,10 +138,8 @@ export function Data() {
   return (
     <div>
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex" ref={bodyDivRef}>
-      {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         <Header 
           title="Data" 
@@ -158,7 +149,6 @@ export function Data() {
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
-            {/* ENHANCED: Card styles */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
               {/* Network Selection */}
               <div className="space-y-3">
@@ -181,7 +171,6 @@ export function Data() {
                 </div>
               </div>
 
-              {/* Phone Number */}
               <div className="space-y-3">
                 <Label htmlFor="phone">Recipient's Phone Number</Label>
                 <Input
@@ -195,7 +184,6 @@ export function Data() {
                 />
               </div>
 
-              {/* Plan Type Selection */}
               <div className="space-y-3">
                 <Label>Select Plan Type</Label>
                 <div className="flex flex-wrap gap-2">
@@ -216,36 +204,37 @@ export function Data() {
                 </div>
               </div>
 
-              {/* Data Plans Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {/* ADJUSTED: Grid set to 3 columns on mobile and responsive card scaling */}
+              <div className="grid grid-cols-3 gap-2 md:gap-3">
                 {filteredPlans.map((plan) => (
                   <button
                     key={plan.id}
                     onClick={() => setSelectedPlan(plan)}
                     className={cn(
-                      'p-4 rounded-xl border-2 transition-all text-center active:scale-95',
+                      'p-2 md:p-4 rounded-xl border-2 transition-all text-center active:scale-95 flex flex-col justify-between min-h-[120px]',
                       selectedPlan?.id === plan.id
                         ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-400'
                         : 'border-slate-200 dark:border-slate-700 hover:border-sky-300 shadow-sm'
                     )}
                   >
-                    <p className="font-bold text-slate-800 dark:text-white">{plan.size}</p>
-                    <p className="text-xs text-slate-500 mb-2">
-                      {plan.network} ₦{plan.price} {plan.size} - {plan.validity}
-                    </p>
-                    <div className="flex gap-1">
-                      <span className="flex-1 bg-sky-500 text-white text-xs py-1 rounded">
-                        PRICE ₦{plan.price}
+                    <div>
+                      <p className="font-bold text-slate-800 dark:text-white text-xs md:text-base leading-tight">{plan.size}</p>
+                      <p className="text-[10px] text-slate-500 mb-2 line-clamp-2 leading-tight">
+                        ₦{plan.price} - {plan.validity}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1 mt-auto">
+                      <span className="bg-sky-500 text-white text-[8px] md:text-xs py-0.5 rounded truncate px-1">
+                        ₦{plan.price}
                       </span>
-                      <span className="flex-1 bg-sky-500 text-white text-xs py-1 rounded">
-                        VALIDITY {plan.validity.toUpperCase()}
+                      <span className="bg-sky-600 text-white text-[8px] md:text-xs py-0.5 rounded truncate px-1">
+                        {plan.validity.toUpperCase()}
                       </span>
                     </div>
                   </button>
                 ))}
               </div>
 
-              {/* Group Payment Toggle */}
               <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 transition-colors">
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5 text-sky-500" />
@@ -268,7 +257,6 @@ export function Data() {
                 </button>
               </div>
 
-              {/* Group Payment Details */}
               {isGroupPayment && (
                 <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="space-y-2">
@@ -325,7 +313,6 @@ export function Data() {
                 </div>
               )}
 
-              {/* Summary */}
               <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2 border border-slate-100 dark:border-slate-700">
                 <h3 className="font-semibold text-slate-800 dark:text-white mb-3">Summary</h3>
                 <div className="flex justify-between text-sm">
@@ -343,7 +330,6 @@ export function Data() {
                   <span className="font-medium">{phoneNumber || '-'}</span>
                 </div>
 
-                {/* ADDED: Points Display */}
                 {selectedPlan && (
                   <div className="flex justify-between text-sm pt-2 border-t border-slate-200 dark:border-slate-700 mt-2">
                     <span className="text-sky-600 font-medium">Points Earned</span>
@@ -352,7 +338,6 @@ export function Data() {
                 )}
               </div>
 
-              {/* Buy Button */}
               <Button 
                 onClick={handleBuyData}
                 className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6 active:scale-95 transition-transform"
@@ -361,7 +346,6 @@ export function Data() {
                 Buy Now
               </Button>
 
-              {/* Auto Top-Up Button */}
               <Button 
                 variant="outline"
                 onClick={() => navigate(`/auto-topup?service_type=data&network=${selectedNetwork.toLowerCase()}&phone_number=${phoneNumber}&amount=${selectedPlan?.price || ''}&plan=${selectedPlan?.description || ''}`)}
@@ -377,12 +361,12 @@ export function Data() {
       </div>
       </div>
 
-      {/* ADDED: Floating Switch Button */}
+      {/* ADJUSTED: Floating switch moved to top-right */}
       <button 
         onClick={() => navigate('/airtime')}
-        className="fixed right-4 bottom-20 z-50 bg-sky-500 text-white rounded-full px-6 py-3 shadow-lg hover:bg-sky-600 transition-all duration-200 active:scale-95 flex items-center gap-2 animate-in fade-in slide-in-from-right-4"
+        className="fixed right-4 top-24 z-50 bg-sky-500 text-white rounded-full px-6 py-2 shadow-lg hover:bg-sky-600 transition-all duration-200 active:scale-95 flex items-center gap-2 animate-in fade-in slide-in-from-right-4"
       >
-        <span className="font-medium">Airtime</span>
+        <span className="font-medium text-sm">Airtime</span>
         <span>→</span>
       </button>
 

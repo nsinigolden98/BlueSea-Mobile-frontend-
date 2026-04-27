@@ -81,7 +81,7 @@ showPinModal();
 
 const finalAmount = selectedAmount || Number(customAmount) || 0;
 
-// ADDED: Points Calculation
+// Points Calculation
 const pointsEarned = Math.floor(finalAmount / 100);
 
 const payload = isGroupPayment ? {
@@ -156,7 +156,6 @@ onMenuClick={() => setSidebarOpen(true)}
 
 <main className="flex-1 p-4 md:p-6 overflow-y-auto">
 <div className="max-w-2xl mx-auto">
-{/* ENHANCED: Card styles */}
 <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
 {/* Network Selection */}
 <div className="space-y-3">
@@ -210,7 +209,6 @@ selectedAmount === amount
 >
 <p className="font-bold text-slate-800 dark:text-white">₦{amount}</p>
 <p className="text-xs text-slate-500">Airtime</p>
-
 </button>
 ))}
 </div>
@@ -328,7 +326,6 @@ className="text-sm text-sky-500 flex items-center gap-1 hover:underline"
 <span className="font-medium">{phoneNumber || '-'}</span>
 </div>
 
-{/* ADDED: Points Display */}
 {finalAmount > 0 && (
 <div className="flex justify-between text-sm pt-2 border-t border-slate-200 dark:border-slate-700 mt-2">
 <span className="text-sky-600 font-medium">Points Earned</span>
@@ -362,12 +359,12 @@ Set Up Auto Top-Up
 </div>
 </div>
 
-{/* ADDED: Floating Switch Button */}
+{/* ADJUSTED: Floating switch moved to top-right */}
 <button 
 onClick={() => navigate('/data')}
-className="fixed right-4 bottom-20 z-50 bg-sky-500 text-white rounded-full px-6 py-3 shadow-lg hover:bg-sky-600 transition-all duration-200 active:scale-95 flex items-center gap-2 animate-in fade-in slide-in-from-right-4"
+className="fixed right-4 top-24 z-50 bg-sky-500 text-white rounded-full px-6 py-2 shadow-lg hover:bg-sky-600 transition-all duration-200 active:scale-95 flex items-center gap-2 animate-in fade-in slide-in-from-right-4"
 >
-<span className="font-medium">Data</span>
+<span className="font-medium text-sm">Data</span>
 <span>→</span>
 </button>
 
