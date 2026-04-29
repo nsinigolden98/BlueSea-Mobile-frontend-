@@ -50,7 +50,8 @@ import Flights from '@/pages/Flights';   // ✅ Correct — default import
 
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
-import { AuthLoader, GlobalGoogleAd } from '@/components/ui-custom';
+import { AuthLoader } from '@/components/ui-custom';
+import GlobalGoogleAd from '@/components/GlobalGoogleAd';
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
