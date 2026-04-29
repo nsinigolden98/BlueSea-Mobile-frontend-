@@ -1,10 +1,10 @@
-  import { useState, useEffect } from 'react';
-import { Sidebar, Header, TransactionList, LoadingSpinner } from '@/components/ui-custom';
+import { useState, useEffect } from 'react';
+import { Sidebar, Header, TransactionList, LoadingSpinner, BalanceCard } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
-import { Landmark, Send, X, ChevronRight, User, ShieldCheck, Search, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Landmark, Send, X, ChevronRight, User, ShieldCheck, Search, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { NIGERIAN_BANKS } from '@/data';
@@ -16,8 +16,6 @@ export function Wallet() {
   const navigate = useNavigate();
 
   // --- States for the layout ---
-  const [showBalance, setShowBalance] = useState(true);
-
   // 1. Funding Details (Request Account)
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountRequested, setAccountRequested] = useState(false);
@@ -48,6 +46,7 @@ export function Wallet() {
   const [verifyingAccount, setVerifyingAccount] = useState(false);
   const [accountVerified, setAccountVerified] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
+  
   const { showPinModal, PinComponent, message } = PinModal();
   const { ToastComponent, showToast } = Toast();
   const [isOpen, setIsOpen] = useState(false);
@@ -132,9 +131,7 @@ export function Wallet() {
     setProcessing(false);
   };
 
-  const lockedBalance = user?.lockedBalance || '₦0.00';
-  const current_balance = Number(user?.balance.slice(1).replaceAll(',', '')) + Number(lockedBalance.slice(1).replaceAll(',', ''));
-  const balance = Number(user?.balance.slice(1).replaceAll(',', ''));
+  const balance = Number(user?.balance.slice(1).replaceAll(',', '')) || 0;
 
   useEffect(() => {
     const lookupUser = async () => {
@@ -236,29 +233,24 @@ export function Wallet() {
       <style dangerouslySetInnerHTML={{ __html: `
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .glass-banner {
-          background: rgba(15, 23, 42, 0.8);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
       ` }} />
-      
+
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0 bg-slate-950">
-        <div className="flex items-center px-4 md:px-6">
+        <header className="flex items-center px-4 py-2 border-b border-white/5">
           <button 
             onClick={() => navigate('/dashboard')}
-            className="p-2 -ml-2 mr-2 text-slate-400 hover:text-white transition-colors"
+            className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-all mr-2"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <Header 
             title="Wallet" 
             subtitle="Manage your BlueSea funds"
-            onMenuClick={() => navigate('/dashboard')} 
+            onMenuClick={() => {}} // Disabling sidebar toggle from wallet header
           />
-        </div>
+        </header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
           <div className="max-w-4xl mx-auto space-y-6">
@@ -266,16 +258,16 @@ export function Wallet() {
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
               
               {/* CARD 1: FUNDING DETAILS */}
-              <div className="lg:col-span-2 bg-slate-900 rounded-2xl p-6 border border-white/5 shadow-2xl flex flex-col justify-between min-h-[220px]">
+              <div className="lg:col-span-2 bg-slate-900 border border-white/5 rounded-2xl p-6 flex flex-col justify-between shadow-sm">
                 <div>
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Funding Details</h3>
+                    <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">Funding Details</h3>
                     <Landmark className="h-4 w-4 text-sky-500" />
                   </div>
                   
                   {accountRequested ? (
-                    <div className="text-center p-4 bg-sky-500/5 rounded-xl border border-sky-500/10 animate-in fade-in zoom-in-95">
-                      <p className="text-sky-400 text-sm font-bold">Dedicated account coming soon</p>
+                    <div className="text-center p-4 bg-sky-500/5 border border-sky-500/10 rounded-xl">
+                      <p className="text-sky-400 font-bold text-sm">Account Coming Soon</p>
                       <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Processing Request</p>
                     </div>
                   ) : (
@@ -283,8 +275,8 @@ export function Wallet() {
                       <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center mx-auto">
                         <Landmark className="h-5 w-5 text-sky-500" />
                       </div>
-                      <h4 className="text-sm font-bold text-slate-200">Request Account Number</h4>
-                      <p className="text-[11px] text-slate-500 leading-relaxed px-2">Get a dedicated virtual account for automated funding.</p>
+                      <h4 className="text-sm font-bold text-slate-200">Request account number</h4>
+                      <p className="text-[11px] text-slate-500 px-2 leading-relaxed">Get a dedicated virtual account for automated funding.</p>
                       <Button 
                         onClick={handleRequestAccount}
                         disabled={accountLoading}
@@ -297,52 +289,21 @@ export function Wallet() {
                 </div>
               </div>
 
-              {/* CARD 2: BALANCE & ACTIONS */}
+              {/* CARD 2: REUSED BALANCE CARD COMPONENT */}
               <div className="lg:col-span-3">
-                <div className="bg-slate-900 rounded-2xl p-6 border border-white/5 shadow-2xl relative overflow-hidden h-full flex flex-col justify-between group">
-                  <div className="relative z-10">
-                    <div className="flex justify-between items-start">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">Current Balance</p>
-                      <button 
-                        onClick={() => setShowBalance(!showBalance)}
-                        className="p-1.5 bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
-                      >
-                        {showBalance ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <h2 className="text-4xl md:text-5xl font-black mt-4 mb-2 tracking-tight text-white">
-                      {showBalance ? `₦${current_balance.toLocaleString()}` : '₦••••••••'}
-                    </h2>
-                    <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-sky-500/10 rounded-full text-[10px] font-bold uppercase text-sky-400 border border-sky-500/20">
-                      <span className="w-1.5 h-1.5 bg-sky-500 rounded-full animate-pulse" />
-                      Verified Account
-                    </div>
-                  </div>
-                  
-                  <div className="absolute -right-6 -top-6 w-32 h-32 bg-sky-500/5 rounded-full blur-3xl" />
-                  
-                  <div className="mt-6 flex gap-3 relative z-10">
-                    <Button 
-                      onClick={handleDeposit}
-                      className="flex-1 rounded-xl bg-sky-500 hover:bg-sky-600 text-white h-11 text-xs font-bold shadow-lg shadow-sky-500/20 transition-all active:scale-95"
-                    >
-                      Deposit
-                    </Button>
-                    <Button 
-                      onClick={() => setShowWithdrawModal(true)}
-                      className="flex-1 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 h-11 text-xs font-bold border border-white/5 transition-all active:scale-95"
-                    >
-                      Withdraw
-                    </Button>
-                  </div>
-                </div>
+                <BalanceCard
+                  showActions={true}
+                  onDeposit={handleDeposit}
+                  onWithdraw={() => setShowWithdrawModal(true)}
+                  className="h-full"
+                />
               </div>
             </div>
 
             {/* Internal Transfer Button */}
             <button 
               onClick={() => setTransferModalOpen(true)}
-              className="group w-full bg-slate-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-xl"
+              className="group w-full bg-slate-900 border border-white/5 rounded-2xl p-5 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm"
             >
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl group-hover:bg-sky-500 group-hover:text-white transition-all">
@@ -373,8 +334,8 @@ export function Wallet() {
 
       {/* Withdraw Modal */}
       {showWithdrawModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-900 rounded-3xl p-6 w-full max-w-md border border-white/10 shadow-2xl animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-white tracking-tight">Withdraw Funds</h3>
               <button onClick={() => setShowWithdrawModal(false)} className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 transition-colors">
@@ -401,41 +362,33 @@ export function Wallet() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Select Bank</Label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder="Search bank name..."
-                    value={bankSearch}
-                    onChange={(e) => setBankSearch(e.target.value)}
-                    className="mb-2 bg-slate-800 border-white/5 rounded-xl h-10 text-xs focus:ring-sky-500"
-                  />
-                  <select
-                    value={selectedBank}
-                    onChange={(e) => {
-                      setSelectedBank(e.target.value);
-                      setAccountVerified(false);
-                      setAccountName('');
-                      setBankSearch('');
-                    }}
-                    className="w-full h-12 px-3 bg-slate-800 border border-white/5 rounded-xl text-slate-200 focus:ring-2 focus:ring-sky-500 outline-none font-bold text-sm"
-                  >
-                    <option value="">Select bank</option>
-                    {NIGERIAN_BANKS.filter(b => 
-                      bankSearch === '' || b.name.toLowerCase().includes(bankSearch.toLowerCase())
-                    ).map((bank) => (
-                      <option key={bank.code} value={bank.code} className="bg-slate-900">
-                        {bank.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Input
+                  type="text"
+                  placeholder="Search bank name..."
+                  value={bankSearch}
+                  onChange={(e) => setBankSearch(e.target.value)}
+                  className="mb-2 bg-slate-800 border-white/5 rounded-xl h-10 text-xs focus:ring-sky-500"
+                />
+                <select
+                  value={selectedBank}
+                  onChange={(e) => {
+                    setSelectedBank(e.target.value);
+                    setAccountVerified(false);
+                    setAccountName('');
+                    setBankSearch('');
+                  }}
+                  className="w-full h-12 px-3 bg-slate-800 border border-white/5 rounded-xl text-slate-200 focus:ring-2 focus:ring-sky-500 outline-none font-bold text-sm"
+                >
+                  <option value="">Select bank</option>
+                  {NIGERIAN_BANKS.filter(b => 
+                    bankSearch === '' || b.name.toLowerCase().includes(bankSearch.toLowerCase())
+                  ).map((bank) => (
+                    <option key={bank.code} value={bank.code}>{bank.name}</option>
+                  ))}
+                </select>
               </div>
               {selectedBank && accountNumber.length === 10 && (
-                <Button
-                  onClick={handleVerifyAccount}
-                  disabled={verifyingAccount}
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold border border-sky-500/20"
-                >
+                <Button onClick={handleVerifyAccount} disabled={verifyingAccount} className="w-full bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold border border-sky-500/20">
                   {verifyingAccount ? 'Verifying...' : 'Verify Account'}
                 </Button>
               )}
@@ -458,16 +411,15 @@ export function Wallet() {
               <Button
                 onClick={handleConfirmWithdraw}
                 disabled={withdrawing || !accountVerified || !withdrawAmount || Number(withdrawAmount) > balance}
-                className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-xl h-12 font-black shadow-lg shadow-sky-500/20 transition-all active:scale-95 mt-4"
-              >{withdrawing ? 'Processing...' : 'Confirm Withdrawal'}
+                className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-xl h-12 font-black shadow-lg shadow-sky-500/20 active:scale-95 mt-4 transition-all"
+              >
+                {withdrawing ? 'Processing...' : 'Confirm Withdrawal'}
               </Button>
             </div>
           </div>
           { isOpen && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-              <div className="glass-banner p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-white/10 animate-in slide-in-from-top-4">
-                <TransactionModal isSuccess={txStatus} onClose={()=> setIsOpen(false)} toastMessage={toastMessage} />
-              </div>
+              <TransactionModal isSuccess={txStatus} onClose={()=> setIsOpen(false)} toastMessage={toastMessage} />
             </div>
           )}
           <ToastComponent />
@@ -480,10 +432,9 @@ export function Wallet() {
           }} />
         </div>
       )}
-
-      {/* Deposit Modal */}
+ {/* Deposit Modal */}
       {depositModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/80 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/80">
           <div className="absolute inset-0" onClick={() => !processing && setDepositModalOpen(false)} />
           <div className="relative bg-slate-900 border border-white/10 rounded-3xl p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
             {processing ? (
@@ -496,7 +447,6 @@ export function Wallet() {
                   <h2 className="text-2xl font-black text-white tracking-tight">Deposit Funds</h2>
                   <div className="h-1.5 w-10 bg-sky-500 mx-auto rounded-full mt-2" />
                 </header>
-                
                 <div className="space-y-6">
                   <div className="relative group">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 absolute left-6 top-3 z-10">Amount (₦)</label>
@@ -509,13 +459,10 @@ export function Wallet() {
                         setDepositError('');
                       }}
                       placeholder="0.00"
-                      className="w-full pl-6 pr-4 pt-9 pb-5 rounded-2xl border border-white/5 bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-white shadow-inner"
+                      className="w-full pl-6 pr-4 pt-9 pb-5 rounded-2xl border border-white/5 bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-white"
                     />
-                    {depositError && (
-                      <p className="mt-2 text-xs text-red-400 font-bold px-4">{depositError}</p>
-                    )}
+                    {depositError && <p className="mt-2 text-xs text-red-400 font-bold px-4">{depositError}</p>}
                   </div>
-
                   <div className="flex flex-col gap-3 pt-4">
                     <Button 
                       className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-14 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
@@ -525,7 +472,7 @@ export function Wallet() {
                       {depositing ? <LoadingSpinner size="sm" /> : 'Confirm & Proceed'}
                     </Button>
                     {!depositing && (
-                      <button onClick={handleCancelDeposit} className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] py-3 hover:text-slate-300 transition-colors">Cancel</button>
+                      <button onClick={handleCancelDeposit} className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] py-3">Cancel</button>
                     )}
                   </div>
                 </div>
@@ -537,44 +484,40 @@ export function Wallet() {
 
       {/* Internal Transfer Modal */}
       {transferModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/80 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/80">
           <div className="absolute inset-0" onClick={() => !transferProcessing && setTransferModalOpen(false)} />
           <div className="relative bg-slate-900 border border-white/10 rounded-3xl p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
-            
             <header className="mb-8 text-center">
               <h2 className="text-2xl font-black text-white tracking-tight">
                 {transferStep === 2 ? 'Verify Identity' : 'Transfer Funds'}
               </h2>
               <div className="h-1.5 w-10 bg-sky-500 mx-auto rounded-full mt-2" />
             </header>
-
             <div className="space-y-6">
               {transferStep === 1 && (
                 <div className="animate-in slide-in-from-bottom-4 space-y-5">
                   <div className="relative group">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 absolute left-6 top-3 z-10">Email Address</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 absolute left-6 top-3 z-10">Email</label>
                     <input
-                      placeholder="user@example.com"
+                      placeholder="user@bluesea.com"
                       className="w-full pl-6 pr-12 pt-9 pb-5 rounded-2xl border border-white/5 bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-white font-bold"
                       value={transferData.recipient}
                       onChange={(e) => setTransferData({...transferData, recipient: e.target.value})}
                     />
                     <Search className="absolute right-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600" />
                   </div>
-
                   <div className="relative group">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 absolute left-6 top-3 z-10">Amount (₦)</label>
                     <input
                       type="number"
                       placeholder="0.00"
-                      className="w-full pl-6 pr-4 pt-9 pb-5 rounded-2xl border border-white/5 bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-white shadow-inner"
+                      className="w-full pl-6 pr-4 pt-9 pb-5 rounded-2xl border border-white/5 bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-white"
                       value={transferData.amount}
                       onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
                     />
                   </div>
-
                   {foundUser && (
-                    <div className="p-4 bg-sky-500/5 border border-sky-500/10 rounded-2xl flex items-center gap-4 animate-in slide-in-from-top-2">
+                    <div className="p-4 bg-sky-500/5 border border-sky-500/10 rounded-2xl flex items-center gap-4">
                       <div className="h-12 w-12 bg-slate-800 rounded-xl flex items-center justify-center text-white font-black overflow-hidden border border-white/5">
                         {foundUser.image ? (
                           <img src={`${API_BASE}${foundUser.image}`} alt="Profile" className="w-full h-full object-cover" />
@@ -584,15 +527,13 @@ export function Wallet() {
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-bold text-slate-200 truncate">{foundUser.name}</h4>
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{foundUser.email}</p>
+                        <p className="text-[10px] font-bold text-slate-500">{foundUser.email}</p>
                       </div>
                     </div>
                   )}
-
-                  {lookingUp && <div className="p-4 bg-slate-800/50 rounded-2xl text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">Looking up user...</div>}
+                  {lookingUp && <div className="p-4 bg-slate-800 rounded-2xl text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">Looking up user...</div>}
                 </div>
               )}
-
               {transferStep === 2 && (
                 <div className="animate-in slide-in-from-bottom-4 text-center">
                   <div className="mb-6">
@@ -601,7 +542,6 @@ export function Wallet() {
                     </div>
                     <p className="text-xs text-slate-400">Confirm <span className="font-black text-white">₦{transferData.amount}</span> to <span className="font-bold text-sky-400">{foundUser?.name}</span></p>
                   </div>
-                  
                   <div className="max-w-[220px] mx-auto">
                     <input
                       type="password"
@@ -612,13 +552,11 @@ export function Wallet() {
                       value={transferData.pin}
                       onChange={(e) => setTransferData({...transferData, pin: e.target.value.replace(/\D/g, '')})}
                     />
-                    <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Enter 4-Digit PIN</p>
+                    <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Enter 4-Digit PIN</p>
                   </div>
                 </div>
               )}
-
               {transferError && <p className="text-red-400 text-[10px] font-bold text-center px-4 uppercase tracking-wider">{transferError}</p>}
-
               <div className="flex flex-col gap-3 pt-4">
                 <Button 
                   className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-14 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
@@ -628,7 +566,7 @@ export function Wallet() {
                   {transferProcessing ? <LoadingSpinner size="sm" /> : transferStep === 1 ? 'Verify Transaction' : 'Confirm & Pay'}
                 </Button>
                 {!transferProcessing && (
-                  <button onClick={() => transferStep === 2 ? setTransferStep(1) : setTransferModalOpen(false)} className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] py-3 hover:text-slate-300 transition-colors">
+                  <button onClick={() => transferStep === 2 ? setTransferStep(1) : setTransferModalOpen(false)} className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] py-3 transition-colors hover:text-slate-300">
                     {transferStep === 2 ? 'Go Back' : 'Close'}
                   </button>
                 )}
