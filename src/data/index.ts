@@ -211,6 +211,7 @@ export const moreServiceCategories: ServiceCategory[] = [
     name: 'Utilities',
     services: [
       { id: 'u1', name: 'Electricity Bill', icon: 'Zap' },
+      { id: 'u2', name: 'Betting', icon: 'Trophy' },
     ],
   },
   {

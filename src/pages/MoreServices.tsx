@@ -30,6 +30,7 @@ import {
   Sparkles,
   QrCode,
   Store,
+  Trophy,
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -57,6 +58,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Sparkles,
   QrCode,
   Store,
+  Trophy,
 };
 
 export function MoreServices() {
@@ -84,6 +86,7 @@ export function MoreServices() {
       'e3': '/jamb-registration',
       // Utilities
       'u1': '/light-bills',
+      'u2': '/betting',
       // Finance
       'f1': '/wallet',
       'f2': '/group-payment',
