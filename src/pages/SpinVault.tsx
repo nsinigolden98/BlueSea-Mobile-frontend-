@@ -9,7 +9,7 @@ import {
   ChevronLeft,
   Trophy,
   Loader2,
-  Clock,
+  Clock, // Now utilized in the button
   History,
   Zap,
   Lock,
@@ -73,7 +73,7 @@ export function SpinVault() {
   const navigate = useNavigate();
   const { showToast, ToastComponent } = Toast();
   const { LoaderComponent } = Loader();
-  const { user } = useAuth(); // Now utilized for personalization
+  const { user } = useAuth(); 
   
   // Typed State Management
   const [points, setPoints] = useState<number>(120);
@@ -154,7 +154,6 @@ export function SpinVault() {
         setStreak(s => (s < 30 ? s + 1 : 1));
       }
 
-      // Update balances based on reward
       if (reward.type === 'points') setPoints(p => p + reward.value);
       if (reward.type === 'airtime') setAirtimeBalance(a => a + reward.value);
       if (reward.type === 'spin') setBonusSpins(s => s + 1);
@@ -191,7 +190,7 @@ export function SpinVault() {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                {user?.first_name ? `Hi, ${user.first_name}` : 'Vault Balance'}
+                {user?.firstName ? `Hi, ${user.firstName}` : 'Vault Balance'}
               </span>
               <span className="text-sm font-bold text-sky-500">{points.toLocaleString()} Pts</span>
             </div>
@@ -207,7 +206,7 @@ export function SpinVault() {
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-12 px-6">
               <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-sky-400" /> {user?.first_name || 'User'} won ₦500 Airtime
+                <Sparkles className="w-3.5 h-3.5 text-sky-400" /> {user?.firstName || 'User'} won ₦500 Airtime
               </span>
               <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
                 <Zap className="w-3.5 h-3.5 text-amber-400" /> Streak Updated
@@ -266,13 +265,22 @@ export function SpinVault() {
                   <div className={cn("w-3 h-3 bg-sky-400 rounded-full", isSpinning && "animate-ping")} />
                 </div>
               </div>
-<div className="w-full max-w-sm space-y-4">
+
+              <div className="w-full max-w-sm space-y-4">
                 <Button 
                   onClick={handleSpin}
                   disabled={isSpinning || !canSpin()}
                   className="w-full h-16 text-lg font-black rounded-2xl bg-sky-500 hover:bg-sky-600 text-white transition-all disabled:bg-slate-200 dark:disabled:bg-slate-800"
                 >
-                  {isSpinning ? <Loader2 className="w-6 h-6 animate-spin" /> : canSpin() ? "SPIN WHEEL" : getTimeRemaining()}
+                  {isSpinning ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : canSpin() ? (
+                    "SPIN WHEEL"
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-5 h-5" /> {getTimeRemaining()}
+                    </span>
+                  )}
                 </Button>
                 <button 
                   onClick={() => points >= 50 ? (setPoints(p => p - 50), setBonusSpins(s => s + 1)) : showToast("Need 50 Pts")}
@@ -363,7 +371,7 @@ export function SpinVault() {
   );
 }
 
-// --- TYPED SUB-COMPONENTS ---
+// --- SUB-COMPONENTS ---
 
 function StatCard({ label, value, icon }: StatCardProps) {
   return (
