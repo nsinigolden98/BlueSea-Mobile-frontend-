@@ -33,7 +33,7 @@ const ENGAGEMENT_ITEMS = [
     type: 'game',
     icon: <Zap className="w-6 h-6 text-yellow-500" />,
     stats: { plays: '12.4k', participants: '1.2k' },
-    route: '/engage/pulse-rush',
+    route: '/pulse-rush',
     ctaText: 'Try Pulse Rush',
     rules: ['Avoid the red barriers', 'Collect 10 tokens for a streak', 'Daily reset at 12:00 AM']
   },
@@ -45,7 +45,7 @@ const ENGAGEMENT_ITEMS = [
     type: 'spin',
     icon: <Dices className="w-6 h-6 text-purple-500" />,
     stats: { plays: '45.2k', participants: '8.9k' },
-    route: '/engage/spin-vault',
+    route: '/spin-vault',
     ctaText: 'Enter SpinVault',
     rules: ['1 Free spin daily', 'Bonus spins on ₦5k+ transactions', 'Rewards expire in 7 days']
   },
@@ -57,7 +57,7 @@ const ENGAGEMENT_ITEMS = [
     type: 'poll',
     icon: <PieChart className="w-6 h-6 text-sky-500" />,
     stats: { plays: '3.1k', participants: '3.1k' },
-    route: '/engage/bluetalk',
+    route: '/bluetalk',
     ctaText: 'Open BlueTalk',
     rules: ['One vote per user', 'Results hidden until poll ends', 'Earn 5 points per vote']
   },
@@ -69,7 +69,7 @@ const ENGAGEMENT_ITEMS = [
     type: 'question',
     icon: <MessageSquare className="w-6 h-6 text-green-500" />,
     stats: { plays: '8.7k', participants: '2.4k' },
-    route: '/engage/trivia',
+    route: '/trivia',
     ctaText: 'Start Trivia',
     rules: ['10 seconds per question', 'Perfect score doubles points', 'New trivia every morning']
   }
