@@ -44,6 +44,7 @@ import {
   SellerProductManager,
   Checkout,
   SpinVault,
+  Betting,
   BlueSphere 
 } from '@/pages';
 import HistoryPage from '@/pages/History';
@@ -126,7 +127,8 @@ function AppRoutes() {
        <Route path="/gift-cards" element={<GiftCards />} />
       <Route path="/flights" element={<Flights />} />
       <Route path="/spin-vault" element={<SpinVault />} />
-      
+      <Route path="/betting" element={<Betting />} />
+
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

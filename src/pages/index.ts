@@ -49,3 +49,5 @@ export { default as GiftCards } from './GiftCards';
 export * from './Checkout';
 export * from './Flights';
 export { SpinVault } from './SpinVault';
+export { Betting } from './Betting';
+
