@@ -48,4 +48,4 @@ export { default as GiftCards } from './GiftCards';
 // Add this line to your existing exports
 export * from './Checkout';
 export * from './Flights';
-
+export { SpinVault } from './SpinVault';
