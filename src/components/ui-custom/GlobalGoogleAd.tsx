@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const DEBUG_SHOW_BOX = true;
+
 
 export const GlobalGoogleAd = () => {
   const [showAd, setShowAd] = useState(false);
@@ -66,7 +66,7 @@ export const GlobalGoogleAd = () => {
   // }, [showAd, adSize]);
 
   // ❌ Don't render before delay
-  if (!showAd && !DEBUG_SHOW_BOX) return null;
+  if (!showAd) return null;
 
   return (
     <div
