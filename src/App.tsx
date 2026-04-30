@@ -48,12 +48,11 @@ import {
   BlueSphere 
 } from '@/pages';
 import HistoryPage from '@/pages/History';
-import Flights from '@/pages/Flights';   // ✅ Correct — default import
-
+import Flights from '@/pages/Flights';  
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
 import { AuthLoader } from '@/components/ui-custom';
-import {GlobalGoogleAd} from '@/components/ui-custom';
+//import {GlobalGoogleAd} from '@/components/ui-custom';
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -134,13 +133,13 @@ function AppRoutes() {
     </Routes>
   );
 }
-
+//          <GlobalGoogleAd />
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <GlobalGoogleAd />
+
           <AppRoutes />
         </BrowserRouter>
       </AuthProvider>
