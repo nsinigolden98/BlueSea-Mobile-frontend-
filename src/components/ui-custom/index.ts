@@ -11,4 +11,4 @@ export {Loader, AuthLoader} from './Loader'
 export {PinModal} from './PinModal'
 export { ConfirmDialog, useConfirm } from './ConfirmDialog'
 export {EventDashboard} from './EventDashboard'
-//export { default as GlobalGoogleAd } from '../GlobalGoogleAd';
+export { GlobalGoogleAd } from './GlobalGoogleAd'

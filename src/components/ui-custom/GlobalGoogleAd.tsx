@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 const DEBUG_SHOW_BOX = true;
 
-const GlobalGoogleAd = () => {
+export const GlobalGoogleAd = () => {
   const [showAd, setShowAd] = useState(false);
   const [adSize, setAdSize] = useState({
     width: 320,
@@ -55,15 +55,15 @@ const GlobalGoogleAd = () => {
   }, []);
 
   // 🚀 Load ad when visible OR when size changes
-  useEffect(() => {
-    if (showAd) {
-      try {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (err) {
-        console.error("Adsense error:", err);
-      }
-    }
-  }, [showAd, adSize]);
+  // useEffect(() => {
+  //   if (showAd) {
+  //     try {
+  //       (window.adsbygoogle = window.adsbygoogle || []).push({});
+  //     } catch (err) {
+  //       console.error("Adsense error:", err);
+  //     }
+  //   }
+  // }, [showAd, adSize]);
 
   // ❌ Don't render before delay
   if (!showAd && !DEBUG_SHOW_BOX) return null;
@@ -96,5 +96,3 @@ boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
     </div>
   );
 };
-
-export default GlobalGoogleAd;
