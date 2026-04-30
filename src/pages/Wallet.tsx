@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Sidebar, Header, TransactionList, LoadingSpinner, BalanceCard } from '@/components/ui-custom';
+import { TransactionList, LoadingSpinner, BalanceCard } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
-import { Landmark, Send, X, ChevronRight, User, ShieldCheck, Search, ArrowLeft } from 'lucide-react';
+import { Landmark, Send, X, ChevronRight, User, ShieldCheck, Search, ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { NIGERIAN_BANKS } from '@/data';
 import { useNavigate } from 'react-router-dom';
 
 export function Wallet() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -225,112 +224,103 @@ export function Wallet() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200 flex overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col">
       <style dangerouslySetInnerHTML={{ __html: `
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       ` }} />
 
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">
-        {/* Fixed Responsive Header */}
-        <header className="sticky top-0 z-30 flex items-center px-4 py-3 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5">
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-all mr-2"
-          >
-            <ArrowLeft className="w-5 h-5" />
+      {/* MATCHED CART HEADER */}
+      <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 py-4">
+        <div className="max-w-3xl mx-auto flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-slate-100 rounded-full">
+            <ChevronLeft className="w-6 h-6" />
           </button>
-          <div className="flex-1">
-            <Header 
-              title="Wallet" 
-              subtitle="Manage your BlueSea funds"
-              onMenuClick={() => setSidebarOpen(true)}
-            />
+          <div>
+            <h1 className="text-xl font-bold">Wallet</h1>
+            <p className="text-xs text-slate-500">Manage your BlueSea funds</p>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
-          <div className="max-w-4xl mx-auto space-y-6">
-            
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-              {/* CARD 1: FUNDING DETAILS */}
-              <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 flex flex-col justify-between shadow-sm">
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Funding Details</h3>
-                    <Landmark className="h-4 w-4 text-sky-500" />
+      <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
+        <div className="max-w-3xl mx-auto space-y-6">
+          
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            {/* CARD 1: FUNDING DETAILS */}
+            <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 flex flex-col justify-between shadow-sm">
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Funding Details</h3>
+                  <Landmark className="h-4 w-4 text-sky-500" />
+                </div>
+                
+                {accountRequested ? (
+                  <div className="text-center p-4 bg-sky-500/5 border border-sky-500/10 rounded-xl">
+                    <p className="text-sky-500 font-bold text-sm">Account Coming Soon</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">Processing Request</p>
                   </div>
-                  
-                  {accountRequested ? (
-                    <div className="text-center p-4 bg-sky-500/5 border border-sky-500/10 rounded-xl">
-                      <p className="text-sky-500 font-bold text-sm">Account Coming Soon</p>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">Processing Request</p>
+                ) : (
+                  <div className="text-center space-y-3">
+                    <div className="w-10 h-10 bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-full flex items-center justify-center mx-auto">
+                      <Landmark className="h-5 w-5 text-sky-500" />
                     </div>
-                  ) : (
-                    <div className="text-center space-y-3">
-                      <div className="w-10 h-10 bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-full flex items-center justify-center mx-auto">
-                        <Landmark className="h-5 w-5 text-sky-500" />
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Request account number</h4>
-                      <p className="text-[11px] text-slate-500 px-2 leading-relaxed">Get a dedicated virtual account for automated funding.</p>
-                      <Button 
-                        onClick={handleRequestAccount}
-                        disabled={accountLoading}
-                        className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-10 text-xs font-bold border border-slate-200 dark:border-white/5"
-                      >
-                        {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Account'}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* CARD 2: REUSED BALANCE CARD COMPONENT */}
-              <div className="lg:col-span-3">
-                <BalanceCard
-                  showActions={true}
-                  onDeposit={handleDeposit}
-                  onWithdraw={() => setShowWithdrawModal(true)}
-                  className="h-full border border-slate-200 dark:border-white/5"
-                />
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Request account number</h4>
+                    <p className="text-[11px] text-slate-500 px-2 leading-relaxed">Get a dedicated virtual account for automated funding.</p>
+                    <Button 
+                      onClick={handleRequestAccount}
+                      disabled={accountLoading}
+                      className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-10 text-xs font-bold border border-slate-200 dark:border-white/5"
+                    >
+                      {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Account'}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Internal Transfer Button */}
-            <button 
-              onClick={() => setTransferModalOpen(true)}
-              className="group w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm"
-            >
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl group-hover:bg-sky-500 group-hover:text-white transition-all">
-                  <Send className="h-5 w-5" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Internal Transfer</h3>
-                  <p className="text-slate-500 text-[11px]">Instant send to BlueSea users</p>
-                </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-slate-400 dark:text-slate-600 group-hover:text-sky-500 transition-colors" />
-            </button>
-
-            {/* History Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Transaction History</h3>
-                <button className="text-sky-500 text-[11px] font-bold hover:underline uppercase tracking-wider">See All</button>
-              </div>
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm">
-                <TransactionList />
-              </div>
+            
+             {/* CARD 2: REUSED BALANCE CARD COMPONENT */}
+            <div className="lg:col-span-3">
+              <BalanceCard
+                showActions={true}
+                onDeposit={handleDeposit}
+                onWithdraw={() => setShowWithdrawModal(true)}
+                className="h-full border border-slate-200 dark:border-white/5"
+              />
             </div>
-
           </div>
-        </main>
-      </div>
 
-      {/* Withdraw Modal */}
+          {/* Internal Transfer Button */}
+          <button 
+            onClick={() => setTransferModalOpen(true)}
+            className="group w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl group-hover:bg-sky-500 group-hover:text-white transition-all">
+                <Send className="h-5 w-5" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Internal Transfer</h3>
+                <p className="text-slate-500 text-[11px]">Instant send to BlueSea users</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-400 dark:text-slate-600 group-hover:text-sky-500 transition-colors" />
+          </button>
+
+          {/* History Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Transaction History</h3>
+              <button className="text-sky-500 text-[11px] font-bold hover:underline uppercase tracking-wider">See All</button>
+            </div>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm">
+              <TransactionList />
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Modals remain unchanged as requested */}
       {showWithdrawModal && (
         <div className="fixed inset-0 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95">
