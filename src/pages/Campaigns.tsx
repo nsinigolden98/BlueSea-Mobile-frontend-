@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils';
 import { 
   Gift, 
   TrendingUp, 
-  Calendar, // FIXED: Usage restored in Legacy View
-  Loader2, // FIXED: Usage restored in loading state
+  Calendar, 
+  Loader2, 
   ArrowRight,
   Heart,
   MessageCircle,
@@ -16,8 +16,8 @@ import {
   User,
   X,
   Send,
-  Copy, // FIXED: Added to Download Modal
-  CheckCircle2 // FIXED: Added to Downloadable Card Preview
+  Copy,
+  CheckCircle2
 } from 'lucide-react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
@@ -34,7 +34,6 @@ interface Campaign {
   end_date: string;
 }
 
-// --- NEW TYPES ---
 interface Comment {
   id: string;
   user: string;
@@ -49,7 +48,6 @@ export function Campaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const { LoaderComponent, showLoader, hideLoader } = Loader();
 
-  // --- NEW STATE ADDITIONS ---
   const [viewMode, setViewMode] = useState<'explore' | 'legacy'>('explore');
   const [points, setPoints] = useState(0);
   const [showToast, setShowToast] = useState({ show: false, message: '' });
@@ -81,7 +79,6 @@ export function Campaigns() {
     }
   };
 
-  // --- NEW LOGIC FUNCTIONS ---
   const triggerToast = (msg: string) => {
     setShowToast({ show: true, message: msg });
     setTimeout(() => setShowToast({ show: false, message: '' }), 3000);
@@ -331,11 +328,9 @@ export function Campaigns() {
                             <div className="flex flex-wrap gap-4 text-sm">
                               <div className="flex items-center gap-1 text-slate-500">
                                 <TrendingUp className="w-4 h-4" />
-                                {/* FIXED: getCampaignTypeLabel usage restored */}
                                 <span>{getCampaignTypeLabel(campaign.campaign_type)}</span>
                               </div>
                               <div className="flex items-center gap-1 text-slate-500">
-                                {/* FIXED: Calendar usage restored */}
                                 <Calendar className="w-4 h-4" />
                                 <span>{formatDate(campaign.start_date)} - {formatDate(campaign.end_date)}</span>
                               </div>
@@ -403,7 +398,6 @@ export function Campaigns() {
         <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
           <div className="max-w-sm w-full space-y-6">
             <div ref={cardRef} className="w-full aspect-[4/5] bg-gradient-to-br from-blue-600 via-sky-500 to-blue-800 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
-              {/* FIXED: CheckCircle2 usage restored */}
               <CheckCircle2 className="absolute -top-4 -right-4 w-24 h-24 text-white/10" />
               <div className="relative z-10 flex flex-col h-full">
                 <div className="font-black text-xl mb-6 italic tracking-tighter">BLUESEA</div>
@@ -425,7 +419,6 @@ export function Campaigns() {
                 }}
                 className="bg-slate-800 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
               >
-                {/* FIXED: Copy usage restored */}
                 <Copy className="w-4 h-4" /> Copy Link
               </button>
             </div>
