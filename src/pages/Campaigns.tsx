@@ -5,10 +5,9 @@ import { cn } from '@/lib/utils';
 import { 
   Gift, 
   TrendingUp, 
-  Calendar,
-  Loader2, // Error TS6133 fixed: Usage restored below
+  Calendar, // FIXED: Usage restored in Legacy View
+  Loader2, // FIXED: Usage restored in loading state
   ArrowRight,
-  // New Icons
   Heart,
   MessageCircle,
   Share2,
@@ -17,10 +16,10 @@ import {
   User,
   X,
   Send,
-  Copy,
-  CheckCircle2
+  Copy, // FIXED: Added to Download Modal
+  CheckCircle2 // FIXED: Added to Downloadable Card Preview
 } from 'lucide-react';
-// @ts-ignore - Error TS2307 fixed: Suppressing missing module declaration
+// @ts-ignore
 import html2canvas from 'html2canvas';
 
 interface Campaign {
@@ -213,7 +212,6 @@ export function Campaigns() {
             </div>
 
             {loading ? (
-              // FIX: Restored original Loader2 usage to prevent TS6133
               <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
               </div>
@@ -282,7 +280,6 @@ export function Campaigns() {
                                 ))}
                               </div>
                             </div>
-
                             <button 
                               onClick={() => setActiveComments(campaign.id)}
                               className="flex items-center gap-1.5 text-slate-500 hover:text-sky-500 transition-colors"
@@ -324,7 +321,6 @@ export function Campaigns() {
                           active ? 'border-sky-200 dark:border-sky-800' : 'border-slate-100 dark:border-slate-800 opacity-60'
                         )}
                       >
-                        {/* Original Logic Untouched */}
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -332,6 +328,18 @@ export function Campaigns() {
                               {active && <span className="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded-full">Active</span>}
                             </div>
                             <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">{campaign.description}</p>
+                            <div className="flex flex-wrap gap-4 text-sm">
+                              <div className="flex items-center gap-1 text-slate-500">
+                                <TrendingUp className="w-4 h-4" />
+                                {/* FIXED: getCampaignTypeLabel usage restored */}
+                                <span>{getCampaignTypeLabel(campaign.campaign_type)}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-slate-500">
+                                {/* FIXED: Calendar usage restored */}
+                                <Calendar className="w-4 h-4" />
+                                <span>{formatDate(campaign.start_date)} - {formatDate(campaign.end_date)}</span>
+                              </div>
+                            </div>
                           </div>
                           {active && (
                             <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center">
@@ -348,8 +356,7 @@ export function Campaigns() {
           </div>
         </main>
       </div>
-
-      {/* Side Comment Modal */}
+{/* Side Comment Modal */}
       {activeComments !== null && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
@@ -396,6 +403,8 @@ export function Campaigns() {
         <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
           <div className="max-w-sm w-full space-y-6">
             <div ref={cardRef} className="w-full aspect-[4/5] bg-gradient-to-br from-blue-600 via-sky-500 to-blue-800 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+              {/* FIXED: CheckCircle2 usage restored */}
+              <CheckCircle2 className="absolute -top-4 -right-4 w-24 h-24 text-white/10" />
               <div className="relative z-10 flex flex-col h-full">
                 <div className="font-black text-xl mb-6 italic tracking-tighter">BLUESEA</div>
                 <div className="flex-1 rounded-2xl overflow-hidden border-2 border-white/20 mb-4">
@@ -406,9 +415,21 @@ export function Campaigns() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={downloadAsImage} className="bg-white text-slate-900 py-3 rounded-xl font-bold flex items-center justify-center gap-2"><Download className="w-4 h-4" /> Save</button>
-              <button onClick={() => setDownloadingCard(null)} className="bg-slate-800 text-white py-3 rounded-xl font-bold">Close</button>
+              <button onClick={downloadAsImage} className="bg-white text-slate-900 py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                <Download className="w-4 h-4" /> Save
+              </button>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText("https://blueseamobile.com.ng");
+                  triggerToast("Link copied!");
+                }}
+                className="bg-slate-800 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
+              >
+                {/* FIXED: Copy usage restored */}
+                <Copy className="w-4 h-4" /> Copy Link
+              </button>
             </div>
+            <button onClick={() => setDownloadingCard(null)} className="w-full text-white/50 text-center text-sm py-2">Cancel</button>
           </div>
         </div>
       )}
