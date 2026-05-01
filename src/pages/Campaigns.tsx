@@ -21,7 +21,6 @@ import {
   CheckCircle2,
   Plus
 } from 'lucide-react';
-// @ts-ignore
 import html2canvas from 'html2canvas';
 
 // --- MOCK DATA SECTION ---
