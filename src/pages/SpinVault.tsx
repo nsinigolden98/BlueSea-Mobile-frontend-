@@ -243,7 +243,7 @@ export function SpinVault() {
                   <div className="w-8 h-10 bg-sky-500 clip-path-polygon-[50%_100%,0_0,100%_0] rounded-t-lg" />
                 </div>
                 <div 
-                  className="w-full h-full rounded-full border-[12px] border-slate-900 dark:border-slate-800 relative overflow-hidden transition-transform duration-[2500ms] cubic-bezier(0.15, 0, 0.15, 1) shadow-2xl"
+                  className="w-full h-full rounded-full border-[12px] border-slate-900 dark:border-slate-800 relative overflow-hidden transition-transform duration-[transition:2500ms] cubic-bezier(0.15, 0, 0.15, 1) shadow-2xl"
                   style={{ transform: `rotate(-${rotation}deg)` }}
                 >
                   {SECTORS.map((s, i) => (
