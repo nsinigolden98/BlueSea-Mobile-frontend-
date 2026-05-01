@@ -14,7 +14,7 @@ import {
   Share2,
   Download,
   Smile,
-  User,
+  //User,
   X,
   Send,
   Copy,
