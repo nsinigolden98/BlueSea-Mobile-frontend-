@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import {
   LandingPage,
   AuthPage,
@@ -141,6 +142,7 @@ function App() {
 
       <GlobalGoogleAd />
           <AppRoutes />
+          <SpeedInsights />
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
