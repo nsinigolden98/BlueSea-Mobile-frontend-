@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
-import { Eye, EyeOff, Lock, Mail, User, Phone } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, Phone, Ticket } from 'lucide-react';
 import { TOKEN, postRequest,ENDPOINTS,setCookie } from '@/types'
 import { ForgotPasswordModal } from '@/components/ui-custom/AuthModal';
 import {GoogleLogin} from '@react-oauth/google';
@@ -35,11 +35,13 @@ export function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [referralCode, setReferralCode] = useState(searchParams.get('ref') || '');
 
   useEffect(()=>{
     const refCode = searchParams.get('ref')
     if (refCode) {
       setCookie('ref',refCode)
+      setMode('signup')
     }
   }, [searchParams])
 
@@ -61,7 +63,7 @@ export function AuthPage() {
       }
       else {
        
-        const response = await signup({ email, phone, firstName, surname, password, confirmPassword, agreeToTerms });
+        const response = await signup({ email, phone, firstName, surname, password, confirmPassword, agreeToTerms, referralCode });
         
         if (response.state) {
           showToast(response.message);
@@ -229,6 +231,23 @@ export function AuthPage() {
                       onChange={(e) => setSurname(e.target.value)}
                       className="h-11"
                       required
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Referral Code (Signup only) */}
+              {mode === 'signup' && (
+                <div className="space-y-2">
+                  <Label htmlFor="referralCode" className="text-sm font-medium">Referral Code</Label>
+                  <div className="relative">
+                    <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="referralCode"
+                      placeholder="Enter referral code"
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value)}
+                      className="pl-10 h-11"
                     />
                   </div>
                 </div>
