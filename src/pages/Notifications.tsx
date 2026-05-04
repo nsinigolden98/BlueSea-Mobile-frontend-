@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Sidebar, Header, Loader } from '@/components/ui-custom';
+import { useNavigate } from 'react-router-dom'; // Added
+import { Sidebar, Loader } from '@/components/ui-custom';
 import { getRequest, postRequest, deleteRequest, ENDPOINTS } from '@/types';
-import { Bell, Check, Trash2, Loader2, ChevronDown } from 'lucide-react';
+import { Bell, Check, Trash2, Loader2, ChevronDown, ChevronLeft } from 'lucide-react'; // Added ChevronLeft
 import { cn } from '@/lib/utils';
 
 interface Notification {
@@ -14,6 +15,7 @@ interface Notification {
 }
 
 export function Notifications() {
+  const navigate = useNavigate(); // Added
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,9 +97,7 @@ export function Notifications() {
 
   const deleteNotification = async (notificationId: number) => {
     try {
-      console.log('Deleting notification:', notificationId);
       const result = await deleteRequest(ENDPOINTS.notification_delete(notificationId.toString()));
-      console.log('Delete result:', result);
       if (result && result.error) {
         console.error('Failed to delete notification:', result.error);
         return;
@@ -125,18 +125,12 @@ export function Notifications() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'payment_success':
-        return 'text-green-500';
-      case 'payment_failed':
-        return 'text-red-500';
-      case 'payment':
-        return 'text-blue-500';
-      case 'wallet':
-        return 'text-purple-500';
-      case 'group':
-        return 'text-orange-500';
-      default:
-        return 'text-gray-500';
+      case 'payment_success': return 'text-green-500';
+      case 'payment_failed': return 'text-red-500';
+      case 'payment': return 'text-blue-500';
+      case 'wallet': return 'text-purple-500';
+      case 'group': return 'text-orange-500';
+      default: return 'text-gray-500';
     }
   };
 
@@ -147,14 +141,25 @@ export function Notifications() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Header
-          title="Notifications"
-          subtitle={`${count} total, ${unreadCount} unread`}
-          onMenuClick={() => setSidebarOpen(true)}
-        />
+        {/* CUSTOM INLINE HEADER */}
+        <header className="sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 py-6 flex items-center gap-4">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <div>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white">Notifications</h1>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
+              {`${count} total, ${unreadCount} unread`}
+            </p>
+          </div>
+        </header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-3xl mx-auto">
+            {/* Filter controls remain unchanged */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex gap-2">
                 <button
@@ -192,6 +197,7 @@ export function Notifications() {
               )}
             </div>
 
+            {/* List rendering remains unchanged */}
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-sky-500" />

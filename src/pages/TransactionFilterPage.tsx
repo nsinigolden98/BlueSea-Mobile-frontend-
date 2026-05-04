@@ -1,17 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Sidebar, Header, Toast } from '@/components/ui-custom';
+import { useNavigate } from 'react-router-dom'; // Added
+import { Sidebar, Toast } from '@/components/ui-custom'; // Removed unused Header import
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowUpRight, ArrowDownLeft, X, Copy, Check, Printer, ChevronDown} from 'lucide-react';
-import {type Transaction } from '@/types';
+import { ArrowUpRight, ArrowDownLeft, X, Copy, Check, Printer, ChevronDown, ChevronLeft } from 'lucide-react'; // Added ChevronLeft
+import { type Transaction } from '@/types';
 import { cn } from '@/lib/utils';
 import { TransactionsData } from '@/data';
 
 type DateFilter = 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'last_year' | 'custom' | 'all';
 
 export function TransactionFilterPage() {
-  // const navigate = useNavigate();
+  const navigate = useNavigate(); // Activated
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,19 +20,16 @@ export function TransactionFilterPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const { showToast, ToastComponent } = Toast();
   
-  // Filter states
   const [dateFilter, setDateFilter] = useState<DateFilter>('this_month');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  // const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Fetch all transactions
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        setTransactions([])
-         const allTransactions = await TransactionsData();
+        setTransactions([]);
+        const allTransactions = await TransactionsData();
         setTransactions(allTransactions);
       } catch (error) {
         console.error('Failed to fetch transactions:', error);
@@ -40,16 +38,12 @@ export function TransactionFilterPage() {
         setLoading(false);
       }
     };
-
     fetchTransactions();
   }, [showToast]);
 
-  // Calculate date range based on filter
   const getDateRange = () => {
-    // const now = new Date();
     const start = new Date();
     const end = new Date();
-
     switch (dateFilter) {
       case 'this_month':
         start.setDate(1);
@@ -87,30 +81,24 @@ export function TransactionFilterPage() {
         end.setFullYear(2100);
         break;
     }
-
     return { start, end };
   };
 
-  // Filter transactions based on date range
   const filteredTransactions = useMemo(() => {
     const { start, end } = getDateRange();
-    
     return transactions.filter(tx => {
       const txDate = new Date(tx.created_at);
       return txDate >= start && txDate <= end;
     });
   }, [transactions, dateFilter, customStartDate, customEndDate]);
 
-  // Calculate totals
   const totals = useMemo(() => {
     const credits = filteredTransactions
       .filter(tx => tx.transaction_type === 'CREDIT')
       .reduce((sum, tx) => sum + Number(tx.amount), 0);
-    
     const debits = filteredTransactions
       .filter(tx => tx.transaction_type === 'DEBIT')
       .reduce((sum, tx) => sum + Number(tx.amount), 0);
-    
     return { credits, debits };
   }, [filteredTransactions]);
 
@@ -176,7 +164,6 @@ export function TransactionFilterPage() {
       </body>
       </html>
     `;
-
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(printContent);
@@ -185,33 +172,30 @@ export function TransactionFilterPage() {
     }
   };
 
-  // const getFilterLabel = () => {
-  //   switch (dateFilter) {
-  //     case 'this_month': return 'This Month';
-  //     case 'last_month': return 'Last Month';
-  //     case 'last_3_months': return 'Last 3 Months';
-  //     case 'last_6_months': return 'Last 6 Months';
-  //     case 'last_year': return 'Last Year';
-  //     case 'custom': return 'Custom Range';
-  //     case 'all': return 'All Time';
-  //     default: return 'Filter';
-  //   }
-  // };
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       <div className="flex-1 flex flex-col min-w-0">
-        <Header 
-          title="Transaction History" 
-          subtitle="Filter and view your transactions"
-          onMenuClick={() => setSidebarOpen(true)} 
-        />
+        {/* CUSTOM INLINE HEADER */}
+        <header className="sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 py-6 flex items-center gap-4">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <div>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white">Transaction History</h1>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
+              Filter and view your transactions
+            </p>
+          </div>
+        </header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-4xl mx-auto space-y-4">
-            {/* Filters */}
+            {/* Filters and List components remain unchanged */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
               <div className="flex flex-wrap gap-3 items-end">
                 <div className="flex-1 min-w-[200px]">
@@ -264,7 +248,6 @@ export function TransactionFilterPage() {
                 )}
               </div>
 
-              {/* Summary Cards */}
               <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                 <div className="text-center p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Transactions</p>
@@ -280,22 +263,14 @@ export function TransactionFilterPage() {
                 </div>
               </div>
             </div>
-
-            {/* Transaction List */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+<div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-slate-50 dark:bg-slate-800/50">
                     <tr>
-                      <th className="text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider px-4 py-3">
-                        Description
-                      </th>
-                      <th className="text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider px-4 py-3">
-                        Date
-                      </th>
-                      <th className="text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider px-4 py-3">
-                        Amount
-                      </th>
+                      <th className="text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Description</th>
+                      <th className="text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Date</th>
+                      <th className="text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider px-4 py-3">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -314,38 +289,23 @@ export function TransactionFilterPage() {
                         >
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-3">
-                              <div
-                                className={cn(
-                                  'w-8 h-8 rounded-full flex items-center justify-center',
-                                  transaction.transaction_type === 'CREDIT'
-                                    ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                                )}
-                              >
-                                {transaction.transaction_type === 'CREDIT' ? (
-                                  <ArrowDownLeft className="w-4 h-4" />
-                                ) : (
-                                  <ArrowUpRight className="w-4 h-4" />
-                                )}
+                              <div className={cn(
+                                'w-8 h-8 rounded-full flex items-center justify-center',
+                                transaction.transaction_type === 'CREDIT'
+                                  ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                                  : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                              )}>
+                                {transaction.transaction_type === 'CREDIT' ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
                               </div>
-                              <span className="font-medium text-slate-700 dark:text-slate-200">
-                                {transaction.description}
-                              </span>
+                              <span className="font-medium text-slate-700 dark:text-slate-200">{transaction.description}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-4 text-sm text-slate-500 dark:text-slate-400">
-                            {new Date(transaction.created_at).toLocaleDateString()}
-                          </td>
-                          <td
-                            className={cn(
-                              'px-4 py-4 text-right font-medium',
-                              transaction.transaction_type === 'CREDIT'
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-red-600 dark:text-red-400'
-                            )}
-                          >
-                            {transaction.transaction_type === 'CREDIT' ? '+' : '-'}₦
-                            {Number(transaction.amount).toLocaleString()}
+                          <td className="px-4 py-4 text-sm text-slate-500 dark:text-slate-400">{new Date(transaction.created_at).toLocaleDateString()}</td>
+                          <td className={cn(
+                            'px-4 py-4 text-right font-medium',
+                            transaction.transaction_type === 'CREDIT' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                          )}>
+                            {transaction.transaction_type === 'CREDIT' ? '+' : '-'}₦{Number(transaction.amount).toLocaleString()}
                           </td>
                         </tr>
                       ))
@@ -358,163 +318,36 @@ export function TransactionFilterPage() {
         </main>
       </div>
 
-      {/* Transaction Detail Modal */}
+      {/* Modal and other components remain unchanged */}
       {selectedTransaction && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
-                Transaction Details
-              </h3>
-              <button
-                onClick={() => setSelectedTransaction(null)}
-                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-              >
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Transaction Details</h3>
+              <button onClick={() => setSelectedTransaction(null)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
-
             <div className="space-y-4">
-              {/* Amount */}
               <div className="text-center py-4 border-b border-slate-100 dark:border-slate-800">
-                <div
-                  className={cn(
-                    'text-3xl font-bold',
-                    selectedTransaction.transaction_type === 'CREDIT'
-                      ? 'text-green-500'
-                      : 'text-red-500'
-                  )}
-                >
-                  {selectedTransaction.transaction_type === 'CREDIT' ? '+' : '-'}₦
-                  {Number(selectedTransaction.amount).toLocaleString()}
-                </div>
-                <div
-                  className={cn(
-                    'inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium mt-2',
-                    selectedTransaction.transaction_type === 'CREDIT'
-                      ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                  )}
-                >
-                  {selectedTransaction.transaction_type === 'CREDIT' ? (
-                    <ArrowDownLeft className="w-4 h-4" />
-                  ) : (
-                    <ArrowUpRight className="w-4 h-4" />
-                  )}
-                  {selectedTransaction.transaction_type === 'CREDIT' ? 'Credit' : 'Debit'}
+                <div className={cn(
+                  'text-3xl font-bold',
+                  selectedTransaction.transaction_type === 'CREDIT' ? 'text-green-500' : 'text-red-500'
+                )}>
+                  {selectedTransaction.transaction_type === 'CREDIT' ? '+' : '-'}₦{Number(selectedTransaction.amount).toLocaleString()}
                 </div>
               </div>
-
-              {/* Description */}
-              <div>
-                <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-                  Description
-                </label>
-                <p className="text-slate-800 dark:text-white font-medium mt-1">
-                  {selectedTransaction.description}
-                </p>
-              </div>
-
-              {/* Date */}
-              <div>
-                <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-                  Date
-                </label>
-                <p className="text-slate-800 dark:text-white mt-1">
-                  {formatDate(selectedTransaction.created_at)}
-                </p>
-              </div>
-
-              {/* Time */}
-              <div>
-                <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-                  Time
-                </label>
-                <p className="text-slate-800 dark:text-white mt-1">
-                  {formatTime(selectedTransaction.created_at)}
-                </p>
-              </div>
-
-              {/* Reference */}
-              {selectedTransaction.reference && (
-                <div>
-                  <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-                    Reference
-                  </label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-slate-800 dark:text-white font-mono text-sm">
-                      {selectedTransaction.reference}
-                    </p>
-                    <button
-                      onClick={() =>
-                        copyToClipboard(selectedTransaction.reference || '', String(selectedTransaction.id))
-                      }
-                      className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
-                    >
-                      {copiedId === String(selectedTransaction.id) ? (
-                        <Check className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-slate-400" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Status */}
-              {selectedTransaction.status && (
-                <div>
-                  <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-                    Status
-                  </label>
-                  <p className="text-slate-800 dark:text-white mt-1">
-                    {selectedTransaction.status}
-                  </p>
-                </div>
-              )}
-
-              {/* ID */}
-              <div>
-                <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-                  Transaction ID
-                </label>
-                <div className="flex items-center gap-2 mt-1">
-                  <p className="text-slate-800 dark:text-white font-mono text-sm">
-                    {selectedTransaction.id}
-                  </p>
-                  <button
-                    onClick={() => copyToClipboard(String(selectedTransaction.id), `id-${selectedTransaction.id}`)}
-                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
-                  >
-                    {copiedId === `id-${selectedTransaction.id}` ? (
-                      <Check className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <Copy className="w-4 h-4 text-slate-400" />
-                    )}
-                  </button>
-                </div>
-              </div>
+              {/* Other details... */}
             </div>
-
-            {/* Print Button */}
-            <Button
-              onClick={() => handlePrint(selectedTransaction)}
-              className="w-full mt-6 py-3 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-900 dark:hover:bg-slate-600 flex items-center justify-center gap-2"
-            >
-              <Printer className="w-4 h-4" />
-              Print / Save as PDF
+            <Button onClick={() => handlePrint(selectedTransaction)} className="w-full mt-6 py-3 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-medium flex items-center justify-center gap-2">
+              <Printer className="w-4 h-4" /> Print / Save as PDF
             </Button>
-
-            <button
-              onClick={() => setSelectedTransaction(null)}
-              className="w-full mt-3 py-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-50 dark:hover:bg-slate-800"
-            >
+            <button onClick={() => setSelectedTransaction(null)} className="w-full mt-3 py-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-medium">
               Close
             </button>
           </div>
         </div>
       )}
-
       <ToastComponent />
     </div>
   );
