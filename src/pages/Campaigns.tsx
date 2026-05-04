@@ -290,7 +290,8 @@ export function Campaigns() {
                 <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
               </div>
             ) : (
-              <div className="space-y-8">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
                 {sortedCampaigns.map((campaign, idx) => {
                   const mockUser = MOCK_USERS[idx % MOCK_USERS.length];
                   const estimatedEarning = (campaign.price * campaign.commissionPercent) / 100;
