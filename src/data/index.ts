@@ -3,11 +3,11 @@ import { ENDPOINTS, getRequest} from '@/types';
 
 export const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'LayoutGrid', path: '/dashboard' },
-  { id: 'campaigns', label: 'Discover & Earn', icon: 'HandCoins', path: '/campaigns' },
   { id: 'airtime', label: 'Buy Airtime & Data', icon: 'Smartphone', path: '/airtime' },
 //  { id: 'data', label: 'Buy Data', icon: 'Wifi', path: '/data' },
   { id: 'marketplace', label: 'Market Place', icon: 'Store', path: '/marketplace' },
   { id: 'services', label: 'Services', icon: 'Globe', path: '/services' },
+   { id: 'campaigns', label: 'Discover & Earn', icon: 'HandCoins', path: '/campaigns' },
   { id: 'more-services', label: 'More Services', icon: 'Grid3X3', path: '/more-services' },
   { id: 'rewards', label: 'Rewards', icon: 'Gift', path: '/rewards' },
   { id: 'campaigns', label: 'Flights', icon: 'PlaneTakeoff', path: '/flights' },
