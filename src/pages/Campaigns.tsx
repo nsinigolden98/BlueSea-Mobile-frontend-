@@ -206,6 +206,11 @@ export function Campaigns() {
     setNewComment("");
   };
 
+  // Memoized sorted campaigns by commission (highest first)
+  const sortedCampaigns = useMemo(() => {
+    return [...campaigns].sort((a, b) => b.commissionPercent - a.commissionPercent);
+  }, [campaigns]);
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex transition-colors duration-300">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -286,7 +291,7 @@ export function Campaigns() {
               </div>
             ) : (
               <div className="space-y-8">
-                {campaigns.map((campaign, idx) => {
+                {sortedCampaigns.map((campaign, idx) => {
                   const mockUser = MOCK_USERS[idx % MOCK_USERS.length];
                   const estimatedEarning = (campaign.price * campaign.commissionPercent) / 100;
 
@@ -359,8 +364,11 @@ export function Campaigns() {
                         
                         <div className="flex items-center justify-between border-t border-slate-50 dark:border-slate-700/50 pt-4">
                           <div className="flex items-center gap-4">
-                            <button className="flex items-center gap-1.5 text-slate-400 hover:text-red-500 transition-colors">
-                              <Heart className="w-5 h-5" />
+                            <button 
+                              onClick={() => setReactions(prev => ({ ...prev, [campaign.id]: prev[campaign.id] === 'liked' ? '' : 'liked' }))}
+                              className={cn("flex items-center gap-1.5 transition-colors", reactions[campaign.id] === 'liked' ? 'text-red-500' : 'text-slate-400 hover:text-red-500')}
+                            >
+                              <Heart className={cn("w-5 h-5", reactions[campaign.id] === 'liked' && "fill-current")} />
                               <span className="text-[10px] font-black uppercase">Like</span>
                             </button>
                             <button 
@@ -387,6 +395,17 @@ export function Campaigns() {
                           </div>
                         </div>
                       </div>
+
+                      {/* SELLER INFO FOOTER */}
+                      <div className="px-5 pb-4 pt-0 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-50 dark:border-slate-700/50 mt-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Ends {new Date(campaign.end_date).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1">Posted by {mockUser.name}</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </div>
+                      </div>
                     </div>
                   )
                 })}
@@ -395,7 +414,8 @@ export function Campaigns() {
           </div>
         </main>
       </div>
- {/* --- MODALS --- */}
+
+      {/* --- MODALS --- */}
 
       {/* Side Comment Modal */}
       {activeComments !== null && (
@@ -410,7 +430,7 @@ export function Campaigns() {
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {(commentsData[activeComments] || []).length === 0 ? (
                 <div className="text-center py-20 text-slate-400">
-                  <Smile className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                                  <Smile className="w-12 h-12 mx-auto mb-2 opacity-20" />
                   <p className="font-bold">No questions yet.</p>
                   <p className="text-xs">Be the first to ask about this item!</p>
                 </div>
