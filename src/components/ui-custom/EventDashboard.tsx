@@ -14,7 +14,7 @@ import {
   AlertTriangle, 
   Edit3, 
   Info,
-  ChevronRight
+//  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
