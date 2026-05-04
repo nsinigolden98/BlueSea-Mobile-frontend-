@@ -133,13 +133,15 @@ function AppRoutes() {
     </Routes>
   );
 }
+
+//      <GlobalGoogleAd />
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
 
-      <GlobalGoogleAd />
+
           <AppRoutes />
         </BrowserRouter>
       </AuthProvider>
