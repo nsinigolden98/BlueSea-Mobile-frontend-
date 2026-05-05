@@ -20,7 +20,8 @@ import {
   Package,
   History,
   FilePlus,
-  Coins
+  Coins,
+  MessageSquare // Added for header and product chat
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRequest, ENDPOINTS, API_BASE, type MarketplaceEvent} from '@/types';
@@ -34,23 +35,19 @@ const VerifiedBadge = ({ className }: { className?: string }) => (
   </span>
 );
 
-// --- PRODUCT DATA DEFINITION ---
+// --- PRODUCT DATA DEFINITION (REDUCED REPETITION) ---
 
 const PRODUCT_CATEGORIES = ['All', 'Bulk', 'Electronics', 'Shoes', 'Makeup'];
 
 const PRODUCTS = [
-  { id: 'b1', category: 'Bulk', name: 'Premium Rice 50kg', price: 45000, sellerName: 'Alhaji & Sons', sellerId: 's1', stock: 12, condition: 'New', images: ['https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80', 'https://images.unsplash.com/photo-1591117207239-7ad59a057fd6?w=800&q=80'], description: 'Long grain parboiled rice, stone-free and high quality.', badge: 'Hot' },
+  // First visible category (Bulk) - 2 items
+  { id: 'b1', category: 'Bulk', name: 'Premium Rice 50kg', price: 45000, sellerName: 'Alhaji & Sons', sellerId: 's1', stock: 12, condition: 'New', images: ['https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80'], description: 'Long grain parboiled rice, stone-free and high quality.', badge: 'Hot' },
   { id: 'b2', category: 'Bulk', name: 'Vegetable Oil 25L', price: 32000, sellerName: 'Uyo Food Mart', sellerId: 's2', stock: 5, condition: 'New', images: ['https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800&q=80'], description: 'Pure refined vegetable oil for all cooking purposes.', badge: 'Bulk' },
-  { id: 'b3', category: 'Bulk', name: 'Carton of Indomie', price: 12500, sellerName: 'Alhaji & Sons', sellerId: 's1', stock: 50, condition: 'New', images: ['https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80'], description: 'Standard carton containing 40 packs of delicious noodles.', badge: 'New' },
-  { id: 'e1', category: 'Electronics', name: 'iPhone 15 Pro Max', price: 1850000, sellerName: 'Gadget Hub', sellerId: 's3', stock: 2, condition: 'New', images: ['https://images.unsplash.com/photo-1696446701796-da61225697cc?w=800&q=80', 'https://images.unsplash.com/photo-1696423602352-75d1653f5344?w=800&q=80'], description: 'Titanium design, A17 Pro chip, Pro camera system.', badge: 'Hot' },
-  { id: 'e2', category: 'Electronics', name: 'MacBook Air M2', price: 1200000, sellerName: 'Elite Tech', sellerId: 's4', stock: 4, condition: 'New', images: ['https://images.unsplash.com/photo-1611186871348-b1ec696e5237?w=800&q=80'], description: 'Supercharged by M2, 13-inch Liquid Retina display.', badge: 'Sale' },
-  { id: 'e3', category: 'Electronics', name: 'Sony WH-1000XM5', price: 450000, sellerName: 'Gadget Hub', sellerId: 's3', stock: 0, condition: 'New', images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&q=80'], description: 'Industry-leading noise cancellation headphones.', badge: 'Out' },
+  
+  // Other categories - 1 item each
+  { id: 'e1', category: 'Electronics', name: 'iPhone 15 Pro Max', price: 1850000, sellerName: 'Gadget Hub', sellerId: 's3', stock: 2, condition: 'New', images: ['https://images.unsplash.com/photo-1696446701796-da61225697cc?w=800&q=80'], description: 'Titanium design, A17 Pro chip, Pro camera system.', badge: 'Hot' },
   { id: 's1', category: 'Shoes', name: 'Nike Air Jordan 1', price: 120000, sellerName: 'Sneaker Head', sellerId: 's5', stock: 8, condition: 'New', images: ['https://images.unsplash.com/photo-1584000302558-ce0ad2ee920e?w=800&q=80'], description: 'Iconic basketball sneakers in classic red and black.', badge: 'Hot' },
-  { id: 's2', category: 'Shoes', name: 'Adidas Ultraboost', price: 95000, sellerName: 'Runners World', sellerId: 's6', stock: 15, condition: 'New', images: ['https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?w=800&q=80'], description: 'Ultimate comfort and energy return for long distance running.', badge: 'New' },
-  { id: 's3', category: 'Shoes', name: 'Formal Leather Shoes', price: 45000, sellerName: 'Uyo Footwear', sellerId: 's7', stock: 20, condition: 'New', images: ['https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=800&q=80'], description: 'Handcrafted Italian leather shoes for professional look.', badge: 'Classic' },
   { id: 'm1', category: 'Makeup', name: 'Fenty Beauty Foundation', price: 42000, sellerName: 'Glamour Shop', sellerId: 's8', stock: 25, condition: 'New', images: ['https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=800&q=80'], description: 'Pro Filt\'r Soft Matte Longwear Foundation in 50 shades.', badge: 'Hot' },
-  { id: 'm2', category: 'Makeup', name: 'Matte Liquid Lipstick', price: 8500, sellerName: 'Glamour Shop', sellerId: 's8', stock: 100, condition: 'New', images: ['https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=800&q=80'], description: 'Non-drying, long-lasting matte finish liquid lipstick.', badge: 'Sale' },
-  { id: 'm3', category: 'Makeup', name: 'Eyeshadow Palette', price: 15000, sellerName: 'Beauty Haven', sellerId: 's9', stock: 12, condition: 'New', images: ['https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=800&q=80'], description: 'Professional palette with 12 highly pigmented shades.', badge: 'Trending' },
 ];
 
 const POINTS_PROVIDERS = [
@@ -173,14 +170,33 @@ export function Marketplace() {
   const isSoldOut = selectedEvent && selectedEvent.tickets_sold >= selectedEvent.total_tickets;
   const isEventEnded = selectedEvent && new Date(selectedEvent.event_date) < new Date();
 
+  // FLOW CHANGE: Events keep the PIN modal
   const handlePurchase = () => {
     if (!selectedEvent || isSoldOut || isEventEnded) return;
     if (!selectedEvent.is_free && !selectedTicketType) return;
     showPinModal();
   };
 
-  const handleBuyNow = () => {
-    showPinModal();
+  // FLOW CHANGE: Marketplace Products navigate to checkout (PIN handled there)
+  const handleProductBuyNow = () => {
+    if (!selectedProduct) return;
+    navigate('/checkout', { 
+        state: { 
+            type: 'product',
+            productId: selectedProduct.id,
+            quantity: productQuantity,
+            total: selectedProduct.price * productQuantity,
+            name: selectedProduct.name,
+            sellerId: selectedProduct.sellerId
+        } 
+    });
+  };
+
+  // NEW: Navigate to the product-linked chat thread
+  const handleChatSeller = () => {
+    if (!selectedProduct) return;
+    // Logic: Opens thread for buyer + specific product
+    navigate(`/messages?thread=${selectedProduct.id}&seller=${selectedProduct.sellerId}`);
   };
 
   const filteredEvents = events.filter(event => 
@@ -443,11 +459,18 @@ const renderProductDetails = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-2 gap-3">
                 <button
-                    onClick={handleBuyNow}
+                    onClick={handleChatSeller}
+                    className="py-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                >
+                    <MessageSquare className="w-5 h-5" />
+                    Chat Seller
+                </button>
+                <button
+                    onClick={handleProductBuyNow}
                     disabled={selectedProduct.stock <= 0}
-                    className="w-full py-4 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-all disabled:opacity-50 shadow-lg shadow-sky-500/20"
+                    className="py-4 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-all disabled:opacity-50 shadow-lg shadow-sky-500/20"
                 >
                     Buy Now
                 </button>
@@ -547,8 +570,7 @@ const renderProductDetails = () => {
                     ))}
                 </div>
             </div>
-
-            <div className="space-y-2">
+<div className="space-y-2">
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                     <User className="w-4 h-4" /> Player ID
                 </label>
@@ -583,7 +605,8 @@ const renderProductDetails = () => {
       </div>
     );
   };
-const handlePointPurchase = async () => {
+
+  const handlePointPurchase = async () => {
     if (!pointPlayerId.trim()) {
       setPointError('Player ID is required');
       return;
@@ -672,7 +695,7 @@ const handlePointPurchase = async () => {
     );
   };
 
-  const renderEventDetails = () => {
+const renderEventDetails = () => {
     if (!selectedEvent) return null;
 
     return (
@@ -800,49 +823,61 @@ const handlePointPurchase = async () => {
             </div>
           </div>
   
-          <div className="relative flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            {/* MESSAGES ENTRY POINT (VISIBLE UI) */}
             <button 
-              onClick={() => setShowMenu(!showMenu)} 
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+              onClick={() => navigate('/messages')}
+              className="p-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors group relative"
+              title="Messages"
             >
-              <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              <MessageSquare className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 transition-colors" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900" />
             </button>
 
-            {showMenu && (
-              <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-2 z-50">
-                {!vendorStatus ? (
-                  <>
-                    <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <Shield className="w-4 h-4 text-sky-500" /> Become Verified Seller
-                    </button>
-                    <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
-                    </button>
-                    <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <History className="w-4 h-4 text-sky-500" /> History
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
-                    </button>
-                    <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <Plus className="w-4 h-4 text-sky-500" /> Create Event
-                    </button>
-                    <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <QrCode className="w-4 h-4 text-sky-500" /> Scan QR Code
-                    </button>
-                    <button onClick={() => { navigate('/products'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <FilePlus className="w-4 h-4 text-sky-500" /> Post Product
-                    </button>
-                    <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                      <History className="w-4 h-4 text-sky-500" /> History
-                    </button>
-                  </>
+            <div className="relative">
+                <button 
+                onClick={() => setShowMenu(!showMenu)} 
+                className="p-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+                >
+                <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </button>
+
+                {showMenu && (
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 z-50">
+                    {!vendorStatus ? (
+                    <>
+                        <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                        <Shield className="w-4 h-4 text-sky-500" /> Become Verified Seller
+                        </button>
+                        <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                        <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
+                        </button>
+                        <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                        <History className="w-4 h-4 text-sky-500" /> History
+                        </button>
+                    </>
+                    ) : (
+                    <>
+                        <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                        <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
+                        </button>
+                        <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                        <Plus className="w-4 h-4 text-sky-500" /> Create Event
+                        </button>
+                        <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                        <QrCode className="w-4 h-4 text-sky-500" /> Scan QR Code
+                        </button>
+                        <button onClick={() => { navigate('/products'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                        <FilePlus className="w-4 h-4 text-sky-500" /> Post Product
+                        </button>
+                        <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                        <History className="w-4 h-4 text-sky-500" /> History
+                        </button>
+                    </>
+                    )}
+                </div>
                 )}
-              </div>
-            )}
+            </div>
           </div>
         </header>
 
@@ -879,6 +914,7 @@ const handlePointPurchase = async () => {
         </main>
       </div>
 
+      {/* Pin Component logic is kept for Events and Points */}
       <PinComponent type="marketplace" value={{ 
         event_id: selectedEvent?.id || selectedPointProvider?.id || selectedProduct?.id, 
         ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || selectedPointProvider?.packages.find(p => p.id === selectedPointPackage)?.name || 'Product Purchase', 
