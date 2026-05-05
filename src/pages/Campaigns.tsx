@@ -171,6 +171,7 @@ export function Campaigns() {
         });
         addPoints(1, "sharing");
       } catch (err) {
+        console.log(err);
         console.log("Share cancelled");
       }
     } else {
