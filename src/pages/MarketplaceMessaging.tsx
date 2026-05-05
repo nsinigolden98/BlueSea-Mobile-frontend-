@@ -136,7 +136,7 @@ const MessageTicks = ({ status }: { status: MessageStatus }) => {
 /** * --- MAIN COMPONENT --- 
  */
 
-export default function MarketplaceMessaging() {
+export function MarketplaceMessaging() {
   const [activeConvId, setActiveConvId] = useState<string>('conv_1');
   const [inputText, setInputText] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
