@@ -39,7 +39,7 @@ export { EventPublic } from './EventPublic';
 // 🛒 Cart Page Export
 //export {CartPage } from './CartPage';
 
-export { MarketplaceMessaging } from './messaging/MarketplaceMessaging';
+export { MarketplaceMessaging } from './MarketplaceMessaging';
 
 // 🔵 BlueSphere (Engagement) Page Export
 export { default as BlueSphere } from './Bluesphere'; 
