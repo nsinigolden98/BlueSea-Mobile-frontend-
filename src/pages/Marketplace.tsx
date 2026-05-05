@@ -15,7 +15,6 @@ import {
   Plus, 
   User, 
   CheckCircle2, 
-  ShoppingCart,
   Star,
   ChevronLeft,
   Package,
@@ -80,7 +79,6 @@ export function Marketplace() {
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [txMessage, setTxMessage] = useState('');
-  const [cartCount, setCartCount] = useState(0);
 
   const [selectedPointProvider, setSelectedPointProvider] = useState<typeof POINTS_PROVIDERS[0] | null>(null);
   const [pointPlayerId, setPointPlayerId] = useState('');
@@ -92,7 +90,6 @@ export function Marketplace() {
   const [productQuantity, setProductQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [activeProductSubCategory, setActiveProductSubCategory] = useState('All');
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const getImageUrl = (path: string | undefined) => {
     if (!path) return '';
@@ -182,33 +179,8 @@ export function Marketplace() {
     showPinModal();
   };
 
-  const handleAddToCart = async () => {
-    if (!selectedProduct || selectedProduct.stock <= 0) return;
-    
-    setIsAddingToCart(true);
-    
-    const cartItem = {
-      productId: selectedProduct.id,
-      name: selectedProduct.name,
-      price: selectedProduct.price,
-      quantity: productQuantity,
-      totalPrice: selectedProduct.price * productQuantity,
-      sellerId: selectedProduct.sellerId,
-      sellerName: selectedProduct.sellerName,
-      image: selectedProduct.images[0],
-      category: selectedProduct.category,
-      createdAt: new Date().toISOString(),
-      deliveryLocation: null // TODO: Set delivery location during checkout
-    };
-
-    console.log("Preparing Cart Item:", cartItem);
-
-    setTimeout(() => {
-        setIsAddingToCart(false);
-        setCartCount(prev => prev + 1);
-        showToast("Added to cart");
-        setSelectedProduct(null);
-    }, 800);
+  const handleBuyNow = () => {
+    showPinModal();
   };
 
   const filteredEvents = events.filter(event => 
@@ -273,7 +245,6 @@ export function Marketplace() {
             </button>
           ))}
         </div>
-
         {filteredProducts.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
             <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -331,8 +302,7 @@ export function Marketplace() {
       </div>
     );
   };
-
-  const renderProductDetails = () => {
+const renderProductDetails = () => {
     if (!selectedProduct) return null;
 
     return (
@@ -473,25 +443,15 @@ export function Marketplace() {
                 </div>
             </div>
 
-            <button
-              onClick={handleAddToCart}
-              disabled={selectedProduct.stock <= 0 || isAddingToCart}
-              className="w-full py-4 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
-            >
-              {isAddingToCart ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Adding...
-                </>
-              ) : selectedProduct.stock <= 0 ? (
-                'Out of Stock'
-              ) : (
-                <>
-                  <ShoppingCart className="w-5 h-5" />
-                  Add to Cart
-                </>
-              )}
-            </button>
+            <div className="grid grid-cols-1 gap-3">
+                <button
+                    onClick={handleBuyNow}
+                    disabled={selectedProduct.stock <= 0}
+                    className="w-full py-4 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-all disabled:opacity-50 shadow-lg shadow-sky-500/20"
+                >
+                    Buy Now
+                </button>
+            </div>
           </div>
         </div>
       </div>
@@ -623,7 +583,7 @@ export function Marketplace() {
       </div>
     );
   };
-  const handlePointPurchase = async () => {
+const handlePointPurchase = async () => {
     if (!pointPlayerId.trim()) {
       setPointError('Player ID is required');
       return;
@@ -657,7 +617,6 @@ export function Marketplace() {
         </div>
       );
     }
-
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredEvents.map((event) => (
@@ -826,81 +785,66 @@ export function Marketplace() {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="flex items-center justify-between px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-30">
-  <div className="flex items-center gap-3">
-    <button 
-      onClick={() => setSidebarOpen(true)} 
-      className="lg:hidden p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-    >
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-    </button>
-    <div>
-      <h1 className="text-xl font-bold text-slate-800 dark:text-white">Market Place</h1>
-      <p className="text-sm text-slate-500 dark:text-slate-400">Buy Smarter & Cheaper</p>
-    </div>
-  </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setSidebarOpen(true)} 
+              className="lg:hidden p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div>
+              <h1 className="text-xl font-bold text-slate-800 dark:text-white">Market Place</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Buy Smarter & Cheaper</p>
+            </div>
+          </div>
   
-  <div className="relative flex items-center gap-2">
-    {/* Corrected Cart Button */}
-    <button 
-      onClick={() => navigate('/cart')} 
-      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative"
-    >
-      <ShoppingCart className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-      {cartCount > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] flex items-center justify-center">
-          {cartCount}
-        </span>
-      )}
-    </button>
+          <div className="relative flex items-center gap-2">
+            <button 
+              onClick={() => setShowMenu(!showMenu)} 
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+            >
+              <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            </button>
 
-    <button 
-      onClick={() => setShowMenu(!showMenu)} 
-      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-    >
-      <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-    </button>
-
-    {showMenu && (
-      <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-2 z-50">
-        {!vendorStatus ? (
-          <>
-            <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-              <Shield className="w-4 h-4 text-sky-500" /> Become Verified Seller
-            </button>
-             <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-              <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
-            </button>
-            <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-              <History className="w-4 h-4 text-sky-500" /> History
-            </button>
-          </>
-        ) : (
-          <>
-            <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-              <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
-            </button>
-            <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-              <Plus className="w-4 h-4 text-sky-500" /> Create Event
-            </button>
-            <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-              <QrCode className="w-4 h-4 text-sky-500" /> Scan QR Code
-            </button>
-            <button onClick={() => { navigate('/products'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-              <FilePlus className="w-4 h-4 text-sky-500" /> Post Product
-            </button>
-            <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-              <History className="w-4 h-4 text-sky-500" /> History
-            </button>
-          </>
-        )}
-      </div>
-    )}
-  </div>
-</header>
-        
-        
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-2 z-50">
+                {!vendorStatus ? (
+                  <>
+                    <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                      <Shield className="w-4 h-4 text-sky-500" /> Become Verified Seller
+                    </button>
+                    <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                      <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
+                    </button>
+                    <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                      <History className="w-4 h-4 text-sky-500" /> History
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                      <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
+                    </button>
+                    <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                      <Plus className="w-4 h-4 text-sky-500" /> Create Event
+                    </button>
+                    <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                      <QrCode className="w-4 h-4 text-sky-500" /> Scan QR Code
+                    </button>
+                    <button onClick={() => { navigate('/products'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                      <FilePlus className="w-4 h-4 text-sky-500" /> Post Product
+                    </button>
+                    <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
+                      <History className="w-4 h-4 text-sky-500" /> History
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-6">
@@ -914,18 +858,18 @@ export function Marketplace() {
                 <button
                   key={category}
                   onClick={() => {
-                    setActiveCategory(category);
-                    setSelectedEvent(null);
-                    setSelectedPointProvider(null);
-                    setSelectedProduct(null);
-                    setSearchQuery('');
+                      setActiveCategory(category);
+                      setSelectedEvent(null);
+                      setSelectedPointProvider(null);
+                      setSelectedProduct(null);
+                      setSearchQuery('');
                   }}
                   className={cn(
-                    'px-6 py-2.5 rounded-full text-sm font-bold transition-all',
-                    activeCategory === category ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100'
+                      'px-6 py-2.5 rounded-full text-sm font-bold transition-all',
+                      activeCategory === category ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100'
                   )}
                 >
-                  {category}
+                {category}
                 </button>
               ))}
             </div>

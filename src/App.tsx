@@ -40,7 +40,8 @@ import {
   EventPublic,
   TransactionFilterPage,
   GiftCards,
-  CartPage,
+ // CartPage,
+ MarketplaceMessaging,
   SellerProductManager,
   Checkout,
   SpinVault,
@@ -113,8 +114,16 @@ function AppRoutes() {
       <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
       <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
  <Route path="/checkout" element={<Checkout />} />
-      {/* 🛒 Cart Route */}
-      <Route path="/cart" element={<CartPage />} />
+   
+    
+      {/* 🛒 Cart Route 
+      <Route path="/cart" element={<CartPage />} />*/}
+ 
+ <Route path="/messages" element={<MarketplaceMessaging />} />
+        
+        {/* Dynamic route for specific transactions */}
+        <Route path="/messages/:conversationId" element={<MarketplaceMessaging />} />
+        
  
       {/* 🔵 BlueSphere Route */}
       <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />

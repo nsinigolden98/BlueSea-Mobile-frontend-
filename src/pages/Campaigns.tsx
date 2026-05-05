@@ -176,7 +176,7 @@ export function Campaigns() {
           text: `Earn ${campaign.commissionPercent}% commission on every sale!`,
           url: refLink,
         });
-        addPoints(1, "sharing");
+       // addPoints(1, "sharing");
       } catch (err) {
         console.log(err);
         console.log("Share cancelled");
