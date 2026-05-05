@@ -309,10 +309,7 @@ export function Wallet() {
 
           {/* History Section */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Transaction History</h3>
-              <button className="text-sky-500 text-[11px] font-bold hover:underline uppercase tracking-wider">See All</button>
-            </div>
+            
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm">
               <TransactionList />
             </div>

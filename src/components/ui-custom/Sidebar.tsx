@@ -5,7 +5,7 @@ import { navItems } from '@/data';
 import { useAuth } from '@/context/AuthContext';
 import {
   LayoutGrid,
-  Wallet,
+  HandCoins,
   Smartphone,
   Wifi,
   Store,
@@ -29,7 +29,7 @@ interface SidebarProps {
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutGrid,
-  Wallet,
+  HandCoins,
   Smartphone,
   Wifi,
   Store,

@@ -2,9 +2,8 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Sidebar, Header, Loader } from '@/components/ui-custom';
 import { getRequest, ENDPOINTS } from '@/types';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom'; // Added for navigation
+import { useNavigate } from 'react-router-dom';
 import { 
-  Gift, 
   TrendingUp, 
   Calendar, 
   Loader2, 
@@ -14,67 +13,88 @@ import {
   Share2,
   Download,
   Smile,
-  //User,
   X,
   Send,
   Copy,
   CheckCircle2,
-  Plus
+  Plus,
+  Wallet,
+  ChevronDown,
+  MapPin,
+  Tag,
+  ExternalLink
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
-// --- MOCK DATA SECTION ---
+// --- MOCK DATA & HELPERS ---
+const REFERRAL_CODE = "USER123"; // Simulated current user code
+
+const formatNaira = (amount: number) => {
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    minimumFractionDigits: 0,
+  }).format(amount);
+};
+
 const MOCK_USERS = [
   { id: 'u1', name: 'Bisi Akindele', handle: '@bisi_lagos', avatar: 'B' },
   { id: 'u2', name: 'Tunde Electronics', handle: '@tunde_tech', avatar: 'T' },
   { id: 'u3', name: 'Abuja Events Hub', handle: '@abuja_vibes', avatar: 'A' }
 ];
 
-const MOCK_PRODUCTS = [
-  { id: 'p1', name: 'Premium Lagos Suya Pack', price: '₦5,000', link: '/marketplace/product/p1' },
-  { id: 'p2', name: 'VIP Ticket: Gidi Fest 2026', price: '₦50,000', link: '/events/p2' },
-  { id: 'p3', name: 'Starlink Kit (Installment)', price: '₦120,000', link: '/marketplace/product/p3' }
-];
-
 const INITIAL_MOCK_CAMPAIGNS: Campaign[] = [
   {
     id: 101,
-    name: "Gidi Fest 2026 Early Bird",
-    description: "Get double points when you secure your VIP tickets for the biggest beach festival in Lagos! Limited slots available.",
-    campaign_type: 'multiplier',
-    multiplier: '2',
-    bonus_amount: 0,
+    name: "Gidi Fest 2026 VIP Experience",
+    description: "The biggest beach festival in Lagos. High demand ticket with premium commissions.",
+    type: 'event',
+    price: 50000,
+    commissionPercent: 10,
+    location: "Landmark Beach, Lagos",
+    sellerName: "Gidi Culture Group",
     is_active: true,
     start_date: new Date().toISOString(),
     end_date: '2026-12-31'
   },
   {
     id: 102,
-    name: "Abuja Tech Week Giveaway",
-    description: "Refer 5 friends to the Abuja Tech Expo and earn a fixed bonus of 500 points instantly. Let's build the future!",
-    campaign_type: 'fixed_bonus',
-    multiplier: '1',
-    bonus_amount: 500,
+    name: "Starlink Kit (Gen 3)",
+    description: "Promote high-speed satellite internet kits. Fast delivery across Nigeria.",
+    type: 'product',
+    price: 450000,
+    commissionPercent: 5,
+    location: "Nationwide Delivery",
+    sellerName: "TechNode Nigeria",
     is_active: true,
     start_date: new Date().toISOString(),
     end_date: '2026-06-15'
+  },
+  {
+    id: 103,
+    name: "Owanbe Special Suya Box",
+    description: "Premium party packs for weekend events. Perfect for social media foodies.",
+    type: 'product',
+    price: 15000,
+    commissionPercent: 15,
+    location: "Lagos/Ibadan Only",
+    sellerName: "GrillMaster B",
+    is_active: true,
+    start_date: new Date().toISOString(),
+    end_date: '2026-12-31'
   }
 ];
 
-const MOCK_COMMENTS_POOL = [
-  { id: 'c1', user: 'Chidi', text: "Omo, this festival go loud! 🔥", timestamp: new Date() },
-  { id: 'c2', user: 'Amina', text: "Is there a student discount for the tech week?", timestamp: new Date() },
-  { id: 'c3', user: 'Obinna', text: "Lagos to the world! 🇳🇬", timestamp: new Date() }
-];
-// --- END MOCK DATA ---
-
+// --- INTERFACES ---
 interface Campaign {
   id: number;
   name: string;
   description: string;
-  campaign_type: string;
-  multiplier: string;
-  bonus_amount: number;
+  type: 'event' | 'product';
+  price: number;
+  commissionPercent: number;
+  location: string;
+  sellerName: string;
   is_active: boolean;
   start_date: string;
   end_date: string;
@@ -85,7 +105,6 @@ interface Comment {
   user: string;
   text: string;
   timestamp: Date;
-  replies?: Comment[];
 }
 
 export function Campaigns() {
@@ -95,8 +114,14 @@ export function Campaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const { LoaderComponent, showLoader, hideLoader } = Loader();
 
-  const [viewMode, setViewMode] = useState<'explore' | 'legacy'>('explore');
-  const [points, setPoints] = useState(0);
+  // Floating Earnings State
+  const [showEarningsDropdown, setShowEarningsDropdown] = useState(false);
+  const [earnings] = useState({
+    total: 12500,
+    pending: 4500,
+    withdrawable: 8000
+  });
+
   const [showToast, setShowToast] = useState({ show: false, message: '' });
   const [reactions, setReactions] = useState<Record<number, string>>({});
   const [activeComments, setActiveComments] = useState<number | null>(null);
@@ -105,9 +130,8 @@ export function Campaigns() {
   const [downloadingCard, setDownloadingCard] = useState<Campaign | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // New states for Simulation
+  // Seller simulation
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [createData, setCreateData] = useState({ name: '', desc: '', product: '' });
 
   useEffect(() => {
     fetchCampaigns();
@@ -117,21 +141,19 @@ export function Campaigns() {
     try {
       setLoading(true);
       showLoader();
-      
       const response = await getRequest(ENDPOINTS.bonus_campaigns);
-      // Append Mock data to API data or use Mock if API is empty
       const apiData = (response && response.success && response.data) ? response.data : [];
-      setCampaigns([...apiData, ...INITIAL_MOCK_CAMPAIGNS]);
-      
-      // Seed initial comments
-      const initialComments: Record<number, Comment[]> = {};
-      [...apiData, ...INITIAL_MOCK_CAMPAIGNS].forEach(c => {
-        initialComments[c.id] = [MOCK_COMMENTS_POOL[Math.floor(Math.random() * MOCK_COMMENTS_POOL.length)]];
-      });
-      setCommentsData(initialComments);
-
+      // Note: Mapping legacy API data to the new Affiliate structure for consistency
+      const formattedApi = apiData.map((c: any) => ({
+        ...c,
+        type: 'event',
+        price: 10000,
+        commissionPercent: 10,
+        location: 'Lagos, NG',
+        sellerName: 'BlueSea Verified'
+      }));
+      setCampaigns([...formattedApi, ...INITIAL_MOCK_CAMPAIGNS]);
     } catch (error) {
-      console.error('Failed to load campaigns:', error);
       setCampaigns(INITIAL_MOCK_CAMPAIGNS);
     } finally {
       hideLoader();
@@ -139,35 +161,20 @@ export function Campaigns() {
     }
   };
 
-  // Performance Optimization
-  const memoizedCampaigns = useMemo(() => campaigns, [campaigns]);
-
   const triggerToast = (msg: string) => {
     setShowToast({ show: true, message: msg });
     setTimeout(() => setShowToast({ show: false, message: '' }), 3000);
   };
 
-  const addPoints = (amount: number, reason: string) => {
-    setPoints(prev => prev + amount);
-    triggerToast(`+${amount} pts earned for ${reason}`);
-  };
-
-  const handleReaction = (id: number, emoji: string) => {
-    if (reactions[id]) {
-      triggerToast("Already reacted to this campaign!");
-      return;
-    }
-    setReactions(prev => ({ ...prev, [id]: emoji }));
-    addPoints(0.1, "reacting");
-  };
-
   const handleShare = async (campaign: Campaign) => {
+    const refLink = `https://blueseamobile.com.ng/${campaign.type === 'event' ? 'events' : 'marketplace/product'}/${campaign.id}?ref=${REFERRAL_CODE}`;
+    
     if (navigator.share) {
       try {
         await navigator.share({
-          title: campaign.name,
-          text: campaign.description,
-          url: 'https://blueseamobile.com.ng',
+          title: `Promote ${campaign.name}`,
+          text: `Earn ${campaign.commissionPercent}% commission on every sale!`,
+          url: refLink,
         });
         addPoints(1, "sharing");
       } catch (err) {
@@ -175,9 +182,8 @@ export function Campaigns() {
         console.log("Share cancelled");
       }
     } else {
-      navigator.clipboard.writeText(`https://blueseamobile.com.ng/explore/${campaign.id}`);
-      triggerToast("Link copied to clipboard!");
-      addPoints(1, "sharing");
+      navigator.clipboard.writeText(refLink);
+      triggerToast("Referral link copied! 💸");
     }
   };
 
@@ -185,75 +191,29 @@ export function Campaigns() {
     if (cardRef.current && typeof html2canvas !== 'undefined') {
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
-        backgroundColor: null,
+        scale: 2,
+        backgroundColor: "#0f172a",
       });
       const link = document.createElement('a');
-      link.download = `${downloadingCard?.name || 'explore'}-card.png`;
+      link.download = `BlueSea-Promo-${downloadingCard?.name}.png`;
       link.href = canvas.toDataURL();
       link.click();
-      addPoints(0.5, "downloading card");
       setDownloadingCard(null);
+      triggerToast("Flyer ready for sharing! 📲");
     }
   };
 
   const submitComment = (id: number) => {
     if (!newComment.trim()) return;
-    const commentObj: Comment = {
-      id: Math.random().toString(36),
-      user: "You",
-      text: newComment,
-      timestamp: new Date()
-    };
-    setCommentsData(prev => ({
-      ...prev,
-      [id]: [commentObj, ...(prev[id] || [])]
-    }));
+    const commentObj: Comment = { id: Math.random().toString(36), user: "You", text: newComment, timestamp: new Date() };
+    setCommentsData(prev => ({ ...prev, [id]: [commentObj, ...(prev[id] || [])] }));
     setNewComment("");
-    addPoints(0.3, "commenting");
   };
 
-  const handleCreateCampaign = () => {
-    if (!createData.name || !createData.desc) return;
-    const newCamp: Campaign = {
-      id: Date.now(),
-      name: createData.name,
-      description: createData.desc,
-      campaign_type: 'fixed_bonus',
-      multiplier: '1',
-      bonus_amount: 100,
-      is_active: true,
-      start_date: new Date().toISOString(),
-      end_date: '2026-12-31'
-    };
-    setCampaigns([newCamp, ...campaigns]);
-    setIsModalOpen(false);
-    setCreateData({ name: '', desc: '', product: '' });
-    triggerToast("New Campaign Created! 🚀");
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const isCampaignActive = (campaign: Campaign) => {
-    const now = new Date();
-    const start = new Date(campaign.start_date);
-    const end = new Date(campaign.end_date);
-    return now >= start && now <= end && campaign.is_active;
-  };
-
-  const getCampaignTypeLabel = (type: string) => {
-    switch (type) {
-      case 'multiplier': return 'Points Multiplier';
-      case 'fixed_bonus': return 'Fixed Bonus';
-      case 'percentage_bonus': return 'Percentage Bonus';
-      default: return type;
-    }
-  };
+  // Memoized sorted campaigns by commission (highest first)
+  const sortedCampaigns = useMemo(() => {
+    return [...campaigns].sort((a, b) => b.commissionPercent - a.commissionPercent);
+  }, [campaigns]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex transition-colors duration-300">
@@ -261,335 +221,351 @@ export function Campaigns() {
 
       <div className="flex-1 flex flex-col min-w-0">
         <Header 
-          title={viewMode === 'explore' ? "Explore" : "Campaigns"} 
-          subtitle={viewMode === 'explore' ? "Discover events, products & trending campaigns" : "Active bonus campaigns"}
+          title="Discover & Earn" 
+          subtitle="Promote events and products. Earn commissions from every successful referral."
           onMenuClick={() => setSidebarOpen(true)} 
         />
 
-        <div className="fixed top-20 right-4 z-40 bg-sky-500 text-white px-4 py-2 rounded-full shadow-lg font-bold flex items-center gap-2 animate-bounce">
-          <TrendingUp className="w-4 h-4" />
-          {points.toFixed(1)} Pts
+        {/* TOP FLOATING EARNINGS BOX */}
+        <div className="fixed top-20 right-4 z-40">
+          <button 
+            onClick={() => setShowEarningsDropdown(!showEarningsDropdown)}
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 pl-4 pr-2 rounded-full shadow-xl flex items-center gap-3 transition-transform active:scale-95 group"
+          >
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter">Your Earnings</span>
+              <span className="text-sm font-black text-sky-500">{formatNaira(earnings.total)}</span>
+            </div>
+            <div className="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+              <Wallet className="w-4 h-4" />
+            </div>
+            <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform", showEarningsDropdown && "rotate-180")} />
+          </button>
+
+          {showEarningsDropdown && (
+            <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 p-4 animate-in fade-in zoom-in-95 origin-top-right">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Pending</span>
+                  <span className="text-sm font-bold dark:text-white">{formatNaira(earnings.pending)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Withdrawable</span>
+                  <span className="text-sm font-bold text-green-500">{formatNaira(earnings.withdrawable)}</span>
+                </div>
+                <div className="h-px bg-slate-100 dark:bg-slate-700 my-2" />
+                <button 
+                  onClick={() => triggerToast("Withdrawal request sent to wallet! ✅")}
+                  className="w-full bg-sky-500 hover:bg-sky-600 text-white py-2.5 rounded-xl text-xs font-black transition-colors"
+                >
+                  Withdraw to Wallet
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {showToast.show && (
-          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-2xl border border-sky-400 animate-in fade-in slide-in-from-bottom-4">
-            {showToast.message}
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl border border-sky-500/50 animate-in fade-in slide-in-from-bottom-4">
+            <p className="text-sm font-bold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-sky-400" /> {showToast.message}
+            </p>
           </div>
         )}
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          <div className="max-w-3xl mx-auto space-y-8">
+          <div className="max-w-3xl mx-auto space-y-6">
             
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex bg-slate-200 dark:bg-slate-800 p-1 rounded-xl w-fit">
-                <button 
-                  onClick={() => setViewMode('explore')}
-                  className={cn("px-6 py-2 rounded-lg text-sm font-medium transition-all", viewMode === 'explore' ? "bg-white dark:bg-slate-700 shadow text-sky-600" : "text-slate-500")}
-                >
-                  Explore Feed
-                </button>
-                <button 
-                  onClick={() => setViewMode('legacy')}
-                  className={cn("px-6 py-2 rounded-lg text-sm font-medium transition-all", viewMode === 'legacy' ? "bg-white dark:bg-slate-700 shadow text-sky-600" : "text-slate-500")}
-                >
-                  Legacy View
-                </button>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <p className="text-xs font-medium text-slate-500 italic">فاعل to earn points 🎁</p>
-                <button 
+            <div className="flex items-center justify-between gap-4 bg-sky-50 dark:bg-sky-500/10 p-4 rounded-2xl border border-sky-100 dark:border-sky-500/20">
+               <div>
+                  <p className="text-sm font-black text-sky-700 dark:text-sky-400">Want to sell something?</p>
+                  <p className="text-xs text-sky-600/70 dark:text-sky-400/60">Sellers can turn their items into affiliate campaigns.</p>
+               </div>
+               <button 
                   onClick={() => setIsModalOpen(true)}
-                  className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-md transition-all active:scale-95"
+                  className="bg-sky-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-sky-600 transition-all shadow-lg shadow-sky-500/20"
                 >
-                  <Plus className="w-4 h-4" /> Create Campaign
+                  My Storefront
                 </button>
-              </div>
             </div>
 
             {loading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
               </div>
-            ) : viewMode === 'explore' ? (
-              <div className="space-y-8">
-                {memoizedCampaigns.length === 0 ? (
-                   <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-300">
-                     <Gift className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-                     <p className="text-slate-500 font-bold">No campaigns found.</p>
-                     <p className="text-xs text-slate-400">Be the first to create one!</p>
-                   </div>
-                ) : (
-                  memoizedCampaigns.map((campaign, idx) => {
-                    const mockUser = MOCK_USERS[idx % MOCK_USERS.length];
-                    const mockProd = MOCK_PRODUCTS[idx % MOCK_PRODUCTS.length];
-                    
-                    return (
-                      <div 
-                        key={campaign.id} 
-                        className="group relative bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-[0_0_20px_rgba(14,165,233,0.15)] hover:border-sky-400 transition-all duration-300 hover:scale-[1.01]"
-                      >
-                        <div className="p-4 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold">
-                              {mockUser.avatar}
-                            </div>
-                            <div>
-                              <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">{mockUser.name}</p>
-                              <p className="text-[10px] text-sky-500 font-medium uppercase tracking-widest">{mockUser.handle}</p>
+            ) : (
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                {sortedCampaigns.map((campaign, idx) => {
+                  const mockUser = MOCK_USERS[idx % MOCK_USERS.length];
+                  const estimatedEarning = (campaign.price * campaign.commissionPercent) / 100;
+
+                  return (
+                    <div 
+                      key={campaign.id} 
+                      className="group relative bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-500"
+                    >
+                      {/* CARD HEADER */}
+                      <div className="p-5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 font-bold border dark:border-slate-600">
+                            {campaign.sellerName[0]}
+                          </div>
+                          <div>
+                            <p className="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight">{campaign.sellerName}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Verified Seller</p>
+                          </div>
+                        </div>
+                        <div className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase">
+                          {campaign.type}
+                        </div>
+                      </div>
+
+                      {/* PROMOTIONAL IMAGE SECTION */}
+                      <div className="relative aspect-[16/10] mx-2 overflow-hidden rounded-[2rem] bg-slate-100 dark:bg-slate-900 group-hover:mx-0 transition-all duration-500">
+                        <img 
+                          src={`https://picsum.photos/seed/${campaign.id}/800/500`} 
+                          alt={campaign.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        {/* IMAGE OVERLAYS */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        
+                        <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
+                          <div className="space-y-1">
+                            <h3 className="text-xl font-black leading-tight drop-shadow-lg">{campaign.name}</h3>
+                            <div className="flex items-center gap-3 text-[10px] font-bold opacity-90">
+                              <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {campaign.location}</span>
+                              <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> {formatNaira(campaign.price)}</span>
                             </div>
                           </div>
                           <button 
-                            onClick={() => navigate(mockProd.link)}
-                            className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md font-bold text-slate-500 hover:text-sky-500"
+                            onClick={() => navigate(`/events/${campaign.id}`)}
+                            className="p-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20 hover:bg-white hover:text-slate-900 transition-all"
                           >
-                            VIEW PRODUCT
+                            <ExternalLink className="w-4 h-4" />
                           </button>
                         </div>
+                      </div>
 
-                        <div className="relative aspect-video bg-slate-100 dark:bg-slate-900 overflow-hidden cursor-pointer" onClick={() => navigate(mockProd.link)}>
-                          <img 
-                            src={`https://picsum.photos/seed/${campaign.id}/800/450`} 
-                            alt={campaign.name}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            loading="lazy"
-                          />
-                          <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-bold border border-white/20">
-                            {campaign.campaign_type === 'multiplier' ? `${campaign.multiplier}x Multiplier` : `${campaign.bonus_amount} Pts Bonus`}
-                          </div>
-                        </div>
-
-                        <div className="p-5">
-                          <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">{campaign.name}</h3>
-                          <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 mb-4 leading-relaxed">
-                            {campaign.description}
+                      {/* SMART EARNING SYSTEM BLOCK */}
+                      <div className="mx-5 mt-5 p-4 bg-sky-500/5 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/20 rounded-2xl flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-0.5">Your Commission</p>
+                          <p className="text-lg font-black text-slate-800 dark:text-white">
+                            {campaign.commissionPercent}% — <span className="text-sky-500">{formatNaira(estimatedEarning)}</span>
+                            <span className="text-xs font-medium text-slate-400 ml-1">per sale</span>
                           </p>
-                          
-                          <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-700 pt-4">
-                            <div className="flex items-center gap-4">
-                              <div className="relative group/react">
-                                <button className="flex items-center gap-1.5 text-slate-500 hover:text-sky-500 transition-colors">
-                                  {reactions[campaign.id] ? (
-                                    <span className="text-xl animate-bounce">{reactions[campaign.id]}</span>
-                                  ) : (
-                                    <Heart className="w-5 h-5" />
-                                  )}
-                                  <span className="text-xs font-semibold">React</span>
-                                </button>
-                                <div className="absolute bottom-full left-0 mb-2 hidden group-hover/react:flex items-center gap-2 bg-white dark:bg-slate-700 p-2 rounded-full shadow-2xl border border-slate-200 dark:border-slate-600 animate-in slide-in-from-bottom-2">
-                                  {['👍', '❤️', '🔥', '😂', '😮'].map(emoji => (
-                                    <button 
-                                      key={emoji}
-                                      onClick={() => handleReaction(campaign.id, emoji)}
-                                      className="hover:scale-150 transition-transform px-1"
-                                    >
-                                      {emoji}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                              <button 
-                                onClick={() => setActiveComments(campaign.id)}
-                                className="flex items-center gap-1.5 text-slate-500 hover:text-sky-500 transition-colors"
-                              >
-                                <MessageCircle className="w-5 h-5" />
-                                <span className="text-xs font-semibold">{commentsData[campaign.id]?.length || 0}</span>
-                              </button>
-                            </div>
-                            <div className="flex items-center gap-2">
-                               <button onClick={() => handleShare(campaign)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">
-                                <Share2 className="w-5 h-5 text-slate-500" />
-                              </button>
-                               <button onClick={() => setDownloadingCard(campaign)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">
-                                <Download className="w-5 h-5 text-slate-500" />
-                              </button>
-                            </div>
+                        </div>
+                        <div className="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center text-white">
+                          <TrendingUp className="w-5 h-5" />
+                        </div>
+                      </div>
+
+                      <div className="p-5 pt-4">
+                        <p className="text-slate-500 dark:text-slate-400 text-xs mb-6 line-clamp-2">
+                          {campaign.description}
+                        </p>
+                        
+                        <div className="flex items-center justify-between border-t border-slate-50 dark:border-slate-700/50 pt-4">
+                          <div className="flex items-center gap-4">
+                            <button 
+                              onClick={() => setReactions(prev => ({ ...prev, [campaign.id]: prev[campaign.id] === 'liked' ? '' : 'liked' }))}
+                              className={cn("flex items-center gap-1.5 transition-colors", reactions[campaign.id] === 'liked' ? 'text-red-500' : 'text-slate-400 hover:text-red-500')}
+                            >
+                              <Heart className={cn("w-5 h-5", reactions[campaign.id] === 'liked' && "fill-current")} />
+                              <span className="text-[10px] font-black uppercase">Like</span>
+                            </button>
+                            <button 
+                              onClick={() => setActiveComments(campaign.id)}
+                              className="flex items-center gap-1.5 text-slate-400 hover:text-sky-500 transition-colors"
+                            >
+                              <MessageCircle className="w-5 h-5" />
+                              <span className="text-[10px] font-black uppercase">Discuss</span>
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                             <button 
+                              onClick={() => handleShare(campaign)} 
+                              className="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-xl text-xs font-black hover:scale-105 transition-all active:scale-95"
+                             >
+                              <Share2 className="w-3.5 h-3.5" /> Promote
+                            </button>
+                             <button 
+                              onClick={() => setDownloadingCard(campaign)} 
+                              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors text-slate-400"
+                             >
+                              <Download className="w-5 h-5" />
+                            </button>
                           </div>
                         </div>
                       </div>
-                    )
-                  })
-                )}
-              </div>
-                  ) : (
-              <div className="space-y-4">
-                {memoizedCampaigns.length === 0 ? (
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
-                    <Gift className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-                    <p className="text-slate-500 dark:text-slate-400">No active campaigns</p>
-                  </div>
-                ) : (
-                  memoizedCampaigns.map((campaign) => {
-                    const active = isCampaignActive(campaign);
-                    return (
-                      <div
-                        key={campaign.id}
-                        className={cn(
-                          'bg-white dark:bg-slate-900 rounded-2xl border p-6 cursor-pointer',
-                          active ? 'border-sky-200 dark:border-sky-800' : 'border-slate-100 dark:border-slate-800 opacity-60'
-                        )}
-                        onClick={() => navigate('/events/' + campaign.id)}
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="text-lg font-semibold dark:text-white">{campaign.name}</h3>
-                              {active && <span className="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded-full">Active</span>}
-                            </div>
-                            <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">{campaign.description}</p>
-                            <div className="flex flex-wrap gap-4 text-sm">
-                              <div className="flex items-center gap-1 text-slate-500">
-                                <TrendingUp className="w-4 h-4" />
-                                <span>{getCampaignTypeLabel(campaign.campaign_type)}</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-slate-500">
-                                <Calendar className="w-4 h-4" />
-                                <span>{formatDate(campaign.start_date)} - {formatDate(campaign.end_date)}</span>
-                              </div>
-                            </div>
-                          </div>
-                          {active && (
-                            <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center">
-                              <ArrowRight className="w-5 h-5 text-sky-500" />
-                            </div>
-                          )}
+
+                      {/* SELLER INFO FOOTER */}
+                      <div className="px-5 pb-4 pt-0 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-50 dark:border-slate-700/50 mt-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Ends {new Date(campaign.end_date).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1">Posted by {mockUser.name}</span>
+                          <ArrowRight className="w-3 h-3" />
                         </div>
                       </div>
-                    );
-                  })
-                )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
         </main>
       </div>
 
+      {/* --- MODALS --- */}
+
       {/* Side Comment Modal */}
       {activeComments !== null && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col animate-in slide-in-from-right">
-            <div className="p-4 border-b dark:border-slate-800 flex items-center justify-between">
-              <h4 className="font-bold text-lg dark:text-white">Comments</h4>
+            <div className="p-6 border-b dark:border-slate-800 flex items-center justify-between">
+              <h4 className="font-black text-xl dark:text-white">Discussion</h4>
               <button onClick={() => setActiveComments(null)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
                 <X className="w-6 h-6 dark:text-white" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {(commentsData[activeComments] || []).length === 0 ? (
-                <div className="text-center py-20 text-slate-400"><Smile className="w-12 h-12 mx-auto mb-2 opacity-20" /><p>Be the first to comment!</p></div>
+                <div className="text-center py-20 text-slate-400">
+                                  <Smile className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                  <p className="font-bold">No questions yet.</p>
+                  <p className="text-xs">Be the first to ask about this item!</p>
+                </div>
               ) : (
                 commentsData[activeComments].map(cmt => (
                   <div key={cmt.id} className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-sky-100 dark:bg-sky-900 flex-shrink-0 flex items-center justify-center font-bold text-[10px] text-sky-600">
+                    <div className="w-8 h-8 rounded-full bg-sky-500 flex-shrink-0 flex items-center justify-center font-black text-[10px] text-white">
                       {cmt.user[0]}
                     </div>
-                    <div className="bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl max-w-[80%]">
-                      <p className="text-xs font-bold text-sky-600">{cmt.user}</p>
-                      <p className="text-sm dark:text-slate-300">{cmt.text}</p>
+                    <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl rounded-tl-none max-w-[85%]">
+                      <p className="text-[10px] font-black text-sky-600 uppercase mb-1">{cmt.user}</p>
+                      <p className="text-sm dark:text-slate-300 leading-relaxed">{cmt.text}</p>
                     </div>
                   </div>
                 ))
               )}
             </div>
-            <div className="p-4 border-t dark:border-slate-800">
+            <div className="p-6 border-t dark:border-slate-800">
               <div className="relative">
                 <input 
                   type="text"
-                  placeholder="Add a comment..."
-                  className="w-full bg-slate-100 dark:bg-slate-800 rounded-full py-3 px-5 pr-12 text-sm dark:text-white focus:ring-2 ring-sky-500 outline-none"
+                  placeholder="Ask a question..."
+                  className="w-full bg-slate-100 dark:bg-slate-800 rounded-2xl py-4 px-5 pr-14 text-sm dark:text-white focus:ring-2 ring-sky-500 outline-none transition-all"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && submitComment(activeComments)}
                 />
-                <button onClick={() => submitComment(activeComments)} className="absolute right-2 top-1.5 p-1.5 bg-sky-500 text-white rounded-full"><Send className="w-4 h-4" /></button>
+                <button onClick={() => submitComment(activeComments)} className="absolute right-2 top-2 p-2 bg-sky-500 text-white rounded-xl shadow-lg shadow-sky-500/30">
+                  <Send className="w-5 h-5" />
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Create Campaign Modal */}
+      {/* Seller Simulation Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2rem] p-6 shadow-2xl animate-in zoom-in-95">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black dark:text-white">Create Campaign</h2>
+          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-2xl font-black dark:text-white">Your Items</h2>
+                <p className="text-sm text-slate-500">Pick an item to create a campaign.</p>
+              </div>
               <button onClick={() => setIsModalOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X className="w-5 h-5 dark:text-white"/></button>
             </div>
             
-            <div className="space-y-5">
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase ml-2">Campaign Name</label>
-                <input 
-                  className="w-full mt-1 bg-slate-50 dark:bg-slate-800 border-none p-4 rounded-2xl dark:text-white focus:ring-2 ring-sky-500"
-                  placeholder="e.g. Lagos Suya Festival Promo"
-                  value={createData.name}
-                  onChange={e => setCreateData({...createData, name: e.target.value})}
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase ml-2">Select Linked Product/Event</label>
-                <select 
-                  className="w-full mt-1 bg-slate-50 dark:bg-slate-800 border-none p-4 rounded-2xl dark:text-white focus:ring-2 ring-sky-500"
-                  onChange={e => setCreateData({...createData, product: e.target.value})}
-                >
-                  <option value="">Select an item...</option>
-                  {MOCK_PRODUCTS.map(p => <option key={p.id} value={p.id}>{p.name} ({p.price})</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase ml-2">Description</label>
-                <textarea 
-                  className="w-full mt-1 bg-slate-50 dark:bg-slate-800 border-none p-4 rounded-2xl dark:text-white h-24 focus:ring-2 ring-sky-500"
-                  placeholder="What is this campaign about?"
-                  value={createData.desc}
-                  onChange={e => setCreateData({...createData, desc: e.target.value})}
-                />
-              </div>
-
-              <button 
-                onClick={handleCreateCampaign}
-                className="w-full bg-sky-500 hover:bg-sky-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-sky-500/20 transition-all active:scale-95"
-              >
-                Launch Campaign 🚀
-              </button>
+            <div className="space-y-3">
+               {[1, 2].map(i => (
+                 <div key={i} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+                      <div>
+                        <p className="font-black text-sm dark:text-white">My Product #{i}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">₦25,000</p>
+                      </div>
+                    </div>
+                    <button className="text-[10px] font-black bg-sky-500 text-white px-4 py-2 rounded-lg">SETUP EARNINGS</button>
+                 </div>
+               ))}
+               <button 
+                  onClick={() => navigate('/create-event')}
+                  className="w-full mt-4 flex items-center justify-center gap-2 border-2 border-dashed border-slate-200 dark:border-slate-700 py-6 rounded-2xl text-slate-400 hover:border-sky-500 hover:text-sky-500 transition-all"
+               >
+                 <Plus className="w-5 h-5" /> <span>Add New Item</span>
+               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Download Modal */}
+      {/* PREMIUM DOWNLOAD FLYER */}
       {downloadingCard && (
-        <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4">
           <div className="max-w-sm w-full space-y-6">
-            <div ref={cardRef} className="w-full aspect-[4/5] bg-gradient-to-br from-blue-600 via-sky-500 to-blue-800 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
-              <CheckCircle2 className="absolute -top-4 -right-4 w-24 h-24 text-white/10" />
+            <div 
+              ref={cardRef} 
+              className="w-full aspect-[4/5] bg-slate-900 rounded-[3rem] p-8 text-white relative overflow-hidden flex flex-col"
+            >
+              {/* Decorative elements */}
+              <div className="absolute -top-12 -right-12 w-48 h-48 bg-sky-500/20 blur-[80px]" />
+              <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-blue-600/20 blur-[80px]" />
+              
               <div className="relative z-10 flex flex-col h-full">
-                <div className="font-black text-xl mb-6 italic tracking-tighter">BLUESEA</div>
-                <div className="flex-1 rounded-2xl overflow-hidden border-2 border-white/20 mb-4">
-                  <img src={`https://picsum.photos/seed/${downloadingCard.id}/400/400`} className="w-full h-full object-cover" />
+                <div className="flex justify-between items-start mb-6">
+                  <div className="font-black text-xl italic tracking-tighter text-sky-400">BLUESEA</div>
+                  <div className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black border border-white/10">AFFILIATE PROMO</div>
                 </div>
-                <h2 className="text-2xl font-black mb-1">{downloadingCard.name}</h2>
-                <p className="text-sm font-bold mt-auto">blueseamobile.com.ng</p>
+
+                <div className="flex-1 rounded-[2rem] overflow-hidden border border-white/10 mb-6 shadow-2xl">
+                  <img src={`https://picsum.photos/seed/${downloadingCard.id}/500/500`} className="w-full h-full object-cover" />
+                </div>
+
+                <div className="space-y-1 mb-6">
+                  <h2 className="text-2xl font-black leading-tight">{downloadingCard.name}</h2>
+                  <p className="text-xs font-bold text-slate-400 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-sky-500" /> {downloadingCard.location}
+                  </p>
+                </div>
+
+                <div className="mt-auto flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
+                  <div>
+                    <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest">Buy Now For</p>
+                    <p className="text-xl font-black">{formatNaira(downloadingCard.price)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-slate-400 uppercase">Referral Link</p>
+                    <p className="text-[10px] font-bold text-sky-400">blueseamobile.ng/ref...</p>
+                  </div>
+                </div>
               </div>
             </div>
+
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={downloadAsImage} className="bg-white text-slate-900 py-3 rounded-xl font-bold flex items-center justify-center gap-2">
-                <Download className="w-4 h-4" /> Save
+              <button onClick={downloadAsImage} className="bg-sky-500 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 active:scale-95 transition-transform">
+                <Download className="w-4 h-4" /> Save Flyer
               </button>
               <button 
                 onClick={() => {
-                  navigator.clipboard.writeText("https://blueseamobile.com.ng");
-                  triggerToast("Link copied!");
+                  const refLink = `https://blueseamobile.com.ng/events/${downloadingCard.id}?ref=${REFERRAL_CODE}`;
+                  navigator.clipboard.writeText(refLink);
+                  triggerToast("Referral link copied!");
                 }}
-                className="bg-slate-800 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"
+                className="bg-white text-slate-900 py-4 rounded-2xl font-black flex items-center justify-center gap-2 active:scale-95 transition-transform"
               >
                 <Copy className="w-4 h-4" /> Copy Link
               </button>
             </div>
-            <button onClick={() => setDownloadingCard(null)} className="w-full text-white/50 text-center text-sm py-2">Cancel</button>
+            <button onClick={() => setDownloadingCard(null)} className="w-full text-white/40 text-center text-sm font-bold py-2">Close</button>
           </div>
         </div>
       )}

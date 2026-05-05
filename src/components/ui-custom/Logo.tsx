@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface LogoProps {
@@ -20,7 +21,7 @@ export function Logo({ size = 'md', showText = true, className }: LogoProps) {
   };
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <Link to="/" className={cn('flex items-center gap-2', className)}>
       <div 
         className={cn(
           'rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center font-bold text-white shadow-lg',
@@ -39,6 +40,6 @@ export function Logo({ size = 'md', showText = true, className }: LogoProps) {
           </span>
         </div>
       )}
-    </div>
+    </Link>
   );
 }
