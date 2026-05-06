@@ -126,7 +126,7 @@ export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleChatWithSeller = (item: HistoryItem) => {
-    navigate('/marketplace/messages', {
+    navigate('/messages', {
       state: {
         source: 'history',
         historyId: item.id,
