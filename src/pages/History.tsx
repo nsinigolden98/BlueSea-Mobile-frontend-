@@ -15,7 +15,8 @@ import {
   ExternalLink,
   MapPin,
   User,
-  ShoppingBag
+  ShoppingBag,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sidebar, Toast } from '@/components/ui-custom';
@@ -110,6 +111,17 @@ export default function HistoryPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const handleChatWithSeller = (item: HistoryItem) => {
+    navigate('/marketplace/messages', {
+      state: {
+        source: 'history',
+        historyId: item.id,
+        productId: item.id,
+        sellerName: item.details.sellerName ?? 'Seller'
+      }
+    });
+  };
+
   useEffect(() => {
     const fetchVendorStatus = async () => {
       try {
@@ -198,10 +210,23 @@ export default function HistoryPage() {
                   </div>
 
                   {expandedId === item.id && (
-                    <div className="mt-4 pt-4 border-t border-dashed border-slate-200 space-y-2">
+                    <div className="mt-4 space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/40">
                          <DetailRow icon={<ExternalLink className="w-3 h-3" />} label="Ref" value={item.details.transactionId ?? item.id} />
                          {item.details.sellerName && <DetailRow icon={<User className="w-3 h-3" />} label="Seller" value={item.details.sellerName} />}
                          {item.details.deliveryLocation && <DetailRow icon={<MapPin className="w-3 h-3" />} label="Location" value={item.details.deliveryLocation} />}
+                         
+                         {item.type === 'product' && item.status === 'pending' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleChatWithSeller(item);
+                            }}
+                            className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-bold text-sky-600 transition-all hover:border-sky-200 hover:bg-sky-100 dark:border-sky-900/40 dark:bg-sky-950/20 dark:text-sky-400"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            Chat with Seller
+                          </button>
+                        )}
                     </div>
                   )}
                 </div>
@@ -221,4 +246,4 @@ function DetailRow({ label, value, icon }: { label: string, value: string, icon:
             <span className="text-[11px] font-bold dark:text-slate-200">{value}</span>
         </div>
     );
-                      }
+}
