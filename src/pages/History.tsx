@@ -63,6 +63,21 @@ const MOCK_HISTORY: HistoryItem[] = [
     }
   },
   {
+    id: 'TX-7819',
+    type: 'product',
+    title: 'Sony WH-1000XM5 Headphones',
+    image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80',
+    amount: 420000,
+    quantity: 1,
+    status: 'pending',
+    createdAt: '2026-04-25T12:10:00Z',
+    details: {
+      sellerName: 'Audio World',
+      deliveryLocation: 'Lekki Phase 1, Lagos',
+      transactionId: 'REF-55219081'
+    }
+  },
+  {
     id: 'TX-4412',
     type: 'point',
     title: 'COD Mobile - 880 CP',
@@ -78,7 +93,6 @@ const MOCK_HISTORY: HistoryItem[] = [
   }
 ];
 
-// Re-using the icons to clear TS6133
 const StatusBadge = ({ status }: { status: string }) => {
   const icons = {
     completed: <CheckCircle2 className="w-3 h-3" />,
@@ -181,7 +195,6 @@ export default function HistoryPage() {
               ))}
             </div>
 
-            {/* Using activeFilter and filters to clear TS6133 */}
             <div className="flex gap-4 border-b border-slate-200">
               {filters.map((f) => (
                 <button key={f} onClick={() => setActiveFilter(f)} className={cn("pb-2 text-xs font-bold", activeFilter === f ? "text-sky-500 border-b-2 border-sky-500" : "text-slate-400")}>
@@ -221,7 +234,7 @@ export default function HistoryPage() {
                               e.stopPropagation();
                               handleChatWithSeller(item);
                             }}
-                            className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-bold text-sky-600 transition-all hover:border-sky-200 hover:bg-sky-100 dark:border-sky-900/40 dark:bg-sky-950/20 dark:text-sky-400"
+                            className="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-white px-4 py-3 text-sm font-bold text-sky-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md dark:border-sky-900/40 dark:from-sky-950/20 dark:to-slate-900 dark:text-sky-400"
                           >
                             <MessageSquare className="w-4 h-4" />
                             Chat with Seller
