@@ -9,7 +9,7 @@ import {
   Package, 
   Clock, 
   ShieldCheck, 
-//  ChevronLeft,
+  ChevronLeft,
   ShoppingBag,
   ExternalLink,
   MessageSquare,
@@ -250,13 +250,19 @@ export function MarketplaceMessaging() {
         ${isSidebarOpen ? 'w-full md:w-80 lg:w-96 translate-x-0' : 'w-0 -translate-x-full md:translate-x-0'}
       `}>
         <div className="flex flex-col h-full overflow-hidden">
-          <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-sky-500" />
-              <h1 className="text-xl font-bold">BlueSea Messages</h1>
-            </div>
-            <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2"><X /></button>
-          </div>
+         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+  <button
+    onClick={() => window.history.back()}
+    className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+  >
+    <ChevronLeft className="w-5 h-5 text-slate-500" />
+  </button>
+
+  <div className="flex items-center gap-2">
+    <ShoppingBag className="w-5 h-5 text-sky-500" />
+    <h1 className="text-xl font-bold">BlueSea Messages</h1>
+  </div>
+</div>
 
           {/* Search Bar */}
           <div className="p-3 border-b border-slate-100 dark:border-slate-800">
