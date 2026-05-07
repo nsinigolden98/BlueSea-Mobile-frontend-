@@ -184,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       phone: String(data.phone),
       other_names: data.firstName,
       surname: data.surname,
-      password: data.surname,
+      password: data.password,
       referral_code: data.referralCode || ''
     };
     const response = await postRequest(ENDPOINTS.signup, payload);
@@ -277,3 +277,4 @@ export function useAuth() {
   }
   return context;
 }
+

@@ -59,8 +59,10 @@ export function AuthPage() {
     
     } else {
       if (password !== confirmPassword) {
-        showToast('Passwords do not match');
-      }
+  showToast('Passwords do not match');
+  hideLoader();
+  return;
+}
       else {
        
         const response = await signup({ email, phone, firstName, surname, password, confirmPassword, agreeToTerms, referralCode });
@@ -70,7 +72,7 @@ export function AuthPage() {
           // setModalVisiblity(true);
           setComponentVisibilty(true);
 
-        } else if (response.errors.email[0] === "Email already exists.") {
+        } else if (response?.errors?.email?.[0] === "Email already exists.") {
           const otpResponse = await postRequest(ENDPOINTS.sendOtp, { email: email });
           console.log(otpResponse);
           showToast(otpResponse.message)
@@ -362,3 +364,4 @@ export function AuthPage() {
       </div>
   );
 }
+
