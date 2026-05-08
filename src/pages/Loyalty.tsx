@@ -10,7 +10,8 @@ import {
   CheckCircle2,
   X,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft
 } from 'lucide-react';
 
 interface Reward {
@@ -113,14 +114,14 @@ export function Loyalty() {
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-             <div>
-            <h1 className="text-xl font-black text-slate-900 dark:text-white">Loyalty Marketplace</h1>
-            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Spend Your BluePoints</p>
-          </div>
+             {/*<div>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white"></h1>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest"></p>
+          </div>*/}
           
-         {/* title="" 
-          subtitle=""
-         onMenuClick={() => setSidebarOpen(true)} */}
+          title="Loyalty Marketplace" 
+          subtitle="Spend Your BluePoints"
+                 {/* onMenuClick={() => setSidebarOpen(true)} */}
 </Header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
