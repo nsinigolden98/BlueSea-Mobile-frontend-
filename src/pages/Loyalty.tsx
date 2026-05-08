@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sidebar, Header, Toast, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { getRequest, postRequest, ENDPOINTS } from '@/types';
@@ -24,6 +25,7 @@ interface Reward {
 }
 
 export function Loyalty() {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,11 +106,22 @@ export function Loyalty() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Header 
-          title="Loyalty Marketplace" 
-          subtitle="Spend Your BluePoints"
-          onMenuClick={() => setSidebarOpen(true)} 
-        />
+        <Header>
+         <button 
+            onClick={() => navigate(-1)} 
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-400"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+             <div>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white">Loyalty Marketplace</h1>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Spend Your BluePoints</p>
+          </div>
+          
+         {/* title="" 
+          subtitle=""
+         onMenuClick={() => setSidebarOpen(true)} */}
+</Header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-6">
