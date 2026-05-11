@@ -127,14 +127,14 @@ export function Loyalty() {
     </div>
   </div>
 
-  <button
+{/* <button
     className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-600 dark:text-slate-400 relative"
     aria-label="Notifications"
   >
     <Bell className="w-5 h-5" />
     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-sky-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-  </button>
-</div>j
+  </button>*/}
+</div>
         {/* --- END HEADER SECTION --- */}
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
