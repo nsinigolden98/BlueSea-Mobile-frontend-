@@ -7,11 +7,12 @@ import { cn } from '@/lib/utils';
 import { 
   Gift, 
   Coins, 
-  //CheckCircle2,
+  CheckCircle2,
   X,
   Loader2,
   RefreshCw,
-  ChevronLeft
+  ChevronLeft,
+  Bell // 1. Added Bell icon
 } from 'lucide-react';
 
 interface Reward {
@@ -104,21 +105,35 @@ export function Loyalty() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar container to hold the back button and the Header side-by-side */}
-        <div className="flex items-center bg-white dark:bg-slate-900 border-b pr-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-4 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
-            aria-label="Go back"
+        
+        {/* --- FIXED HEADER SECTION --- */}
+        <div className="flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pr-4">
+          <div className="flex items-center">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-4 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
+              aria-label="Go back"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            
+            <Header
+              title="Loyalty Marketplace"
+              subtitle="Spend Your BluePoints"
+            />
+          </div>
+
+          {/* Notification Bell Button */}
+          <button 
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-600 dark:text-slate-400 relative"
+            onClick={() => {/* Add notification logic here */}}
           >
-            <ChevronLeft className="w-6 h-6" />
+            <Bell className="w-6 h-6" />
+            {/* Optional indicator dot if you want to show a new notification */}
+            <span className="absolute top-2 right-2 w-2 h-2 bg-sky-500 rounded-full border-2 border-white dark:border-slate-900"></span>
           </button>
-          
-          <Header
-            title="Loyalty Marketplace"
-            subtitle="Spend Your BluePoints"
-          />
         </div>
+        {/* --- END HEADER SECTION --- */}
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-6">
@@ -201,16 +216,6 @@ export function Loyalty() {
                       <p className="text-lg font-bold text-sky-500">
                         {reward.points_cost} pts
                       </p>
-                      {!isAvailable && (
-                        <span className="absolute top-2 right-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                          Out of stock
-                        </span>
-                      )}
-                      {isAvailable && !canAfford && (
-                        <span className="absolute top-2 right-2 px-2 py-0.5 bg-slate-800 text-white text-xs rounded-full">
-                          Need more points
-                        </span>
-                      )}
                     </button>
                   );
                 })}
@@ -249,13 +254,6 @@ export function Loyalty() {
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl mb-4">
-              <span className="text-slate-600 dark:text-slate-300">Your Balance</span>
-              <span className="text-xl font-bold text-slate-800 dark:text-white">
-                {totalPoints} pts
-              </span>
-            </div>
-
             <div className="flex gap-3">
               <Button
                 variant="outline"
@@ -280,14 +278,14 @@ export function Loyalty() {
       {showSuccess && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full text-center">
-            {/*<div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8 text-green-500" />
-            </div>*/}
+            </div>
             <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">
               Redemption Successful!
             </h3>
             <p className="text-slate-500 dark:text-slate-400 mb-4">
-              Your reward has been redeemed. Check your rewards history for delivery details.
+              Your reward has been redeemed.
             </p>
             <Button
               className="w-full bg-sky-500 hover:bg-sky-600"
