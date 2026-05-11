@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { 
   Gift, 
   Coins, 
-  CheckCircle2,
+  //CheckCircle2,
   X,
   Loader2,
   RefreshCw,
@@ -280,9 +280,9 @@ export function Loyalty() {
       {showSuccess && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full text-center">
-            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+            {/*<div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8 text-green-500" />
-            </div>
+            </div>*/}
             <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">
               Redemption Successful!
             </h3>
