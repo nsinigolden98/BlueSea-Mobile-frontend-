@@ -12,7 +12,7 @@ import {
   Loader2,
   RefreshCw,
   ChevronLeft,
-  Bell // 1. Added Bell icon
+  //Bell // 1. Added Bell icon
 } from 'lucide-react';
 
 interface Reward {
