@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar, Header, Toast, Loader } from '@/components/ui-custom';
+import { Header, Toast, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { getRequest, postRequest, ENDPOINTS } from '@/types';
 import { cn } from '@/lib/utils';
@@ -27,7 +27,6 @@ interface Reward {
 
 export function Loyalty() {
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<Reward | null>(null);
@@ -104,25 +103,18 @@ export function Loyalty() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
       <div className="flex-1 flex flex-col min-w-0">
-        <Header>
-         <button 
-            onClick={() => navigate(-1)} 
+        <Header
+          title="Loyalty Marketplace"
+          subtitle="Spend Your BluePoints"
+        >
+          <button
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-400"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-             {/*<div>
-            <h1 className="text-xl font-black text-slate-900 dark:text-white"></h1>
-            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest"></p>
-          </div>*/}
-          
-          title="Loyalty Marketplace" 
-          subtitle="Spend Your BluePoints"
-                 {/* onMenuClick={() => setSidebarOpen(true)} */}
-</Header>
+        </Header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-6">
@@ -138,7 +130,7 @@ export function Loyalty() {
                     <p className="text-3xl font-bold">{totalPoints.toLocaleString()}</p>
                   </div>
                 </div>
-               <button
+                <button
                   onClick={fetchRewards}
                   className="p-2 bg-white/20 rounded-lg hover:bg-white/30"
                 >
