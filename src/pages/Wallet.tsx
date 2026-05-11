@@ -4,7 +4,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
-import { Landmark, Send, X, ChevronRight, User, ShieldCheck, Search, ChevronLeft, CreditCard, Smartphone, CheckCircle2, AlertCircle } from 'lucide-react';
+import { 
+  Landmark, 
+  Send, 
+  X, 
+  ChevronRight, 
+  User, 
+  ShieldCheck, 
+  Search, 
+  ChevronLeft, 
+  CreditCard, 
+  Smartphone, 
+  CheckCircle2, 
+  AlertCircle,
+  WalletCards,
+  BadgeCheck,
+  Sparkles
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { NIGERIAN_BANKS } from '@/data';
@@ -12,24 +28,62 @@ import { useNavigate } from 'react-router-dom';
 
 // --- BlueSea Connect Mock Data ---
 const MOCK_PARTNERS = [
-  { id: 1, name: 'Lumic', idType: 'username', helper: 'Pay package', label: 'Username', placeholder: 'Enter Lumic username', initials: 'LU' },
-  { id: 2, name: 'HFM', idType: 'email', helper: 'Fund trading', label: 'Email', placeholder: 'Enter HFM email', initials: 'HF' },
-  { id: 3, name: 'Modis', idType: 'memberId', helper: 'Top up account', label: 'Member ID', placeholder: 'Enter Modis member ID', initials: 'MO' },
-  { id: 4, name: 'NovaPay', idType: 'phone', helper: 'Send payment', label: 'Phone Number', placeholder: 'Enter phone number', initials: 'NP' },
-  { id: 5, name: 'LynkPro', idType: 'email', helper: 'Premium access', label: 'Email', placeholder: 'Enter email address', initials: 'LP' },
+  {
+    id: 1,
+    name: 'Lumiq',
+    idType: 'username',
+    helper: 'Pay package',
+    label: 'Username',
+    placeholder: 'Enter Lumiq username',
+    logo: 'https://images.unsplash.com/photo-1618005198919-d3d4b5a92eee?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: 2,
+    name: 'HFM',
+    idType: 'email',
+    helper: 'Fund trading',
+    label: 'Email',
+    placeholder: 'Enter HFM email',
+    logo: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: 3,
+    name: 'Modis',
+    idType: 'memberId',
+    helper: 'Top up account',
+    label: 'Member ID',
+    placeholder: 'Enter Modis member ID',
+    logo: 'https://images.unsplash.com/photo-1556740749-887f6717d7e4?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: 4,
+    name: 'NovaPay',
+    idType: 'phone',
+    helper: 'Send payment',
+    label: 'Phone Number',
+    placeholder: 'Enter phone number',
+    logo: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: 5,
+    name: 'LynkPro',
+    idType: 'email',
+    helper: 'Premium access',
+    label: 'Email',
+    placeholder: 'Enter email address',
+    logo: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=400&auto=format&fit=crop',
+  },
 ];
-
-const MOCK_PARTNER_USERS: Record<string, { id: string, name: string }[]> = {
-  'Lumic': [{ id: 'alex99', name: 'Alex Johnson' }, { id: 'sarah_m', name: 'Sarah Miller' }],
-  'HFM': [{ id: 'trade@hfm.com', name: 'Global Markets Ltd' }, { id: 'invest@hfm.com', name: 'Capital Group' }],
-  'Modis': [{ id: 'MOD-7721', name: 'David Chen' }, { id: 'MOD-8832', name: 'Elena Rodriguez' }],
-  'NovaPay': [{ id: '08012345678', name: 'Samuel Okoro' }, { id: '09087654321', name: 'Blessing Ade' }],
-  'LynkPro': [{ id: 'pro@lynk.io', name: 'Professional Services' }, { id: 'admin@lynk.io', name: 'System Admin' }],
-};
 
 export function Wallet() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [cardModalOpen, setCardModalOpen] = useState(false);
+const [savedCard, setSavedCard] = useState<{ name: string; number: string; expiry: string } | null>(null);
+const [newCard, setNewCard] = useState({ name: '', number: '', expiry: '', cvv: '' });
+const [googlePayModalOpen, setGooglePayModalOpen] = useState(false);
+const [centeredPartner, setCenteredPartner] = useState<number>(1);
+
 
   // --- States for the layout ---
   const [accountLoading, setAccountLoading] = useState(false);
