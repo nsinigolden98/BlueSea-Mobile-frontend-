@@ -260,3 +260,4 @@ function DetailRow({ label, value, icon }: { label: string, value: string, icon:
         </div>
     );
 }
+
