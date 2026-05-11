@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header, Toast, Loader } from '@/components/ui-custom';
+import {Toast, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { getRequest, postRequest, ENDPOINTS } from '@/types';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,8 @@ import {
   X,
   Loader2,
   RefreshCw,
-  ChevronLeft
+  ChevronLeft,
+  Bell // 1. Added Bell icon
 } from 'lucide-react';
 
 interface Reward {
@@ -70,10 +71,16 @@ export function Loyalty() {
 
   const handleRedeem = async () => {
     if (!selectedItem) return;
+    
     setRedeeming(true);
     showLoader();
+    
     try {
-      const response = await postRequest(ENDPOINTS.loyalty_redeem(selectedItem.id), {});
+      const response = await postRequest(
+        ENDPOINTS.loyalty_redeem(selectedItem.id),
+        {}
+      );
+      
       if (response && response.success) {
         setShowSuccess(true);
         showToast('Reward redeemed successfully!');
@@ -99,26 +106,40 @@ export function Loyalty() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
       <div className="flex-1 flex flex-col min-w-0">
         
-        {/* CLEAN TOP BAR: Removed all notification bells */}
-        <div className="flex items-center bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-4 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
-            aria-label="Go back"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          
-          {/* We pass title and subtitle as props to satisfy TS and avoid the children error */}
-          <Header
-            title="Loyalty Marketplace"
-            subtitle="Spend Your BluePoints"
-          />
-        </div>
+        {/* --- FIXED HEADER SECTION --- */}
+        <div className="flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+  <div className="flex items-center gap-3 min-w-0">
+    <button
+      onClick={() => navigate(-1)}
+      className="p-1 text-slate-600 dark:text-slate-400"
+      aria-label="Go back"
+    >
+      <ChevronLeft className="w-6 h-6" />
+    </button>
+
+    <div className="min-w-0">
+      <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">
+        Loyalty Marketplace
+      </h1>
+      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+        Spend Your BluePoints
+      </p>
+    </div>
+  </div>
+
+  <button
+    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-600 dark:text-slate-400 relative"
+    aria-label="Notifications"
+  >
+    <Bell className="w-5 h-5" />
+    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-sky-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+  </button>
+</div>j
+        {/* --- END HEADER SECTION --- */}
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-6">
-            {/* Points Balance Card */}
+            {/* Points Balance */}
             <div className="bg-gradient-to-br from-sky-400 via-sky-500 to-sky-600 rounded-2xl p-6 text-white shadow-lg shadow-sky-500/25">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -132,7 +153,7 @@ export function Loyalty() {
                 </div>
                 <button
                   onClick={fetchRewards}
-                  className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+                  className="p-2 bg-white/20 rounded-lg hover:bg-white/30"
                 >
                   <RefreshCw className="w-5 h-5" />
                 </button>
@@ -140,7 +161,7 @@ export function Loyalty() {
             </div>
 
             {/* Category Filter */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto pb-2">
               {categories.map((cat) => (
                 <button
                   key={cat}
@@ -165,7 +186,7 @@ export function Loyalty() {
             ) : filteredItems.length === 0 ? (
               <div className="text-center py-12">
                 <Gift className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-                <p className="text-slate-500 dark:text-slate-400 font-medium">No rewards available</p>
+                <p className="text-slate-500 dark:text-slate-400">No rewards available</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -179,7 +200,7 @@ export function Loyalty() {
                       onClick={() => isAvailable && canAfford && setSelectedItem(reward)}
                       disabled={!isAvailable || !canAfford}
                       className={cn(
-                        'relative p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all text-left group',
+                        'relative p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all text-left',
                         isAvailable && canAfford
                           ? 'border-slate-100 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-600 hover:shadow-lg'
                           : 'border-slate-100 dark:border-slate-800 opacity-60 cursor-not-allowed'
@@ -206,25 +227,48 @@ export function Loyalty() {
         </main>
       </div>
 
-      {/* Modals & Components */}
+      {/* Redeem Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Redeem Reward</h3>
-              <button onClick={() => setSelectedItem(null)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
+                Redeem Reward
+              </h3>
+              <button onClick={() => setSelectedItem(null)}>
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
             </div>
+            
             <div className="mb-4">
-              <h4 className="font-medium text-slate-800 dark:text-white mb-2">{selectedItem.title}</h4>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{selectedItem.description}</p>
+              <h4 className="font-medium text-slate-800 dark:text-white mb-2">
+                {selectedItem.title}
+              </h4>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {selectedItem.description}
+              </p>
             </div>
+
             <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl mb-4">
               <span className="text-slate-600 dark:text-slate-300">Cost</span>
-              <span className="text-xl font-bold text-sky-500">{selectedItem.points_cost} pts</span>
+              <span className="text-xl font-bold text-sky-500">
+                {selectedItem.points_cost} pts
+              </span>
             </div>
+
             <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => setSelectedItem(null)}>Cancel</Button>
-              <Button className="flex-1 bg-sky-500 hover:bg-sky-600" onClick={handleRedeem} disabled={redeeming}>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setSelectedItem(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-sky-500 hover:bg-sky-600"
+                onClick={handleRedeem}
+                disabled={redeeming}
+              >
                 {redeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Redeem'}
               </Button>
             </div>
@@ -232,15 +276,28 @@ export function Loyalty() {
         </div>
       )}
 
+      {/* Success Modal */}
       {showSuccess && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full text-center shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full text-center">
             <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8 text-green-500" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">Success!</h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-4">Your reward has been redeemed.</p>
-            <Button className="w-full bg-sky-500 hover:bg-sky-600" onClick={() => { setShowSuccess(false); setSelectedItem(null); }}>Done</Button>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">
+              Redemption Successful!
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-4">
+              Your reward has been redeemed.
+            </p>
+            <Button
+              className="w-full bg-sky-500 hover:bg-sky-600"
+              onClick={() => {
+                setShowSuccess(false);
+                setSelectedItem(null);
+              }}
+            >
+              Done
+            </Button>
           </div>
         </div>
       )}
