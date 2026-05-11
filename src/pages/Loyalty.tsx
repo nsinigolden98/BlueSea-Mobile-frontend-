@@ -104,17 +104,21 @@ export function Loyalty() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
       <div className="flex-1 flex flex-col min-w-0">
-        <Header
-          title="Loyalty Marketplace"
-          subtitle="Spend Your BluePoints"
-        >
+        {/* Top bar container to hold the back button and the Header side-by-side */}
+        <div className="flex items-center bg-white dark:bg-slate-900 border-b pr-4">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-400"
+            className="p-4 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
+            aria-label="Go back"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
-        </Header>
+          
+          <Header
+            title="Loyalty Marketplace"
+            subtitle="Spend Your BluePoints"
+          />
+        </div>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-6">
@@ -179,7 +183,7 @@ export function Loyalty() {
                       onClick={() => isAvailable && canAfford && setSelectedItem(reward)}
                       disabled={!isAvailable || !canAfford}
                       className={cn(
-                        'relative p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all',
+                        'relative p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all text-left',
                         isAvailable && canAfford
                           ? 'border-slate-100 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-600 hover:shadow-lg'
                           : 'border-slate-100 dark:border-slate-800 opacity-60 cursor-not-allowed'
