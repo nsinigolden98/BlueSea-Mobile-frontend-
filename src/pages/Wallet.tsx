@@ -17,73 +17,85 @@ import {
   Smartphone, 
   CheckCircle2, 
   AlertCircle,
-  WalletCards,
-  BadgeCheck,
-  Sparkles
+  Zap,
+  Globe,
+  Wallet as WalletIcon
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { NIGERIAN_BANKS } from '@/data';
 import { useNavigate } from 'react-router-dom';
 
-// --- BlueSea Connect Mock Data ---
+// --- BlueSea Connect Mock Data (Refined with Visual Branding) ---
 const MOCK_PARTNERS = [
-  {
-    id: 1,
-    name: 'Lumiq',
-    idType: 'username',
-    helper: 'Pay package',
-    label: 'Username',
-    placeholder: 'Enter Lumiq username',
-    logo: 'https://images.unsplash.com/photo-1618005198919-d3d4b5a92eee?q=80&w=400&auto=format&fit=crop',
+  { 
+    id: 1, 
+    name: 'Lumiq', 
+    idType: 'username', 
+    helper: 'Pay package', 
+    label: 'Username', 
+    placeholder: 'Enter Lumiq username', 
+    initials: 'LU',
+    logo: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop',
+    color: '#0ea5e9'
   },
-  {
-    id: 2,
-    name: 'HFM',
-    idType: 'email',
-    helper: 'Fund trading',
-    label: 'Email',
-    placeholder: 'Enter HFM email',
-    logo: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=400&auto=format&fit=crop',
+  { 
+    id: 2, 
+    name: 'HFM', 
+    idType: 'email', 
+    helper: 'Fund trading', 
+    label: 'Email', 
+    placeholder: 'Enter HFM email', 
+    initials: 'HF',
+    logo: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=2064&auto=format&fit=crop',
+    color: '#ef4444'
   },
-  {
-    id: 3,
-    name: 'Modis',
-    idType: 'memberId',
-    helper: 'Top up account',
-    label: 'Member ID',
-    placeholder: 'Enter Modis member ID',
-    logo: 'https://images.unsplash.com/photo-1556740749-887f6717d7e4?q=80&w=400&auto=format&fit=crop',
+  { 
+    id: 3, 
+    name: 'Modis', 
+    idType: 'memberId', 
+    helper: 'Top up account', 
+    label: 'Member ID', 
+    placeholder: 'Enter Modis member ID', 
+    initials: 'MO',
+    logo: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop',
+    color: '#8b5cf6'
   },
-  {
-    id: 4,
-    name: 'NovaPay',
-    idType: 'phone',
-    helper: 'Send payment',
-    label: 'Phone Number',
-    placeholder: 'Enter phone number',
-    logo: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=400&auto=format&fit=crop',
+  { 
+    id: 4, 
+    name: 'NovaPay', 
+    idType: 'phone', 
+    helper: 'Send payment', 
+    label: 'Phone Number', 
+    placeholder: 'Enter phone number', 
+    initials: 'NP',
+    logo: 'https://images.unsplash.com/photo-1633158829585-23ba8f7c8caf?q=80&w=2070&auto=format&fit=crop',
+    color: '#10b981'
   },
-  {
-    id: 5,
-    name: 'LynkPro',
-    idType: 'email',
-    helper: 'Premium access',
-    label: 'Email',
-    placeholder: 'Enter email address',
-    logo: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=400&auto=format&fit=crop',
+  { 
+    id: 5, 
+    name: 'LynkPro', 
+    idType: 'email', 
+    helper: 'Premium access', 
+    label: 'Email', 
+    placeholder: 'Enter email address', 
+    initials: 'LP',
+    logo: 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2029&auto=format&fit=crop',
+    color: '#f59e0b'
   },
 ];
+
+const MOCK_PARTNER_USERS: Record<string, { id: string, name: string }[]> = {
+  'Lumiq': [{ id: 'alex99', name: 'Alex Johnson' }, { id: 'sarah_m', name: 'Sarah Miller' }],
+  'HFM': [{ id: 'trade@hfm.com', name: 'Global Markets Ltd' }, { id: 'invest@hfm.com', name: 'Capital Group' }],
+  'Modis': [{ id: 'MOD-7721', name: 'David Chen' }, { id: 'MOD-8832', name: 'Elena Rodriguez' }],
+  'NovaPay': [{ id: '08012345678', name: 'Samuel Okoro' }, { id: '09087654321', name: 'Blessing Ade' }],
+  'LynkPro': [{ id: 'pro@lynk.io', name: 'Professional Services' }, { id: 'admin@lynk.io', name: 'System Admin' }],
+};
 
 export function Wallet() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [cardModalOpen, setCardModalOpen] = useState(false);
-const [savedCard, setSavedCard] = useState<{ name: string; number: string; expiry: string } | null>(null);
-const [newCard, setNewCard] = useState({ name: '', number: '', expiry: '', cvv: '' });
-const [googlePayModalOpen, setGooglePayModalOpen] = useState(false);
-const [centeredPartner, setCenteredPartner] = useState<number>(1);
-
 
   // --- States for the layout ---
   const [accountLoading, setAccountLoading] = useState(false);
@@ -129,11 +141,16 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
   const [connectPin, setConnectPin] = useState('');
   const [connectStatus, setConnectStatus] = useState<'idle' | 'loading' | 'success' | 'failure'>('idle');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
 
   // --- Card Support States ---
   const [cardModalOpen, setCardModalOpen] = useState(false);
+  const [googlePayModalOpen, setGooglePayModalOpen] = useState(false);
   const [savedCard, setSavedCard] = useState<{ name: string; number: string; expiry: string } | null>(null);
   const [newCard, setNewCard] = useState({ name: '', number: '', expiry: '', cvv: '' });
+
+  // --- Staged Flow Visibility ---
+  const [showConnectForm, setShowConnectForm] = useState(false);
 
   useEffect(() => {
     if (message) {
@@ -321,6 +338,15 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
     }
   }, [selectedPartner, connectIdentifier]);
 
+  // Progressive Disclosure for Connect Flow
+  useEffect(() => {
+    if (selectedPartner) {
+      setTimeout(() => setShowConnectForm(true), 50);
+    } else {
+      setShowConnectForm(false);
+    }
+  }, [selectedPartner]);
+
   const handleConnectPayment = () => {
     setConnectStatus('loading');
     setTimeout(() => {
@@ -335,24 +361,38 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
     setConnectPin('');
     setIsConnectConfirmOpen(false);
     setConnectStatus('idle');
+    setShowConnectForm(false);
   };
 
+  // Carousel Scroll Listener
+  const handleCarouselScroll = () => {
+    if (!scrollRef.current) return;
+    const scrollLeft = scrollRef.current.scrollLeft;
+    const itemWidth = 128 + 16; // w-32 + gap-4
+    const index = Math.round(scrollLeft / itemWidth);
+    setActiveCarouselIndex(index);
+  };
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col">
       <style dangerouslySetInnerHTML={{ __html: `
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .snap-x { scroll-snap-type: x mandatory; }
+        .snap-center { scroll-snap-align: center; }
       ` }} />
 
       {/* MATCHED CART HEADER */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 py-4">
+      <header className="sticky top-0 z-40 bg-white dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 px-4 py-4">
         <div className="max-w-3xl mx-auto flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-slate-100 rounded-full">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-90"
+          >
             <ChevronLeft className="w-6 h-6" />
           </button>
           <div>
-            <h1 className="text-xl font-bold">Wallet</h1>
-            <p className="text-xs text-slate-500">Manage your BlueSea funds</p>
+            <h1 className="text-xl font-bold tracking-tight">Wallet</h1>
+            <p className="text-[10px] uppercase tracking-[0.1em] font-bold text-slate-400 dark:text-slate-500">Manage your BlueSea funds</p>
           </div>
         </div>
       </header>
@@ -362,302 +402,464 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
           
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             {/* CARD 1: FUNDING DETAILS */}
-            <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 flex flex-col justify-between shadow-sm">
+            <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all hover:shadow-md">
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Funding Details</h3>
-                  <Landmark className="h-4 w-4 text-sky-500" />
+                  <div className="p-1.5 bg-sky-500/10 rounded-lg">
+                    <Landmark className="h-3.5 w-3.5 text-sky-500" />
+                  </div>
                 </div>
                 
                 {accountRequested ? (
-                  <div className="text-center p-4 bg-sky-500/5 border border-sky-500/10 rounded-xl">
+                  <div className="text-center p-6 bg-sky-500/5 border border-sky-500/10 rounded-2xl animate-pulse">
                     <p className="text-sky-500 font-bold text-sm">Account Coming Soon</p>
                     <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">Processing Request</p>
                   </div>
                 ) : (
-                  <div className="text-center space-y-3">
-                    <div className="w-10 h-10 bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-full flex items-center justify-center mx-auto">
-                      <Landmark className="h-5 w-5 text-sky-500" />
+                  <div className="text-center space-y-4">
+                    <div className="w-12 h-12 bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                      <Landmark className="h-6 w-6 text-sky-500" />
                     </div>
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Request account number</h4>
-                    <p className="text-[11px] text-slate-500 px-2 leading-relaxed">Get a dedicated virtual account for automated funding.</p>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Virtual Account</h4>
+                      <p className="text-[11px] text-slate-500 mt-1 px-4 leading-relaxed">Generate a dedicated account for instant automated wallet funding.</p>
+                    </div>
                     <Button 
                       onClick={handleRequestAccount}
                       disabled={accountLoading}
-                      className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-10 text-xs font-bold border border-slate-200 dark:border-white/5"
+                      className="w-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-11 text-xs font-bold border border-slate-200 dark:border-white/10 shadow-sm transition-all active:scale-[0.98]"
                     >
-                      {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Account'}
+                     {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Account'}
                     </Button>
                   </div>
                 )}
               </div>
             </div>
-                         {/* CARD 2: REUSED BALANCE CARD COMPONENT */}
-            <div className="lg:col-span-3 relative">
-              {/* BALANCE CARD ENHANCEMENT: UTILITY CHIPS */}
-              <div className="absolute top-5 right-12 md:right-16 flex gap-1.5 z-10 pointer-events-auto">
+
+            {/* CARD 2: REUSED BALANCE CARD COMPONENT */}
+            <div className="lg:col-span-3 relative group">
+              {/* BALANCE CARD ENHANCEMENT: PREMIUM UTILITY CHIPS */}
+              <div className="absolute top-6 right-8 md:right-10 flex gap-2 z-20 pointer-events-auto">
                 <button 
                   onClick={() => setCardModalOpen(true)}
-                  className="flex items-center gap-1 px-2 py-1 bg-white/40 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-full text-[9px] font-bold text-slate-700 dark:text-slate-300 hover:bg-white/60 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full text-[10px] font-bold text-white shadow-lg hover:bg-white/20 transition-all active:scale-90"
                 >
-                  <CreditCard className="w-2.5 h-2.5" />
-                  Card
+                  <CreditCard className="w-3 h-3" />
+                  <span>Card</span>
                 </button>
-                <button className="flex items-center gap-1 px-2 py-1 bg-white/40 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-full text-[9px] font-bold text-slate-700 dark:text-slate-300 hover:bg-white/60 transition-colors">
-                  <Smartphone className="w-2.5 h-2.5" />
-                  Google Pay
+                <button 
+                  onClick={() => setGooglePayModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full text-[10px] font-bold text-white shadow-lg hover:bg-white/20 transition-all active:scale-90"
+                >
+                  <Smartphone className="w-3 h-3" />
+                  <span>G-Pay</span>
                 </button>
               </div>
               <BalanceCard
                 showActions={true}
                 onDeposit={handleDeposit}
                 onWithdraw={() => setShowWithdrawModal(true)}
-                className="h-full border border-slate-200 dark:border-white/5"
+                className="h-full border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden"
               />
             </div>
           </div>
 
           {/* BlueSea Connect Section */}
-          <section className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-sm transition-all duration-300">
-            <div className="p-5 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">BlueSea Connect</h3>
-                <p className="text-slate-500 text-[11px]">Pay partner platforms from your wallet</p>
+          <section className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] overflow-hidden shadow-sm transition-all duration-300">
+            <div className="p-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-sky-500 rounded-xl shadow-lg shadow-sky-500/20">
+                  <Zap className="w-4 h-4 text-white fill-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">BlueSea Connect</h3>
+                  <p className="text-slate-500 text-[10px] font-medium">Instant partner platform payments</p>
+                </div>
               </div>
               <button 
                 onClick={() => setIsSeeAllOpen(true)}
-                className="text-[10px] font-bold text-sky-500 hover:text-sky-600 px-2 py-1"
+                className="text-[10px] font-bold text-sky-500 bg-sky-500/10 hover:bg-sky-500 hover:text-white rounded-lg px-3 py-1.5 transition-all active:scale-95"
               >
                 See all
               </button>
             </div>
 
             {/* Featured Partners */}
-            <div className="px-5 pb-5">
+            <div className="px-6 pb-6">
               <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1">
                 {MOCK_PARTNERS.slice(0, 3).map((partner) => (
                   <button
                     key={partner.id}
                     onClick={() => setSelectedPartner(partner)}
-                    className={`flex-shrink-0 flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                    className={`flex-shrink-0 flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-300 ${
                       selectedPartner?.id === partner.id 
-                      ? 'bg-white dark:bg-slate-800 border-sky-500 shadow-sm' 
-                      : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 hover:border-slate-300'
-                    } min-w-[140px]`}
+                      ? 'bg-white dark:bg-slate-800 border-sky-500 shadow-xl shadow-sky-500/10 scale-105 z-10' 
+                      : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
+                    } min-w-[130px]`}
                   >
-                    <div className="w-8 h-8 rounded-full bg-sky-500/10 text-sky-500 flex items-center justify-center text-[10px] font-bold border border-sky-500/20">
-                      {partner.initials}
+                    <div className="relative">
+                      <div 
+                        className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center shadow-inner"
+                      >
+                        <img 
+                          src={partner.logo} 
+                          alt={partner.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${partner.name}&background=random`;
+                          }}
+                        />
+                      </div>
+                      {selectedPartner?.id === partner.id && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                        </div>
+                      )}
                     </div>
                     <div className="text-left">
-                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-none">{partner.name}</p>
-                      <p className="text-[9px] text-slate-500 mt-1">{partner.helper}</p>
+                      <p className="text-xs font-black text-slate-800 dark:text-slate-200 leading-none">{partner.name}</p>
+                      <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{partner.helper}</p>
                     </div>
                   </button>
                 ))}
               </div>
- {/* Inline Expandable Panel */}
-              {selectedPartner && (
-                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/5 space-y-4 animate-in slide-in-from-top-2 duration-300">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{selectedPartner.label}</Label>
-                    <div className="relative">
-                      <Input
-                        value={connectIdentifier}
-                        onChange={(e) => setConnectIdentifier(e.target.value)}
-                        placeholder={selectedPartner.placeholder}
-                        className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/5 rounded-xl h-11 text-xs focus:ring-sky-500"
-                      />
-                      {connectIdentifier && !verifiedPartnerUser && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">User not found</span>
-                      )}
+
+              {/* Inline Expandable Panel - Progressive Disclosure */}
+              {selectedPartner && showConnectForm && (
+                <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/10 space-y-5 animate-in slide-in-from-top-4 fade-in duration-500 ease-out">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">
+                        {selectedPartner.label}
+                      </Label>
+                      <div className="relative group">
+                        <Input
+                          value={connectIdentifier}
+                          onChange={(e) => setConnectIdentifier(e.target.value)}
+                          placeholder={selectedPartner.placeholder}
+                          className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-xs font-bold focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
+                        />
+                        {connectIdentifier && !verifiedPartnerUser && (
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-red-400 uppercase tracking-tighter">Not Found</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Amount (₦)</Label>
+                      <div className="relative group">
+                        <Input
+                          type="number"
+                          value={connectAmount}
+                          onChange={(e) => setConnectAmount(e.target.value)}
+                          placeholder="0.00"
+                          className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-sm font-black focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
+                        />
+                        <WalletIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
+                      </div>
                     </div>
                   </div>
 
                   {verifiedPartnerUser && (
-                    <div className="p-3 bg-sky-500/5 border border-sky-500/10 rounded-xl flex items-center gap-3 animate-in fade-in zoom-in-95">
-                      <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                        <User className="w-4 h-4 text-slate-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{verifiedPartnerUser.name}</p>
-                          <span className="text-[8px] px-1 bg-sky-500/20 text-sky-500 rounded font-bold uppercase">Verified</span>
+                    <div className="p-4 bg-sky-500/5 border border-sky-500/20 rounded-2xl flex items-center justify-between animate-in zoom-in-95 duration-300">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm border border-sky-500/20">
+                          <User className="w-5 h-5 text-sky-500" />
                         </div>
-                        <p className="text-[10px] text-slate-500 truncate">{verifiedPartnerUser.id}</p>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-black text-slate-800 dark:text-slate-200">{verifiedPartnerUser.name}</p>
+                            <CheckCircle2 className="w-3 h-3 text-sky-500" />
+                          </div>
+                          <p className="text-[10px] font-bold text-slate-400">{verifiedPartnerUser.id}</p>
+                        </div>
+                      </div>
+                      <div className="hidden md:block">
+                        <div className="px-2 py-1 bg-sky-500 text-white rounded text-[8px] font-black uppercase tracking-widest">Verified Recipient</div>
                       </div>
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Amount (₦)</Label>
-                    <Input
-                      type="number"
-                      value={connectAmount}
-                      onChange={(e) => setConnectAmount(e.target.value)}
-                      placeholder="0.00"
-                      className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/5 rounded-xl h-11 text-sm font-bold focus:ring-sky-500"
-                    />
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      onClick={() => setSelectedPartner(null)}
+                      className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-500 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => setIsConnectConfirmOpen(true)}
+                      disabled={!verifiedPartnerUser || !connectAmount}
+                      className="flex-[2] bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-12 text-xs font-black shadow-lg shadow-sky-500/20 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      Continue
+                    </Button>
                   </div>
-
-                  <Button
-                    onClick={() => setIsConnectConfirmOpen(true)}
-                    disabled={!verifiedPartnerUser || !connectAmount}
-                    className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-xl h-11 text-xs font-bold transition-all active:scale-[0.98]"
-                  >
-                    Continue
-                  </Button>
                 </div>
               )}
             </div>
           </section>
-
           {/* Internal Transfer Button */}
           <button 
             onClick={() => setTransferModalOpen(true)}
-            className="group w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm"
+            className="group w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] p-6 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm hover:shadow-md"
           >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl group-hover:bg-sky-500 group-hover:text-white transition-all">
+            <div className="flex items-center gap-5">
+              <div className="p-4 bg-white dark:bg-slate-800 text-sky-500 rounded-2xl shadow-sm group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 group-hover:rotate-12">
                 <Send className="h-5 w-5" />
               </div>
               <div className="text-left">
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Internal Transfer</h3>
-                <p className="text-slate-500 text-[11px]">Instant send to BlueSea users</p>
+                <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">Internal Transfer</h3>
+                <p className="text-slate-500 text-[10px] font-medium uppercase tracking-wider">Instant send to BlueSea users</p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-slate-400 dark:text-slate-600 group-hover:text-sky-500 transition-colors" />
+            <div className="p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+              <ChevronRight className="h-4 w-4 text-sky-500" />
+            </div>
           </button>
 
           {/* History Section */}
-          <div className="space-y-3">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-2">
+               <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Recent Activity</h3>
+               <Globe className="w-3.5 h-3.5 text-slate-300" />
+            </div>
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-2 shadow-sm">
               <TransactionList />
             </div>
           </div>
         </div>
       </main>
 
-      {/* BlueSea Connect See All Modal */}
+      {/* --- PREMIUM CAROUSEL MODAL (SEE ALL) --- */}
       {isSeeAllOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">All Partners</h3>
-              <button onClick={() => setIsSeeAllOpen(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
-                <X className="w-4 h-4 text-slate-400" />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-xl bg-slate-950/40 transition-all duration-500">
+          <div 
+            className="absolute inset-0 cursor-pointer" 
+            onClick={() => setIsSeeAllOpen(false)} 
+          />
+          <div className="relative bg-white dark:bg-slate-900 sm:rounded-[3rem] rounded-t-[3rem] p-8 w-full max-w-lg shadow-2xl animate-in slide-in-from-bottom-10 duration-500 border-t sm:border border-slate-200 dark:border-white/10">
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Select Partner</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Direct Connection</p>
+              </div>
+              <button 
+                onClick={() => setIsSeeAllOpen(false)} 
+                className="p-3 bg-slate-50 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 rounded-2xl transition-all active:scale-90"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
             
             <div 
               ref={scrollRef}
-              className="flex gap-4 overflow-x-auto snap-x scrollbar-hide py-4 px-10"
+              onScroll={handleCarouselScroll}
+              className="flex gap-4 overflow-x-auto snap-x scrollbar-hide py-12 px-[35%] transition-all"
             >
-              {MOCK_PARTNERS.map((partner) => (
-                <button
-                  key={partner.id}
-                  onClick={() => {
-                    setSelectedPartner(partner);
-                    setIsSeeAllOpen(false);
-                  }}
-                  className="flex-shrink-0 snap-center flex flex-col items-center gap-3 w-32 transition-all active:scale-95"
-                >
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-lg font-black transition-all ${
-                    selectedPartner?.id === partner.id 
-                    ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' 
-                    : 'bg-slate-100 dark:bg-slate-800 text-sky-500 border border-slate-200 dark:border-white/5'
-                  }`}>
-                    {partner.initials}
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{partner.name}</p>
-                    <p className="text-[9px] text-slate-500">{partner.helper}</p>
-                  </div>
-                </button>
-              ))}
+              {MOCK_PARTNERS.map((partner, index) => {
+                const isActive = activeCarouselIndex === index;
+                return (
+                  <button
+                    key={partner.id}
+                    onClick={() => {
+                      if (isActive) {
+                        setSelectedPartner(partner);
+                        setIsSeeAllOpen(false);
+                      } else {
+                        scrollRef.current?.scrollTo({
+                          left: index * (128 + 16),
+                          behavior: 'smooth'
+                        });
+                      }
+                    }}
+                    className={`flex-shrink-0 snap-center flex flex-col items-center gap-6 w-32 transition-all duration-500 ease-out ${
+                      isActive ? 'scale-125 opacity-100 translate-y-[-8px]' : 'scale-90 opacity-40 grayscale-[0.5]'
+                    }`}
+                  >
+                    <div className="relative group">
+                      <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center p-0.5 overflow-hidden transition-all duration-500 ${
+                        isActive 
+                        ? 'bg-sky-500 shadow-2xl shadow-sky-500/40 rotate-0' 
+                        : 'bg-slate-200 dark:bg-slate-800 rotate-[-10deg]'
+                      }`}>
+                        <img 
+                          src={partner.logo} 
+                          alt={partner.name}
+                          className="w-full h-full object-cover rounded-[1.8rem]"
+                        />
+                        {isActive && (
+                          <div className="absolute inset-0 bg-gradient-to-t from-sky-500/40 to-transparent" />
+                        )}
+                      </div>
+                      {isActive && (
+                         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-900 rounded-full p-1 shadow-lg border border-sky-100 dark:border-white/10">
+                            <CheckCircle2 className="w-4 h-4 text-sky-500 fill-sky-500/10" />
+                         </div>
+                      )}
+                    </div>
+                    <div className={`text-center transition-all duration-500 ${isActive ? 'translate-y-2' : ''}`}>
+                      <p className={`text-xs font-black tracking-tight ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
+                        {partner.name}
+                      </p>
+                      {isActive && (
+                        <p className="text-[9px] font-bold text-sky-500 uppercase tracking-tighter mt-1 animate-in fade-in slide-in-from-top-1">
+                          Tap to select
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-            <div className="mt-4 text-center">
-              <p className="text-[10px] text-slate-400 font-medium">Scroll to browse platforms</p>
+
+            <div className="mt-12 flex flex-col items-center gap-4">
+              <div className="flex gap-1.5">
+                {MOCK_PARTNERS.map((_, i) => (
+                  <div 
+                    key={i} 
+                    className={`h-1 rounded-full transition-all duration-500 ${
+                      activeCarouselIndex === i ? 'w-6 bg-sky-500' : 'w-1.5 bg-slate-200 dark:bg-slate-800'
+                    }`} 
+                  />
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] animate-pulse">Swipe to explore</p>
             </div>
           </div>
         </div>
       )}
 
+      {/* --- GOOGLE PAY COMING SOON MODAL --- */}
+      {googlePayModalOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 backdrop-blur-2xl bg-slate-950/40">
+          <div 
+            className="absolute inset-0" 
+            onClick={() => setGooglePayModalOpen(false)} 
+          />
+          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-10 w-full max-w-sm shadow-2xl text-center animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner border border-slate-100 dark:border-white/5">
+              <Smartphone className="w-10 h-10 text-sky-500" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Google Pay</h3>
+            <div className="px-6 py-2 bg-sky-500/10 rounded-full inline-block mt-3">
+               <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">Coming Soon</p>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-6 leading-relaxed px-4">
+              We're working on bringing seamless Google Pay integration to your BlueSea wallet. Stay tuned for updates!
+            </p>
+            <Button 
+              onClick={() => setGooglePayModalOpen(false)}
+              className="w-full mt-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 h-14 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-950/20 dark:shadow-white/5 active:scale-95 transition-all"
+            >
+              Got it
+            </Button>
+          </div>
+        </div>
+      )}
       {/* BlueSea Connect Confirmation Modal */}
       {isConnectConfirmOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
             {connectStatus === 'idle' ? (
               <>
-                <div className="text-center mb-6">
-                  <div className="w-12 h-12 bg-sky-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <ShieldCheck className="w-6 h-6 text-sky-500" />
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-sky-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-sky-500/20">
+                    <ShieldCheck className="w-8 h-8 text-sky-500" />
                   </div>
-                  <h3 className="text-lg font-bold">Confirm Payment</h3>
-                  <p className="text-xs text-slate-500">Review details before proceeding</p>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Confirm Payment</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Authorization Required</p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 space-y-3 mb-6 border border-slate-200 dark:border-white/5">
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-400 font-bold uppercase tracking-wider">Partner</span>
-                    <span className="text-slate-900 dark:text-white font-bold">{selectedPartner?.name}</span>
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 space-y-4 mb-8 border border-slate-200 dark:border-white/5 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-5">
+                    <img src={selectedPartner?.logo} alt="" className="w-20 h-20 object-contain" />
                   </div>
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-400 font-bold uppercase tracking-wider">Recipient</span>
-                    <span className="text-slate-900 dark:text-white font-bold">{verifiedPartnerUser?.name}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Platform</span>
+                    <div className="flex items-center gap-2">
+                       <img src={selectedPartner?.logo} className="w-4 h-4 rounded-full object-cover" alt="" />
+                       <span className="text-slate-900 dark:text-white font-black text-xs">{selectedPartner?.name}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-400 font-bold uppercase tracking-wider">ID</span>
-                    <span className="text-slate-900 dark:text-white font-bold">{verifiedPartnerUser?.id}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Recipient</span>
+                    <span className="text-slate-900 dark:text-white font-black text-xs">{verifiedPartnerUser?.name}</span>
                   </div>
-                  <div className="pt-2 border-t border-slate-200 dark:border-white/5 flex justify-between items-center">
-                    <span className="text-slate-400 font-bold uppercase tracking-wider text-[11px]">Amount</span>
-                    <span className="text-sky-500 font-black text-lg">₦{Number(connectAmount).toLocaleString()}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Reference</span>
+                    <span className="text-slate-900 dark:text-white font-bold text-xs">{verifiedPartnerUser?.id}</span>
+                  </div>
+                  <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex justify-between items-center">
+                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Total Amount</span>
+                    <span className="text-sky-500 font-black text-xl">₦{Number(connectAmount).toLocaleString()}</span>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="max-w-[200px] mx-auto">
+                <div className="space-y-6">
+                  <div className="max-w-[240px] mx-auto">
                     <input
                       type="password"
                       maxLength={4}
                       placeholder="••••"
-                      className="w-full h-14 bg-slate-100 dark:bg-slate-800 rounded-xl text-center text-2xl tracking-[0.8em] font-black focus:ring-2 focus:ring-sky-500 outline-none"
+                      className="w-full h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl text-center text-3xl tracking-[0.8em] font-black focus:ring-2 focus:ring-sky-500 outline-none border-none transition-all"
                       value={connectPin}
                       onChange={(e) => setConnectPin(e.target.value.replace(/\D/g, ''))}
                     />
-                    <p className="text-[10px] text-center text-slate-400 font-bold mt-2">Enter 4-digit PIN</p>
+                    <p className="text-[9px] text-center text-slate-400 font-black uppercase tracking-[0.2em] mt-3">Enter Transaction PIN</p>
                   </div>
-                  <div className="flex gap-3">
-                    <Button onClick={() => setIsConnectConfirmOpen(false)} className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 h-12 rounded-xl text-xs font-bold">Cancel</Button>
+                  <div className="flex gap-4">
+                    <Button 
+                      onClick={() => setIsConnectConfirmOpen(false)} 
+                      className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-500 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+                    >
+                      Cancel
+                    </Button>
                     <Button 
                       disabled={connectPin.length < 4}
                       onClick={handleConnectPayment}
-                      className="flex-1 bg-sky-500 hover:bg-sky-600 text-white h-12 rounded-xl text-xs font-bold"
+                      className="flex-[2] bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
                     >
-                      Confirm Payment
+                      Pay Now
                     </Button>
                   </div>
                 </div>
               </>
             ) : connectStatus === 'loading' ? (
-              <div className="py-12 flex flex-col items-center justify-center gap-4">
-                <LoadingSpinner size="lg" text="Processing..." />
+              <div className="py-16 flex flex-col items-center justify-center gap-6">
+                <div className="relative">
+                  <div className="w-20 h-20 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin" />
+                  <Zap className="absolute inset-0 m-auto w-8 h-8 text-sky-500 animate-pulse" />
+                </div>
+                <div className="text-center">
+                  <h4 className="text-lg font-black tracking-tight">Processing Payment</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Please do not close this window</p>
+                </div>
               </div>
             ) : (
-              <div className="text-center py-6 animate-in zoom-in-95">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                  connectStatus === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+              <div className="text-center py-10 animate-in zoom-in-95 duration-500">
+                <div className={`w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 ${
+                  connectStatus === 'success' ? 'bg-green-500 shadow-2xl shadow-green-500/20' : 'bg-red-500 shadow-2xl shadow-red-500/20'
                 }`}>
-                  {connectStatus === 'success' ? <CheckCircle2 className="w-10 h-10" /> : <AlertCircle className="w-10 h-10" />}
-                </div>
-                <h3 className="text-xl font-bold">{connectStatus === 'success' ? 'Payment Successful' : 'Payment Failed'}</h3>
-                <p className="text-xs text-slate-500 mt-2 px-6">
                   {connectStatus === 'success' 
-                    ? `Successfully sent ₦${connectAmount} to ${verifiedPartnerUser?.name}.`
-                    : 'The transaction could not be completed at this time. Please try again.'}
+                    ? <CheckCircle2 className="w-12 h-12 text-white" /> 
+                    : <AlertCircle className="w-12 h-12 text-white" />
+                  }
+                </div>
+                <h3 className="text-2xl font-black tracking-tight">
+                  {connectStatus === 'success' ? 'Payment Sent!' : 'Payment Failed'}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 px-8 leading-relaxed font-medium">
+                  {connectStatus === 'success' 
+                    ? `Successfully processed ₦${Number(connectAmount).toLocaleString()} for ${verifiedPartnerUser?.name} on ${selectedPartner?.name}.`
+                    : 'We encountered an error while processing your payment. Please check your balance or try again later.'}
                 </p>
-                <Button onClick={resetConnect} className="w-full mt-8 bg-slate-900 dark:bg-white text-white dark:text-slate-900 h-12 rounded-xl text-xs font-black">
-                  Done
+                <Button 
+                  onClick={resetConnect} 
+                  className="w-full mt-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 h-14 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+                >
+                  Return to Wallet
                 </Button>
               </div>
             )}
@@ -667,73 +869,86 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
 
       {/* Card Support Modal */}
       {cardModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Card Management</h3>
-              <button onClick={() => setCardModalOpen(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl bg-slate-950/40">
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl animate-in zoom-in-95 border border-slate-200 dark:border-white/10">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">Saved Cards</h3>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Manage Payment Methods</p>
+              </div>
+              <button onClick={() => setCardModalOpen(false)} className="p-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 rounded-xl transition-all">
                 <X className="w-4 h-4 text-slate-400" />
               </button>
             </div>
 
             {savedCard ? (
-              <div className="space-y-6">
-                <div className="relative h-44 w-full bg-slate-900 rounded-2xl p-6 overflow-hidden border border-white/10 shadow-xl">
-                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-sky-500/20 rounded-full blur-3xl" />
-                  <div className="flex justify-between items-start mb-10">
-                    <div className="w-10 h-6 bg-slate-700/50 rounded-md" />
-                    <CreditCard className="w-6 h-6 text-white/20" />
+              <div className="space-y-8">
+                <div className="relative h-48 w-full bg-slate-900 rounded-[2rem] p-8 overflow-hidden border border-white/10 shadow-2xl transform hover:rotate-1 transition-transform">
+                  <div className="absolute -right-10 -top-10 w-48 h-48 bg-sky-500/30 rounded-full blur-[80px]" />
+                  <div className="flex justify-between items-start mb-12 relative z-10">
+                    <div className="w-12 h-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-lg flex items-center justify-center">
+                       <div className="w-6 h-4 bg-yellow-500/50 rounded-sm" />
+                    </div>
+                    <CreditCard className="w-6 h-6 text-white/40" />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-white text-lg font-black tracking-widest">•••• •••• •••• {savedCard.number.slice(-4)}</p>
-                    <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider">{savedCard.name}</p>
+                  <div className="space-y-1 relative z-10">
+                    <p className="text-white text-xl font-black tracking-[0.2em]">•••• •••• •••• {savedCard.number.slice(-4)}</p>
+                    <div className="flex justify-between items-end mt-4">
+                       <p className="text-[10px] text-white/60 font-black uppercase tracking-widest">{savedCard.name}</p>
+                       <p className="text-[10px] text-white/40 font-bold">{savedCard.expiry}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex justify-center gap-4">
-                   <div className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md text-[8px] font-black text-slate-500">VISA</div>
-                   <div className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md text-[8px] font-black text-slate-500">MASTERCARD</div>
-                   <div className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md text-[8px] font-black text-slate-500">VERVE</div>
+                <div className="flex justify-center gap-6">
+                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1">Visa</span>
+                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1">Mastercard</span>
+                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1">Verve</span>
                 </div>
-                <Button onClick={() => setSavedCard(null)} className="w-full bg-red-500/10 text-red-500 h-11 rounded-xl text-xs font-bold border border-red-500/20">Remove Card</Button>
+                <Button 
+                  onClick={() => setSavedCard(null)} 
+                  className="w-full bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-red-500/20 transition-all shadow-lg shadow-red-500/5"
+                >
+                  Remove Card
+                </Button>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-bold text-slate-400 ml-1">Cardholder Name</Label>
+              <div className="space-y-5">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cardholder Name</Label>
                     <Input 
                       value={newCard.name}
                       onChange={(e) => setNewCard({...newCard, name: e.target.value})}
-                      placeholder="John Doe" 
-                      className="bg-slate-50 dark:bg-slate-800 h-11 text-xs" 
+                      placeholder="e.g. John Doe" 
+                      className="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl h-12 text-xs font-bold" 
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-bold text-slate-400 ml-1">Card Number</Label>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Card Number</Label>
                     <Input 
                       value={newCard.number}
                       onChange={(e) => setNewCard({...newCard, number: e.target.value.replace(/\D/g, '').slice(0, 16)})}
                       placeholder="0000 0000 0000 0000" 
-                      className="bg-slate-50 dark:bg-slate-800 h-11 text-xs" 
+                      className="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl h-12 text-xs font-bold" 
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-[10px] font-bold text-slate-400 ml-1">Expiry</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry</Label>
                       <Input 
                         value={newCard.expiry}
                         onChange={(e) => setNewCard({...newCard, expiry: e.target.value})}
                         placeholder="MM/YY" 
-                        className="bg-slate-50 dark:bg-slate-800 h-11 text-xs" 
+                        className="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl h-12 text-xs font-bold" 
                       />
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px] font-bold text-slate-400 ml-1">CVV</Label>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">CVV</Label>
                       <Input 
                         value={newCard.cvv}
                         onChange={(e) => setNewCard({...newCard, cvv: e.target.value.replace(/\D/g, '').slice(0, 3)})}
                         placeholder="000" 
-                        className="bg-slate-50 dark:bg-slate-800 h-11 text-xs" 
+                        className="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl h-12 text-xs font-bold" 
                       />
                     </div>
                   </div>
@@ -745,9 +960,9 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
                       setNewCard({ name: '', number: '', expiry: '', cvv: '' });
                     }
                   }}
-                  className="w-full bg-sky-500 hover:bg-sky-600 text-white h-12 rounded-xl text-xs font-black shadow-lg shadow-sky-500/20"
+                  className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-sky-500/20 active:scale-95 transition-all mt-4"
                 >
-                  Add Card
+                  Link Card
                 </Button>
               </div>
             )}
@@ -755,24 +970,24 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
         </div>
       )}
 
-      {/* Modals remain unchanged as requested */}
+      {/* Withdraw Modal */}
       {showWithdrawModal && (
-        <div className="fixed inset-0 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Withdraw Funds</h3>
-              <button onClick={() => setShowWithdrawModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 transition-colors">
+        <div className="fixed inset-0 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-xl flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Withdraw</h3>
+              <button onClick={() => setShowWithdrawModal(false)} className="p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all active:scale-90">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Account Number</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Account Number</Label>
                 <Input
                   type="text"
                   inputMode='numeric'
                   placeholder="0000000000"
-                  className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-white/5 rounded-xl h-12 focus:ring-sky-500 text-slate-900 dark:text-white font-bold"
+                  className="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl h-14 focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white font-black text-lg text-center"
                   value={accountNumber}
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -784,14 +999,17 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Select Bank</Label>
-                <Input
-                  type="text"
-                  placeholder="Search bank name..."
-                  value={bankSearch}
-                  onChange={(e) => setBankSearch(e.target.value)}
-                  className="mb-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-white/5 rounded-xl h-10 text-xs focus:ring-sky-500"
-                />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Bank</Label>
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                  <Input
+                    type="text"
+                    placeholder="Search bank name..."
+                    value={bankSearch}
+                    onChange={(e) => setBankSearch(e.target.value)}
+                    className="bg-slate-50 dark:bg-slate-800 border-none rounded-t-2xl h-12 text-xs font-bold pl-11 focus:ring-sky-500"
+                  />
+                </div>
                 <select
                   value={selectedBank}
                   onChange={(e) => {
@@ -800,9 +1018,9 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
                     setAccountName('');
                     setBankSearch('');
                   }}
-                  className="w-full h-12 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 outline-none font-bold text-sm"
+                  className="w-full h-14 px-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-white/5 rounded-b-2xl text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 outline-none font-black text-sm appearance-none cursor-pointer"
                 >
-<option value="">Select bank</option>
+                  <option value="">Choose your bank</option>
                   {NIGERIAN_BANKS.filter(b => 
                     bankSearch === '' || b.name.toLowerCase().includes(bankSearch.toLowerCase())
                   ).map((bank) => (
@@ -810,32 +1028,43 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
                   ))}
                 </select>
               </div>
-              
               {selectedBank && accountNumber.length === 10 && (
-                <Button onClick={handleVerifyAccount} disabled={verifyingAccount} className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sky-500 dark:text-sky-400 font-bold border border-sky-500/20">
-                  {verifyingAccount ? 'Verifying...' : 'Verify Account'}
+                <Button onClick={handleVerifyAccount} disabled={verifyingAccount} className="w-full bg-sky-500/10 text-sky-500 hover:bg-sky-500 hover:text-white font-black h-12 rounded-2xl border border-sky-500/20 transition-all text-[10px] uppercase tracking-widest">
+                  {verifyingAccount ? 'Verifying Account...' : 'Verify Details'}
                 </Button>
               )}
               {accountVerified && (
-                <div className="p-3 bg-sky-500/5 border border-sky-500/10 rounded-xl">
-                  <p className="text-xs font-bold text-sky-500 dark:text-sky-400 uppercase tracking-wider">{accountName}</p>
+                <div className="p-4 bg-green-500/5 border border-green-500/20 rounded-2xl flex items-center gap-3 animate-in fade-in zoom-in-95">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">{accountName}</p>
                 </div>
               )}
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Amount (₦)</Label>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-white/5 rounded-xl h-14 text-2xl font-black focus:ring-sky-500 text-slate-900 dark:text-white"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                />
-                <p className="text-[10px] text-slate-500 font-bold ml-1">AVAILABLE: ₦{balance.toLocaleString()}</p>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Amount to Withdraw</Label>
+                <div className="relative group">
+                   <Input
+                    type="number"
+                    placeholder="0.00"
+                    className="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl h-16 text-3xl font-black focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white pl-10"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                  />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300 group-focus-within:text-sky-500">₦</span>
+                </div>
+                <div className="flex justify-between px-2">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Available: ₦{balance.toLocaleString()}</p>
+                  <button 
+                    onClick={() => setWithdrawAmount(balance.toString())}
+                    className="text-[10px] text-sky-500 font-black uppercase tracking-widest hover:underline"
+                  >
+                    Withdraw All
+                  </button>
+                </div>
               </div>
               <Button
                 onClick={handleConfirmWithdraw}
                 disabled={withdrawing || !accountVerified || !withdrawAmount || Number(withdrawAmount) > balance}
-                className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-xl h-12 font-black shadow-lg shadow-sky-500/20 active:scale-95 mt-4 transition-all"
+                className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-[1.5rem] h-14 font-black text-xs uppercase tracking-widest shadow-xl shadow-sky-500/20 active:scale-95 mt-6 transition-all"
               >
                 {withdrawing ? 'Processing...' : 'Confirm Withdrawal'}
               </Button>
@@ -846,7 +1075,7 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
               <TransactionModal isSuccess={txStatus} onClose={()=> setIsOpen(false)} toastMessage={toastMessage} />
             </div>
           )}
-          <ToastComponent />
+<ToastComponent />
           <PinComponent type="withdrawal" value={{
             account_name: accountName,
             account_number: accountNumber,
@@ -859,22 +1088,23 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
 
       {/* Deposit Modal */}
       {depositModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60 dark:bg-slate-950/80">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl bg-slate-950/40">
           <div className="absolute inset-0" onClick={() => !processing && setDepositModalOpen(false)} />
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
+          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
             {processing ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <LoadingSpinner size="lg" text="Processing payment..." />
+              <div className="flex flex-col items-center justify-center py-12 gap-6">
+                <LoadingSpinner size="lg" text="Connecting to Secure Gateway..." />
               </div>
             ) : (
               <>
-                <header className="mb-8 text-center">
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Deposit Funds</h2>
-                  <div className="h-1.5 w-10 bg-sky-500 mx-auto rounded-full mt-2" />
+                <header className="mb-10 text-center">
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Add Funds</h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Instant Wallet Funding</p>
                 </header>
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <div className="relative group">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 absolute left-6 top-3 z-10">Amount (₦)</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 absolute left-8 top-4 z-10">Amount to Fund</label>
+                    <span className="absolute left-8 bottom-6 text-3xl font-black text-slate-300 group-focus-within:text-sky-500 transition-colors">₦</span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -884,20 +1114,20 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
                         setDepositError('');
                       }}
                       placeholder="0.00"
-                      className="w-full pl-6 pr-4 pt-9 pb-5 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-slate-900 dark:text-white"
+                      className="w-full pl-16 pr-8 pt-12 pb-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-slate-900 dark:text-white shadow-inner"
                     />
-                    {depositError && <p className="mt-2 text-xs text-red-500 dark:text-red-400 font-bold px-4">{depositError}</p>}
+                    {depositError && <p className="mt-3 text-xs text-red-500 font-black px-6 animate-bounce">{depositError}</p>}
                   </div>
-                  <div className="flex flex-col gap-3 pt-4">
+                  <div className="flex flex-col gap-4 pt-4">
                     <Button 
-                      className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-14 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
+                      className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-[1.5rem] h-16 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
                       onClick={handleFund}
                       disabled={depositing || !depositAmount}
                     >
-                      {depositing ? <LoadingSpinner size="sm" /> : 'Confirm & Proceed'}
+                      {depositing ? <LoadingSpinner size="sm" /> : 'Proceed to Checkout'}
                     </Button>
                     {!depositing && (
-                      <button onClick={handleCancelDeposit} className="text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] py-3">Cancel</button>
+                      <button onClick={handleCancelDeposit} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[10px] font-black uppercase tracking-[0.3em] py-3 transition-colors">Cancel</button>
                     )}
                   </div>
                 </div>
@@ -909,90 +1139,100 @@ const [centeredPartner, setCenteredPartner] = useState<number>(1);
 
       {/* Internal Transfer Modal */}
       {transferModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60 dark:bg-slate-950/80">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl bg-slate-950/40">
           <div className="absolute inset-0" onClick={() => !transferProcessing && setTransferModalOpen(false)} />
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
-            <header className="mb-8 text-center">
+          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
+            <header className="mb-10 text-center">
               <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                {transferStep === 2 ? 'Verify Identity' : 'Transfer Funds'}
+                {transferStep === 2 ? 'Authorize' : 'Send Money'}
               </h2>
-              <div className="h-1.5 w-10 bg-sky-500 mx-auto rounded-full mt-2" />
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">BlueSea Instant Transfer</p>
             </header>
-            <div className="space-y-6">
+            <div className="space-y-8">
               {transferStep === 1 && (
-                <div className="animate-in slide-in-from-bottom-4 space-y-5">
+                <div className="animate-in slide-in-from-bottom-8 duration-500 space-y-6">
                   <div className="relative group">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 absolute left-6 top-3 z-10">Email</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 absolute left-8 top-4 z-10">Recipient Email</label>
                     <input
-                      placeholder="user@bluesea.com"
-                      className="w-full pl-6 pr-12 pt-9 pb-5 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-slate-900 dark:text-white font-bold"
+                      placeholder="e.g. name@bluesea.com"
+                      className="w-full pl-8 pr-14 pt-12 pb-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-slate-900 dark:text-white font-black text-lg shadow-inner"
                       value={transferData.recipient}
                       onChange={(e) => setTransferData({...transferData, recipient: e.target.value})}
                     />
-                    <Search className="absolute right-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <Search className="absolute right-8 bottom-8 h-5 w-5 text-slate-300 group-focus-within:text-sky-500 transition-colors" />
                   </div>
                   <div className="relative group">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 absolute left-6 top-3 z-10">Amount (₦)</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 absolute left-8 top-4 z-10">Amount (₦)</label>
                     <input
                       type="number"
                       placeholder="0.00"
-                      className="w-full pl-6 pr-4 pt-9 pb-5 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-slate-900 dark:text-white"
+                      className="w-full pl-8 pr-8 pt-12 pb-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-slate-900 dark:text-white shadow-inner"
                       value={transferData.amount}
                       onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
                     />
                   </div>
                   {foundUser && (
-                    <div className="p-4 bg-sky-500/5 border border-sky-500/10 rounded-2xl flex items-center gap-4">
-                      <div className="h-12 w-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-white font-black overflow-hidden border border-slate-200 dark:border-white/5">
+                    <div className="p-5 bg-sky-500/5 border border-sky-500/20 rounded-[2rem] flex items-center gap-5 animate-in zoom-in-95">
+                      <div className="h-16 w-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-md overflow-hidden border border-sky-500/20">
                         {foundUser.image ? (
                           <img src={`${API_BASE}${foundUser.image}`} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
-                          <User className="w-5 h-5 text-sky-500" />
+                          <User className="w-7 h-7 text-sky-500" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-bold text-slate-800 dark:text-slate-200 truncate">{foundUser.name}</h4>
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">{foundUser.email}</p>
+                        <div className="flex items-center gap-2">
+                           <h4 className="font-black text-slate-800 dark:text-slate-200 truncate text-lg tracking-tight">{foundUser.name}</h4>
+                           <CheckCircle2 className="w-4 h-4 text-sky-500" />
+                        </div>
+                        <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{foundUser.email}</p>
                       </div>
                     </div>
                   )}
-                  {lookingUp && <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">Looking up user...</div>}
+                  {lookingUp && (
+                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-[2rem] text-center">
+                       <LoadingSpinner size="sm" text="Verifying user address..." />
+                    </div>
+                  )}
                 </div>
               )}
               {transferStep === 2 && (
-                <div className="animate-in slide-in-from-bottom-4 text-center">
-                  <div className="mb-6">
-                    <div className="h-16 w-16 bg-sky-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-sky-500/20">
-                      <ShieldCheck className="h-8 w-8 text-sky-500" />
+                <div className="animate-in slide-in-from-bottom-8 duration-500 text-center">
+                  <div className="mb-10">
+                    <div className="h-24 w-24 bg-sky-500/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-sky-500/20 shadow-inner">
+                      <ShieldCheck className="h-12 w-12 text-sky-500" />
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Confirm <span className="font-black text-slate-900 dark:text-white">₦{transferData.amount}</span> to <span className="font-bold text-sky-500">{foundUser?.name}</span></p>
+                    <div className="px-8">
+                       <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Sending <span className="font-black text-slate-900 dark:text-white text-lg">₦{Number(transferData.amount).toLocaleString()}</span> to</p>
+                       <p className="text-sky-500 font-black text-xl tracking-tight mt-1">{foundUser?.name}</p>
+                    </div>
                   </div>
-                  <div className="max-w-[220px] mx-auto">
+                  <div className="max-w-[260px] mx-auto">
                     <input
                       type="password"
                       maxLength={4}
                       placeholder="••••"
                       inputMode="numeric"
-                      className="w-full px-4 py-6 rounded-2xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-sky-500 outline-none text-center text-4xl tracking-[1.5rem] font-black text-slate-900 dark:text-white"
+                      className="w-full px-6 py-8 rounded-3xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-sky-500 outline-none text-center text-5xl tracking-[1.2rem] font-black text-slate-900 dark:text-white shadow-inner"
                       value={transferData.pin}
                       onChange={(e) => setTransferData({...transferData, pin: e.target.value.replace(/\D/g, '')})}
                     />
-                    <p className="mt-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Enter 4-Digit PIN</p>
+                    <p className="mt-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">Security Pin Required</p>
                   </div>
                 </div>
               )}
-              {transferError && <p className="text-red-500 dark:text-red-400 text-[10px] font-bold text-center px-4 uppercase tracking-wider">{transferError}</p>}
-              <div className="flex flex-col gap-3 pt-4">
+              {transferError && <p className="text-red-500 text-[10px] font-black text-center px-8 uppercase tracking-widest animate-pulse">{transferError}</p>}
+              <div className="flex flex-col gap-4 pt-6">
                 <Button 
-                  className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-14 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
+                  className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-[1.5rem] h-16 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
                   disabled={transferProcessing || (transferStep === 1 && (!transferData.amount || !foundUser))}
                   onClick={() => transferStep === 1 ? setTransferStep(2) : handleTransferSubmit()}
                 >
-                  {transferProcessing ? <LoadingSpinner size="sm" /> : transferStep === 1 ? 'Verify Transaction' : 'Confirm & Pay'}
+                {transferProcessing ? <LoadingSpinner size="sm" /> : transferStep === 1 ? 'Verify Destination' : 'Confirm & Send'}
                 </Button>
                 {!transferProcessing && (
-                  <button onClick={() => transferStep === 2 ? setTransferStep(1) : setTransferModalOpen(false)} className="text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] py-3 transition-colors hover:text-slate-700 dark:hover:text-slate-300">
-                    {transferStep === 2 ? 'Go Back' : 'Close'}
+                  <button onClick={() => transferStep === 2 ? setTransferStep(1) : setTransferModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[10px] font-black uppercase tracking-[0.3em] py-3 transition-colors">
+                    {transferStep === 2 ? 'Return to Details' : 'Cancel Transfer'}
                   </button>
                 )}
               </div>
