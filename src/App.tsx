@@ -69,7 +69,7 @@ function MainLayout() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Persistent Header */}
-      <Header />
+<Header title="BlueSea Mobile" />
 
       {/* Conditional LiveTicker - Only renders if not on an excluded path */}
       {shouldShowTicker && <LiveTicker />}
