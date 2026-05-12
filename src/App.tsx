@@ -3,7 +3,6 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import Header from '@/components/layout/Header';
 import LiveTicker from '@/components/ui/LiveTicker';
-import Header from '@/components/Header';
 import {
   LandingPage,
   AuthPage,
