@@ -1,6 +1,8 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import Header from '@/components/layout/Header';
+import LiveTicker from '@/components/ui/LiveTicker';
 import {
   LandingPage,
   AuthPage,
@@ -40,8 +42,7 @@ import {
   EventPublic,
   TransactionFilterPage,
   GiftCards,
- // CartPage,
- MarketplaceMessaging,
+  MarketplaceMessaging,
   SellerProductManager,
   Checkout,
   SpinVault,
@@ -53,7 +54,33 @@ import Flights from '@/pages/Flights';
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
 import { AuthLoader } from '@/components/ui-custom';
-//import {GlobalGoogleAd} from '@/components/ui-custom';
+
+/**
+ * Global Layout Wrapper
+ * Handles the persistent Header and the conditional LiveTicker
+ */
+function MainLayout() {
+  const location = useLocation();
+
+  // Exclude ticker from Landing, Login, and Signup pages
+  const excludedPaths = ['/', '/login', '/signup'];
+  const shouldShowTicker = !excludedPaths.includes(location.pathname);
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* Persistent Header */}
+      <Header />
+
+      {/* Conditional LiveTicker - Only renders if not on an excluded path */}
+      {shouldShowTicker && <LiveTicker />}
+
+      {/* Page Content */}
+      <main className="flex-1">
+        <Outlet /> 
+      </main>
+    </div>
+  );
+}
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -72,85 +99,74 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
-      <Route path="/signup" element={<PublicRoute><AuthPage /></PublicRoute>} />
-      <Route path="/event/:eventId" element={<EventPublic />} />
+      {/* Wrap everything in the MainLayout to ensure Header and Ticker logic are global */}
+      <Route element={<MainLayout />}>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
+        <Route path="/signup" element={<PublicRoute><AuthPage /></PublicRoute>} />
+        <Route path="/event/:eventId" element={<EventPublic />} />
 
-      {/* Protected Routes */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-      <Route path="/airtime" element={<ProtectedRoute><Airtime /></ProtectedRoute>} />
-      <Route path="/data" element={<ProtectedRoute><Data /></ProtectedRoute>} />
-      <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} /> 
-      <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/pin" element={<ProtectedRoute><CreatePin /></ProtectedRoute>} />
-      <Route path="/light-bills" element={<ProtectedRoute><LightBills /></ProtectedRoute>} />
-      <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
-      <Route path="/rewards" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
-      <Route path="/transaction-history" element={<ProtectedRoute><TransactionFilterPage /></ProtectedRoute>} />
-      <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} /> 
-      <Route path="/airtime-buyback" element={<ProtectedRoute><AirtimeBuyback /></ProtectedRoute>} />
-      <Route path="/group-payment" element={<ProtectedRoute><GroupPayment /></ProtectedRoute>} />
-      <Route path="/loyalty" element={<ProtectedRoute><Loyalty /></ProtectedRoute>} />
-      <Route path="/more-services" element={<ProtectedRoute><MoreServices /></ProtectedRoute>} />
-      <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-      <Route path="/event-manager" element={<ProtectedRoute><EventManager /></ProtectedRoute>} />
-      <Route path="/scanner" element={<ProtectedRoute><Scanner /></ProtectedRoute>} />
-      <Route path="/scanner-assignments" element={<ProtectedRoute><ScannerAssignments /></ProtectedRoute>} />
-      <Route path="/my-tickets" element={<ProtectedRoute><MyTickets /></ProtectedRoute>} />
-      <Route path="/vendor-verification" element={<ProtectedRoute><VendorVerification /></ProtectedRoute>} />
-      <Route path="/dstv" element={<ProtectedRoute><DSTV /></ProtectedRoute>} />
-      <Route path="/gotv" element={<ProtectedRoute><GOTV /></ProtectedRoute>} />
-      <Route path="/startimes" element={<ProtectedRoute><Startimes /></ProtectedRoute>} />
-      <Route path="/showmax" element={<ProtectedRoute><ShowMax /></ProtectedRoute>} />
-      <Route path="/waec-registration" element={<ProtectedRoute><WAECRegistration /></ProtectedRoute>} />
-      <Route path="/waec-result" element={<ProtectedRoute><WAECResult /></ProtectedRoute>} />
-      <Route path="/jamb-registration" element={<ProtectedRoute><JAMBRegistration /></ProtectedRoute>} />
-      <Route path="/tv-subscription" element={<ProtectedRoute><TVSubscription /></ProtectedRoute>} />
-      <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
-      <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
- <Route path="/checkout" element={<Checkout />} />
-   
-    
-      {/* 🛒 Cart Route 
-      <Route path="/cart" element={<CartPage />} />*/}
- 
- <Route path="/messages" element={<MarketplaceMessaging />} />
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+        <Route path="/airtime" element={<ProtectedRoute><Airtime /></ProtectedRoute>} />
+        <Route path="/data" element={<ProtectedRoute><Data /></ProtectedRoute>} />
+        <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} /> 
+        <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/pin" element={<ProtectedRoute><CreatePin /></ProtectedRoute>} />
+        <Route path="/light-bills" element={<ProtectedRoute><LightBills /></ProtectedRoute>} />
+        <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+        <Route path="/rewards" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
+        <Route path="/transaction-history" element={<ProtectedRoute><TransactionFilterPage /></ProtectedRoute>} />
+        <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} /> 
+        <Route path="/airtime-buyback" element={<ProtectedRoute><AirtimeBuyback /></ProtectedRoute>} />
+        <Route path="/group-payment" element={<ProtectedRoute><GroupPayment /></ProtectedRoute>} />
+        <Route path="/loyalty" element={<ProtectedRoute><Loyalty /></ProtectedRoute>} />
+        <Route path="/more-services" element={<ProtectedRoute><MoreServices /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+        <Route path="/event-manager" element={<ProtectedRoute><EventManager /></ProtectedRoute>} />
+        <Route path="/scanner" element={<ProtectedRoute><Scanner /></ProtectedRoute>} />
+        <Route path="/scanner-assignments" element={<ProtectedRoute><ScannerAssignments /></ProtectedRoute>} />
+        <Route path="/my-tickets" element={<ProtectedRoute><MyTickets /></ProtectedRoute>} />
+        <Route path="/vendor-verification" element={<ProtectedRoute><VendorVerification /></ProtectedRoute>} />
+        <Route path="/dstv" element={<ProtectedRoute><DSTV /></ProtectedRoute>} />
+        <Route path="/gotv" element={<ProtectedRoute><GOTV /></ProtectedRoute>} />
+        <Route path="/startimes" element={<ProtectedRoute><Startimes /></ProtectedRoute>} />
+        <Route path="/showmax" element={<ProtectedRoute><ShowMax /></ProtectedRoute>} />
+        <Route path="/waec-registration" element={<ProtectedRoute><WAECRegistration /></ProtectedRoute>} />
+        <Route path="/waec-result" element={<ProtectedRoute><WAECResult /></ProtectedRoute>} />
+        <Route path="/jamb-registration" element={<ProtectedRoute><JAMBRegistration /></ProtectedRoute>} />
+        <Route path="/tv-subscription" element={<ProtectedRoute><TVSubscription /></ProtectedRoute>} />
+        <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
+        <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+        <Route path="/checkout" element={<Checkout />} />
         
-        {/* Dynamic route for specific transactions */}
+        <Route path="/messages" element={<MarketplaceMessaging />} />
         <Route path="/messages/:conversationId" element={<MarketplaceMessaging />} />
         
- 
-      {/* 🔵 BlueSphere Route */}
-      <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
-
- {/* New Seller Route */}
+        <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
         <Route path="/products" element={<SellerProductManager />} />
+        <Route path="/history" element={<HistoryPage />} />
+        <Route path="/gift-cards" element={<GiftCards />} />
+        <Route path="/flights" element={<Flights />} />
+        <Route path="/spin-vault" element={<SpinVault />} />
+        <Route path="/betting" element={<Betting />} />
 
-      <Route path="/history" element={<HistoryPage />} />
-       <Route path="/gift-cards" element={<GiftCards />} />
-      <Route path="/flights" element={<Flights />} />
-      <Route path="/spin-vault" element={<SpinVault />} />
-      <Route path="/betting" element={<Betting />} />
-
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" />} />
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Route>
     </Routes>
   );
 }
 
-//      <GlobalGoogleAd />
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-
-
           <AppRoutes />
         </BrowserRouter>
       </AuthProvider>
@@ -159,4 +175,3 @@ function App() {
 }
 
 export default App;
-      
