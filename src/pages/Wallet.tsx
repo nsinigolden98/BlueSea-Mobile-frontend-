@@ -440,7 +440,7 @@ export function Wallet() {
             {/* CARD 2: REUSED BALANCE CARD COMPONENT */}
             <div className="lg:col-span-3 relative group">
               {/* BALANCE CARD ENHANCEMENT: PREMIUM UTILITY CHIPS */}
-              <div className="absolute top-4 right-4 md:right-10 flex gap-2 z-20 pointer-events-auto">
+              <div className="absolute top-4 right-12 md:right-10 flex gap-2 z-20 pointer-events-auto">
                 <button 
                   onClick={() => setCardModalOpen(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full text-[10px] font-bold text-white shadow-lg hover:bg-white/20 transition-all active:scale-90"
