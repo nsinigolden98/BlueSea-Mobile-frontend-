@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, 
   ShieldCheck, 
@@ -107,10 +106,10 @@ const MethodCard = ({
     )} />
   </button>
 );
+
 const IdentityCenter: React.FC = () => {
   const navigate = useNavigate();
   
-  // --- State ---
   const [step, setStep] = useState<number>(1);
   const [status, setStatus] = useState<KYCStatus>('unverified');
   const [selectedMethod, setSelectedMethod] = useState<KYCMethod | null>(null);
@@ -118,7 +117,6 @@ const IdentityCenter: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [kycData, setKycData] = useState<KYCData | null>(null);
 
-  // --- Initial Load (LocalStorage Safety) ---
   useEffect(() => {
     try {
       const savedStatus = localStorage.getItem(STORAGE_KEYS.STATUS) as KYCStatus;
@@ -131,28 +129,22 @@ const IdentityCenter: React.FC = () => {
       }
     } catch (error) {
       console.error("Failed to load KYC state:", error);
-      // Fallback to default state on corruption
       setStatus('unverified');
       setKycData(null);
     }
   }, []);
 
-  // --- Progress Logic ---
-  // Fix 1: Progress only reflects steps 1-4. Step 5 (Success) is 100% but separate.
   const progress = useMemo(() => {
     if (step >= 4) return 100;
     return ((step - 1) / 3) * 100;
   }, [step]);
 
-  // --- Validation Logic ---
-  // Fix 2: Strict 11-digit check for BVN/NIN
   const isInputValid = useMemo(() => {
     if (selectedMethod === 'location') return true;
     if (!selectedMethod) return false;
     return inputValue.length === 11 && /^\d+$/.test(inputValue);
   }, [inputValue, selectedMethod]);
 
-  // --- Handlers ---
   const handleStart = () => setStep(2);
 
   const handleMethodSelect = (method: KYCMethod) => {
@@ -165,7 +157,6 @@ const IdentityCenter: React.FC = () => {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Fix 4: Data Randomization
     const randomName = MOCK_NAMES[Math.floor(Math.random() * MOCK_NAMES.length)];
     const maskedId = selectedMethod === 'location' 
       ? "Lagos, NG" 
@@ -200,16 +191,8 @@ const IdentityCenter: React.FC = () => {
     else setStep(step - 1);
   };
 
-  // --- Animation Variants ---
-  const flowVariants = {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -10 },
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-blue-100 dark:selection:bg-blue-900">
-      {/* Header Section */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
           <button 
@@ -225,25 +208,22 @@ const IdentityCenter: React.FC = () => {
           <div className="w-9" />
         </div>
         
-        {/* Progress Bar (Fix 1) */}
         {step < 5 && (
           <div className="h-1 w-full bg-slate-100 dark:bg-slate-800">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
-              transition={{ type: "spring", bounce: 0, duration: 0.5 }}
+            <div 
+              className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] transition-all duration-500 ease-in-out"
+              style={{ width: `${progress}%` }}
             />
           </div>
         )}
       </header>
 
       <main className="max-w-2xl mx-auto px-6 py-8">
-        <AnimatePresence mode="wait">
+        <div className="transition-opacity duration-300">
           
           {/* STEP 1: OVERVIEW */}
           {step === 1 && (
-            <motion.div key="step1" {...flowVariants} className="space-y-8">
+            <div className="space-y-8">
               <div className="text-center space-y-3">
                 <div className={cn(
                   "inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-tight",
@@ -277,12 +257,12 @@ const IdentityCenter: React.FC = () => {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* STEP 2: METHOD SELECTION */}
           {step === 2 && (
-            <motion.div key="step2" {...flowVariants} className="space-y-6">
+            <div className="space-y-6">
               <div className="space-y-1">
                 <h2 className="text-xl font-bold text-slate-800 dark:text-white">Select Method</h2>
                 <p className="text-sm text-slate-500">Choose your preferred identification document.</p>
@@ -314,12 +294,12 @@ const IdentityCenter: React.FC = () => {
                   time="10s"
                 />
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* STEP 3: INPUT */}
           {step === 3 && (
-            <motion.div key="step3" {...flowVariants} className="space-y-6">
+            <div className="space-y-6">
               <div className="space-y-1">
                 <h2 className="text-xl font-bold text-slate-800 dark:text-white capitalize">
                   {selectedMethod} Verification
@@ -370,12 +350,12 @@ const IdentityCenter: React.FC = () => {
                   <TrustNotice />
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* STEP 4: CONFIRMATION */}
           {step === 4 && (
-            <motion.div key="step4" {...flowVariants} className="space-y-6 text-center">
+            <div className="space-y-6 text-center">
               <div className="space-y-1">
                 <h2 className="text-xl font-bold">Review Details</h2>
                 <p className="text-sm text-slate-500">Ensure the retrieved info matches your ID.</p>
@@ -407,20 +387,15 @@ const IdentityCenter: React.FC = () => {
                 </button>
                 <TrustNotice />
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* STEP 5: SUCCESS */}
           {step === 5 && (
-            <motion.div 
-              key="step5" 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-12 space-y-6"
-            >
+            <div className="text-center py-12 space-y-6">
               <div className="relative inline-block">
                 <div className="absolute inset-0 bg-emerald-500 blur-2xl opacity-20 animate-pulse" />
-                <div className="relative w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-xl">
+                <div className="relative w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-xl transition-transform duration-500 scale-100">
                   <CheckCircle2 className="w-12 h-12 text-white" />
                 </div>
               </div>
@@ -440,10 +415,10 @@ const IdentityCenter: React.FC = () => {
                   Finish
                 </button>
               </div>
-            </motion.div>
+            </div>
           )}
 
-        </AnimatePresence>
+        </div>
       </main>
     </div>
   );
