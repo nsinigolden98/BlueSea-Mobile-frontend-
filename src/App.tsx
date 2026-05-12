@@ -49,6 +49,7 @@ import {
   Betting,
   BlueSphere 
 } from '@/pages';
+import IdentityCenter from '@/pages/IdentityCenter';
 import HistoryPage from '@/pages/History';
 import Flights from '@/pages/Flights';  
 import './App.css';
@@ -154,6 +155,9 @@ function AppRoutes() {
         <Route path="/flights" element={<Flights />} />
         <Route path="/spin-vault" element={<SpinVault />} />
         <Route path="/betting" element={<Betting />} />
+        
+            <Route path="/identity-center" element={<IdentityCenter />} />
+
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />

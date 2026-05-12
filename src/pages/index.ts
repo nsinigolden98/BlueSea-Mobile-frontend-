@@ -52,4 +52,6 @@ export * from './Checkout';
 export * from './Flights';
 export { SpinVault } from './SpinVault';
 export { Betting } from './Betting';
+// src/components/index.ts
+export { default as IdentityCenter } from './IdentityCenter';
 
