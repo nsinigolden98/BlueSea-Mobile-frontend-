@@ -314,8 +314,8 @@ const mtn_dict = {
     "mtn-1tb-110000",
     110000
   ],
-  "N600 2.5GB - 2 days": [
-    "mtn-2-5gb-600",
+  "N750 2.5GB - 2 days": [
+    "mtn-2.5-750",
     600
   ],
   "N22000 120GB + 80mins - 30 days": [
