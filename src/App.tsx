@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import { Header } from '@/components/ui-custom/Header';
+//import { Header } from '@/components/ui-custom/Header';
 import LiveTicker from '@/components/ui/LiveTicker';
 import {
   LandingPage,
@@ -68,9 +68,9 @@ function MainLayout() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Persistent Header */}
+      {/* Persistent Header
 <Header title="BlueSea Mobile" />
-
+ */}
       {/* Conditional LiveTicker - Only renders if not on an excluded path */}
       {shouldShowTicker && <LiveTicker />}
 
