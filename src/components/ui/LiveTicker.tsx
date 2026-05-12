@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { getShuffledTickerData, TickerItem } from './ticker-data';
+import { getShuffledTickerData } from './ticker-data';
+import type { TickerItem } from './ticker-data';
 import { TICKER_CONFIG } from './ticker-config';
 
 const LiveTicker: React.FC = () => {
