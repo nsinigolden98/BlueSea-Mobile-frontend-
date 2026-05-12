@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import Header from '@/components/layout/Header';
+import Header from '@/components/ui-custom/Header';
 import LiveTicker from '@/components/ui/LiveTicker';
 import {
   LandingPage,
