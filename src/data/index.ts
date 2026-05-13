@@ -682,7 +682,7 @@ planType: "Monthly",
 network: "MTN",
 description: "MTN N10000 34GB - (30 days)"
 }
-];
+] as const;
 
 
 
@@ -1101,7 +1101,7 @@ planType: "Daily",
 network: "Airtel",
 description: "500MB Daily Plan (2 Days) - 350 Naira - 500MB - 2 Days"
 }
-];
+]as const;
 
 
 export const GLO_DATA = [
@@ -1827,7 +1827,7 @@ planType: "YouTube",
 network: "Glo",
 description: "3GB 2 Days - Youtube Special N600"
 }
-];
+]as const;
 
 export const NINEMOBILE_DATA = [
 {
@@ -1950,7 +1950,7 @@ planType: "Anytime",
 network: "9mobile",
 description: "T2 N200 - 250MB Anytime Data Plan (7 Days)"
 }
-];
+] as const;
 
 export const etisalat_dict = Object.fromEntries(
 NINEMOBILE_DATA.map(plan => [
@@ -1968,16 +1968,7 @@ plan.description,
  * conversion logic has been removed to support fully dynamic plan categories.
  */
 
-export interface DataPlan {
-  id: string;           // Backend variation code
-  price: number;        // Numeric amount
-  size: string;         // Data volume string
-  validity: string;     // Formatted validity string
-  planType: string;     // Fully dynamic category (Daily, Weekly, Monthly, Social, Mega, etc.)
-  network: string;      // Network name (MTN, Airtel, Glo, 9mobile)
-  description: string;  // Full variation name
-  key?: string;         // Optional frontend-safe identifier
-}
+
 
 /**
  * Merges all structured network data into a single flat array.
