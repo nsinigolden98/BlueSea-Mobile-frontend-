@@ -1968,6 +1968,8 @@ plan.description,
  * conversion logic has been removed to support fully dynamic plan categories.
  */
 
+// Explicitly using the Network type here satisfies the "unused" error
+export const networks: readonly Network[] = ['MTN', 'Glo', 'Airtel', '9mobile'] as const;
 
 
 /**
