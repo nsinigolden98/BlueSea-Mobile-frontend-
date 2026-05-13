@@ -240,496 +240,1762 @@ export const airtimeAmounts = [50, 100, 200, 500, 1000, 2000];
 
 export const networks = ['MTN', 'Glo', 'Airtel', '9mobile'] as const;
 
+export const MTN_DATA = [
+{
+id: "mtn-10mb-100",
+price: 100,
+size: "110MB",
+validity: "1 Day",
+planType: "Daily",
+network: "MTN",
+description: "110MB Daily Plan (1 Day) - N100"
+},
+{
+id: "mtn-230mb-200",
+price: 200,
+size: "230MB",
+validity: "1 Day",
+planType: "Daily",
+network: "MTN",
+description: "230MB Daily Plan (1 Day) - N200"
+},
+{
+id: "mtn-1500mb-1000",
+price: 1000,
+size: "1.5GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "MTN",
+description: "1.5GB Weekly Plan (7 Days) - N1,000"
+},
+{
+id: "mtn-5.5gb-3500",
+price: 3500,
+size: "7GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "7GB Monthly Plan - N3,500"
+},
+{
+id: "mtn-3.5gb-1500",
+price: 1500,
+size: "3.5GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "MTN",
+description: "3.5GB Weekly Plan (7 Days) - N1,500"
+},
+{
+id: "mtn-data-6500",
+price: 6500,
+size: "16.5GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "16.5GB Monthly Plan"
+},
+{
+id: "mtn-20gb-7500",
+price: 7500,
+size: "20GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "20GB Monthly Plan"
+},
+{
+id: "mtn-32gb-11000",
+price: 11000,
+size: "36GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "36GB Monthly Plan"
+},
+{
+id: "mtn-75gb-20000",
+price: 18000,
+size: "75GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "75GB Monthly Plan"
+},
+{
+id: "mtn-2.7gb-2000",
+price: 2000,
+size: "2.7GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "2.7GB + 2mins + 2GB All Night Streaming + 200MB YouTube Music, Monthly Plan - N2000"
+},
+{
+id: "mtn-1800mb-1500",
+price: 1500,
+size: "1.8GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "1.8GB + 6mins + 5 SMS, Weekly plan - N1500"
+},
+{
+id: "mtn-120gb-24000",
+price: 24000,
+size: "120GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "MTN N24,000 120GB - 30days"
+},
+{
+id: "mtn-480gb-90000",
+price: 90000,
+size: "480GB",
+validity: "90 Days",
+planType: "Extravalue",
+network: "MTN",
+description: "480GB 3-Month Plan - N90,000"
+},
+{
+id: "mtn-1gb-350",
+price: 500,
+size: "1GB",
+validity: "1 Day",
+planType: "Daily",
+network: "MTN",
+description: "MTN N500 1GB + 1.5mins - 1 day"
+},
+{
+id: "mtn-1gb-600",
+price: 800,
+size: "1GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "MTN",
+description: "1GB+5mins Weekly Plan"
+},
+{
+id: "mtn-xtrabundle-500",
+price: 500,
+size: "600MB",
+validity: "7 Days",
+planType: "Extravalue",
+network: "MTN",
+description: "600MB Xtra Bundle Weekly Data (7 Days) - N500"
+},
+{
+id: "mtn-xtra-1000",
+price: 1500,
+size: "2GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "2GB + 2 Mins Monthly Plan - N1,500"
+},
+{
+id: "mtn-11gb-5000",
+price: 5500,
+size: "12.5GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "12.5GB Monthly Plan - N5,500"
+},
+{
+id: "mtn-2-5gb-900",
+price: 900,
+size: "2.5GB",
+validity: "2 Days",
+planType: "Daily",
+network: "MTN",
+description: "MTN N900 2.5GB - 2 days"
+},
+{
+id: "mtn-150gb-40000",
+price: 40000,
+size: "150GB",
+validity: "60 Days",
+planType: "Extravalue",
+network: "MTN",
+description: "150GB 2-Month Plan"
+},
+{
+id: "mtn-11gb-3500",
+price: 3500,
+size: "11GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "MTN",
+description: "MTN N3,500 11GB - 7 days"
+},
+{
+id: "mtn-500mb-ex-350",
+price: 350,
+size: "500MB",
+validity: "1 Day",
+planType: "Daily",
+network: "MTN",
+description: "500MB Daily Plan (1 Day) - N350"
+},
+{
+id: "mtn-2-5gb-ex-600",
+price: 600,
+size: "1.5GB",
+validity: "2 Days",
+planType: "Daily",
+network: "MTN",
+description: "1.5GB Daily Plan (2 Days) - N600"
+},
+{
+id: "mtn-2gb-ex-750",
+price: 750,
+size: "2GB",
+validity: "2 Days",
+planType: "Daily",
+network: "MTN",
+description: "2GB Daily Plan (2 Days) - N750"
+},
+{
+id: "mtn-1500mb-ex-1200",
+price: 3000,
+size: "2.7GB",
+validity: "30 Days",
+planType: "Extravalue",
+network: "MTN",
+description: "2.7GB Xtra Bundle Monthly Plan"
+},
+{
+id: "mtn-8gb-ex-3000",
+price: 4500,
+size: "10GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "MTN N4,500 10GB + 10mins - 30 days"
+},
+{
+id: "mtn-25gb-9000",
+price: 9000,
+size: "25GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "MTN N9,000 25GB + Youtube - 30 days"
+},
+{
+id: "mtn-65gb-ex-16000",
+price: 16000,
+size: "65GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "65GB Monthly Plan (30 Days) - N16,000"
+},
+{
+id: "mtn-500mb-500",
+price: 500,
+size: "1.5GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "MTN",
+description: "500MB + 1GB YouTube (7 Days) - N500"
+},
+{
+id: "mtn-3.2gb-1000",
+price: 1000,
+size: "3.2GB",
+validity: "2 Days",
+planType: "Daily",
+network: "MTN",
+description: "MTN N1000 3.2GB - 2 days"
+},
+{
+id: "mtn-7gb-3000",
+price: 2500,
+size: "6GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "MTN",
+description: "MTN N2500 6GB - 7 days"
+},
+{
+id: "mtn-3.5gb-2500",
+price: 2500,
+size: "3.5GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "MTN N2500 3.5GB +5mins Monthly Plan"
+},
+{
+id: "mtn-hynetflex-14500-30",
+price: 14500,
+size: "60GB",
+validity: "30 Days",
+planType: "Extravalue",
+network: "MTN",
+description: "60GB Monthly HyNetFlex Plan - N14,500"
+},
+{
+id: "mtn-hynetflex-75000-90",
+price: 75000,
+size: "450GB",
+validity: "90 Days",
+planType: "Extravalue",
+network: "MTN",
+description: "450GB 3-Month Broadband Plan - N75,000"
+},
+{
+id: "mtn-hynetflex-9000-30",
+price: 9000,
+size: "30GB",
+validity: "30 Days",
+planType: "Extravalue",
+network: "MTN",
+description: "30GB Monthly Broadband Plan - N9,000"
+},
+{
+id: "mtn-2.5-750",
+price: 750,
+size: "2.5GB",
+validity: "1 Day",
+planType: "Daily",
+network: "MTN",
+description: "2.5GB Daily Plan - 750 Naira"
+},
+{
+id: "mtn-20-5000",
+price: 5000,
+size: "20GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "MTN",
+description: "20GB Weekly Plan - 5,000 Naira"
+},
+{
+id: "mtn-7gb-1800",
+price: 1800,
+size: "7GB",
+validity: "2 Days",
+planType: "Daily",
+network: "MTN",
+description: "MTN N1800 7GB - (2 Days)"
+},
+{
+id: "mtn-150gb-30000",
+price: 30000,
+size: "150GB",
+validity: "30 Days",
+planType: "Extravalue",
+network: "MTN",
+description: "MTN N30,000 150GB + 2GB daily - 5G Router Data (30 Days)"
+},
+{
+id: "mtn-165gb-35000",
+price: 35000,
+size: "165GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "MTN N35,000 165GB Monthly Data Plan (30 Days)"
+},
+{
+id: "mtn-200gb-37500",
+price: 37500,
+size: "200GB",
+validity: "30 Days",
+planType: "Extravalue",
+network: "MTN",
+description: "MTN N37,500 200GB + 5GB Youtube/MSTeams/Zoom - 5G Router Data (30 Days)"
+},
+{
+id: "mtn-260gb-monthly",
+price: 45000,
+size: "260GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "MTN 260GB + 2GB daily upon exhausting main bundle - N45,000"
+},
+{
+id: "mtn-1500gb-yearly",
+price: 225000,
+size: "1.5TB",
+validity: "365 Days",
+planType: "Extravalue",
+network: "MTN",
+description: "MTN 1.5TB - N225,000 Broadband Router"
+},
+{
+id: "mtn-6.75gb-3000",
+price: 3000,
+size: "6.75GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "MTN N3000 6.75GB Monthly Plan"
+},
+{
+id: "mtn-14.5gb-5000",
+price: 5000,
+size: "14.5GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "MTN 14.5GB Monthly Plan Monthly"
+},
+{
+id: "mtn-5.5gb-2-1500",
+price: 1500,
+size: "5.5GB",
+validity: "2 Days",
+planType: "Daily",
+network: "MTN",
+description: "MTN N1500 5.5GB - (2 days)"
+},
+{
+id: "mtn-4gb-2-1200",
+price: 1200,
+size: "4GB",
+validity: "2 Days",
+planType: "Daily",
+network: "MTN",
+description: "MTN N1200 4GB - (2 days)"
+},
+{
+id: "mtn-3.5gb-1-1000",
+price: 1000,
+size: "3.5GB",
+validity: "1 Day",
+planType: "Daily",
+network: "MTN",
+description: "MTN N1000 3.5GB - (1 day)"
+},
+{
+id: "mtn-34gb-30-10000",
+price: 10000,
+size: "34GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "MTN",
+description: "MTN N10000 34GB - (30 days)"
+}
+];
 
-const mtn_dict = {
-  "N100 100MB - 24 hrs": [
-    "mtn-10mb-100",
-    100
-  ],
-  "N200 200MB - 2 days": [
-    "mtn-50mb-200",
-    200
-  ],
-  "N1000 1.5GB - 30 days": [
-    "mtn-1500mb-1000",
-    1000
-  ],
-  "N2000 4.5GB - 30 days": [
-    "mtn-500mb-2000",
-    2000
-  ],
-  "N1500 3.5GB - 7 days": [
-    "mtn-3.5gb-1500",
-    1500
-  ],
-  "N2500 6GB - 30 days": [
-    "mtn-3gb-2500",
-    2500
-  ],
-  "N3000 8GB - 30 days": [
-    "mtn-data-3000",
-    3000
-  ],
-  "N3500 10GB - 30 days": [
-    "mtn-1gb-3500",
-    3500
-  ],
-  "N5000 15GB - 30 days": [
-    "mtn-100hr-5000",
-    5000
-  ],
-  "N6000 20GB - 30 days": [
-    "mtn-3gb-6000",
-    6000
-  ],
-  "N10000 40GB - 30 days": [
-    "mtn-40gb-10000",
-    10000
-  ],
-  "N15000 75GB - 30 days": [
-    "mtn-75gb-15000",
-    15000
-  ],
-  "N20000 110GB - 30 days": [
-    "mtn-110gb-20000",
-    20000
-  ],
-  "N1500 3GB - 30 days": [
-    "mtn-3gb-1500",
-    1500
-  ],
-  "N10000 25GB SME - 1 month": [
-    "mtn-25gb-sme-10000",
-    10000
-  ],
-  "N50000 165GB SME - 2 months": [
-    "mtn-165gb-sme-50000",
-    50000
-  ],
-  "N100000 360GB SME - 3 months": [
-    "mtn-360gb-sme-100000",
-    100000
-  ],
-  "N110000 1TB - 1 year": [
-    "mtn-1tb-110000",
-    110000
-  ],
-  "N750 2.5GB - 2 days": [
-    "mtn-2.5-750",
-    600
-  ],
-  "N22000 120GB + 80mins - 30 days": [
-    "mtn-120gb-22000",
-    22000
-  ],
-  "N20000 100GB - 2 months": [
-    "mtn-100gb-20000",
-    20000
-  ],
-  "N30000 160GB - 2 months": [
-    "mtn-160gb-30000",
-    30000
-  ],
-  "N50000 400GB - 3 months": [
-    "mtn-400gb-50000",
-    50000
-  ],
-  "N75000 600GB - 3 months": [
-    "mtn-600gb-75000",
-    75000
-  ],
-  "N300 Xtratalk Weekly": [
-    "mtn-xtratalk-300",
-    300
-  ],
-  "N500 Xtratalk Weekly": [
-    "mtn-xtratalk-500",
-    500
-  ],
-  "N1000 Xtratalk Monthly": [
-    "mtn-xtratalk-1000",
-    1000
-  ],
-  "N2000 Xtratalk Monthly": [
-    "mtn-xtratalk-2000",
-    2000
-  ],
-  "N5000 Xtratalk Monthly": [
-    "mtn-xtratalk-5000",
-    5000
-  ],
-  "N10000 Xtratalk Monthly": [
-    "mtn-xtratalk-10000",
-    10000
-  ],
-  "N15000 Xtratalk Monthly": [
-    "mtn-xtratalk-15000",
-    15000
-  ],
-  "N20000 Xtratalk Monthly": [
-    "mtn-xtratalk-20000",
-    20000
-  ],
-  "N800 3GB - 2 days": [
-    "mtn-3gb-800",
-    800
-  ],
-  "N200 Xtradata": [
-    "mtn-xtradata-200",
-    200
-  ]
+
+
+export const AIRTEL_DATA = [
+{
+id: "airt-50",
+price: 50,
+size: "250MB",
+validity: "1 Day",
+planType: "Night",
+network: "Airtel",
+description: "250MB Night Plan (12 - 5 AM) - 50 Naira - 1Day"
+},
+{
+id: "airt-100",
+price: 100,
+size: "200MB",
+validity: "1 Day",
+planType: "Social",
+network: "Airtel",
+description: "200MB Social Plan (2 Days) - 100 Naira - 1Day"
+},
+{
+id: "airt-200",
+price: 200,
+size: "230MB",
+validity: "1 Day",
+planType: "Daily",
+network: "Airtel",
+description: "230MB Daily Plan (2 Days) - 200 Naira - 200MB - 1Day"
+},
+{
+id: "airt-daily-100",
+price: 100,
+size: "110MB",
+validity: "1 Day",
+planType: "Daily",
+network: "Airtel",
+description: "Airtel Data - 100 Naira - 110MB - 1 Day"
+},
+{
+id: "airt-500",
+price: 500,
+size: "500MB",
+validity: "7 Days",
+planType: "Weekly",
+network: "Airtel",
+description: "500MB Weekly Plan (7 Days) - 500 Naira"
+},
+{
+id: "airt-1000-7",
+price: 1000,
+size: "1.5GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "Airtel",
+description: "1.5GB Weekly Plan + Youtube & Social Plans (7 Days) - 1,000 Naira"
+},
+{
+id: "airt-1500-7",
+price: 1500,
+size: "3.5GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "Airtel",
+description: "3.5GB Weekly Plan + Youtube & Social Platform (7 Days) - 1,500 Naira"
+},
+{
+id: "airt-2000",
+price: 2000,
+size: "3GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "3GB Monthly Plan + Youtube & Social Plan (30 Days)- 2,000 Naira"
+},
+{
+id: "airt-3000",
+price: 3000,
+size: "8GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "8GB Monthly Plan + Youtube & Social Plan (30 Days) - 3,000 Naira"
+},
+{
+id: "airt-4000",
+price: 4000,
+size: "10GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "10GB Monthly Plan + Youtube & Social Plan (30 Days) - 4,000 Naira"
+},
+{
+id: "airt-5000",
+price: 5000,
+size: "13GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "13GB Monthly Plan + Youtube & Social Plan (30 Days) - 5,000 Naira"
+},
+{
+id: "airt-1500-2",
+price: 1500,
+size: "5GB",
+validity: "2 Days",
+planType: "Binge",
+network: "Airtel",
+description: "5GB Binge Plan + Youtube & Social Platforms Data (2 Day) - 1,500 Naira"
+},
+{
+id: "airt-10000",
+price: 10000,
+size: "35GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "35GB Monthly Plan + Youtube & Social Plan (30 Days) - 10,000 Naira"
+},
+{
+id: "airt-15000",
+price: 15000,
+size: "60GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "60GB Monthly Plan + Youtube & Social Plan (30 Days) - 15,000 Naira"
+},
+{
+id: "airt-40000",
+price: 40000,
+size: "210GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "210GB Data (30 Days) - 40,000 Naira"
+},
+{
+id: "airt-60000",
+price: 60000,
+size: "350GB",
+validity: "120 Days",
+planType: "Extravalue",
+network: "Airtel",
+description: "350GB Monthly Plan + Youtube & Social Plan (120 Days) - 60,000 Naira"
+},
+{
+id: "airt-100000",
+price: 100000,
+size: "680GB",
+validity: "365 Days",
+planType: "Extravalue",
+network: "Airtel",
+description: "680GB Data (365 Days) - 100,000 Naira"
+},
+{
+id: "airt-20000",
+price: 20000,
+size: "100GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "100GB Monthly Plan + Youtube & Social Plan (30 Days) - 20,000 Naira"
+},
+{
+id: "airt-2500",
+price: 2500,
+size: "4GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "4GB Monthly Plan + Youtube & Social Plan (30 Days) - 2,500 Naira"
+},
+{
+id: "airt-8000",
+price: 8000,
+size: "25GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "25GB Monthly Plan + Youtube & Social Plan (30 Days) - 8,000 Naira"
+},
+{
+id: "airt-30000",
+price: 30000,
+size: "160GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "160GB Monthly Plan (30 Days) - 30,000 Naira"
+},
+{
+id: "airt-50000",
+price: 50000,
+size: "200GB",
+validity: "90 Days",
+planType: "Extravalue",
+network: "Airtel",
+description: "200GB Monthly Plan (90 Days) - 50,000 Naira"
+},
+{
+id: "airt-600",
+price: 600,
+size: "1.5GB",
+validity: "2 Days",
+planType: "Binge",
+network: "Airtel",
+description: "1.5GB Binge Plan + Youtube & Social Plan Data (2 Days) - 600 Naira"
+},
+{
+id: "airt-1000-2",
+price: 1000,
+size: "3.2GB",
+validity: "2 Days",
+planType: "Binge",
+network: "Airtel",
+description: "3.2GB Binge Plan + Youtube & Social Plans Data (2 Days)  - 1000 Naira"
+},
+{
+id: "airt-3000-7",
+price: 3000,
+size: "10GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "Airtel",
+description: "10GB Weekly Plan + Youtube & Social Platform (7 Days) - 3000 Naira"
+},
+{
+id: "airt-5000-7",
+price: 5000,
+size: "18GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "Airtel",
+description: "18GB Weekly Plan + Youtube & Social Platform (7 Days) - 5000 Naira"
+},
+{
+id: "airt-binge-500-1",
+price: 500,
+size: "Binge Plan",
+validity: "1 Day",
+planType: "Binge",
+network: "Airtel",
+description: "500 Naira Binge Plan -"
+},
+{
+id: "airt-800-7",
+price: 800,
+size: "1GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "Airtel",
+description: "1GB Weekly Plan (7 Days) - 800 Naira"
+},
+{
+id: "airt-6000-30",
+price: 6000,
+size: "18GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "18GB Monthly Plan + Youtube & Social Plan (30 Days) - 6000 Naira"
+},
+{
+id: "airt-75-1",
+price: 75,
+size: "75MB",
+validity: "1 Day",
+planType: "Daily",
+network: "Airtel",
+description: "75MB Daily Plan (1 Day) - 75 Naira"
+},
+{
+id: "airt-300-1",
+price: 300,
+size: "300MB",
+validity: "1 Day",
+planType: "Daily",
+network: "Airtel",
+description: "300MB Daily Plan (1 Day) - 300 Naira"
+},
+{
+id: "airt-social-300-3",
+price: 300,
+size: "1GB",
+validity: "3 Days",
+planType: "Social",
+network: "Airtel",
+description: "1GB Social Plan Plan (3 Days) - 300 Naira"
+},
+{
+id: "airt-750-2",
+price: 750,
+size: "2GB",
+validity: "2 Days",
+planType: "Binge",
+network: "Airtel",
+description: "2GB Binge Plan + Youtube & Social Plan Data (2 Days) - 750 Naira"
+},
+{
+id: "airt-1500-30",
+price: 1500,
+size: "2GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Airtel",
+description: "2GB Monthly Plan + Youtube & Social Plan (30 Days) - 1,500 Naira"
+},
+{
+id: "airt-2500-7",
+price: 2500,
+size: "6GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "Airtel",
+description: "6GB Weekly Plan + Youtube & Social Platform (7 Days) - 2,500 Naira"
+},
+{
+id: "airt-mifi-5000-30",
+price: 5000,
+size: "13GB",
+validity: "30 Days",
+planType: "MiFi",
+network: "Airtel",
+description: "13GB MIFI 5 Data - MiFi Only (30 Days) - 5,000 Naira"
+},
+{
+id: "airt-mifi-10000-30",
+price: 10000,
+size: "35GB",
+validity: "30 Days",
+planType: "MiFi",
+network: "Airtel",
+description: "35GB MIFI 10 Data - MiFi Only (30 Days) - 10,000 Naira"
+},
+{
+id: "airt-mifi-15000-30",
+price: 15000,
+size: "60GB",
+validity: "30 Days",
+planType: "MiFi",
+network: "Airtel",
+description: "60GB MIFI 15 Data - MiFi Only (30 Days) - 15,000 Naira"
+},
+{
+id: "airt-mifi-20000-30",
+price: 20000,
+size: "100GB",
+validity: "30 Days",
+planType: "Router",
+network: "Airtel",
+description: "100GB Monthly Plan + Youtube & Social Plan (30 Days) - 20,000 Naira"
+},
+{
+id: "airt-mifi-30000-30",
+price: 30000,
+size: "Unlimited",
+validity: "30 Days",
+planType: "Unlimited",
+network: "Airtel",
+description: "Unlimited 20MBPS Data - Router Only (30 Days) - 30,000 Naira"
+},
+{
+id: "airt-mifi-50000-30",
+price: 50000,
+size: "Unlimited",
+validity: "30 Days",
+planType: "Unlimited",
+network: "Airtel",
+description: "Unlimited 60MBPS Data - Router Only (30 Days) - 50,000 Naira"
+},
+{
+id: "airt-mifi-80000-90",
+price: 80000,
+size: "Unlimited",
+validity: "90 Days",
+planType: "Unlimited",
+network: "Airtel",
+description: "Unlimited 60MBPS Data - Router Only (90 Days) - 80,000 Naira"
+},
+{
+id: "airt-mifi-135000-90",
+price: 135000,
+size: "Unlimited",
+validity: "90 Days",
+planType: "Unlimited",
+network: "Airtel",
+description: "Unlimited 60MBPS Data - Router Only (90 Days) - 135,000 Naira"
+},
+{
+id: "airt-mifi-150000-120",
+price: 150000,
+size: "Unlimited",
+validity: "120 Days",
+planType: "Unlimited",
+network: "Airtel",
+description: "Unlimited 20MBPS Data - Router Only (120 Days) - 150,000 Naira"
+},
+{
+id: "airt-social-500-7",
+price: 500,
+size: "1.5GB",
+validity: "7 Days",
+planType: "Social",
+network: "Airtel",
+description: "1.5GB Social Plan - 500 Naira"
+},
+{
+id: "airt-350-500",
+price: 350,
+size: "500MB",
+validity: "2 Days",
+planType: "Daily",
+network: "Airtel",
+description: "500MB Daily Plan (2 Days) - 350 Naira - 500MB - 2 Days"
+}
+];
+
+
+export const GLO_DATA = [
+{
+id: "glo-daily-50",
+price: 50,
+size: "40MB",
+validity: "1 Day",
+planType: "Daily",
+network: "Glo",
+description: "40MB + 5MB Night - N50 - 1 Day"
+},
+{
+id: "glo-daily-100",
+price: 100,
+size: "120MB",
+validity: "1 Day",
+planType: "Daily",
+network: "Glo",
+description: "120MB + 5MB Night - N100 - 1 Day"
+},
+{
+id: "glo-2days-200",
+price: 200,
+size: "250MB",
+validity: "2 Days",
+planType: "Daily",
+network: "Glo",
+description: "250MB + 25MB Night - N200 - 2 Days"
+},
+{
+id: "glo-monthly-1000",
+price: 1000,
+size: "1.1GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "1.1GB + 1.5GB Night - N1000 - 30 Days"
+},
+{
+id: "glo-monthly-1500",
+price: 1500,
+size: "2.2GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "2.2GB + 3GB - N1500 - 30 Days"
+},
+{
+id: "glo-monthly-2000",
+price: 2000,
+size: "3.25GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "3.25GB + 3GB Night - N2000 - 30 Days"
+},
+{
+id: "glo-monthly-2500",
+price: 2500,
+size: "4.25GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "4.25GB + 3GB Night - N2500 - 30 Days"
+},
+{
+id: "glo-monthly-3000",
+price: 3000,
+size: "8.5GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "8.5GB + 2GB Night - N3000 - 30 Days"
+},
+{
+id: "glo-monthly-4000",
+price: 4000,
+size: "10.5GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "10.5GB + 2GB Night - N4000 - 30 Days"
+},
+{
+id: "glo-monthly-5000",
+price: 5000,
+size: "14.5GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "14.5GB + 2.5GB Night - N5000 - 30 Days"
+},
+{
+id: "glo-monthly-8000",
+price: 8000,
+size: "26GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "26GB + 2GB - N8,000 - 30 Days"
+},
+{
+id: "glo-monthly-10000",
+price: 10000,
+size: "38GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "38GB + 4GB Night - N10,000 - 30 Days"
+},
+{
+id: "glo-sunday-200",
+price: 200,
+size: "875MB",
+validity: "1 Day",
+planType: "Weekend",
+network: "Glo",
+description: "875MB 1 Day - Weekend N200"
+},
+{
+id: "glo-special-500",
+price: 500,
+size: "1GB",
+validity: "2 Days",
+planType: "Special",
+network: "Glo",
+description: "1GB + 1GB Night - N500 - 2 Days Special"
+},
+{
+id: "glo-special-1500",
+price: 1500,
+size: "4GB",
+validity: "7 Days",
+planType: "Special",
+network: "Glo",
+description: "4GB + 2GB Night - N1,500 - 7 Days - Special"
+},
+{
+id: "glo-weekend-500",
+price: 500,
+size: "2.5GB",
+validity: "2 Days",
+planType: "Weekend",
+network: "Glo",
+description: "2.5GB 2 Days - Weekend N500"
+},
+{
+id: "glo-mega-30000",
+price: 30000,
+size: "165GB",
+validity: "30 Days",
+planType: "Mega",
+network: "Glo",
+description: "165GB 30 Days - Mega N30000"
+},
+{
+id: "glo-mega-40000",
+price: 40000,
+size: "220GB",
+validity: "30 Days",
+planType: "Mega",
+network: "Glo",
+description: "220GB 30 Days - Mega N40000 Oneoff"
+},
+{
+id: "glo-mega-50000",
+price: 50000,
+size: "310GB",
+validity: "60 Days",
+planType: "Mega",
+network: "Glo",
+description: "310GB 60 Days - Mega N50000"
+},
+{
+id: "glo-mega-60000",
+price: 60000,
+size: "355GB",
+validity: "90 Days",
+planType: "Mega",
+network: "Glo",
+description: "355GB 90 Days - Mega N60000"
+},
+{
+id: "glo-mega-75000",
+price: 75000,
+size: "475GB",
+validity: "90 Days",
+planType: "Mega",
+network: "Glo",
+description: "475GB 90 Days - Mega N75000 Oneoff"
+},
+{
+id: "glo-tv-150",
+price: 150,
+size: "500MB",
+validity: "3 Days",
+planType: "TV",
+network: "Glo",
+description: "Glo TV VOD 500 MB 3days Oneoff"
+},
+{
+id: "glo-tv-450",
+price: 450,
+size: "2GB",
+validity: "7 Days",
+planType: "TV",
+network: "Glo",
+description: "Glo TV VOD 2GB 7days Oneoff"
+},
+{
+id: "glo-tv-1400",
+price: 1400,
+size: "6GB",
+validity: "30 Days",
+planType: "TV",
+network: "Glo",
+description: "Glo TV VOD 6GB 30days"
+},
+{
+id: "glo-tv-900",
+price: 900,
+size: "2GB",
+validity: "7 Days",
+planType: "TV",
+network: "Glo",
+description: "Glo TV Lite 2GB 7 Days"
+},
+{
+id: "glo-tv-3200",
+price: 3200,
+size: "6GB",
+validity: "30 Days",
+planType: "TV",
+network: "Glo",
+description: "Glo TV Max 6 GB 30 Days"
+},
+{
+id: "glo-social-oneoff-100",
+price: 100,
+size: "300MB",
+validity: "1 Day",
+planType: "Social",
+network: "Glo",
+description: "300MB - GloMyG N100 1 Day"
+},
+{
+id: "glo-social-oneoff-300",
+price: 300,
+size: "1GB",
+validity: "3 Days",
+planType: "Social",
+network: "Glo",
+description: "Glo MyG N300 1 GB 3 Days OneOff (Whatsapp, Instagram, Snapchat, Boomplay, Audiomac, GloTV, Tiktok)"
+},
+{
+id: "glo-social-oneoff-500",
+price: 500,
+size: "1.5GB",
+validity: "7 Days",
+planType: "Social",
+network: "Glo",
+description: "Glo MyG N500 1.5 GB 7 Days (Whatsapp, Instagram, Snapchat, Boomplay, Audiomac, GloTV, Tiktok)"
+},
+{
+id: "glo-social-oneoff-1000",
+price: 1000,
+size: "3.5GB",
+validity: "30 Days",
+planType: "Social",
+network: "Glo",
+description: "Glo MyG N1000 3.5 GB 30 Days (Whatsapp, Instagram, Snapchat, Boomplay, Audiomac, GloTV, Tiktok)"
+},
+{
+id: "glo-campus-booster-100",
+price: 100,
+size: "240MB",
+validity: "1 Day",
+planType: "Campus",
+network: "Glo",
+description: "240MB + 5MB Night - N100 - 1 Day - Camp-Boost"
+},
+{
+id: "glo-campus-booster-200",
+price: 200,
+size: "500MB",
+validity: "2 Days",
+planType: "Campus",
+network: "Glo",
+description: "500MB + 25MB Night - N200 - 2 Days - Camp-Boost"
+},
+{
+id: "glo-campus-booster-500",
+price: 500,
+size: "1.1GB",
+validity: "7 Days",
+planType: "Campus",
+network: "Glo",
+description: "1.1GB + 1GB Night - N500 - 7 Days - Camp-Boost"
+},
+{
+id: "glo-campus-booster-1000",
+price: 1000,
+size: "2.2GB",
+validity: "30 Days",
+planType: "Campus",
+network: "Glo",
+description: "2.2GB + 2GB Night - N1000 - 30 Days - Camp-Boost"
+},
+{
+id: "glo-campus-booster-2000",
+price: 2000,
+size: "6.5GB",
+validity: "30 Days",
+planType: "Campus",
+network: "Glo",
+description: "6.5GB + 3.5GB - N2,000 - 30 Days - Camp-Boost"
+},
+{
+id: "glo-campus-booster-5000",
+price: 5000,
+size: "29GB",
+validity: "30 Days",
+planType: "Campus",
+network: "Glo",
+description: "29GB + 3GB Night - N5000 - 30 Days - Camp-Boost"
+},
+{
+id: "glo-dg-295",
+price: 295,
+size: "1GB",
+validity: "3 Days",
+planType: "DG",
+network: "Glo",
+description: "1GB (Best Value) - 295 Naira - 3 days"
+},
+{
+id: "glo-dg-890",
+price: 890,
+size: "3GB",
+validity: "3 Days",
+planType: "DG",
+network: "Glo",
+description: "3GB (Best Value) - 890 Naira - 3 days"
+},
+{
+id: "glo-dg-1485",
+price: 1485,
+size: "5GB",
+validity: "3 Days",
+planType: "DG",
+network: "Glo",
+description: "5GB (Best Value) - 1,485 Naira - 3 days"
+},
+{
+id: "glo-dg-345",
+price: 345,
+size: "1GB",
+validity: "7 Days",
+planType: "DG",
+network: "Glo",
+description: "1GB (Best Value) - 345 Naira - 7 days"
+},
+{
+id: "glo-dg-1040",
+price: 1040,
+size: "3GB",
+validity: "7 Days",
+planType: "DG",
+network: "Glo",
+description: "3GB (Best Value) - 1,040 Naira - 7 days"
+},
+{
+id: "glo-dg-1730",
+price: 1730,
+size: "5GB",
+validity: "7 Days",
+planType: "DG",
+network: "Glo",
+description: "5GB (Best Value) - 1,730 Naira - 7 days"
+},
+{
+id: "glo-dg-350",
+price: 350,
+size: "1GB",
+validity: "14 Days",
+planType: "DG",
+network: "Glo",
+description: "1GB (Best Value) - 350 Naira - 14 days Night plan"
+},
+{
+id: "glo-dg-1040-14",
+price: 1040,
+size: "3GB",
+validity: "14 Days",
+planType: "DG",
+network: "Glo",
+description: "3GB (Best Value) - 1,040 Naira - 14 days Night plan"
+},
+// Note: glo-dg-1730 duplicated in source table for 7d and 14d night. flagging.
+{
+id: "glo-dg-1730-14", // Manually adjusted suffix for internal uniqueness while flagging original in comment
+price: 1730,
+size: "5GB",
+validity: "14 Days",
+planType: "DG",
+network: "Glo",
+description: "5GB (Best Value)  - 1,730 Naira - 14 days Night plan"
+},
+{
+id: "glo-dg-3460",
+price: 3460,
+size: "10GB",
+validity: "14 Days",
+planType: "DG",
+network: "Glo",
+description: "10GB (Best Value) - 3,460 Naira - 14 days Night plan"
+},
+{
+id: "glo-dg-99",
+price: 99,
+size: "200MB",
+validity: "14 Days",
+planType: "DG",
+network: "Glo",
+description: "200MB (Best Value) - 99 Naira - 14 days"
+},
+{
+id: "glo-dg-250",
+price: 250,
+size: "500MB",
+validity: "14 Days",
+planType: "DG",
+network: "Glo",
+description: "500MB (Best Value) - 250 Naira - 14 days"
+},
+{
+id: "glo-dg-250-30",
+price: 250,
+size: "500MB",
+validity: "30 Days",
+planType: "DG",
+network: "Glo",
+description: "500MB (Best Value) - N250 - 30 Days"
+},
+{
+id: "glo-dg-495",
+price: 495,
+size: "1GB",
+validity: "30 Days",
+planType: "DG",
+network: "Glo",
+description: "1GB (Best Value) - 495 Naira - 30 days"
+},
+{
+id: "glo-dg-990",
+price: 990,
+size: "2GB",
+validity: "30 Days",
+planType: "DG",
+network: "Glo",
+description: "2GB (Best Value) - 990 Naira - 30 days"
+},
+// Duplicate ID in source: glo-dg-1485 (3d vs 30d). Internal mapping usually requires unique IDs.
+{
+id: "glo-dg-1485-30", // Manually adjusted suffix
+price: 1485,
+size: "3GB",
+validity: "30 Days",
+planType: "DG",
+network: "Glo",
+description: "3GB (Best Value) - 1,485 Naira - 30 days"
+},
+{
+id: "glo-dg-2475",
+price: 2475,
+size: "5GB",
+validity: "30 Days",
+planType: "DG",
+network: "Glo",
+description: "5GB (Best Value) - 2,475 Naira - 30 days"
+},
+{
+id: "glo-dg-4950",
+price: 4950,
+size: "10GB",
+validity: "30 Days",
+planType: "DG",
+network: "Glo",
+description: "10GB (Best Value) - 4,950 Naira - 30 days"
+},
+{
+id: "glo-750-14",
+price: 750,
+size: "1.1GB",
+validity: "14 Days",
+planType: "Special",
+network: "Glo",
+description: "1.1GB 14 Days - N750"
+},
+{
+id: "glo-1000-7days",
+price: 1000,
+size: "1.7GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "Glo",
+description: "1.7GB + 2GB Night - N1000 - 7 Days"
+},
+{
+id: "glo-2000-7days",
+price: 2000,
+size: "6.5GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "Glo",
+description: "6.5GB + 2.5GB - N2000 - 7 Days"
+},
+{
+id: "glo-5000-7days",
+price: 5000,
+size: "22GB",
+validity: "7 Days",
+planType: "Weekly",
+network: "Glo",
+description: "22GB + 2GB Night - N5000 - 7 Days"
+},
+{
+id: "glo-6000-30days",
+price: 6000,
+size: "18.5GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "18.5GB + 2GB Night - N6000 - 30 Days"
+},
+{
+id: "glo-15000-30days",
+price: 15000,
+size: "62GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "62GB + 2GB - N15,000 - 30 Days"
+},
+{
+id: "glo-20000-30days",
+price: 20000,
+size: "105GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "Glo",
+description: "105GB + 2GB - N20,000 - 30 Days"
+},
+{
+id: "glo-350-special-1day",
+price: 350,
+size: "1GB",
+validity: "1 Day",
+planType: "Special",
+network: "Glo",
+description: "1GB 1 Day - Special N350"
+},
+{
+id: "glo-600-special-2days",
+price: 600,
+size: "1.55GB",
+validity: "2 Days",
+planType: "Special",
+network: "Glo",
+description: "1.55GB + 2GB Night - N600 - 2 Days - Special"
+},
+{
+id: "glo-1000-special-2days",
+price: 1000,
+size: "3.1GB",
+validity: "2 Days",
+planType: "Special",
+network: "Glo",
+description: "3.1GB + 2GB - N1000 - 2 Days - Special"
+},
+{
+id: "glo-25000-mega-30days",
+price: 25000,
+size: "135GB",
+validity: "30 Days",
+planType: "Mega",
+network: "Glo",
+description: "135GB 30 Days - Mega N25000 Oneoff"
+},
+{
+id: "glo-yearly-mega",
+price: 150000,
+size: "1000GB",
+validity: "365 Days",
+planType: "Mega",
+network: "Glo",
+description: "1000GB Yearly - Mega N150,000 Oneoff"
+},
+{
+id: "glo-social-50-3days",
+price: 50,
+size: "135MB",
+validity: "3 Days",
+planType: "Social",
+network: "Glo",
+description: "135MB 3 Days - Social Bundles N50"
+},
+{
+id: "glo-special-100-7days",
+price: 100,
+size: "335MB",
+validity: "7 Days",
+planType: "Social",
+network: "Glo",
+description: "335MB 7 Days - Social Bundles N100"
+},
+{
+id: "glo-special-300-10days",
+price: 300,
+size: "1.1GB",
+validity: "10 Days",
+planType: "Social",
+network: "Glo",
+description: "1.1GB 10 Days - Social Bundles N300"
+},
+{
+id: "glo-special-500-15days",
+price: 500,
+size: "1.8GB",
+validity: "15 Days",
+planType: "Social",
+network: "Glo",
+description: "1.8GB 15 Days - Social Bundles N500"
+},
+{
+id: "glo-night-60-1day",
+price: 60,
+size: "350MB",
+validity: "1 Day",
+planType: "Night",
+network: "Glo",
+description: "350MB Night - N60"
+},
+{
+id: "glo-night-120-1day",
+price: 120,
+size: "750MB",
+validity: "1 Day",
+planType: "Night",
+network: "Glo",
+description: "750MB Night - N120"
+},
+{
+id: "glo-500mb-200-oneoff",
+price: 200,
+size: "500MB",
+validity: "1 Day",
+planType: "Daily",
+network: "Glo",
+description: "500MB 1 Day - N200 Oneoff"
+},
+{
+id: "glo-1000mb-300-oneoff",
+price: 300,
+size: "1GB",
+validity: "1 Day",
+planType: "Daily",
+network: "Glo",
+description: "1GB 1 Day - N300 Oneoff"
+},
+{
+id: "glo-always-on-2000",
+price: 2000,
+size: "6.1GB",
+validity: "15 Days",
+planType: "AlwaysOn",
+network: "Glo",
+description: "6.1GB (410MB per day) 15 Days - Always On N2000"
+},
+{
+id: "glo-always-on-3500",
+price: 3500,
+size: "15GB",
+validity: "30 Days",
+planType: "AlwaysOn",
+network: "Glo",
+description: "15GB (500MB per day) 30 Days - Always On N3500"
+},
+{
+id: "glo-always-on-5000",
+price: 5000,
+size: "30GB",
+validity: "30 Days",
+planType: "AlwaysOn",
+network: "Glo",
+description: "30GB (1GB per day) 30 Days - Always On N5000"
+},
+{
+id: "glo-always-on-7000",
+price: 7000,
+size: "45GB",
+validity: "30 Days",
+planType: "AlwaysOn",
+network: "Glo",
+description: "45GB (1.5 per day) 30 Days - Always On N7000"
+},
+{
+id: "glo-youtube-250",
+price: 250,
+size: "1GB",
+validity: "1 Day",
+planType: "YouTube",
+network: "Glo",
+description: "1GB 1 Day - Youtube Special N250"
+},
+{
+id: "glo-youtube-600",
+price: 600,
+size: "3GB",
+validity: "2 Days",
+planType: "YouTube",
+network: "Glo",
+description: "3GB 2 Days - Youtube Special N600"
+}
+];
+
+export const NINEMOBILE_DATA = [
+{
+key: "eti-100",
+id: "eti-100",
+price: 100,
+size: "83MB",
+validity: "1 Day",
+planType: "Daily",
+network: "9mobile",
+description: "T2 83MB - 100 Naira - 1 day"
+},
+{
+key: "eti-150",
+id: "eti-150",
+price: 150,
+size: "150MB",
+validity: "1 Day",
+planType: "Night",
+network: "9mobile",
+description: "T2 150MB  + 100MB Night Data - 150 Naira - 1 day"
+},
+{
+key: "eti-500",
+id: "eti-500",
+price: 500,
+size: "650MB",
+validity: "7 Days",
+planType: "Weekly",
+network: "9mobile",
+description: "T2 650MB - 500 Naira - 3 days"
+},
+{
+key: "eti-1000",
+id: "eti-1000",
+price: 1000,
+size: "2GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "9mobile",
+description: "9mobile 2GB - 1,000 Naira - 30 Days"
+},
+{
+key: "eti-4000",
+id: "eti-4000",
+price: 4000,
+size: "8.4GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "9mobile",
+description: "T2 8.4GB - 4,000 Naira - 30 days"
+},
+{
+key: "eti-2000",
+id: "eti-2000",
+price: 2000,
+size: "4.5GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "9mobile",
+description: "T2 4.5GB - 2000 Naira - 30 Days"
+},
+{
+key: "eti-5000",
+id: "eti-5000",
+price: 5000,
+size: "11.4GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "9mobile",
+description: "T2 11.4GB - 5,000 Naira - 30 Days"
+},
+{
+key: "eti-3000",
+id: "eti-3000",
+price: 3000,
+size: "6.2GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "9mobile",
+description: "T2 6.2G - 3,000 Naira - 30 days"
+},
+{
+key: "eti-1200",
+id: "eti-1200",
+price: 1200,
+size: "2.3GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "9mobile",
+description: "T2 2.3GB - 1,200 Naira - 30 Days"
+},
+{
+key: "eti-50",
+id: "eti-50",
+price: 50,
+size: "40MB",
+validity: "1 Day",
+planType: "Daily",
+network: "9mobile",
+description: "T2 40MB - 50 Naira - 1 day"
+},
+{
+key: "eti-2500",
+id: "eti-2500",
+price: 2500,
+size: "5.2GB",
+validity: "30 Days",
+planType: "Monthly",
+network: "9mobile",
+description: "T2 5.2GB - 2,500 Naira - 30 days"
+},
+{
+key: "t2-250mb-200",
+id: "t2-250mb-200",
+price: 200,
+size: "250MB",
+validity: "7 Days",
+planType: "Anytime",
+network: "9mobile",
+description: "T2 N200 - 250MB Anytime Data Plan (7 Days)"
+}
+];
+
+export const etisalat_dict = Object.fromEntries(
+NINEMOBILE_DATA.map(plan => [
+plan.description,
+[plan.id, plan.price]
+])
+);
+
+
+/**
+ * DATA PLAN TYPES & REPOSITORY
+ * 
+ * This section uses the structured data arrays (MTN_DATA, AIRTEL_DATA, GLO_DATA, NINEMOBILE_DATA)
+ * as the direct source of truth. All legacy regex parsing and dictionary-to-object 
+ * conversion logic has been removed to support fully dynamic plan categories.
+ */
+
+export interface DataPlan {
+  id: string;           // Backend variation code
+  price: number;        // Numeric amount
+  size: string;         // Data volume string
+  validity: string;     // Formatted validity string
+  planType: string;     // Fully dynamic category (Daily, Weekly, Monthly, Social, Mega, etc.)
+  network: string;      // Network name (MTN, Airtel, Glo, 9mobile)
+  description: string;  // Full variation name
+  key?: string;         // Optional frontend-safe identifier
 }
 
-const airtel_dict = {
-  "N50 25MB - 1 day": [
-    "airt-50",
-    50
-  ],
-  "N100 75MB - 1 day": [
-    "airt-100",
-    100
-  ],
-  "N200 200MB - 3 days": [
-    "airt-200",
-    200
-  ],
-  "N300 350MB - 7 days": [
-    "airt-300",
-    300
-  ],
-  "N500 750MB - 14 days": [
-    "airt-500",
-    500
-  ],
-  "N1000 1.5GB - 30 days": [
-    "airt-1000",
-    1000
-  ],
-  "N1500 3GB - 30 days": [
-    "airt-1500",
-    1500
-  ],
-  "N2000 4.5GB - 30 days": [
-    "airt-2000",
-    2000
-  ],
-  "N3000 8GB - 30 days": [
-    "airt-3000",
-    3000
-  ],
-  "N4000 11GB - 30 days": [
-    "airt-4000",
-    4000
-  ],
-  "N5000 15GB - 30 days": [
-    "airt-5000",
-    5000
-  ],
-  "N1500 6GB Binge - 7 days": [
-    "airt-1500-2",
-    1500
-  ],
-  "N10000 40GB - 30 days": [
-    "airt-10000",
-    10000
-  ],
-  "N15000 75GB - 30 days": [
-    "airt-15000",
-    15000
-  ],
-  "N20000 110GB - 30 days": [
-    "airt-20000",
-    20000
-  ],
-  "N600 1GB - 14 days": [
-    "airt-600",
-    600
-  ],
-  "N1000 1.5GB - 7 days": [
-    "airt-1000-7",
-    1000
-  ],
-  "N2000 7GB - 7 days": [
-    "airt-2000-7",
-    2000
-  ],
-  "N5000 25GB - 7 days": [
-    "airt-5000-7",
-    5000
-  ],
-  "N400 1.5GB - 1 day": [
-    "airt-400-1",
-    400
-  ],
-  "N800 3.5GB - 2 days": [
-    "airt-800-2",
-    800
-  ],
-  "N6000 23GB - 30 days": [
-    "airt-6000-30",
-    6000
-  ]
-}
-        
-const glo_dict = {
-  "N100 105MB - 2 days": [
-    "glo100",
-    100
-  ],
-  "N200 350MB - 4 days": [
-    "glo200",
-    200
-  ],
-  "N500 1.05GB - 14 days": [
-    "glo500",
-    500
-  ],
-  "N1000 2.5GB - 30 days": [
-    "glo1000",
-    1000
-  ],
-  "N2000 5.8GB - 30 days": [
-    "glo2000",
-    2000
-  ],
-  "N5000 18.25GB - 30 days": [
-    "glo5000",
-    5000
-  ],
-  "N8000 29.5GB - 30 days": [
-    "glo8000",
-    8000
-  ],
-  "N10000 50GB - 30 days": [
-    "glo10000",
-    10000
-  ],
-  "N15000 93GB - 30 days": [
-    "glo15000",
-    15000
-  ],
-  "N18000 119GB - 30 days": [
-    "glo18000",
-    18000
-  ],
-  "N1500 4.1GB - 30 days": [
-    "glo1500",
-    1500
-  ],
-  "N20000 138GB - 30 days": [
-    "glo20000",
-    20000
-  ],
-  "N50 45MB + 5MB Night - 1 day": [
-    "glo-daily-50",
-    50
-  ],
-  "N100 115MB + 35MB Night - 1 day": [
-    "glo-daily-100",
-    100
-  ],
-  "N200 240MB + 110MB Night - 2 days": [
-    "glo-2days-200",
-    200
-  ],
-  "N500 800MB + 1GB Night - 2 weeks": [
-    "glo-2weeks-500",
-    500
-  ],
-  "N1000 1.9GB + 2GB Night - 30 days": [
-    "glo-monthly-1000",
-    1000
-  ],
-  "N1500 3.5GB + 4GB Night - 30 days": [
-    "glo-monthly-1500",
-    1500
-  ],
-  "N2000 5.2GB + 4GB Night - 30 days": [
-    "glo-monthly-2000",
-    2000
-  ],
-  "N2500 6.8GB + 4GB Night - 30 days": [
-    "glo-monthly-2500",
-    2500
-  ],
-  "N3000 10GB + 4GB Night - 30 days": [
-    "glo-monthly-3000",
-    3000
-  ],
-  "N4000 14GB + 4GB Night - 30 days": [
-    "glo-monthly-4000",
-    4000
-  ],
-  "N5000 20GB + 4GB Night - 30 days": [
-    "glo-monthly-5000",
-    5000
-  ],
-  "N8000 27.5GB + 2GB Night - 30 days": [
-    "glo-monthly-8000",
-    8000
-  ],
-  "N15000 86GB + 7GB Night - 30 days": [
-    "glo-monthly-15000",
-    15000
-  ],
-  "N18000 109GB + 10GB Night - 30 days": [
-    "glo-monthly-18000",
-    18000
-  ],
-  "N20000 126GB + 12GB Night - 30 days": [
-    "glo-monthly-20000",
-    20000
-  ]
-}
-
-const  etisalat_dict = {
-  "N100 100MB - 1 day": [
-    "eti-100",
-    100
-  ],
-  "N200 650MB - 1 day": [
-    "eti-200",
-    200
-  ],
-  "N1000 1.5GB - 30 days": [
-    "eti-1000",
-    1000
-  ],
-  "N2000 4.5GB - 30 days": [
-    "eti-2000",
-    2000
-  ],
-  "N10000 40GB - 30 days": [
-    "eti-10000",
-    10000
-  ],
-  "N27500 30GB - 90 days": [
-    "eti-27500",
-    27500
-  ],
-  "N55000 60GB - 180 days": [
-    "eti-55000",
-    55000
-  ],
-  "N300 1GB + 100MB - 1 day": [
-    "eti-300",
-    300
-  ],
-  "N2500 11GB - 30 days": [
-    "eti-2500",
-    2500
-  ],
-  "N20000 125GB - 30 days": [
-    "eti-20000",
-    20000
-  ],
-  "N1500 7GB - 7 days": [
-    "eti-1500-7",
-    1500
-  ]
-}
-
- function parsePlanDetails(planName:string) {
-        // Default values
-        let volume = "Bundle";
-        let validity = "N/A";
-        let type = "ExtraValue"; 
-
-        // 1. Extract Volume (GB, MB, TB)
-        const volumeMatch = planName.match(/(\d+(?:\.\d+)?)\s*(GB|MB|TB)/i);
-        if (volumeMatch) {
-            volume = volumeMatch[0].toUpperCase();
-        } else {
-            // For Voice/XtraTalk bundles, use the first NGN value followed by 'Bundle'
-            const priceMatch = planName.match(/N(\d+,?\d*)/);
-            if (priceMatch) {
-                volume = `₦${priceMatch[1].replace(/,/g, '')} Bundle`;
-            } else if (planName.includes("Voice")) {
-                 volume = "Voice Bundle";
-            }
-        }
-   
-        // 2. Extract Validity (Days, Weeks, Months, Years, hrs)
-        const validityMatch = planName.match(/(\d+)\s*(day|days|week|weeks|month|months|year|yrs|hrs)/i);
-        
-        if (validityMatch) {
-            const num = parseInt(validityMatch[1]);
-            const unit = validityMatch[2].toLowerCase();
-
-            if (unit.startsWith('hr')) {
-                 validity = `${num} Hrs`;
-            } else if (unit.startsWith('day')) {
-                validity = `${num} Day${num !== 1 ? 's' : ''}`;
-                if (num === 1) type = 'Daily';
-                else if (num <= 7) type = 'Daily'; // Keep 2-7 days as Daily for the plan tab grouping
-            } else if (unit.startsWith('week')) {
-                validity = `${num} Week${num !== 1 ? 's' : ''}`;
-                type = 'Weekly';
-            } else if (unit.startsWith('month')) {
-                validity = `${num} Month${num !== 1 ? 's' : ''}`;
-                type = 'Monthly';
-            } else if (unit.startsWith('year') || unit.startsWith('yrs')) {
-                validity = `${num} Year${num !== 1 ? 's' : ''}`;
-                type = 'ExtraValue'; // Yearly plans go to ExtraValue
-            }
-
-        } else if (planName.toLowerCase().includes('weekly')) {
-            validity = "7 Days";
-            type = "Weekly";
-        } else if (planName.toLowerCase().includes('monthly') || planName.toLowerCase().includes('30 days')) {
-            validity = "30 Days";
-            type = "Monthly";
-        } else if (planName.toLowerCase().includes('weekend')) {
-             validity = "Weekend";
-             type = "ExtraValue";
-        }
-
-        // Catch edge cases for Daily/Monthly
-        if (type === 'ExtraValue' && (validity.includes("Day") && parseInt(validity) <= 7)) {
-            type = 'Daily';
-        } else if (type === 'ExtraValue' && validity.includes("Day") && parseInt(validity) > 7) {
-            type = 'Monthly';
-        }
-
-        return { volume, validity, type };
-    }
-
-
-    /**
-     * Converts the raw Python dictionary data into the structured JS data format.
-     * @param {Object} rawDict 
-     * @returns {Object} Structured plans keyed by plan name
-     */
-
-    function processPlans(network: string, rawDict: any): DataPlan[] {
-        const processed: DataPlan[] = [];
-        for (const name in rawDict) {
-            const [id, price] = rawDict[name];
-            const details = parsePlanDetails(name);
-            processed.push({
-                id: id,
-                price: price,
-                size: details.volume,
-                validity: details.validity,
-                planType: details.type as 'Daily' | 'Weekly' | 'Monthly' | 'Extravalue',
-                network: network as Network,
-                description: name
-            });
-        }
-        return processed;
-    }
-
-
+/**
+ * Merges all structured network data into a single flat array.
+ * Categories are derived directly from the plan.planType field, allowing 
+ * for dynamic filtering and grouping in the UI without code changes.
+ * 
+ * @returns {DataPlan[]} The complete list of available data plans
+ */
 export const dataPlanFunction = (): DataPlan[] => {
-  const mtnPlans = Object.values(processPlans('MTN', mtn_dict))
-  const gloPlans = Object.values(processPlans('Glo', glo_dict))
-  const airtelPlans = Object.values(processPlans('Airtel', airtel_dict))
-  const etisalatPlans = Object.values(processPlans('9mobile', etisalat_dict))
-
-  return [mtnPlans, gloPlans, airtelPlans, etisalatPlans].flat();
-  
+  return [
+    ...MTN_DATA,
+    ...AIRTEL_DATA,
+    ...GLO_DATA,
+    ...NINEMOBILE_DATA
+  ];
 };
 
+ 
 export const NIGERIAN_BANKS = [
   { code: '40195', name: '78 Finance Company Ltd' },
   { code: '090629', name: '9jaPay Microfinance Bank' },
