@@ -193,25 +193,41 @@ export function Data() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
                 
                 {/* Network Selection */}
-                <div className="space-y-3">
-                  <Label>Select Network</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {networks.map((network) => (
-                      <button
-                        key={network}
-                        onClick={() => setSelectedNetwork(network)}
-                        className={cn(
-                          'px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
-                          selectedNetwork === network
-                            ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-                        )}
-                      >
-                        {network}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+             {/* Network Selection - Horizontal & Scrollable */}
+<div className="space-y-3">
+  <Label className="px-1 text-slate-500 dark:text-slate-400">Select Network</Label>
+  
+  <div className="relative group">
+    <div 
+      className={cn(
+        "flex flex-nowrap gap-3 overflow-x-auto pb-3 px-1 scrollbar-hide",
+        /* Premium edge fade effect */
+        "[mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]"
+      )}
+      style={{
+        scrollbarWidth: 'none', 
+        msOverflowStyle: 'none',
+        WebkitOverflowScrolling: 'touch'
+      }}
+    >
+      {networks.map((network) => (
+        <button
+          key={network}
+          onClick={() => setSelectedNetwork(network)}
+          className={cn(
+            'whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 active:scale-90 shrink-0',
+            selectedNetwork === network
+              ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2 dark:ring-offset-slate-900 shadow-lg shadow-sky-500/20'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent'
+          )}
+        >
+          {network}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
+
 
                 {/* Phone Number with Dropdown */}
                 <div className="space-y-3 relative" ref={dropdownRef}>
