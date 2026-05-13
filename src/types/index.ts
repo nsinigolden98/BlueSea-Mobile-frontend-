@@ -39,7 +39,7 @@ export interface DataPlan {
   price: number;
   validity: string;
   network: Network;
-  planType: 'Daily' | 'Weekly' | 'Monthly' | 'Extravalue';
+  planType: "Daily" | "Weekly" | "Monthly" | "Extravalue" | "Social" | "Night" | "Binge" | "Mega" | "TV" | "Campus" | "DG" | "AlwaysOn" | "YouTube" | "MiFi" | "Router" | "Unlimited" | "Anytime";
   description: string;
 }
 

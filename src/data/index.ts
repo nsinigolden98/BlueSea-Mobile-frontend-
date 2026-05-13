@@ -240,7 +240,7 @@ export const airtimeAmounts = [50, 100, 200, 500, 1000, 2000];
 
 export const networks = ['MTN', 'Glo', 'Airtel', '9mobile'] as const;
 
-export const MTN_DATA = [
+export const MTN_DATA: DataPlan[] = [
 {
 id: "mtn-10mb-100",
 price: 100,
@@ -686,7 +686,7 @@ description: "MTN N10000 34GB - (30 days)"
 
 
 
-export const AIRTEL_DATA = [
+export const AIRTEL_DATA: DataPlan[] = [
 {
 id: "airt-50",
 price: 50,
@@ -1104,7 +1104,7 @@ description: "500MB Daily Plan (2 Days) - 350 Naira - 500MB - 2 Days"
 ]as const;
 
 
-export const GLO_DATA = [
+export const GLO_DATA: DataPlan[] = [
 {
 id: "glo-daily-50",
 price: 50,
@@ -1829,7 +1829,7 @@ description: "3GB 2 Days - Youtube Special N600"
 }
 ]as const;
 
-export const NINEMOBILE_DATA = [
+export const NINEMOBILE_DATA: DataPlan[] = [
 {
 key: "eti-100",
 id: "eti-100",
