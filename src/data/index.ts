@@ -1954,7 +1954,7 @@ description: "T2 N200 - 250MB Anytime Data Plan (7 Days)"
 
 export const etisalat_dict = Object.fromEntries(
 NINEMOBILE_DATA.map(plan => [
-plan.description,
+plan.id,
 [plan.id, plan.price]
 ])
 );
