@@ -257,7 +257,7 @@ export function Data() {
                 </div>
 
 
-// REPLACE IT WITH THIS:
+
              <div className="space-y-3">
   <Label className="px-1 text-slate-500 dark:text-slate-400">Select Plan Type</Label>
   
