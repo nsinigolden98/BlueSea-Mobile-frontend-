@@ -238,7 +238,7 @@ export const moreServiceCategories: ServiceCategory[] = [
 
 export const airtimeAmounts = [50, 100, 200, 500, 1000, 2000];
 
-export const networks = ['MTN', 'Glo', 'Airtel', '9mobile'] as const;
+//export const networks = ['MTN', 'Glo', 'Airtel', '9mobile'] as const;
 
 export const MTN_DATA: DataPlan[] = [
 {
