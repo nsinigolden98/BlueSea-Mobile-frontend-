@@ -111,7 +111,7 @@ export function Data() {
     }
 
     if (!user?.pin_is_set) {
-      navigate('/settings/pin');
+      navigate('/pin');
       return;
     }
     
