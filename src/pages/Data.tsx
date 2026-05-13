@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react'; // Added useMemo
 import { Sidebar, Header, PinModal, TransactionModal, Toast } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,15 +9,6 @@ import type { Network, DataPlan } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, X, RefreshCw, ChevronDown, History } from 'lucide-react';
-
-type PlanType = 'Daily' | 'Weekly' | 'Monthly' | 'Extravalue';
-
-const planTypes: { value: PlanType; label: string }[] = [
-  { value: 'Daily', label: 'Daily' },
-  { value: 'Weekly', label: 'Weekly' },
-  { value: 'Monthly', label: 'Monthly' },
-  { value: 'Extravalue', label: 'Extravalue' },
-];
 
 export function Data() {
   const { user } = useAuth();
@@ -30,7 +21,7 @@ export function Data() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<Network>('MTN');
   const [phoneNumber, setPhoneNumber] = useState(defaultNumber);
-  const [selectedPlanType, setSelectedPlanType] = useState<PlanType>('Daily');
+  const [selectedPlanType, setSelectedPlanType] = useState<string>('Daily'); // Changed type to string for dynamism
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
@@ -48,9 +39,30 @@ export function Data() {
   const [groupDescription, setGroupDescription] = useState('');
   
   const dataPlans = dataPlanFunction();
+
+  // --- DYNAMIC PLAN TYPE LOGIC START ---
+  
+  // 1. Get unique plan types based on the selected network
+  const availablePlanTypes = useMemo(() => {
+    const networkSpecificPlans = dataPlans.filter(p => p.network === selectedNetwork);
+    const types = networkSpecificPlans.map(plan => plan.planType);
+    return Array.from(new Set(types)); // Removes duplicates
+  }, [selectedNetwork, dataPlans]);
+
+  // 2. Auto-reset selectedPlanType when switching network if the current type doesn't exist
+  useEffect(() => {
+    if (!availablePlanTypes.includes(selectedPlanType as any)) {
+      setSelectedPlanType(availablePlanTypes[0] || '');
+      setSelectedPlan(null); // Clear selected plan when switching types
+    }
+  }, [selectedNetwork, availablePlanTypes]);
+
+  // 3. Final filtered plans to display in the grid
   const filteredPlans = dataPlans.filter(
     plan => plan.network === selectedNetwork && plan.planType === selectedPlanType
   );
+
+  // --- DYNAMIC PLAN TYPE LOGIC END ---
 
   // Refs
   const bodyDivRef = useRef<HTMLDivElement>(null);
@@ -84,6 +96,7 @@ export function Data() {
     localStorage.setItem('data_recent_numbers', JSON.stringify(updated));
   };
 
+  // Fixed payload: Sending plan.id (or key) instead of description to resolve "invalid_choice"
   const payload = isGroupPayment ? {
     name: groupName,
     description: groupDescription,
@@ -91,16 +104,15 @@ export function Data() {
     sub_number: phoneNumber,
     target_amount: Number(selectedPlan?.price || 0),
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
-    plan: selectedPlan?.description,
+    plan: selectedPlan?.id || selectedPlan?.key, 
     plan_type: selectedNetwork === '9mobile' ? 'etisalat': selectedNetwork.toLowerCase()
   } : {
-    plan: selectedPlan?.description,
+    plan: selectedPlan?.id || selectedPlan?.key,
     billersCode: phoneNumber,
     phone_number: phoneNumber,
   };
 
   const handleBuyData = async () => {
-    // Betting-level validation
     if (!phoneNumber || phoneNumber.length !== 11) {
       showToast('Please enter a valid 11-digit phone number');
       return;
@@ -247,18 +259,19 @@ export function Data() {
                 <div className="space-y-3">
                   <Label>Select Plan Type</Label>
                   <div className="flex flex-wrap gap-2">
-                    {planTypes.map((type) => (
+                    {/* Now mapping over the DYNAMIC availablePlanTypes */}
+                    {availablePlanTypes.map((type) => (
                       <button
-                        key={type.value}
-                        onClick={() => setSelectedPlanType(type.value)}
+                        key={type}
+                        onClick={() => setSelectedPlanType(type)}
                         className={cn(
                           'px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
-                          selectedPlanType === type.value
+                          selectedPlanType === type
                             ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2'
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                         )}
                       >
-                        {type.label}
+                        {type}
                       </button>
                     ))}
                   </div>
@@ -413,7 +426,7 @@ export function Data() {
 
                   <Button 
                     variant="outline"
-                    onClick={() => navigate(`/auto-topup?service_type=data&network=${selectedNetwork.toLowerCase()}&phone_number=${phoneNumber}&amount=${selectedPlan?.price || ''}&plan=${selectedPlan?.description || ''}`)}
+                    onClick={() => navigate(`/auto-topup?service_type=data&network=${selectedNetwork.toLowerCase()}&phone_number=${phoneNumber}&amount=${selectedPlan?.price || ''}&plan=${selectedPlan?.id || ''}`)}
                     className="w-full rounded-full py-6 border-sky-500 text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/10 active:scale-95 transition-transform"
                     disabled={!phoneNumber || !selectedPlan}
                   >
@@ -439,7 +452,7 @@ export function Data() {
       <ToastComponent />
       {isOpen && (
         <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
-        )}
-        </div>
-        );
+      )}
+    </div>
+  );
 }
