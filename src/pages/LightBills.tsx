@@ -185,7 +185,7 @@ export function LightBills() {
     showPaymentModal();
   }
 
-  // Synchronized Success Handler Matching Airtime Architecture Exactly
+  // Fixed Success Handler with dynamic casting to bypass strict TS validation rules
   useEffect(() => {
     if (message) {
       setIsLoading(true);
@@ -195,15 +195,17 @@ export function LightBills() {
         setIsLoading(false);
         setIsOpen(true);
 
-        // Comprehensive response mapping covering all potential payload variations
+        // Cast message to any safely to evaluate dynamic backend variants without TS compilation blocking
+        const msg = message as any;
         const isSuccess = 
-          message?.success === true || 
-          message?.code === '000' || 
-          message?.code === 200 || 
-          message?.code === '200' || 
-          message?.status === 'success' || 
-          message?.status === '000' || 
-          message?.state === 'success';
+          msg?.success === true || 
+          msg?.success === 'true' ||
+          msg?.code === '000' || 
+          msg?.code === '200' || 
+          msg?.code === 200 ||
+          msg?.status === 'success' || 
+          msg?.status === '000' || 
+          msg?.state === 'success';
 
         if (isSuccess) {
           saveToRecent(meterNumber);
@@ -450,7 +452,7 @@ export function LightBills() {
                             </button>
                           </div>
                         </div>
-           )}
+                      )}
 
                       <Button
                         onClick={handleContinue}
