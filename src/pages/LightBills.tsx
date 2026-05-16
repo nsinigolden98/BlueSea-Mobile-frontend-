@@ -48,17 +48,19 @@ export function LightBills() {
   const [meterType, setMeterType] = useState('');
   const [biller, setBiller] = useState('');
   const [amount, setAmount] = useState('');
-  const { PinComponent, showPinModal, modalData, message } = PinModal()
-  const { user } = useAuth()
-  const { LoaderComponent, showLoader, hideLoader } = Loader()
-  const navigate = useNavigate()
-  const [customer, setCustomer] = useState('')
-  const { showToast, ToastComponent } = Toast()
+  const { PinComponent, showPinModal, modalData, message } = PinModal();
+  const auth = useAuth();
+  const { user } = auth;
+  const { LoaderComponent, showLoader, hideLoader } = Loader();
+  const navigate = useNavigate();
+  const [customer, setCustomer] = useState('');
+  const { showToast, ToastComponent } = Toast();
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
-  const [toastMessage, setToastMessage] = useState('')
+  const [toastMessage, setToastMessage] = useState('');
 
-  // New UX State for Consistency
+  // New UX State for Sync and Consistency
+  const [isLoading, setIsLoading] = useState(false);
   const [recentMeters, setRecentMeters] = useState<string[]>([]);
   const [showRecentDropdown, setShowRecentDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -89,7 +91,7 @@ export function LightBills() {
     amount: Number(amount),
     biller_name: BILLER_NAME[biller as keyof BillerName],
     meter_type: meterType.toLowerCase(),
-  }
+  };
 
   // Load recent meters on mount
   useEffect(() => {
@@ -124,7 +126,7 @@ export function LightBills() {
     else if (!user?.pin_is_set) {
       navigate('/settings');
       navigate('/pin');
-      return
+      return;
     }
     else if (isGroupPayment) {
       if (!groupName) {
@@ -145,69 +147,78 @@ export function LightBills() {
       return;
     }
     else {
-      showToast("Searching For Customer ...", 3000)
-      showLoader()
+      showToast("Searching For Customer ...", 3000);
+      showLoader();
       const data = {
         meter_number: Number(meterNumber),
         meter_type: meterType.toLowerCase(),
         biller: BILLER_NAME[biller as keyof BillerName]
-      }
-      const response = await postRequest(ENDPOINTS.electricity_user, data)
-      hideLoader()
+      };
+      const response = await postRequest(ENDPOINTS.electricity_user, data);
+      hideLoader();
       if (response.success) {
-        setCustomer(`Customer: ${response.response.Customer_Name}`)
+        setCustomer(`Customer: ${response.response.Customer_Name}`);
         showPinModal();
       } else {
-        showToast(response.error)
-      };
-
+        showToast(response.error);
+      }
     }
   };
-  const bodyDivRef = useRef<HTMLDivElement>(null)
+
+  const bodyDivRef = useRef<HTMLDivElement>(null);
 
   const hidePaymentModal = () => {
     if (bodyDivRef.current) {
-      bodyDivRef.current.style.opacity = '1'
-
+      bodyDivRef.current.style.opacity = '1';
     }
-  }
+  };
+
   const showPaymentModal = () => {
     if (bodyDivRef.current) {
-      bodyDivRef.current.style.opacity = '0.5'
+      bodyDivRef.current.style.opacity = '0.5';
     }
-  }
+  };
+
   if (!modalData.visible) {
-    hidePaymentModal()
+    hidePaymentModal();
   }
   else {
-    showPaymentModal()
+    showPaymentModal();
   }
 
+  // Frontend synchronization and rendering lifecycle matching Airtime page exactly
   useEffect(() => {
     if (message) {
-      console.log(message)
-      setIsOpen(true)
+      setIsLoading(true);
+      // Replicating processing delay for global frontend synchronization consistency
+      setTimeout(() => {
+        setIsLoading(false);
+        setIsOpen(true);
 
-      if (message?.success || message?.code === '000') {
-        saveToRecent(meterNumber);
-        showToast(message?.response_description || message?.message || '')
-        setToastMessage(message?.response_description || message?.message || '')
-        setTxStatus(true)
+        if (message?.success || message?.code === '000') {
+          saveToRecent(meterNumber);
+          showToast(message?.response_description || message?.message || 'Success');
+          setToastMessage(message?.response_description || message?.message || 'Success');
+          setTxStatus(true);
 
-        if (isGroupPayment) {
-          setIsGroupPayment(false);
-          setGroupName('');
-          setInviteMembers(['']);
+          // Force-trigger any underlying auth balance/history updates available in global context
+          if (auth && typeof (auth as any).refresh === 'function') (auth as any).refresh();
+          if (auth && typeof (auth as any).refreshUser === 'function') (auth as any).refreshUser();
+          if (auth && typeof (auth as any).updateBalance === 'function') (auth as any).updateBalance();
+
+          if (isGroupPayment) {
+            setIsGroupPayment(false);
+            setGroupName('');
+            setInviteMembers(['']);
+          }
+        } else {
+          showToast(message?.error || message?.response_description || 'Failed');
+          setToastMessage(message?.error || message?.response_description || 'Failed');
+          setTxStatus(false);
         }
-      } else {
-        showToast(message?.error || message?.response_description || '')
-        setToastMessage(message?.error || message?.response_description || '')
-        setTxStatus(false)
-      }
-    } else {
-      return
-    };
-  }, [message, showToast, isGroupPayment, meterNumber]);
+      }, 1500);
+    }
+  }, [message]);
 
   return (
     <div>
@@ -320,7 +331,8 @@ export function LightBills() {
                       </div>
                     </div>
                   </div>
- {/* Purchase Units */}
+
+                  {/* Purchase Units */}
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
                       Purchase Units
@@ -432,17 +444,16 @@ export function LightBills() {
                               <Plus className="w-4 h-4" /> Add another
                             </button>
                           </div>
-                        </div>
+                    </div>
                       )}
 
                       <Button
                         onClick={handleContinue}
                         className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-7 text-lg font-bold active:scale-95 transition-transform"
-                        disabled={!meterNumber || !meterType || !biller || !amount}
+                        disabled={!meterNumber || !meterType || !biller || !amount || isLoading}
                       >
-                        Continue Payment
+                        {isLoading ? "Processing..." : "Continue Payment"}
                       </Button>
-
 
                       {/* Auto Top-Up Button */}
                       <Button
@@ -466,7 +477,8 @@ export function LightBills() {
       <PinComponent type={isGroupPayment ? "group-lightbill" : "light"} value={payload} />
       <ToastComponent />
       {isOpen && (
-        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />)}
+        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
+      )}
     </div>
   );
 }
