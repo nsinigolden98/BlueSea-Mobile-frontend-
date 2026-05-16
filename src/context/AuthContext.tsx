@@ -14,25 +14,25 @@ import {
 } from '@/types';
 import { TOKEN } from '@/types'
 
- interface SignUpResponse {
-    state: boolean;
-   message: string;
-   errors: {
-     email:Array<null>;
-   };
-};
-import type {CredentialResponse} from '@react-oauth/google';
+interface SignUpResponse {
+  state: boolean;
+  message: string;
+  errors: {
+    email: Array<null>;
+  };
+}
+import type { CredentialResponse } from '@react-oauth/google';
 
 interface AuthContextType extends AuthState {
   login: (data: LoginFormData) => Promise<string>;
   signup: (data: SignupFormData) => Promise<SignUpResponse>;
   logout: () => void;
-  googleLogin: (credentialResponse:CredentialResponse)=> Promise<void> | void;
+  googleLogin: (credentialResponse: CredentialResponse) => Promise<void> | void;
   load?: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({
@@ -47,14 +47,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return `${API_BASE}${path}`;
   };
 
-  useEffect( () => {
+  useEffect(() => {
     const loadUser = async () => {
+      try {
+        if (TOKEN !== '') {
+          const get_user = await getRequest(ENDPOINTS.user);
+          const get_balance = await getRequest(ENDPOINTS.balance);
+        
+          const user: User = {
+            email: get_user.email,
+            firstName: get_user.other_names,
+            surname: get_user.surname,
+            phone: get_user.phone,
+            profilePicture: getImageUrl(get_user.image),
+            balance: get_balance.balance,
+            lockedBalance: get_balance.locked_balance,
+            availableBalance: get_balance.available_balance,
+            pin_is_set: get_user.pin_is_set,
+            referral_code: get_user.referral_code,
+          };
+         
+          setState({
+            isAuthenticated: true,
+            user: user,
+            loading: false,
+          });
+        }
+        else {
+          setState({
+            isAuthenticated: false,
+            user: null,
+            loading: false,
+          });
+        }
+      } catch (error) {
+        if (TOKEN !== '') {
+          setState(prev => ({ ...prev, loading: false }));
+        } else {
+          setState({
+            isAuthenticated: false,
+            user: null,
+            loading: false,
+          });
+        }
+        console.log(error)
+      }
+    };
+    loadUser();
+  }, []);
+
+  // New inline, unified state-synchronization functionality mapped directly to existing AuthState keys
+  const refreshUser = async () => {
     try {
       if (TOKEN !== '') {
         const get_user = await getRequest(ENDPOINTS.user);
         const get_balance = await getRequest(ENDPOINTS.balance);
       
-        const user: User = {
+        const updatedUser: User = {
+          id: get_user.id || state.user?.id,
           email: get_user.email,
           firstName: get_user.other_names,
           surname: get_user.surname,
@@ -67,35 +117,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           referral_code: get_user.referral_code,
         };
        
-        setState({
+        setState(prev => ({
+          ...prev,
           isAuthenticated: true,
-          user: user,
-          loading: false,
-        });
-      }
-       else {
-        setState({
-          isAuthenticated: false,
-          user: null,
-          loading: false,
-        });
+          user: updatedUser,
+        }));
       }
     } catch (error) {
-      if (TOKEN !== '') {
-        setState(prev => ({ ...prev, loading: false }));
-      } else {
-        setState({
-          isAuthenticated: false,
-          user: null,
-          loading: false,
-        });
-      }
-      console.log(error)
+      console.error("Failed to synchronize global state natively:", error);
     }
-  }
-  loadUser()
-       
-  },[]);
+  };
    
   const referral = async () => {
     const refCode = getCookie('ref');
@@ -104,14 +135,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const payload = {
       referral_code: refCode,
     }
-    const response =  await postRequest(ENDPOINTS.referral, payload)
+    const response = await postRequest(ENDPOINTS.referral, payload)
     if (response?.success) {
       deleteCookie('ref');
       console.log('Referral applied:', response.message);
     } else {
       console.log('Referral error:', response?.error);
     }
-  }
+  };
 
   const login = useCallback(async (_data: LoginFormData) => {
     setState(prev => ({ ...prev, loading: true }));
@@ -121,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const response = await postRequest(ENDPOINTS.login, _data)
     if (response.detail === undefined) {
       if (response.user.email_verified) {
-        setCookie('access_token',response.access_token);
+        setCookie('access_token', response.access_token);
         setCookie('refresh_token', response.refresh_token); 
         referral()
         const get_user = await getRequest(ENDPOINTS.user);
@@ -143,7 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           loading: false,
         });
         window.location.reload();
-        return user; // Return user on success
+        return user;
       } else {
         setState({
           isAuthenticated: false,
@@ -172,13 +203,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       surname: data.surname,
       balance: "0",
       pin_is_set: false,
-      referral_code : '',
+      referral_code: '',
     }
     setState({
-        isAuthenticated: false,
-        user: user,
-        loading: false,
-           });
+      isAuthenticated: false,
+      user: user,
+      loading: false,
+    });
     const payload = {
       email: data.email,
       phone: String(data.phone),
@@ -193,67 +224,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-      setState(prev => ({ ...prev, loading: true }));
+    setState(prev => ({ ...prev, loading: true }));
     
-    const response =  await postRequest(ENDPOINTS.logout, {});
-    if(response.state){
-    deleteCookie("access_token");
-    deleteCookie("refresh_token");
-    setState({
-      isAuthenticated: false,
-      user: null,
-      loading: false,
-    });
-    window.location.reload();
-    }else{
-        return response.message
+    const response = await postRequest(ENDPOINTS.logout, {});
+    if (response.state) {
+      deleteCookie("access_token");
+      deleteCookie("refresh_token");
+      setState({
+        isAuthenticated: false,
+        user: null,
+        loading: false,
+      });
+      window.location.reload();
+    } else {
+      return response.message
     }
     
   }, []);
 
-  const googleLogin = async (credentialResponse:CredentialResponse) => {
-      setState(prev => ({ ...prev, loading: true }));
-      const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
-      const response = await postRequest(ENDPOINTS.oauthGoogle, {
-       id_token: credentialResponse.credential,
-        redirect_uri
-      });
-      
-
-      if (response.success) {
-          setCookie('refresh_token', response.refresh_token);
-        setCookie('access_token', response.access_token);
-        const get_user = await getRequest(ENDPOINTS.user);
-        const get_balance = await getRequest(ENDPOINTS.balance);
-        referral()
-        const user: User = {
-          id: get_user.id,
-          email: get_user.email,
-          firstName: get_user.other_names,
-          surname: get_user.surname,
-          phone: get_user.phone,
-          profilePicture: getImageUrl(get_user.image),
-          balance: get_balance.balance,
-          pin_is_set: get_user.pin_is_set,
-          referral_code: get_user.referral_code,
-        }; 
-        setState({
-          isAuthenticated: true,
-          user: user,
-          loading: false,
-        });
-        window.location.reload()
-        
-      }
-      else{
-          setState({
-          isAuthenticated: false,
-          user: null,
-          loading: false,
-        });
-      }
-    }
+  const googleLogin = async (credentialResponse: CredentialResponse) => {
+    setState(prev => ({ ...prev, loading: true }));
+    const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
+    const response = await postRequest(ENDPOINTS.oauthGoogle, {
+      id_token: credentialResponse.credential,
+      redirect_uri
+    });
     
+    if (response.success) {
+      setCookie('refresh_token', response.refresh_token);
+      setCookie('access_token', response.access_token);
+      const get_user = await getRequest(ENDPOINTS.user);
+      const get_balance = await getRequest(ENDPOINTS.balance);
+      referral()
+      const user: User = {
+        id: get_user.id,
+        email: get_user.email,
+        firstName: get_user.other_names,
+        surname: get_user.surname,
+        phone: get_user.phone,
+        profilePicture: getImageUrl(get_user.image),
+        balance: get_balance.balance,
+        pin_is_set: get_user.pin_is_set,
+        referral_code: get_user.referral_code,
+      }; 
+      setState({
+        isAuthenticated: true,
+        user: user,
+        loading: false,
+      });
+      window.location.reload()
+    }
+    else {
+      setState({
+        isAuthenticated: false,
+        user: null,
+        loading: false,
+      });
+    }
+  };
 
   return (
     <AuthContext.Provider
@@ -263,6 +291,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signup,
         logout,
         googleLogin,
+        refreshUser,
       }}
     >
       {children}
@@ -277,4 +306,3 @@ export function useAuth() {
   }
   return context;
 }
-

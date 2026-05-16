@@ -49,7 +49,7 @@ export function LightBills() {
   const [biller, setBiller] = useState('');
   const [amount, setAmount] = useState('');
   const { PinComponent, showPinModal, modalData, message } = PinModal();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { LoaderComponent, showLoader, hideLoader } = Loader();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState('');
@@ -58,7 +58,7 @@ export function LightBills() {
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // New UX State for Alignment with Reference Implementation
+  // New UX Loading States for State-Sync Consistency
   const [isLoading, setIsLoading] = useState(false);
   const [recentMeters, setRecentMeters] = useState<string[]>([]);
   const [showRecentDropdown, setShowRecentDropdown] = useState(false);
@@ -185,33 +185,36 @@ export function LightBills() {
     showPaymentModal();
   }
 
-  // Fixed Success Handler with dynamic casting to bypass strict TS validation rules
+  // Production-Grade Unified Success Pipeline Tracking Effect Block
   useEffect(() => {
     if (message) {
       setIsLoading(true);
       
-      // UX Consistency Delay matching working Airtime processing timeline
-      setTimeout(() => {
+      // UX Processing transition delay mapping exactly to working reference implementation
+      const timer = setTimeout(async () => {
         setIsLoading(false);
         setIsOpen(true);
 
-        // Cast message to any safely to evaluate dynamic backend variants without TS compilation blocking
-        const msg = message as any;
+        // Safe dynamic cast protecting build-step from strict payload validation limits
+        const targetPayload = message as any;
         const isSuccess = 
-          msg?.success === true || 
-          msg?.success === 'true' ||
-          msg?.code === '000' || 
-          msg?.code === '200' || 
-          msg?.code === 200 ||
-          msg?.status === 'success' || 
-          msg?.status === '000' || 
-          msg?.state === 'success';
+          targetPayload?.success === true || 
+          targetPayload?.success === 'true' ||
+          targetPayload?.code === '000' || 
+          targetPayload?.code === '200' || 
+          targetPayload?.code === 200 ||
+          targetPayload?.status === 'success' || 
+          targetPayload?.status === '000' || 
+          targetPayload?.state === 'success';
 
         if (isSuccess) {
           saveToRecent(meterNumber);
           showToast(message?.response_description || message?.message || 'Success');
           setToastMessage(message?.response_description || message?.message || 'Success');
           setTxStatus(true);
+
+          // Proactively refresh user data and wallet balance values within context
+          await refreshUser();
 
           if (isGroupPayment) {
             setIsGroupPayment(false);
@@ -224,8 +227,10 @@ export function LightBills() {
           setTxStatus(false);
         }
       }, 1500);
+
+      return () => clearTimeout(timer);
     }
-  }, [message]);
+  }, [message, meterNumber]);
 
   return (
     <div>
@@ -444,7 +449,7 @@ export function LightBills() {
                                 )}
                               </div>
                             ))}
-                            <button
+<button
                               onClick={() => setInviteMembers([...inviteMembers, ''])}
                               className="text-sm text-sky-500 flex items-center gap-1 hover:underline"
                             >
@@ -489,6 +494,7 @@ export function LightBills() {
           onClose={() => {
             setIsOpen(false);
             if (txStatus) {
+              // Safety fallback refresh when closing out a successful transaction context
               window.location.reload();
             }
           }} 
