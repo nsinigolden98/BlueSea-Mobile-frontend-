@@ -49,8 +49,7 @@ export function LightBills() {
   const [biller, setBiller] = useState('');
   const [amount, setAmount] = useState('');
   const { PinComponent, showPinModal, modalData, message } = PinModal();
-  const auth = useAuth();
-  const { user } = auth;
+  const { user } = useAuth();
   const { LoaderComponent, showLoader, hideLoader } = Loader();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState('');
@@ -59,7 +58,7 @@ export function LightBills() {
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // New UX State for Sync and Consistency
+  // New UX State for Alignment with Reference Implementation
   const [isLoading, setIsLoading] = useState(false);
   const [recentMeters, setRecentMeters] = useState<string[]>([]);
   const [showRecentDropdown, setShowRecentDropdown] = useState(false);
@@ -186,25 +185,31 @@ export function LightBills() {
     showPaymentModal();
   }
 
-  // Frontend synchronization and rendering lifecycle matching Airtime page exactly
+  // Synchronized Success Handler Matching Airtime Architecture Exactly
   useEffect(() => {
     if (message) {
       setIsLoading(true);
-      // Replicating processing delay for global frontend synchronization consistency
+      
+      // UX Consistency Delay matching working Airtime processing timeline
       setTimeout(() => {
         setIsLoading(false);
         setIsOpen(true);
 
-        if (message?.success || message?.code === '000') {
+        // Comprehensive response mapping covering all potential payload variations
+        const isSuccess = 
+          message?.success === true || 
+          message?.code === '000' || 
+          message?.code === 200 || 
+          message?.code === '200' || 
+          message?.status === 'success' || 
+          message?.status === '000' || 
+          message?.state === 'success';
+
+        if (isSuccess) {
           saveToRecent(meterNumber);
           showToast(message?.response_description || message?.message || 'Success');
           setToastMessage(message?.response_description || message?.message || 'Success');
           setTxStatus(true);
-
-          // Force-trigger any underlying auth balance/history updates available in global context
-          if (auth && typeof (auth as any).refresh === 'function') (auth as any).refresh();
-          if (auth && typeof (auth as any).refreshUser === 'function') (auth as any).refreshUser();
-          if (auth && typeof (auth as any).updateBalance === 'function') (auth as any).updateBalance();
 
           if (isGroupPayment) {
             setIsGroupPayment(false);
@@ -212,8 +217,8 @@ export function LightBills() {
             setInviteMembers(['']);
           }
         } else {
-          showToast(message?.error || message?.response_description || 'Failed');
-          setToastMessage(message?.error || message?.response_description || 'Failed');
+          showToast(message?.error || message?.response_description || message?.message || 'Failed');
+          setToastMessage(message?.error || message?.response_description || message?.message || 'Failed');
           setTxStatus(false);
         }
       }, 1500);
@@ -444,8 +449,8 @@ export function LightBills() {
                               <Plus className="w-4 h-4" /> Add another
                             </button>
                           </div>
-                    </div>
-                      )}
+                        </div>
+           )}
 
                       <Button
                         onClick={handleContinue}
@@ -477,7 +482,16 @@ export function LightBills() {
       <PinComponent type={isGroupPayment ? "group-lightbill" : "light"} value={payload} />
       <ToastComponent />
       {isOpen && (
-        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
+        <TransactionModal 
+          isSuccess={txStatus} 
+          onClose={() => {
+            setIsOpen(false);
+            if (txStatus) {
+              window.location.reload();
+            }
+          }} 
+          toastMessage={toastMessage} 
+        />
       )}
     </div>
   );
