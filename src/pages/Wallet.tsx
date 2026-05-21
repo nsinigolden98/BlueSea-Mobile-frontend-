@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
+import { connectApi, Partner, VerifiedUser } from '@/services/connectApi';
 import { 
   Landmark, 
   Send, 
@@ -22,76 +23,10 @@ import {
   Wallet as WalletIcon
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { PinModal, Toast, TransactionModal } from '@/components/ui-custom';
+import { PinModal, Toast } from '@/components/ui-custom';
+import { TransactionModal } from '@/components/ui_component/transaction_modal';
 import { NIGERIAN_BANKS } from '@/data';
 import { useNavigate } from 'react-router-dom';
-
-// --- BlueSea Connect Mock Data (Refined with Visual Branding) ---
-const MOCK_PARTNERS = [
-  { 
-    id: 1, 
-    name: 'Lumiq', 
-    idType: 'username', 
-    helper: 'Pay package', 
-    label: 'Username', 
-    placeholder: 'Enter Lumiq username', 
-    initials: 'LU',
-    logo: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop',
-    color: '#0ea5e9'
-  },
-  { 
-    id: 2, 
-    name: 'HFM', 
-    idType: 'email', 
-    helper: 'Fund trading', 
-    label: 'Email', 
-    placeholder: 'Enter HFM email', 
-    initials: 'HF',
-    logo: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=2064&auto=format&fit=crop',
-    color: '#ef4444'
-  },
-  { 
-    id: 3, 
-    name: 'Modis', 
-    idType: 'memberId', 
-    helper: 'Top up account', 
-    label: 'Member ID', 
-    placeholder: 'Enter Modis member ID', 
-    initials: 'MO',
-    logo: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop',
-    color: '#8b5cf6'
-  },
-  { 
-    id: 4, 
-    name: 'NovaPay', 
-    idType: 'phone', 
-    helper: 'Send payment', 
-    label: 'Phone Number', 
-    placeholder: 'Enter phone number', 
-    initials: 'NP',
-    logo: 'https://images.unsplash.com/photo-1633158829585-23ba8f7c8caf?q=80&w=2070&auto=format&fit=crop',
-    color: '#10b981'
-  },
-  { 
-    id: 5, 
-    name: 'LynkPro', 
-    idType: 'email', 
-    helper: 'Premium access', 
-    label: 'Email', 
-    placeholder: 'Enter email address', 
-    initials: 'LP',
-    logo: 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2029&auto=format&fit=crop',
-    color: '#f59e0b'
-  },
-];
-
-const MOCK_PARTNER_USERS: Record<string, { id: string, name: string }[]> = {
-  'Lumiq': [{ id: 'alex99', name: 'Alex Johnson' }, { id: 'sarah_m', name: 'Sarah Miller' }],
-  'HFM': [{ id: 'trade@hfm.com', name: 'Global Markets Ltd' }, { id: 'invest@hfm.com', name: 'Capital Group' }],
-  'Modis': [{ id: 'MOD-7721', name: 'David Chen' }, { id: 'MOD-8832', name: 'Elena Rodriguez' }],
-  'NovaPay': [{ id: '08012345678', name: 'Samuel Okoro' }, { id: '09087654321', name: 'Blessing Ade' }],
-  'LynkPro': [{ id: 'pro@lynk.io', name: 'Professional Services' }, { id: 'admin@lynk.io', name: 'System Admin' }],
-};
 
 export function Wallet() {
   const { user } = useAuth();
@@ -127,19 +62,25 @@ export function Wallet() {
   
   const { showPinModal, PinComponent, message } = PinModal();
   const { ToastComponent, showToast } = Toast();
+
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // --- BlueSea Connect States ---
-  const [selectedPartner, setSelectedPartner] = useState<typeof MOCK_PARTNERS[0] | null>(null);
+  // --- BlueSea Connect States (Backend Driven) ---
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [partnersLoading, setPartnersLoading] = useState(true);
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [isSeeAllOpen, setIsSeeAllOpen] = useState(false);
   const [connectIdentifier, setConnectIdentifier] = useState('');
-  const [verifiedPartnerUser, setVerifiedPartnerUser] = useState<{ id: string, name: string } | null>(null);
+  const [verifiedPartnerUser, setVerifiedPartnerUser] = useState<VerifiedUser | null>(null);
+  const [isVerifyingPartner, setIsVerifyingPartner] = useState(false);
   const [connectAmount, setConnectAmount] = useState('');
   const [isConnectConfirmOpen, setIsConnectConfirmOpen] = useState(false);
   const [connectPin, setConnectPin] = useState('');
   const [connectStatus, setConnectStatus] = useState<'idle' | 'loading' | 'success' | 'failure'>('idle');
+  const [transactionMessage, setTransactionMessage] = useState('');
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
 
@@ -327,15 +268,47 @@ export function Wallet() {
     showPinModal();
   };
 
-  // --- Connect Simulation ---
+  // --- Connect Integration (Backend Flow) ---
+  
+  // Fetch Partners on mount
   useEffect(() => {
-    if (selectedPartner && connectIdentifier) {
-      const users = MOCK_PARTNER_USERS[selectedPartner.name] || [];
-      const match = users.find(u => u.id.toLowerCase() === connectIdentifier.toLowerCase());
-      setVerifiedPartnerUser(match || null);
-    } else {
+    const loadPartners = async () => {
+      try {
+        const data = await connectApi.fetchPartners();
+        setPartners(data);
+      } catch (err) {
+        showToast('Failed to load partners. Please try again.');
+      } finally {
+        setPartnersLoading(false);
+      }
+    };
+    loadPartners();
+  }, [showToast]);
+
+  // Debounced Provider User Verification
+  useEffect(() => {
+    if (!selectedPartner || connectIdentifier.length < 3) {
       setVerifiedPartnerUser(null);
+      return;
     }
+    
+    const verifyUser = async () => {
+      setIsVerifyingPartner(true);
+      try {
+        const user = await connectApi.verifyUser(selectedPartner.id, connectIdentifier);
+        setVerifiedPartnerUser(user);
+      } catch (err) {
+        setVerifiedPartnerUser(null);
+      } finally {
+        setIsVerifyingPartner(false);
+      }
+    };
+    
+    const delayVerify = setTimeout(() => {
+      verifyUser();
+    }, 800);
+    
+    return () => clearTimeout(delayVerify);
   }, [selectedPartner, connectIdentifier]);
 
   // Progressive Disclosure for Connect Flow
@@ -347,11 +320,29 @@ export function Wallet() {
     }
   }, [selectedPartner]);
 
-  const handleConnectPayment = () => {
+  // API Driven Connect Payment
+  const handleConnectPayment = async () => {
     setConnectStatus('loading');
-    setTimeout(() => {
-      setConnectStatus(Math.random() > 0.3 ? 'success' : 'failure');
-    }, 1200);
+    
+    try {
+      const response = await connectApi.pay({
+        partner: selectedPartner!.id,
+        identifier: connectIdentifier,
+        amount: Number(connectAmount),
+        pin: connectPin
+      });
+      
+      if (response.success) {
+        setConnectStatus('success');
+        setTransactionMessage(response.message || 'Payment processed successfully.');
+      } else {
+        setConnectStatus('failure');
+        setTransactionMessage(response.message || 'Transaction failed.');
+      }
+    } catch (error: any) {
+      setConnectStatus('failure');
+      setTransactionMessage(error.message || 'Connection error. Please try again.');
+    }
   };
 
   const resetConnect = () => {
@@ -362,16 +353,18 @@ export function Wallet() {
     setIsConnectConfirmOpen(false);
     setConnectStatus('idle');
     setShowConnectForm(false);
+    setTransactionMessage('');
   };
 
   // Carousel Scroll Listener
   const handleCarouselScroll = () => {
     if (!scrollRef.current) return;
     const scrollLeft = scrollRef.current.scrollLeft;
-    const itemWidth = 128 + 16; // w-32 + gap-4
+    const itemWidth = 128 + 16;
     const index = Math.round(scrollLeft / itemWidth);
     setActiveCarouselIndex(index);
   };
+
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col">
       <style dangerouslySetInnerHTML={{ __html: `
@@ -487,43 +480,49 @@ export function Wallet() {
 
             {/* Featured Partners */}
             <div className="px-6 pb-6">
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1">
-                {MOCK_PARTNERS.slice(0, 3).map((partner) => (
-                  <button
-                    key={partner.id}
-                    onClick={() => setSelectedPartner(partner)}
-                    className={`flex-shrink-0 flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-300 ${
-                      selectedPartner?.id === partner.id 
-                      ? 'bg-white dark:bg-slate-800 border-sky-500 shadow-xl shadow-sky-500/10 scale-105 z-10' 
-                      : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
-                    } min-w-[130px]`}
-                  >
-                    <div className="relative">
-                      <div 
-                        className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center shadow-inner"
-                      >
-                        <img 
-                          src={partner.logo} 
-                          alt={partner.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${partner.name}&background=random`;
-                          }}
-                        />
-                      </div>
-                      {selectedPartner?.id === partner.id && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
-                          <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+              {partnersLoading ? (
+                <div className="flex justify-center p-6">
+                  <LoadingSpinner size="sm" text="Loading Partners..." />
+                </div>
+              ) : (
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1">
+                  {partners.slice(0, 3).map((partner) => (
+                    <button
+                      key={partner.id}
+                      onClick={() => setSelectedPartner(partner)}
+                      className={`flex-shrink-0 flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-300 ${
+                        selectedPartner?.id === partner.id 
+                        ? 'bg-white dark:bg-slate-800 border-sky-500 shadow-xl shadow-sky-500/10 scale-105 z-10' 
+                        : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
+                      } min-w-[130px]`}
+                    >
+                      <div className="relative">
+                        <div 
+                          className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center shadow-inner"
+                        >
+                          <img 
+                            src={partner.logo} 
+                            alt={partner.name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${partner.name}&background=random`;
+                            }}
+                          />
                         </div>
-                      )}
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs font-black text-slate-800 dark:text-slate-200 leading-none">{partner.name}</p>
-                      <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{partner.helper}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
+                        {selectedPartner?.id === partner.id && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs font-black text-slate-800 dark:text-slate-200 leading-none">{partner.name}</p>
+                        <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{partner.helper}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Inline Expandable Panel - Progressive Disclosure */}
               {selectedPartner && showConnectForm && (
@@ -531,17 +530,22 @@ export function Wallet() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">
-                        {selectedPartner.label}
+                        {selectedPartner.label || selectedPartner.verification_type}
                       </Label>
                       <div className="relative group">
                         <Input
                           value={connectIdentifier}
                           onChange={(e) => setConnectIdentifier(e.target.value)}
-                          placeholder={selectedPartner.placeholder}
+                          placeholder={selectedPartner.placeholder || `Enter ${selectedPartner.verification_type}`}
                           className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-xs font-bold focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
                         />
-                        {connectIdentifier && !verifiedPartnerUser && (
+                        {connectIdentifier.length > 2 && !verifiedPartnerUser && !isVerifyingPartner && (
                           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-red-400 uppercase tracking-tighter">Not Found</span>
+                        )}
+                        {isVerifyingPartner && (
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                            <LoadingSpinner size="sm" />
+                          </div>
                         )}
                       </div>
                     </div>
@@ -572,7 +576,7 @@ export function Wallet() {
                             <p className="text-xs font-black text-slate-800 dark:text-slate-200">{verifiedPartnerUser.name}</p>
                             <CheckCircle2 className="w-3 h-3 text-sky-500" />
                           </div>
-                          <p className="text-[10px] font-bold text-slate-400">{verifiedPartnerUser.id}</p>
+                          <p className="text-[10px] font-bold text-slate-400">{verifiedPartnerUser.identifier}</p>
                         </div>
                       </div>
                       <div className="hidden md:block">
@@ -600,6 +604,7 @@ export function Wallet() {
               )}
             </div>
           </section>
+          
           {/* Internal Transfer Button */}
           <button 
             onClick={() => setTransferModalOpen(true)}
@@ -658,7 +663,7 @@ export function Wallet() {
               onScroll={handleCarouselScroll}
               className="flex gap-4 overflow-x-auto snap-x scrollbar-hide py-12 px-[35%] transition-all"
             >
-              {MOCK_PARTNERS.map((partner, index) => {
+              {partners.map((partner, index) => {
                 const isActive = activeCarouselIndex === index;
                 return (
                   <button
@@ -716,7 +721,7 @@ export function Wallet() {
 
             <div className="mt-12 flex flex-col items-center gap-4">
               <div className="flex gap-1.5">
-                {MOCK_PARTNERS.map((_, i) => (
+                {partners.map((_, i) => (
                   <div 
                     key={i} 
                     className={`h-1 rounded-full transition-all duration-500 ${
@@ -758,6 +763,7 @@ export function Wallet() {
           </div>
         </div>
       )}
+
       {/* BlueSea Connect Confirmation Modal */}
       {isConnectConfirmOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
@@ -789,7 +795,7 @@ export function Wallet() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Reference</span>
-                    <span className="text-slate-900 dark:text-white font-bold text-xs">{verifiedPartnerUser?.id}</span>
+                    <span className="text-slate-900 dark:text-white font-bold text-xs">{verifiedPartnerUser?.identifier}</span>
                   </div>
                   <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex justify-between items-center">
                     <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Total Amount</span>
@@ -852,8 +858,8 @@ export function Wallet() {
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 px-8 leading-relaxed font-medium">
                   {connectStatus === 'success' 
-                    ? `Successfully processed ₦${Number(connectAmount).toLocaleString()} for ${verifiedPartnerUser?.name} on ${selectedPartner?.name}.`
-                    : 'We encountered an error while processing your payment. Please check your balance or try again later.'}
+                    ? transactionMessage || `Successfully processed ₦${Number(connectAmount).toLocaleString()} for ${verifiedPartnerUser?.name} on ${selectedPartner?.name}.`
+                    : transactionMessage || 'We encountered an error while processing your payment. Please check your balance or try again later.'}
                 </p>
                 <Button 
                   onClick={resetConnect} 
@@ -886,24 +892,24 @@ export function Wallet() {
                 <div className="relative h-48 w-full bg-slate-900 rounded-[2rem] p-8 overflow-hidden border border-white/10 shadow-2xl transform hover:rotate-1 transition-transform">
                   <div className="absolute -right-10 -top-10 w-48 h-48 bg-sky-500/30 rounded-full blur-[80px]" />
                   <div className="flex justify-between items-start mb-12 relative z-10">
-                    <div className="w-12 h-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-lg flex items-center justify-center">
+                     <div className="w-12 h-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-lg flex items-center justify-center">
                        <div className="w-6 h-4 bg-yellow-500/50 rounded-sm" />
                     </div>
                     <CreditCard className="w-6 h-6 text-white/40" />
-                  </div>
+                   </div>
                   <div className="space-y-1 relative z-10">
                     <p className="text-white text-xl font-black tracking-[0.2em]">•••• •••• •••• {savedCard.number.slice(-4)}</p>
                     <div className="flex justify-between items-end mt-4">
-                       <p className="text-[10px] text-white/60 font-black uppercase tracking-widest">{savedCard.name}</p>
+                        <p className="text-[10px] text-white/60 font-black uppercase tracking-widest">{savedCard.name}</p>
                        <p className="text-[10px] text-white/40 font-bold">{savedCard.expiry}</p>
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-center gap-6">
+                 <div className="flex justify-center gap-6">
                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1">Visa</span>
                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1">Mastercard</span>
                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-1">Verve</span>
-                </div>
+                 </div>
                 <Button 
                   onClick={() => setSavedCard(null)} 
                   className="w-full bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-red-500/20 transition-all shadow-lg shadow-red-500/5"
@@ -914,7 +920,7 @@ export function Wallet() {
             ) : (
               <div className="space-y-5">
                 <div className="space-y-4">
-                  <div className="space-y-2">
+                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cardholder Name</Label>
                     <Input 
                       value={newCard.name}
@@ -1036,7 +1042,7 @@ export function Wallet() {
               {accountVerified && (
                 <div className="p-4 bg-green-500/5 border border-green-500/20 rounded-2xl flex items-center gap-3 animate-in fade-in zoom-in-95">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">{accountName}</p>
+                 <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">{accountName}</p>
                 </div>
               )}
               <div className="space-y-2">
@@ -1075,7 +1081,7 @@ export function Wallet() {
               <TransactionModal isSuccess={txStatus} onClose={()=> setIsOpen(false)} toastMessage={toastMessage} />
             </div>
           )}
-<ToastComponent />
+          <ToastComponent />
           <PinComponent type="withdrawal" value={{
             account_name: accountName,
             account_number: accountNumber,
@@ -1217,7 +1223,7 @@ export function Wallet() {
                       value={transferData.pin}
                       onChange={(e) => setTransferData({...transferData, pin: e.target.value.replace(/\D/g, '')})}
                     />
-                    <p className="mt-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">Security Pin Required</p>
+                     <p className="mt-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">Security Pin Required</p>
                   </div>
                 </div>
               )}
