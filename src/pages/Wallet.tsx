@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
-import { connectApi, Partner, VerifiedUser } from '@/services/connectApi';
+import { connectApi } from '@/services/connectApi';
+import type { Partner, VerifiedUser } from '@/services/connectApi';
+
 import { 
   Landmark, 
   Send, 
@@ -19,12 +21,12 @@ import {
   CheckCircle2, 
   AlertCircle,
   Zap,
-  Globe,
+  Globe, 
   Wallet as WalletIcon
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { PinModal, Toast } from '@/components/ui-custom';
-import { TransactionModal } from '@/components/ui_component/transaction_modal';
+import { PinModal, Toast, TransactionModal, } from '@/components/ui-custom';
+
 import { NIGERIAN_BANKS } from '@/data';
 import { useNavigate } from 'react-router-dom';
 
