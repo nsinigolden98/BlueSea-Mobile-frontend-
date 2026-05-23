@@ -407,8 +407,6 @@ export const ENDPOINTS = {
   
   
   //new
-  marketplace_events: '/api/marketplace/events/',
-  vendor_status: '/api/merchant/profile/',
   states: '/api/locations/states/',
   lgas: '/api/locations/lgas/',
 };
