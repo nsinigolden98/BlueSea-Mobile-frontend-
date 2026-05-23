@@ -22,7 +22,7 @@ export const useSendMessage = (conversationId: string | null) => {
 
   return useMutation({
     mutationFn: (formData: FormData) => messagingApi.sendMessage(formData),
-    onMutate: async (formData) => {
+    onMutate: async (formData: any) => {
       if (!conversationId) return;
 
       // Cancel outgoing refetches
@@ -52,7 +52,7 @@ export const useSendMessage = (conversationId: string | null) => {
 
       return { previousMessages };
     },
-    onError: (err, newTodo, context) => {
+    onError: (err: any, newTodo: any, context: any) => {
       // Rollback on failure
       if (context?.previousMessages && conversationId) {
         queryClient.setQueryData(['messaging', 'messages', conversationId], context.previousMessages);
@@ -71,7 +71,7 @@ export const useMarkAsRead = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: messagingApi.markAsRead,
-    onSuccess: (_, conversationId) => {
+    onSuccess: (_: any, conversationId: any) => {
       queryClient.invalidateQueries({ queryKey: ['messaging', 'conversations'] });
     }
   });

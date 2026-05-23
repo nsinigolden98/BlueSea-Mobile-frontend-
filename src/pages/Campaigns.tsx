@@ -8,14 +8,14 @@ import {
   useCampaignComments,
   useSubmitComment
 } from '@/hooks/affiliate/useAffiliate';
-import { Sidebar, Header, Loader } from '@/components/ui-custom';
+import { Sidebar, Header } from '@/components/ui-custom';
 import { cn } from '@/lib/utils';
 import { 
   TrendingUp, Calendar, Loader2, ArrowRight, Heart, MessageCircle, 
-  Share2, Download, Smile, X, Send, Copy, CheckCircle2, Plus, 
+  Share2, Download, Smile, X, Send, Copy, CheckCircle2, 
   Wallet, ChevronDown, MapPin, Tag, ExternalLink 
 } from 'lucide-react';
-import { Campaign } from '@/api/affiliate.api';
+import type { Campaign } from '@/api/affiliate.api';
 
 const formatNaira = (amount: number) => {
   return new Intl.NumberFormat('en-NG', {
@@ -194,7 +194,7 @@ export function Campaigns() {
                </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {sortedCampaigns.map((campaign) => {
+                {sortedCampaigns.map((campaign: Campaign) => {
                   const estimatedEarning = (campaign.price * campaign.commission_percent) / 100;
 
                   return (
@@ -335,7 +335,7 @@ export function Campaigns() {
                   <p className="text-xs">Be the first to ask about this item!</p>
                 </div>
               ) : (
-                activeComments.map((cmt: any) => (
+                activeComments.map((cmt: { id: string; user: { name: string }; text: string }) => (
                   <div key={cmt.id} className="flex gap-3">
                     <div className="w-8 h-8 rounded-full bg-sky-500 flex-shrink-0 flex items-center justify-center font-black text-[10px] text-white">
                       {cmt.user.name[0]}
@@ -371,7 +371,7 @@ export function Campaigns() {
         </div>
       )}
 
-    {/* PREMIUM DOWNLOAD FLYER */}
+      {/* PREMIUM DOWNLOAD FLYER */}
       {downloadingCard && (
         <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4">
            <div className="max-w-sm w-full space-y-6">

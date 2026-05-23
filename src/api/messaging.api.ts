@@ -1,5 +1,5 @@
 import { apiClient } from './axios';
-import { ApiResponse } from '../types';
+import type { ApiResponse } from '@/types';
 
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 

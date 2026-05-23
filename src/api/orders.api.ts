@@ -1,5 +1,5 @@
 import { apiClient } from './axios';
-import { ApiResponse, OrderPreview } from '../types';
+import type { ApiResponse, OrderPreview } from '@/types';;
 
 export const ordersApi = {
   createOrder: (payload: { 

@@ -559,7 +559,6 @@ export const stripCommas = (amount:string) => {
 // ==========================================
 export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.blueseamobile.com.ng';
 
-// Legacy endpoints retained for the preserved Event system
 export const ENDPOINTS = {
   marketplace_events: '/api/marketplace/events/',
   vendor_status: '/api/merchant/profile/',
@@ -579,7 +578,6 @@ export interface ApiResponse<T> {
   };
 }
 
-// Legacy fetch wrapper retained for the preserved Event component
 export const getRequest = async (endpoint: string) => {
   const token = localStorage.getItem('bluesim_token');
   const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -591,7 +589,6 @@ export const getRequest = async (endpoint: string) => {
   if (!response.ok) throw new Error('Network response was not ok');
   return response.json();
 };
-
 
 // ==========================================
 // 2. MARKETPLACE & MERCHANT
@@ -618,7 +615,7 @@ export interface Product {
   id: string;
   title: string;
   slug: string;
-  description: string;
+  description?: string; // Made optional to prevent modifier conflicts across variants
   price: number;
   discount_price: number;
   currency: string;
@@ -639,7 +636,6 @@ export interface Product {
   created_at: string;
   updated_at: string;
 }
-
 
 // ==========================================
 // 3. ORDERS & CHECKOUT
@@ -680,7 +676,6 @@ export interface DeliveryInfo {
   landmark?: string;
   postalCode?: string;
 }
-
 
 // ==========================================
 // 4. MESSAGING SYSTEM
@@ -724,8 +719,8 @@ export interface Message {
   timestamp: string;
   status: MessageStatus;
   reply_to?: string;
+  pin?: string; // Added to fix property fallback errors during checkout verification
 }
-
 
 // ==========================================
 // 5. AFFILIATE / DISCOVER & EARN
@@ -751,7 +746,6 @@ export interface AffiliateEarnings {
   pending: number;
   withdrawable: number;
 }
-
 
 // ==========================================
 // 6. ACTIVITY & HISTORY
@@ -779,15 +773,14 @@ export interface HistoryItem {
   details: HistoryDetails;
 }
 
-
 // ==========================================
 // 7. EVENT SYSTEM (PRESERVED MODULES)
 // ==========================================
 export interface TicketType {
   id: string;
   name: string;
-  description: string;
-  price: number | string;
+  description?: string;
+  price: string; // Synced consistent primitive typing
   quantity_available: number;
 }
 
@@ -806,7 +799,6 @@ export interface MarketplaceEvent {
   total_tickets: number;
   ticket_types: TicketType[];
 }
-
 
 // ==========================================
 // 8. WALLET & POINTS

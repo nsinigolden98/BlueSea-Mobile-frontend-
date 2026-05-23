@@ -1,14 +1,16 @@
+// src/pages/history/History.tsx
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, ChevronDown, ChevronUp, Package, Gamepad2, 
-  Ticket, TrendingUp, Search, Clock, CheckCircle2, 
+  Ticket, Search, Clock, CheckCircle2, 
   XCircle, ExternalLink, MapPin, User, ShoppingBag, MessageSquare, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sidebar } from '@/components/ui-custom';
 import { useHistory } from '@/hooks/history/useHistory';
-import { HistoryItem } from '@/api/history.api';
+import type { HistoryItem } from '@/types';
 
 const StatusBadge = ({ status }: { status: string }) => {
   const icons = {
@@ -23,7 +25,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   };
   return (
     <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase", styles[status as keyof typeof styles])}>
-      {icons[status as keyof typeof icons]}
+      {icons[status as keyof typeof icons] || <Clock className="w-3 h-3" />}
       {status}
     </span>
   );
@@ -44,7 +46,7 @@ export default function HistoryPage() {
     search: searchQuery
   });
 
-  const history = historyRes?.data || [];
+  const history = (historyRes as any)?.data || [];
 
   const handleChatWithSeller = (item: HistoryItem) => {
     navigate(`/messages?thread=${item.id}`, {
@@ -107,7 +109,7 @@ export default function HistoryPage() {
                <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-sky-500" /></div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {history.map((item) => (
+                {history.map((item: HistoryItem) => (
                   <div key={item.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
                     <div className="flex justify-between items-start cursor-pointer" onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}>
                       <div className="flex gap-3">

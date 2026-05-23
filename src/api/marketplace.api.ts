@@ -1,5 +1,5 @@
 import { apiClient } from './axios';
-import { ApiResponse, Product } from '../types';
+import type { ApiResponse, Product } from '@/types';
 
 export const marketplaceApi = {
   getProducts: (params?: any) =>

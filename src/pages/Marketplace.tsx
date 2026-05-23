@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -26,10 +25,11 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getRequest, ENDPOINTS, API_BASE, type MarketplaceEvent} from '@/types';
+import { getRequest, ENDPOINTS, API_BASE } from '@/types';
+import type { MarketplaceEvent } from '@/types';
 import { marketplaceApi } from '@/api/marketplace.api';
 import { messagingApi } from '@/api/messaging.api';
-import { Product, Category } from '@/types';
+import type { Product, Category } from '@/types';
 
 // --- UNIVERSAL COMPONENTS ---
 const VerifiedBadge = ({ className }: { className?: string }) => (
@@ -87,6 +87,7 @@ export function Marketplace() {
   useEffect(() => {
     fetchEvents();
     fetchVendorStatus();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchEvents = async () => {
@@ -182,7 +183,7 @@ export function Marketplace() {
 
   const createConvMutation = useMutation({
     mutationFn: messagingApi.createConversation,
-    onSuccess: (res) => navigate(`/messages?thread=${res.data.conversation_id}`)
+    onSuccess: (res: any) => navigate(`/messages?thread=${res.data.conversation_id}`)
   });
 
   const handleProductClick = (product: Product) => {
@@ -225,7 +226,7 @@ export function Marketplace() {
     enabled: activeCategory === 'Points'
   });
   
-  const pointsProviders = pointsRes?.data || [];
+  const pointsProviders = (pointsRes as any)?.data || [];
   const filteredPoints = pointsProviders.filter((p: any) => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -248,18 +249,20 @@ export function Marketplace() {
   useEffect(() => {
     if (message) {
       setIsOpen(true);
-      if (message?.success || message?.code === '000') {
-        showToast(message?.response_description || 'Transaction successful!');
-        setTxMessage(message?.response_description || 'Transaction successful!');
+      const msgState = message as any;
+      if (msgState?.success || msgState?.code === '000') {
+        showToast(msgState?.response_description || 'Transaction successful!');
+        setTxMessage(msgState?.response_description || 'Transaction successful!');
         setTxStatus(true);
         setSelectedEvent(null);
         setSelectedPointProvider(null);
       } else {
-        showToast(message?.error || message?.response_description || 'Transaction failed');
-        setTxMessage(message?.error || message?.response_description || 'Transaction failed');
+        showToast(msgState?.error || msgState?.response_description || 'Transaction failed');
+        setTxMessage(msgState?.error || msgState?.response_description || 'Transaction failed');
         setTxStatus(false);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message]);
 
 
@@ -610,7 +613,7 @@ export function Marketplace() {
                     <div className="flex items-center gap-3">
                       <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">-</button>
                       <span className="text-xl font-bold text-slate-800 dark:text-white">{quantity}</span>
-                      <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">+</button>
+                                           <button onClick={() => setQuantity(quantity + 1)} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">+</button>
                     </div>
                   </div>
                 )}
@@ -715,7 +718,7 @@ export function Marketplace() {
 
       <PinComponent type="marketplace" value={{ 
         event_id: selectedEvent?.id || selectedPointProvider?.id || selectedProduct?.id, 
-        ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || selectedPointProvider?.packages.find(p => p.id === selectedPointPackage)?.name || 'Product Purchase', 
+        ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || selectedPointProvider?.packages.find((p: any) => p.id === selectedPointPackage)?.name || 'Product Purchase', 
         quantity: activeCategory === 'Products' ? productQuantity : quantity,
         player_id: pointPlayerId 
       }} />

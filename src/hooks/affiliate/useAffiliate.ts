@@ -34,7 +34,7 @@ export const useSubmitComment = () => {
   return useMutation({
     mutationFn: ({ campaignId, text }: { campaignId: string; text: string }) => 
       affiliateApi.submitComment(campaignId, text),
-    onSuccess: (_, variables) => {
+    onSuccess: (_: any, variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['affiliate', 'comments', variables.campaignId] });
     },
   });
