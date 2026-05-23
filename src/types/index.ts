@@ -402,7 +402,15 @@ export const ENDPOINTS = {
   marketplace_ticket_detail: (id: string) => `${API_BASE}/marketplace/tickets/${id}/`,
   marketplace_ticket_transfer: (id: string) => `${API_BASE}/marketplace/tickets/${id}/transfer/`,
   marketplace_ticket_cancel: (id: string) => `${API_BASE}/marketplace/tickets/${id}/cancel/`,
-  referral: `${API_BASE}/bonus/referral/`
+  referral: `${API_BASE}/bonus/referral/`,
+  
+  
+  
+  //new
+  marketplace_events: '/api/marketplace/events/',
+  vendor_status: '/api/merchant/profile/',
+  states: '/api/locations/states/',
+  lgas: '/api/locations/lgas/',
 };
 
 
@@ -558,12 +566,12 @@ export const stripCommas = (amount:string) => {
 // 1. GLOBAL API & SYSTEM CONSTANTS
 // ==========================================
 
-export const ENDPOINTS = {
+{/*export const ENDPOINTS = {
   marketplace_events: '/api/marketplace/events/',
   vendor_status: '/api/merchant/profile/',
   states: '/api/locations/states/',
   lgas: '/api/locations/lgas/',
-};
+};*/}
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -577,7 +585,7 @@ export interface ApiResponse<T> {
   };
 }
 
-export const getRequest = async (endpoint: string) => {
+{/*export const getRequest = async (endpoint: string) => {
   const token = localStorage.getItem('bluesim_token');
   const response = await fetch(`${API_BASE}${endpoint}`, {
     headers: {
@@ -587,7 +595,7 @@ export const getRequest = async (endpoint: string) => {
   });
   if (!response.ok) throw new Error('Network response was not ok');
   return response.json();
-};
+};*/}
 
 // ==========================================
 // 2. MARKETPLACE & MERCHANT
