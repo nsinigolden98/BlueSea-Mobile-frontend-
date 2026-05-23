@@ -1,97 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ChevronLeft, 
-  ChevronDown, 
-  ChevronUp, 
-  Package, 
-  Gamepad2, 
-  Ticket, 
-  TrendingUp, 
-  Search,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  ExternalLink,
-  MapPin,
-  User,
-  ShoppingBag,
-  MessageSquare
+  ChevronLeft, ChevronDown, ChevronUp, Package, Gamepad2, 
+  Ticket, TrendingUp, Search, Clock, CheckCircle2, 
+  XCircle, ExternalLink, MapPin, User, ShoppingBag, MessageSquare, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Sidebar, Toast } from '@/components/ui-custom';
-import { getRequest, ENDPOINTS } from '@/types';
-
-// --- TYPES ---
-interface HistoryDetails {
-  sellerName?: string;
-  deliveryLocation?: string;
-  transactionId?: string;
-  gameName?: string;
-  playerId?: string;
-  eventName?: string;
-  eventDate?: string;
-  ticketInfo?: string;
-}
-
-interface HistoryItem {
-  id: string;
-  type: 'product' | 'point' | 'ticket';
-  title: string;
-  image: string;
-  amount: number;
-  quantity?: number;
-  status: 'pending' | 'completed' | 'failed';
-  createdAt: string;
-  details: HistoryDetails;
-}
-
-const MOCK_HISTORY: HistoryItem[] = [
-  {
-    id: 'TX-9021',
-    type: 'product',
-    title: 'iPhone 15 Pro Max',
-    image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=800&q=80',
-    amount: 1850000,
-    quantity: 1,
-    status: 'completed',
-    createdAt: '2026-04-23T14:30:00Z',
-    details: {
-      sellerName: 'Gadget Hub',
-      deliveryLocation: '123 Ewet Housing, Uyo',
-      transactionId: 'REF-882910293'
-    }
-  },
-  {
-    id: 'TX-7819',
-    type: 'product',
-    title: 'Sony WH-1000XM5 Headphones',
-    image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80',
-    amount: 420000,
-    quantity: 1,
-    status: 'pending',
-    createdAt: '2026-04-25T12:10:00Z',
-    details: {
-      sellerName: 'Audio World',
-      deliveryLocation: 'Lekki Phase 1, Lagos',
-      transactionId: 'REF-55219081'
-    }
-  },
-  {
-    id: 'TX-4412',
-    type: 'point',
-    title: 'COD Mobile - 880 CP',
-    image: '🎮', 
-    amount: 9000,
-    status: 'pending',
-    createdAt: '2026-04-24T09:15:00Z',
-    details: {
-      gameName: 'Call of Duty Mobile',
-      playerId: '6722910332',
-      transactionId: 'PTS-11022938'
-    }
-  }
-];
+import { Sidebar } from '@/components/ui-custom';
+import { useHistory } from '@/hooks/history/useHistory';
+import { HistoryItem } from '@/api/history.api';
 
 const StatusBadge = ({ status }: { status: string }) => {
   const icons = {
@@ -99,13 +16,11 @@ const StatusBadge = ({ status }: { status: string }) => {
     pending: <Clock className="w-3 h-3" />,
     failed: <XCircle className="w-3 h-3" />
   };
-
   const styles = {
-    completed: "bg-green-100 text-green-600",
-    pending: "bg-orange-100 text-orange-600",
-    failed: "bg-red-100 text-red-600"
+    completed: "bg-green-100 text-green-600 dark:bg-green-900/20",
+    pending: "bg-orange-100 text-orange-600 dark:bg-orange-900/20",
+    failed: "bg-red-100 text-red-600 dark:bg-red-900/20"
   };
-
   return (
     <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase", styles[status as keyof typeof styles])}>
       {icons[status as keyof typeof icons]}
@@ -116,57 +31,35 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function HistoryPage() {
   const navigate = useNavigate();
-  const { ToastComponent } = Toast();
-  
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [vendorStatus, setVendorStatus] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState('All');
   const [activeFilter, setActiveFilter] = useState('All');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // --- SERVER STATE ---
+  const { data: historyRes, isLoading } = useHistory({
+    type: activeTab === 'All' ? undefined : activeTab.toLowerCase().slice(0, -1),
+    status: activeFilter === 'All' ? undefined : activeFilter.toLowerCase(),
+    search: searchQuery
+  });
+
+  const history = historyRes?.data || [];
 
   const handleChatWithSeller = (item: HistoryItem) => {
     navigate(`/messages?thread=${item.id}`, {
-      state: {
-        source: 'history',
-        historyId: item.id,
-        productId: item.id,
-        sellerName: item.details.sellerName ?? 'Seller'
-      }
+      state: { source: 'history', historyId: item.id, sellerName: item.details?.sellerName }
     });
   };
-
-  useEffect(() => {
-    const fetchVendorStatus = async () => {
-      try {
-        const response = await getRequest(ENDPOINTS.vendor_status);
-        if (response?.vendor?.is_verified) setVendorStatus(true);
-      } catch (err) { console.error(err); }
-    };
-    fetchVendorStatus();
-  }, []);
-
-  const baseTabs = ['All', 'Products', 'Points', 'Tickets'];
-  const tabs = vendorStatus ? ['Sales', ...baseTabs] : baseTabs;
-  const filters = ['All', 'Pending', 'Completed', 'Failed'];
-
-  const filteredHistory = MOCK_HISTORY.filter(item => {
-    const search = searchQuery.toLowerCase().trim();
-    const matchesTab = activeTab === 'All' || (activeTab === 'Sales' && item.type === 'product') || item.type === activeTab.toLowerCase().slice(0, -1);
-    const matchesStatus = activeFilter === 'All' || item.status === activeFilter.toLowerCase();
-    const matchesSearch = item.title.toLowerCase().includes(search) || item.id.toLowerCase().includes(search);
-    return matchesTab && matchesStatus && matchesSearch;
-  });
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <ToastComponent />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center gap-4 px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 sticky top-0 z-30">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ChevronLeft className="w-6 h-6 text-slate-600" />
+        <header className="flex items-center gap-4 px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-30">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+            <ChevronLeft className="w-6 h-6 text-slate-600 dark:text-slate-400" />
           </button>
           <h1 className="text-xl font-bold text-slate-800 dark:text-white">History</h1>
           <ShoppingBag className="w-5 h-5 ml-auto text-slate-400" />
@@ -174,7 +67,6 @@ export default function HistoryPage() {
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-6">
-            
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input 
@@ -182,69 +74,78 @@ export default function HistoryPage() {
                 placeholder="Search history..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm"
+                className="w-full pl-12 pr-4 py-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm outline-none focus:ring-2 ring-sky-500"
               />
             </div>
 
+            {/* Filter Tabs */}
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {tabs.map((tab) => (
-                <button key={tab} onClick={() => setActiveTab(tab)} className={cn("px-6 py-2 rounded-full text-xs font-bold", activeTab === tab ? "bg-slate-800 text-white" : "bg-white text-slate-500")}>
-                  {tab === 'Sales' && <TrendingUp className="w-3 h-3 inline mr-1" />}
+              {['All', 'Products', 'Points', 'Tickets'].map((tab) => (
+                <button 
+                  key={tab} 
+                  onClick={() => setActiveTab(tab)} 
+                  className={cn("px-6 py-2 rounded-full text-xs font-bold transition-all", activeTab === tab ? "bg-slate-800 text-white dark:bg-sky-500" : "bg-white dark:bg-slate-800 text-slate-500")}
+                >
                   {tab}
                 </button>
               ))}
             </div>
 
-            <div className="flex gap-4 border-b border-slate-200">
-              {filters.map((f) => (
-                <button key={f} onClick={() => setActiveFilter(f)} className={cn("pb-2 text-xs font-bold", activeFilter === f ? "text-sky-500 border-b-2 border-sky-500" : "text-slate-400")}>
+            <div className="flex gap-4 border-b border-slate-200 dark:border-slate-700">
+              {['All', 'Pending', 'Completed', 'Failed'].map((f) => (
+                <button 
+                  key={f} 
+                  onClick={() => setActiveFilter(f)} 
+                  className={cn("pb-2 text-xs font-bold transition-colors", activeFilter === f ? "text-sky-500 border-b-2 border-sky-500" : "text-slate-400")}
+                >
                   {f}
                 </button>
               ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredHistory.map((item) => (
-                <div key={item.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <div className="flex justify-between items-start" onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}>
-                    <div className="flex gap-3">
-                      <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
-                        {item.type === 'product' ? <Package className="w-6 h-6 text-sky-500" /> : item.type === 'point' ? <Gamepad2 className="w-6 h-6 text-purple-500" /> : <Ticket className="w-6 h-6 text-orange-500" />}
+            {isLoading ? (
+               <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-sky-500" /></div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {history.map((item) => (
+                  <div key={item.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <div className="flex justify-between items-start cursor-pointer" onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}>
+                      <div className="flex gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                          {item.type === 'product' ? <Package className="w-6 h-6 text-sky-500" /> : item.type === 'point' ? <Gamepad2 className="w-6 h-6 text-purple-500" /> : <Ticket className="w-6 h-6 text-orange-500" />}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold dark:text-white">{item.title}</h4>
+                          <StatusBadge status={item.status} />
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-bold dark:text-white">{item.title}</h4>
-                        <StatusBadge status={item.status} />
-                      </div>
-                    </div>
-                    <div className="text-right">
+                      <div className="text-right">
                         <p className="text-sm font-black text-sky-500">₦{item.amount.toLocaleString()}</p>
-                        {expandedId === item.id ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+                        {expandedId === item.id ? <ChevronUp className="w-4 h-4 ml-auto text-slate-400" /> : <ChevronDown className="w-4 h-4 ml-auto text-slate-400" />}
+                      </div>
                     </div>
-                  </div>
 
-                  {expandedId === item.id && (
-                    <div className="mt-4 space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/40">
-                         <DetailRow icon={<ExternalLink className="w-3 h-3" />} label="Ref" value={item.details.transactionId ?? item.id} />
-                         {item.details.sellerName && <DetailRow icon={<User className="w-3 h-3" />} label="Seller" value={item.details.sellerName} />}
-                         {item.details.deliveryLocation && <DetailRow icon={<MapPin className="w-3 h-3" />} label="Location" value={item.details.deliveryLocation} />}
-                         
-                         {item.type === 'product' && item.status === 'pending' && (
+                    {expandedId === item.id && (
+                      <div className="mt-4 space-y-3 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4">
+                        <DetailRow icon={<ExternalLink className="w-3 h-3" />} label="Ref" value={item.details?.transactionId ?? item.id} />
+                        {item.details?.sellerName && <DetailRow icon={<User className="w-3 h-3" />} label="Seller" value={item.details.sellerName} />}
+                        {item.details?.deliveryLocation && <DetailRow icon={<MapPin className="w-3 h-3" />} label="Location" value={item.details.deliveryLocation} />}
+                        
+                        {item.type === 'product' && item.status === 'pending' && (
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleChatWithSeller(item);
-                            }}
-                            className="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-white px-4 py-3 text-sm font-bold text-sky-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md dark:border-sky-900/40 dark:from-sky-950/20 dark:to-slate-900 dark:text-sky-400"
+                            onClick={() => handleChatWithSeller(item)}
+                            className="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-white dark:bg-slate-800 px-4 py-3 text-sm font-bold text-sky-600 hover:bg-sky-50 transition-colors"
                           >
                             <MessageSquare className="w-4 h-4" />
                             Chat with Seller
                           </button>
                         )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -253,11 +154,10 @@ export default function HistoryPage() {
 }
 
 function DetailRow({ label, value, icon }: { label: string, value: string, icon: React.ReactNode }) {
-    return (
-        <div className="flex justify-between items-center py-1">
-            <span className="text-[11px] text-slate-400 flex items-center gap-1">{icon} {label}</span>
-            <span className="text-[11px] font-bold dark:text-slate-200">{value}</span>
-        </div>
-    );
+  return (
+    <div className="flex justify-between items-center py-1">
+      <span className="text-[11px] text-slate-400 flex items-center gap-1">{icon} {label}</span>
+      <span className="text-[11px] font-bold dark:text-slate-200">{value}</span>
+    </div>
+  );
 }
-

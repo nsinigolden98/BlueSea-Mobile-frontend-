@@ -552,3 +552,280 @@ export const stripCommas = (amount:string) => {
   return Number(amount.replaceAll(',',''))
 }
 
+// src/types/index.ts
+
+// ==========================================
+// 1. GLOBAL API & SYSTEM CONSTANTS
+// ==========================================
+export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.blueseamobile.com.ng';
+
+// Legacy endpoints retained for the preserved Event system
+export const ENDPOINTS = {
+  marketplace_events: '/api/marketplace/events/',
+  vendor_status: '/api/merchant/profile/',
+  states: '/api/locations/states/',
+  lgas: '/api/locations/lgas/',
+};
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  pagination?: {
+    page: number;
+    total_pages: number;
+    total_items: number;
+    has_next: boolean;
+  };
+}
+
+// Legacy fetch wrapper retained for the preserved Event component
+export const getRequest = async (endpoint: string) => {
+  const token = localStorage.getItem('bluesim_token');
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    }
+  });
+  if (!response.ok) throw new Error('Network response was not ok');
+  return response.json();
+};
+
+
+// ==========================================
+// 2. MARKETPLACE & MERCHANT
+// ==========================================
+export interface Category {
+  id: string;
+  name: string;
+  icon?: string;
+  slug: string;
+}
+
+export interface Merchant {
+  id: string;
+  name: string;
+  is_verified: boolean;
+  avatar: string;
+  rating: number;
+  response_rate?: number;
+  response_time?: string;
+  joined_date?: string;
+}
+
+export interface Product {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  price: number;
+  discount_price: number;
+  currency: string;
+  stock_quantity: number;
+  condition: 'new' | 'used';
+  status: 'active' | 'draft' | 'sold_out' | 'hidden' | 'deleted' | 'under_review';
+  visibility: 'public' | 'hidden';
+  location: string;
+  delivery_type: 'pickup' | 'delivery' | 'both';
+  delivery_fee: number;
+  images: string[];
+  category: Category;
+  seller: Merchant;
+  rating: number;
+  review_count: number;
+  view_count: number;
+  wishlist_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+
+// ==========================================
+// 3. ORDERS & CHECKOUT
+// ==========================================
+export type OrderStatus = 
+  | 'pending' 
+  | 'awaiting_payment' 
+  | 'processing' 
+  | 'shipped' 
+  | 'delivered' 
+  | 'completed' 
+  | 'refunded' 
+  | 'cancelled' 
+  | 'disputed';
+
+export interface OrderPreview {
+  id: string;
+  total_amount: number;
+  subtotal: number;
+  delivery_fee: number;
+  status: OrderStatus;
+  items?: {
+    product_id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    image: string;
+  }[];
+  delivery_address?: DeliveryInfo;
+}
+
+export interface DeliveryInfo {
+  country: string;
+  state: string;
+  city?: string;
+  lga?: string;
+  address: string;
+  landmark?: string;
+  postalCode?: string;
+}
+
+
+// ==========================================
+// 4. MESSAGING SYSTEM
+// ==========================================
+export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
+
+export interface Participant {
+  id: string;
+  name: string;
+  avatar: string;
+  role: 'buyer' | 'seller' | 'user';
+  is_verified: boolean;
+}
+
+export interface Conversation {
+  id: string;
+  participants: Participant[];
+  product?: {
+    id: string;
+    name: string;
+    price: number;
+    image: string;
+  };
+  order?: {
+    id: string;
+    status: OrderStatus;
+  };
+  last_message: string;
+  unread_count: number;
+  updated_at: string;
+}
+
+export interface Message {
+  id: string;
+  conversation_id: string;
+  text?: string;
+  image_url?: string;
+  sender_id: string;
+  is_mine: boolean;
+  role: 'buyer' | 'seller' | 'system';
+  timestamp: string;
+  status: MessageStatus;
+  reply_to?: string;
+}
+
+
+// ==========================================
+// 5. AFFILIATE / DISCOVER & EARN
+// ==========================================
+export interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  type: 'event' | 'product';
+  price: number;
+  commission_percent: number;
+  location: string;
+  seller_name: string;
+  seller_avatar: string;
+  is_active: boolean;
+  start_date: string;
+  end_date: string;
+  image_url: string;
+}
+
+export interface AffiliateEarnings {
+  total: number;
+  pending: number;
+  withdrawable: number;
+}
+
+
+// ==========================================
+// 6. ACTIVITY & HISTORY
+// ==========================================
+export interface HistoryDetails {
+  sellerName?: string;
+  deliveryLocation?: string;
+  transactionId?: string;
+  gameName?: string;
+  playerId?: string;
+  eventName?: string;
+  eventDate?: string;
+  ticketInfo?: string;
+}
+
+export interface HistoryItem {
+  id: string;
+  type: 'product' | 'point' | 'ticket' | 'affiliate' | 'wallet';
+  title: string;
+  image: string;
+  amount: number;
+  quantity?: number;
+  status: 'pending' | 'completed' | 'failed';
+  createdAt: string;
+  details: HistoryDetails;
+}
+
+
+// ==========================================
+// 7. EVENT SYSTEM (PRESERVED MODULES)
+// ==========================================
+export interface TicketType {
+  id: string;
+  name: string;
+  description: string;
+  price: number | string;
+  quantity_available: number;
+}
+
+export interface MarketplaceEvent {
+  id: string;
+  event_title: string;
+  event_description: string;
+  event_date: string;
+  event_location: string;
+  category: string;
+  event_banner?: string;
+  ticket_image?: string;
+  is_free: boolean;
+  is_approved: boolean;
+  tickets_sold: number;
+  total_tickets: number;
+  ticket_types: TicketType[];
+}
+
+
+// ==========================================
+// 8. WALLET & POINTS
+// ==========================================
+export interface WalletBalance {
+  balance: number;
+  currency: string;
+}
+
+export interface PointPackage {
+  id: number;
+  name: string;
+  price: number;
+}
+
+export interface PointProvider {
+  id: string;
+  name: string;
+  image: string;
+  color: string;
+  packages: PointPackage[];
+}

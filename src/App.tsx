@@ -56,6 +56,9 @@ import './App.css';
 import { useAuth } from '@/context/AuthContext';
 import { AuthLoader } from '@/components/ui-custom';
 
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
+
 /**
  * Global Layout Wrapper
  * Handles the persistent Header and the conditional LiveTicker
@@ -171,7 +174,9 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <QueryClientProvider client={queryClient}>
           <AppRoutes />
+          </QueryClientProvider>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>

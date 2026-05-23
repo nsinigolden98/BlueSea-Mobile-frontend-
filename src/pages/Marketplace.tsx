@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Sidebar, PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { Input } from '@/components/ui/input';
 import { 
@@ -21,13 +23,15 @@ import {
   History,
   FilePlus,
   Coins,
-  MessageSquare // Added for header and product chat
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRequest, ENDPOINTS, API_BASE, type MarketplaceEvent} from '@/types';
+import { marketplaceApi } from '@/api/marketplace.api';
+import { messagingApi } from '@/api/messaging.api';
+import { Product, Category } from '@/types';
 
 // --- UNIVERSAL COMPONENTS ---
-
 const VerifiedBadge = ({ className }: { className?: string }) => (
   <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider", className)}>
     <CheckCircle2 className="w-3 h-3" />
@@ -35,72 +39,43 @@ const VerifiedBadge = ({ className }: { className?: string }) => (
   </span>
 );
 
-// --- PRODUCT DATA DEFINITION (REDUCED REPETITION) ---
-
-const PRODUCT_CATEGORIES = ['All', 'Bulk', 'Electronics', 'Shoes', 'Makeup'];
-
-const PRODUCTS = [
-  // First visible category (Bulk) - 2 items
-  { id: 'b1', category: 'Bulk', name: 'Premium Rice 50kg', price: 45000, sellerName: 'Alhaji & Sons', sellerId: 's1', stock: 12, condition: 'New', images: ['https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80'], description: 'Long grain parboiled rice, stone-free and high quality.', badge: 'Hot' },
-  { id: 'b2', category: 'Bulk', name: 'Vegetable Oil 25L', price: 32000, sellerName: 'Uyo Food Mart', sellerId: 's2', stock: 5, condition: 'New', images: ['https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=800&q=80'], description: 'Pure refined vegetable oil for all cooking purposes.', badge: 'Bulk' },
-  
-  // Other categories - 1 item each
-  { id: 'e1', category: 'Electronics', name: 'iPhone 15 Pro Max', price: 1850000, sellerName: 'Gadget Hub', sellerId: 's3', stock: 2, condition: 'New', images: ['https://images.unsplash.com/photo-1696446701796-da61225697cc?w=800&q=80'], description: 'Titanium design, A17 Pro chip, Pro camera system.', badge: 'Hot' },
-  { id: 's1', category: 'Shoes', name: 'Nike Air Jordan 1', price: 120000, sellerName: 'Sneaker Head', sellerId: 's5', stock: 8, condition: 'New', images: ['https://images.unsplash.com/photo-1584000302558-ce0ad2ee920e?w=800&q=80'], description: 'Iconic basketball sneakers in classic red and black.', badge: 'Hot' },
-  { id: 'm1', category: 'Makeup', name: 'Fenty Beauty Foundation', price: 42000, sellerName: 'Glamour Shop', sellerId: 's8', stock: 25, condition: 'New', images: ['https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=800&q=80'], description: 'Pro Filt\'r Soft Matte Longwear Foundation in 50 shades.', badge: 'Hot' },
-];
-
-const POINTS_PROVIDERS = [
-  { id: 'cod', name: 'COD Mobile', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80', color: 'bg-slate-800', packages: [{ id: 1, name: '80 CP', price: 900 }, { id: 2, name: '420 CP', price: 4500 }, { id: 3, name: '880 CP', price: 9000 }] },
-  { id: 'freefire', name: 'Free Fire', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&q=80', color: 'bg-orange-500', packages: [{ id: 1, name: '100 Diamonds', price: 800 }, { id: 2, name: '310 Diamonds', price: 2400 }, { id: 3, name: '520 Diamonds', price: 4000 }] },
-  { id: 'pubg', name: 'PUBG Mobile', image: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=400&q=80', color: 'bg-yellow-600', packages: [{ id: 1, name: '60 UC', price: 1200 }, { id: 2, name: '325 UC', price: 6000 }, { id: 3, name: '660 UC', price: 11500 }] },
-  { id: 'fortnite', name: 'Fortnite', image: 'https://images.unsplash.com/photo-1589241062272-c0a000072dfa?w=400&q=80', color: 'bg-purple-600', packages: [{ id: 1, name: '1000 V-Bucks', price: 12000 }, { id: 2, name: '2800 V-Bucks', price: 30000 }, { id: 3, name: '5000 V-Bucks', price: 50000 }] },
-  { id: 'acadiva', name: 'Acadiva', image: 'https://acadiva.xyz/favicon.ico', color: 'bg-blue-600', packages: [{ id: 1, name: 'Basic Plan', price: 2000 }, { id: 2, name: 'Premium Plan', price: 5000 }, { id: 3, name: 'Scholar Plan', price: 10000 }] },
-];
+// --- DEBOUNCE HOOK ---
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 export function Marketplace() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { PinComponent, showPinModal, message } = PinModal();
+  const { showToast, ToastComponent } = Toast();
+
+  // --- GLOBAL UI STATE ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const [activeCategory, setActiveCategory] = useState('Events');
+  const [showMenu, setShowMenu] = useState(false);
+  const [vendorStatus, setVendorStatus] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [txStatus, setTxStatus] = useState<boolean | null>(null);
+  const [txMessage, setTxMessage] = useState('');
+
+  const categoriesTabs = ['Events', 'Products', 'Points'];
+
+  // ==========================================
+  // 1. EVENT SYSTEM (PRESERVED)
+  // ==========================================
   const [events, setEvents] = useState<MarketplaceEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<MarketplaceEvent | null>(null);
   const [selectedTicketType, setSelectedTicketType] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
-  const [vendorStatus, setVendorStatus] = useState<boolean>(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const { PinComponent, showPinModal, message } = PinModal();
-  const { showToast, ToastComponent } = Toast();
-  const [isOpen, setIsOpen] = useState(false);
-  const [txStatus, setTxStatus] = useState<boolean | null>(null);
-  const [txMessage, setTxMessage] = useState('');
-
-  const [selectedPointProvider, setSelectedPointProvider] = useState<typeof POINTS_PROVIDERS[0] | null>(null);
-  const [pointPlayerId, setPointPlayerId] = useState('');
-  const [selectedPointPackage, setSelectedPointPackage] = useState<number | null>(null);
-  const [isPointLoading, setIsPointLoading] = useState(false);
-  const [pointError, setPointError] = useState('');
-
-  const [selectedProduct, setSelectedProduct] = useState<typeof PRODUCTS[0] | null>(null);
-  const [productQuantity, setProductQuantity] = useState(1);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [activeProductSubCategory, setActiveProductSubCategory] = useState('All');
-
-  const getImageUrl = (path: string | undefined) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    return `${API_BASE}${path}`;
-  };
-
-  const getEventImage = (event: MarketplaceEvent) => {
-    if (event.event_banner) return getImageUrl(event.event_banner);
-    if (event.ticket_image) return getImageUrl(event.ticket_image);
-    return '';
-  };
-
-  const categories = ['Events', 'Products', 'Points'];
 
   useEffect(() => {
     if (!selectedEvent) {
@@ -114,24 +89,6 @@ export function Marketplace() {
     fetchVendorStatus();
   }, []);
 
-  useEffect(() => {
-    if (message) {
-      setIsOpen(true);
-      if (message?.success || message?.code === '000') {
-        showToast(message?.response_description || 'Transaction successful!');
-        setTxMessage(message?.response_description || 'Transaction successful!');
-        setTxStatus(true);
-        setSelectedEvent(null);
-        setSelectedPointProvider(null);
-        setSelectedProduct(null);
-      } else {
-        showToast(message?.error || message?.response_description || 'Transaction failed');
-        setTxMessage(message?.error || message?.response_description || 'Transaction failed');
-        setTxStatus(false);
-      }
-    }
-  }, [message]);
-
   const fetchEvents = async () => {
     try {
       const data = await getRequest(ENDPOINTS.marketplace_events);
@@ -140,13 +97,11 @@ export function Marketplace() {
         const eventId = searchParams.get('event');
         if (eventId) {
           const foundEvent = data.find((e: MarketplaceEvent) => e.id === eventId);
-          if (foundEvent) {
-            setSelectedEvent(foundEvent);
-          }
+          if (foundEvent) setSelectedEvent(foundEvent);
         }
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       showToast('Failed to fetch events');
     } finally {
       setLoading(false);
@@ -156,47 +111,20 @@ export function Marketplace() {
   const fetchVendorStatus = async () => {
     try {
       const response = await getRequest(ENDPOINTS.vendor_status);
-      if (response?.vendor) {
-        setVendorStatus(response.vendor.is_verified);
-      } else {
-        setVendorStatus(false);
-      }
+      setVendorStatus(response?.vendor?.is_verified || false);
     } catch (err) {
-      console.log(err)
+      console.log(err);
       setVendorStatus(false);
     }
   };
 
   const isSoldOut = selectedEvent && selectedEvent.tickets_sold >= selectedEvent.total_tickets;
   const isEventEnded = selectedEvent && new Date(selectedEvent.event_date) < new Date();
-
-  // FLOW CHANGE: Events keep the PIN modal
+  
   const handlePurchase = () => {
     if (!selectedEvent || isSoldOut || isEventEnded) return;
     if (!selectedEvent.is_free && !selectedTicketType) return;
     showPinModal();
-  };
-
-  // FLOW CHANGE: Marketplace Products navigate to checkout (PIN handled there)
-  const handleProductBuyNow = () => {
-    if (!selectedProduct) return;
-    navigate('/checkout', { 
-        state: { 
-            type: 'product',
-            productId: selectedProduct.id,
-            quantity: productQuantity,
-            total: selectedProduct.price * productQuantity,
-            name: selectedProduct.name,
-            sellerId: selectedProduct.sellerId
-        } 
-    });
-  };
-
-  // NEW: Navigate to the product-linked chat thread
-  const handleChatSeller = () => {
-    if (!selectedProduct) return;
-    // Logic: Opens thread for buyer + specific product
-    navigate(`/messages?thread=${selectedProduct.id}&seller=${selectedProduct.sellerId}`);
   };
 
   const filteredEvents = events.filter(event => 
@@ -205,40 +133,145 @@ export function Marketplace() {
     event.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredPoints = POINTS_PROVIDERS.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const getImageUrl = (path: string | undefined) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return `${API_BASE}${path}`;
+  };
 
-  const filteredProducts = PRODUCTS.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          p.sellerName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeProductSubCategory === 'All' || p.category === activeProductSubCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const getEventImage = (event: MarketplaceEvent) => {
+    if (event.event_banner) return getImageUrl(event.event_banner);
+    if (event.ticket_image) return getImageUrl(event.ticket_image);
+    return '';
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const isEventPassed = (eventDate: string) => new Date(eventDate) < new Date();
+
+
+  // ==========================================
+  // 2. PRODUCT SYSTEM (REFACTORED)
+  // ==========================================
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productQuantity, setProductQuantity] = useState(1);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [activeProductSubCategory, setActiveProductSubCategory] = useState<string | null>(null);
+
+  const { data: catRes } = useQuery({
+    queryKey: ['marketplace', 'categories'],
+    queryFn: marketplaceApi.getCategories,
+  });
+  const productCategories = catRes?.data || [];
+
+  const { data: prodRes, isLoading: productsLoading } = useQuery({
+    queryKey: ['marketplace', 'products', activeProductSubCategory, debouncedSearch],
+    queryFn: () => marketplaceApi.getProducts({
+      category_id: activeProductSubCategory || undefined,
+      search: debouncedSearch || undefined
+    }),
+    enabled: activeCategory === 'Products' && !selectedProduct,
+  });
+  const products = prodRes?.data || [];
+
+  const trackViewMutation = useMutation({
+    mutationFn: marketplaceApi.trackView
+  });
+
+  const createConvMutation = useMutation({
+    mutationFn: messagingApi.createConversation,
+    onSuccess: (res) => navigate(`/messages?thread=${res.data.conversation_id}`)
+  });
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+    setProductQuantity(1);
+    setCurrentImageIndex(0);
+    trackViewMutation.mutate(product.id);
+  };
+
+  const handleProductBuyNow = () => {
+    if (!selectedProduct) return;
+    navigate('/checkout', { 
+        state: { 
+            productId: selectedProduct.id,
+            quantity: productQuantity,
+        } 
     });
   };
 
-  const isEventPassed = (eventDate: string) => {
-    return new Date(eventDate) < new Date();
+  const handleChatSeller = () => {
+    if (!selectedProduct) return;
+    createConvMutation.mutate({ 
+      product_id: selectedProduct.id, 
+      seller_id: selectedProduct.seller.id 
+    });
   };
 
+  // ==========================================
+  // 3. POINTS SYSTEM (REFACTORED)
+  // ==========================================
+  const [selectedPointProvider, setSelectedPointProvider] = useState<any | null>(null);
+  const [pointPlayerId, setPointPlayerId] = useState('');
+  const [selectedPointPackage, setSelectedPointPackage] = useState<number | null>(null);
+  const [isPointLoading, setIsPointLoading] = useState(false);
+  const [pointError, setPointError] = useState('');
+
+  const { data: pointsRes, isLoading: pointsLoading } = useQuery({
+    queryKey: ['points', 'providers'],
+    queryFn: () => getRequest('/api/points/providers/'),
+    enabled: activeCategory === 'Points'
+  });
+  
+  const pointsProviders = pointsRes?.data || [];
+  const filteredPoints = pointsProviders.filter((p: any) => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handlePointPurchase = async () => {
+    if (!pointPlayerId.trim()) {
+      setPointError('Player ID is required');
+      return;
+    }
+    setPointError('');
+    setIsPointLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsPointLoading(false);
+    showPinModal();
+  };
+
+  // ==========================================
+  // TRANSACTION HANDLING
+  // ==========================================
+  useEffect(() => {
+    if (message) {
+      setIsOpen(true);
+      if (message?.success || message?.code === '000') {
+        showToast(message?.response_description || 'Transaction successful!');
+        setTxMessage(message?.response_description || 'Transaction successful!');
+        setTxStatus(true);
+        setSelectedEvent(null);
+        setSelectedPointProvider(null);
+      } else {
+        showToast(message?.error || message?.response_description || 'Transaction failed');
+        setTxMessage(message?.error || message?.response_description || 'Transaction failed');
+        setTxStatus(false);
+      }
+    }
+  }, [message]);
+
+
+  // ==========================================
+  // RENDERERS
+  // ==========================================
   const renderContent = () => {
     switch (activeCategory) {
-      case 'Events':
-        return selectedEvent ? renderEventDetails() : renderEvents();
-      case 'Points':
-        return selectedPointProvider ? renderPointDetails() : renderPoints();
-      case 'Products':
-        return selectedProduct ? renderProductDetails() : renderProducts();
-      default:
-        return renderComingSoon();
+      case 'Events': return selectedEvent ? renderEventDetails() : renderEvents();
+      case 'Points': return selectedPointProvider ? renderPointDetails() : renderPoints();
+      case 'Products': return selectedProduct ? renderProductDetails() : renderProducts();
+      default: return renderComingSoon();
     }
   };
 
@@ -246,51 +279,59 @@ export function Marketplace() {
     return (
       <div className="space-y-6">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {PRODUCT_CATEGORIES.map((cat) => (
+          <button
+            onClick={() => setActiveProductSubCategory(null)}
+            className={cn("px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors", !activeProductSubCategory ? "bg-slate-800 text-white dark:bg-white dark:text-slate-900" : "bg-white dark:bg-slate-800 text-slate-500 border border-slate-100 dark:border-slate-700")}
+          >
+            All
+          </button>
+          {productCategories.map((cat: Category) => (
             <button
-              key={cat}
-              onClick={() => setActiveProductSubCategory(cat)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors",
-                activeProductSubCategory === cat 
-                  ? "bg-slate-800 text-white dark:bg-white dark:text-slate-900" 
-                  : "bg-white dark:bg-slate-800 text-slate-500 border border-slate-100 dark:border-slate-700"
-              )}
+              key={cat.id}
+              onClick={() => setActiveProductSubCategory(cat.id)}
+              className={cn("px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors", activeProductSubCategory === cat.id ? "bg-slate-800 text-white dark:bg-white dark:text-slate-900" : "bg-white dark:bg-slate-800 text-slate-500 border border-slate-100 dark:border-slate-700")}
             >
-              {cat}
+              {cat.name}
             </button>
           ))}
         </div>
-        {filteredProducts.length === 0 ? (
+
+        {productsLoading ? (
+           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1,2,3,4,5,6].map(i => (
+                 <div key={i} className="animate-pulse bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-3">
+                   <div className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-xl mb-3"></div>
+                   <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4 mb-2"></div>
+                   <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+                 </div>
+              ))}
+           </div>
+        ) : products.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
             <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">No products available</h3>
-            <p className="text-slate-500">Check back later for new arrivals in this category.</p>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">No products found</h3>
+            <p className="text-slate-500">Check back later or adjust your search.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredProducts.map((product) => (
-              <div 
+            {products.map((product: Product) => (
+               <div 
                 key={product.id}
-                onClick={() => {
-                    setSelectedProduct(product);
-                    setProductQuantity(1);
-                    setCurrentImageIndex(0);
-                }}
+                onClick={() => handleProductClick(product)}
                 className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-all cursor-pointer group"
               >
                 <div className="aspect-square relative overflow-hidden bg-slate-100 dark:bg-slate-800">
                   <img 
-                    src={product.images[0]} 
-                    alt={product.name} 
+                    src={product.images[0] || 'https://via.placeholder.com/400'} 
+                    alt={product.title} 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                   />
-                  {product.badge && (
-                    <div className="absolute top-2 left-2 px-2 py-1 rounded-lg text-[10px] font-bold bg-sky-500 text-white shadow-lg">
-                        {product.badge}
+                  {product.condition && (
+                    <div className="absolute top-2 left-2 px-2 py-1 rounded-lg text-[10px] font-bold bg-sky-500 text-white shadow-lg uppercase">
+                        {product.condition}
                     </div>
                   )}
-                  {product.stock === 0 && (
+                  {product.stock_quantity === 0 && (
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
                         <span className="bg-red-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase">Out of Stock</span>
                     </div>
@@ -298,11 +339,11 @@ export function Marketplace() {
                 </div>
                 <div className="p-3">
                   <div className="flex items-center gap-1 mb-1">
-                    <span className="text-[10px] text-slate-400 line-clamp-1">{product.sellerName}</span>
-                    <VerifiedBadge className="scale-75 origin-left" />
+                    <span className="text-[10px] text-slate-400 line-clamp-1">{product.seller?.name || "Seller"}</span>
+                    {product.seller?.is_verified && <VerifiedBadge className="scale-75 origin-left" />}
                   </div>
                   <h3 className="font-semibold text-slate-800 dark:text-white text-sm line-clamp-1 mb-1">
-                    {product.name}
+                    {product.title}
                   </h3>
                   <div className="flex items-center justify-between">
                     <span className="text-sky-500 font-bold text-sm">₦{product.price.toLocaleString()}</span>
@@ -318,56 +359,29 @@ export function Marketplace() {
       </div>
     );
   };
-const renderProductDetails = () => {
-    if (!selectedProduct) return null;
 
+  const renderProductDetails = () => {
+    if (!selectedProduct) return null;
     return (
       <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-        <button 
-          onClick={() => setSelectedProduct(null)}
-          className="flex items-center gap-2 text-sky-500 font-medium"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back to Products
+        <button onClick={() => setSelectedProduct(null)} className="flex items-center gap-2 text-sky-500 font-medium">
+          <ChevronLeft className="w-4 h-4" /> Back to Products
         </button>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
           <div className="aspect-square md:aspect-video relative bg-slate-100 dark:bg-slate-800">
-            <img 
-              src={selectedProduct.images[currentImageIndex]} 
-              alt={selectedProduct.name} 
-              className="w-full h-full object-cover" 
-            />
-            
+            <img src={selectedProduct.images[currentImageIndex] || 'https://via.placeholder.com/800'} alt={selectedProduct.title} className="w-full h-full object-cover" />
             {selectedProduct.images.length > 1 && (
               <>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex(prev => prev === 0 ? selectedProduct.images.length - 1 : prev - 1);
-                  }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40 transition-colors"
-                >
+                <button onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => prev === 0 ? selectedProduct.images.length - 1 : prev - 1); }} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40">
                   <ChevronLeft className="w-6 h-6" />
                 </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex(prev => prev === selectedProduct.images.length - 1 ? 0 : prev + 1);
-                  }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40 transition-colors"
-                >
+                <button onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(prev => prev === selectedProduct.images.length - 1 ? 0 : prev + 1); }} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/40">
                   <ChevronRight className="w-6 h-6" />
                 </button>
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {selectedProduct.images.map((_, i) => (
-                    <div 
-                      key={i} 
-                      className={cn(
-                        "w-2 h-2 rounded-full transition-all",
-                        currentImageIndex === i ? "bg-white w-4" : "bg-white/40"
-                      )} 
-                    />
+                    <div key={i} className={cn("w-2 h-2 rounded-full transition-all", currentImageIndex === i ? "bg-white w-4" : "bg-white/40")} />
                   ))}
                 </div>
               </>
@@ -378,15 +392,11 @@ const renderProductDetails = () => {
             <div className="flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-0.5 rounded-lg bg-sky-50 text-sky-500 text-[10px] font-bold uppercase tracking-wider">
-                    {selectedProduct.category}
-                  </span>
+                  <span className="px-2 py-0.5 rounded-lg bg-sky-50 text-sky-500 text-[10px] font-bold uppercase tracking-wider">{selectedProduct.category?.name || 'Category'}</span>
                   <span className="text-xs text-slate-400">•</span>
-                  <span className="text-xs text-slate-500">{selectedProduct.condition}</span>
+                  <span className="text-xs text-slate-500 uppercase">{selectedProduct.condition}</span>
                 </div>
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-white leading-tight">
-                    {selectedProduct.name}
-                </h2>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white leading-tight">{selectedProduct.title}</h2>
               </div>
               <div className="text-right">
                 <p className="text-xs text-slate-400 mb-1">Price per unit</p>
@@ -396,60 +406,40 @@ const renderProductDetails = () => {
 
             <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
                <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-500 font-bold">
-                    {selectedProduct.sellerName.charAt(0)}
-                 </div>
+                 <img src={selectedProduct.seller?.avatar || `https://ui-avatars.com/api/?name=${selectedProduct.seller?.name}`} className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" alt="seller" />
                  <div>
                     <div className="flex items-center gap-1.5">
-                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">{selectedProduct.sellerName}</h4>
-                        <VerifiedBadge />
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">{selectedProduct.seller?.name || 'Seller'}</h4>
+                        {selectedProduct.seller?.is_verified && <VerifiedBadge />}
                     </div>
-                    <p className="text-[10px] text-slate-500">Sold by Verified Seller</p>
                  </div>
                </div>
                <div className="text-right">
                     <div className="flex items-center gap-0.5 text-yellow-500 mb-0.5">
                         <Star className="w-3 h-3 fill-current" />
-                        <span className="text-xs font-bold">4.8</span>
+                        <span className="text-xs font-bold">{selectedProduct.rating || 'New'}</span>
                     </div>
-                    <p className="text-[10px] text-slate-400">Location: Uyo</p>
+                    <p className="text-[10px] text-slate-400">Location: {selectedProduct.location}</p>
                </div>
             </div>
 
             <div className="space-y-3">
               <h3 className="font-semibold text-slate-800 dark:text-white">Description</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                {selectedProduct.description}
-              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{selectedProduct.description}</p>
             </div>
 
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between">
                     <div>
                         <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Quantity</h4>
-                        <p className={cn(
-                            "text-xs mt-0.5",
-                            selectedProduct.stock > 5 ? "text-slate-400" : "text-orange-500 font-medium"
-                        )}>
-                            {selectedProduct.stock > 0 ? `In Stock: ${selectedProduct.stock} left` : 'Out of Stock'}
+                        <p className={cn("text-xs mt-0.5", selectedProduct.stock_quantity > 5 ? "text-slate-400" : "text-orange-500 font-medium")}>
+                            {selectedProduct.stock_quantity > 0 ? `In Stock: ${selectedProduct.stock_quantity} left` : 'Out of Stock'}
                         </p>
                     </div>
                     <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                        <button 
-                            disabled={productQuantity <= 1}
-                            onClick={() => setProductQuantity(q => q - 1)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-700 shadow-sm disabled:opacity-50"
-                        >
-                            -
-                        </button>
+                        <button disabled={productQuantity <= 1} onClick={() => setProductQuantity(q => q - 1)} className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-700 shadow-sm disabled:opacity-50">-</button>
                         <span className="text-sm font-bold w-4 text-center">{productQuantity}</span>
-                        <button 
-                            disabled={productQuantity >= selectedProduct.stock}
-                            onClick={() => setProductQuantity(q => q + 1)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-700 shadow-sm disabled:opacity-50"
-                        >
-                            +
-                        </button>
+                        <button disabled={productQuantity >= selectedProduct.stock_quantity} onClick={() => setProductQuantity(q => q + 1)} className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-700 shadow-sm disabled:opacity-50">+</button>
                     </div>
                 </div>
 
@@ -460,18 +450,11 @@ const renderProductDetails = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-                <button
-                    onClick={handleChatSeller}
-                    className="py-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
-                >
-                    <MessageSquare className="w-5 h-5" />
+                <button onClick={handleChatSeller} disabled={createConvMutation.isPending} className="py-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                    {createConvMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <MessageSquare className="w-5 h-5" />}
                     Chat Seller
                 </button>
-                <button
-                    onClick={handleProductBuyNow}
-                    disabled={selectedProduct.stock <= 0}
-                    className="py-4 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-all disabled:opacity-50 shadow-lg shadow-sky-500/20"
-                >
+                <button onClick={handleProductBuyNow} disabled={selectedProduct.stock_quantity <= 0} className="py-4 rounded-xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-sky-500/20">
                     Buy Now
                 </button>
             </div>
@@ -482,36 +465,28 @@ const renderProductDetails = () => {
   };
 
   const renderPoints = () => {
+    if (pointsLoading) return <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-sky-500" /></div>;
+    if (filteredPoints.length === 0) return (
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border p-12 text-center">
+        <Coins className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">No providers found</h3>
+      </div>
+    );
     return (
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredPoints.map((provider) => (
-          <div 
-            key={provider.id}
-            onClick={() => {
-                setSelectedPointProvider(provider);
-                setSelectedPointPackage(null);
-                setPointPlayerId('');
-                setPointError('');
-            }}
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-          >
-            <div className={cn("aspect-video relative overflow-hidden", provider.color)}>
+        {filteredPoints.map((provider: any) => (
+          <div key={provider.id} onClick={() => { setSelectedPointProvider(provider); setSelectedPointPackage(null); setPointPlayerId(''); setPointError(''); }} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+            <div className={cn("aspect-video relative overflow-hidden", provider.color || "bg-slate-800")}>
                <img src={provider.image} alt={provider.name} className="w-full h-full object-cover mix-blend-overlay opacity-60" />
                <div className="absolute inset-0 flex items-center justify-center">
                    <img src={provider.image} alt={provider.name} className="w-16 h-16 rounded-2xl shadow-xl object-cover border-2 border-white/20" />
                </div>
-               <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-medium bg-white/20 backdrop-blur-md text-white">
-                Points
-              </div>
+               <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-medium bg-white/20 backdrop-blur-md text-white">Points</div>
             </div>
             <div className="p-4">
-              <h3 className="font-semibold text-slate-800 dark:text-white mb-1 text-sm md:text-base line-clamp-1">
-                {provider.name}
-              </h3>
+              <h3 className="font-semibold text-slate-800 dark:text-white mb-1 text-sm md:text-base line-clamp-1">{provider.name}</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Instant Delivery</p>
-              <button className="w-full py-2 rounded-xl bg-sky-500 text-white text-xs font-medium hover:bg-sky-600 transition-colors">
-                Top Up
-              </button>
+              <button className="w-full py-2 rounded-xl bg-sky-500 text-white text-xs font-medium hover:bg-sky-600 transition-colors">Top Up</button>
             </div>
           </div>
         ))}
@@ -521,84 +496,36 @@ const renderProductDetails = () => {
 
   const renderPointDetails = () => {
     if (!selectedPointProvider) return null;
-
     return (
       <div className="space-y-4">
-        <button 
-          onClick={() => setSelectedPointProvider(null)}
-          className="flex items-center gap-2 text-sky-500 font-medium"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back to Providers
-        </button>
-
+        <button onClick={() => setSelectedPointProvider(null)} className="flex items-center gap-2 text-sky-500 font-medium"><ChevronLeft className="w-4 h-4" /> Back to Providers</button>
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-          <div className={cn("aspect-[21/9] relative flex items-center justify-center", selectedPointProvider.color)}>
+          <div className={cn("aspect-[21/9] relative flex items-center justify-center", selectedPointProvider.color || "bg-slate-800")}>
             <img src={selectedPointProvider.image} alt={selectedPointProvider.name} className="w-24 h-24 rounded-3xl border-4 border-white/20 shadow-2xl object-cover" />
           </div>
-          
           <div className="p-6 space-y-6">
-            <div>
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
-                {selectedPointProvider.name}
-                </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Select a package and enter your Player ID to proceed.</p>
-            </div>
-
+            <div><h2 className="text-2xl font-bold text-slate-800 dark:text-white">{selectedPointProvider.name}</h2><p className="text-sm text-slate-500 dark:text-slate-400">Select a package and enter your Player ID to proceed.</p></div>
             <div className="space-y-3">
                 <h3 className="font-semibold text-slate-800 dark:text-white">Select Package</h3>
                 <div className="grid grid-cols-1 gap-3">
-                    {selectedPointProvider.packages.map((pkg) => (
-                    <div 
-                        key={pkg.id}
-                        onClick={() => setSelectedPointPackage(pkg.id)}
-                        className={cn(
-                        'p-4 rounded-xl border-2 cursor-pointer transition-all',
-                        selectedPointPackage === pkg.id
-                            ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
-                        )}
-                    >
+                    {selectedPointProvider.packages?.map((pkg: any) => (
+                    <div key={pkg.id} onClick={() => setSelectedPointPackage(pkg.id)} className={cn('p-4 rounded-xl border-2 cursor-pointer transition-all', selectedPointPackage === pkg.id ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-sky-300')}>
                         <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                            <div className={cn("w-2 h-2 rounded-full", selectedPointPackage === pkg.id ? "bg-sky-500" : "bg-slate-300")} />
-                            <h4 className="font-medium text-slate-800 dark:text-white">{pkg.name}</h4>
-                        </div>
+                        <div className="flex items-center gap-3"><div className={cn("w-2 h-2 rounded-full", selectedPointPackage === pkg.id ? "bg-sky-500" : "bg-slate-300")} /><h4 className="font-medium text-slate-800 dark:text-white">{pkg.name}</h4></div>
                         <span className="font-bold text-sky-500">₦{pkg.price.toLocaleString()}</span>
                         </div>
                     </div>
                     ))}
                 </div>
             </div>
-<div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                    <User className="w-4 h-4" /> Player ID
-                </label>
-                <Input 
-                    placeholder="Enter Player ID"
-                    value={pointPlayerId}
-                    onChange={(e) => setPointPlayerId(e.target.value)}
-                    className={cn(pointError ? "border-red-500" : "")}
-                />
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2"><User className="w-4 h-4" /> Player ID</label>
+                <Input placeholder="Enter Player ID" value={pointPlayerId} onChange={(e) => setPointPlayerId(e.target.value)} className={cn(pointError ? "border-red-500" : "")} />
                 {pointError && <p className="text-xs text-red-500 mt-1">{pointError}</p>}
                 <p className="text-[10px] text-slate-400 italic">Make sure your Player ID is correct. Transactions are irreversible.</p>
             </div>
-
-            <button
-              onClick={handlePointPurchase}
-              disabled={!selectedPointPackage || !pointPlayerId || isPointLoading}
-              className="w-full py-4 rounded-xl bg-sky-500 text-white font-medium hover:bg-sky-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isPointLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                selectedPointPackage 
-                  ? `Pay ₦${selectedPointProvider.packages.find(p => p.id === selectedPointPackage)?.price.toLocaleString()}`
-                  : 'Select a Package'
-              )}
+            <button onClick={handlePointPurchase} disabled={!selectedPointPackage || !pointPlayerId || isPointLoading} className="w-full py-4 rounded-xl bg-sky-500 text-white font-medium hover:bg-sky-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              {isPointLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : selectedPointPackage ? `Pay ₦${selectedPointProvider.packages?.find((p: any) => p.id === selectedPointPackage)?.price.toLocaleString()}` : 'Select a Package'}
             </button>
           </div>
         </div>
@@ -606,87 +533,36 @@ const renderProductDetails = () => {
     );
   };
 
-  const handlePointPurchase = async () => {
-    if (!pointPlayerId.trim()) {
-      setPointError('Player ID is required');
-      return;
-    }
-    setPointError('');
-    setIsPointLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsPointLoading(false);
-    showPinModal();
-  };
-
   const renderEvents = () => {
-    if (loading) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
-        </div>
-      );
-    }
-
-    if (filteredEvents.length === 0) {
-      return (
+    if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-sky-500" /></div>;
+    if (filteredEvents.length === 0) return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-            <Calendar className="w-10 h-10 text-slate-400" />
-          </div>
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><Calendar className="w-10 h-10 text-slate-400" /></div>
           <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2">No Events Found</h3>
-          <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-            {searchQuery ? 'Try a different search term' : 'Check back soon for upcoming events!'}
-          </p>
+          <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">{searchQuery ? 'Try a different search term' : 'Check back soon for upcoming events!'}</p>
         </div>
-      );
-    }
+    );
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredEvents.map((event) => (
-          <div 
-            key={event.id}
-            onClick={() => setSelectedEvent(event)}
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-          >
+          <div key={event.id} onClick={() => setSelectedEvent(event)} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
             <div className="aspect-video bg-slate-200 dark:bg-slate-800 relative">
-              {getEventImage(event) ? (
-                <img src={getEventImage(event)} alt={event.event_title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Calendar className="w-12 h-12 text-slate-400" />
-                </div>
-              )}
-              <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium bg-sky-500 text-white">
-                {event.category}
-              </div>
+              {getEventImage(event) ? <img src={getEventImage(event)} alt={event.event_title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Calendar className="w-12 h-12 text-slate-400" /></div>}
+              <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium bg-sky-500 text-white">{event.category}</div>
             </div>
             <div className="p-4">
               <h3 className="font-semibold text-slate-800 dark:text-white mb-2 line-clamp-1">{event.event_title}</h3>
               <div className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>{formatDate(event.event_date)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span className="line-clamp-1">{event.event_location}</span>
-                </div>
+                <div className="flex items-center gap-2"><Calendar className="w-4 h-4" /><span>{formatDate(event.event_date)}</span></div>
+                <div className="flex items-center gap-2"><MapPin className="w-4 h-4" /><span>{event.event_location}</span></div>
               </div>
               <div className="mt-4 flex items-center justify-between">
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {isEventPassed(event.event_date) ? (
-                      <span className="text-slate-400 font-medium">Event Ended</span>
-                    ) : event.tickets_sold >= event.total_tickets ? (
-                      <span className="text-red-500 font-medium">Sold Out</span>
-                    ) : (
-                      `${event.tickets_sold}/${event.total_tickets} sold`
-                    )}
+                    {isEventPassed(event.event_date) ? <span className="text-slate-400 font-medium">Event Ended</span> : event.tickets_sold >= event.total_tickets ? <span className="text-red-500 font-medium">Sold Out</span> : `${event.tickets_sold}/${event.total_tickets} sold`}
                   </span>
                 </div>
-                <button className="px-4 py-2 rounded-xl bg-sky-500 text-white text-sm font-medium hover:bg-sky-600 transition-colors">
-                  {event.is_free ? 'Free' : 'View'}
-                </button>
+                <button className="px-4 py-2 rounded-xl bg-sky-500 text-white text-sm font-medium hover:bg-sky-600 transition-colors">{event.is_free ? 'Free' : 'View'}</button>
               </div>
             </div>
           </div>
@@ -695,72 +571,34 @@ const renderProductDetails = () => {
     );
   };
 
-const renderEventDetails = () => {
+  const renderEventDetails = () => {
     if (!selectedEvent) return null;
-
     return (
       <div className="space-y-4">
-        <button 
-          onClick={() => setSelectedEvent(null)}
-          className="flex items-center gap-2 text-sky-500 font-medium"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back to Events
-        </button>
-
+        <button onClick={() => setSelectedEvent(null)} className="flex items-center gap-2 text-sky-500 font-medium"><ChevronLeft className="w-4 h-4" /> Back to Events</button>
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
           <div className="aspect-video bg-slate-200 dark:bg-slate-800 relative">
-            {getEventImage(selectedEvent) ? (
-              <img src={getEventImage(selectedEvent)} alt={selectedEvent.event_title} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Calendar className="w-16 h-16 text-slate-400" />
-              </div>
-            )}
+            {getEventImage(selectedEvent) ? <img src={getEventImage(selectedEvent)} alt={selectedEvent.event_title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Calendar className="w-16 h-16 text-slate-400" /></div>}
           </div>
-          
           <div className="p-6 space-y-4">
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 rounded-full text-xs font-medium bg-sky-500 text-white">{selectedEvent.category}</span>
-              {selectedEvent.is_approved && (
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-600 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Verified
-                </span>
-              )}
+              {selectedEvent.is_approved && <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Verified</span>}
             </div>
-
             <h2 className="text-2xl font-bold text-slate-800 dark:text-white">{selectedEvent.event_title}</h2>
-
             <div className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
               <div className="flex items-center gap-2"><Calendar className="w-4 h-4" /><span>{formatDate(selectedEvent.event_date)}</span></div>
               <div className="flex items-center gap-2"><MapPin className="w-4 h-4" /><span>{selectedEvent.event_location}</span></div>
             </div>
-
-            <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
-              <h3 className="font-semibold text-slate-800 dark:text-white mb-3">About Event</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">{selectedEvent.event_description}</p>
-            </div>
-
+            <div className="border-t border-slate-100 dark:border-slate-800 pt-4"><h3 className="font-semibold text-slate-800 dark:text-white mb-3">About Event</h3><p className="text-slate-500 dark:text-slate-400 text-sm">{selectedEvent.event_description}</p></div>
             {selectedEvent.ticket_types && selectedEvent.ticket_types.length > 0 && (
               <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
                 <h3 className="font-semibold text-slate-800 dark:text-white mb-3">Select Tickets</h3>
                 <div className="space-y-3">
                   {selectedEvent.ticket_types.map((ticketType) => (
-                    <div 
-                      key={ticketType.id}
-                      onClick={() => setSelectedTicketType(ticketType.id)}
-                      className={cn(
-                        'p-4 rounded-xl border-2 cursor-pointer transition-all',
-                        selectedTicketType === ticketType.id
-                          ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
-                      )}
-                    >
+                    <div key={ticketType.id} onClick={() => setSelectedTicketType(ticketType.id)} className={cn('p-4 rounded-xl border-2 cursor-pointer transition-all', selectedTicketType === ticketType.id ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-sky-300')}>
                       <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium text-slate-800 dark:text-white">{ticketType.name}</h4>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">{ticketType.description || `${ticketType.quantity_available} available`}</p>
-                        </div>
+                        <div><h4 className="font-medium text-slate-800 dark:text-white">{ticketType.name}</h4><p className="text-sm text-slate-500 dark:text-slate-400">{ticketType.description || `${ticketType.quantity_available} available`}</p></div>
                         <span className="font-bold text-sky-500">{Number(ticketType.price) === 0 ? 'Free' : `₦${Number(ticketType.price).toLocaleString()}`}</span>
                       </div>
                     </div>
@@ -778,12 +616,7 @@ const renderEventDetails = () => {
                 )}
               </div>
             )}
-
-            <button
-              onClick={handlePurchase}
-              disabled={isSoldOut || isEventEnded || (!selectedTicketType && !selectedEvent.is_free)}
-              className="w-full py-4 rounded-xl bg-sky-500 text-white font-medium hover:bg-sky-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button onClick={handlePurchase} disabled={isSoldOut || isEventEnded || (!selectedTicketType && !selectedEvent.is_free)} className="w-full py-4 rounded-xl bg-sky-500 text-white font-medium hover:bg-sky-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {isSoldOut ? 'Sold Out' : isEventEnded ? 'Event Ended' : selectedEvent.is_free ? 'Get Free Ticket' : selectedTicketType ? `Pay ₦${(Number(selectedEvent.ticket_types.find(t => t.id === selectedTicketType)?.price) * quantity).toLocaleString()}` : 'Select a Ticket'}
             </button>
           </div>
@@ -809,13 +642,8 @@ const renderEventDetails = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="flex items-center justify-between px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setSidebarOpen(true)} 
-              className="lg:hidden p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
             <div>
               <h1 className="text-xl font-bold text-slate-800 dark:text-white">Market Place</h1>
@@ -824,55 +652,29 @@ const renderEventDetails = () => {
           </div>
   
           <div className="flex items-center gap-2">
-            {/* MESSAGES ENTRY POINT (VISIBLE UI) */}
-            <button 
-              onClick={() => navigate('/messages')}
-              className="p-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors group relative"
-              title="Messages"
-            >
+            <button onClick={() => navigate('/messages')} className="p-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors group relative" title="Messages">
               <MessageSquare className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 transition-colors" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900" />
             </button>
 
             <div className="relative">
-                <button 
-                onClick={() => setShowMenu(!showMenu)} 
-                className="p-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
-                >
-                <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                <button onClick={() => setShowMenu(!showMenu)} className="p-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors">
+                  <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                 </button>
-
                 {showMenu && (
                 <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 z-50">
                     {!vendorStatus ? (
                     <>
-                        <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                        <Shield className="w-4 h-4 text-sky-500" /> Become Verified Seller
-                        </button>
-                        <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                        <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
-                        </button>
-                        <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                        <History className="w-4 h-4 text-sky-500" /> History
-                        </button>
+                        <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 flex items-center gap-2.5 font-medium"><Shield className="w-4 h-4 text-sky-500" /> Become Verified Seller</button>
+                        <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 flex items-center gap-2.5 font-medium"><Ticket className="w-4 h-4 text-sky-500" /> My Tickets</button>
+                        <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 flex items-center gap-2.5 font-medium"><History className="w-4 h-4 text-sky-500" /> History</button>
                     </>
                     ) : (
                     <>
-                        <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                        <Ticket className="w-4 h-4 text-sky-500" /> My Tickets
-                        </button>
-                        <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                        <Plus className="w-4 h-4 text-sky-500" /> Create Event
-                        </button>
-                        <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                        <QrCode className="w-4 h-4 text-sky-500" /> Scan QR Code
-                        </button>
-                        <button onClick={() => { navigate('/products'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                        <FilePlus className="w-4 h-4 text-sky-500" /> Post Product
-                        </button>
-                        <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5 font-medium">
-                        <History className="w-4 h-4 text-sky-500" /> History
-                        </button>
+                        <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 flex items-center gap-2.5 font-medium"><Ticket className="w-4 h-4 text-sky-500" /> My Tickets</button>
+                        <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 flex items-center gap-2.5 font-medium"><Plus className="w-4 h-4 text-sky-500" /> Create Event</button>
+                        <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 flex items-center gap-2.5 font-medium"><QrCode className="w-4 h-4 text-sky-500" /> Scan QR Code</button>
+                        <button onClick={() => { navigate('/merchant/dashboard'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 flex items-center gap-2.5 font-medium"><FilePlus className="w-4 h-4 text-sky-500" /> Post Product</button>
+                        <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 flex items-center gap-2.5 font-medium"><History className="w-4 h-4 text-sky-500" /> History</button>
                     </>
                     )}
                 </div>
@@ -889,7 +691,7 @@ const renderEventDetails = () => {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
+              {categoriesTabs.map((category) => (
                 <button
                   key={category}
                   onClick={() => {
@@ -899,10 +701,7 @@ const renderEventDetails = () => {
                       setSelectedProduct(null);
                       setSearchQuery('');
                   }}
-                  className={cn(
-                      'px-6 py-2.5 rounded-full text-sm font-bold transition-all',
-                      activeCategory === category ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100'
-                  )}
+                  className={cn('px-6 py-2.5 rounded-full text-sm font-bold transition-all', activeCategory === category ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100')}
                 >
                 {category}
                 </button>
@@ -914,7 +713,6 @@ const renderEventDetails = () => {
         </main>
       </div>
 
-      {/* Pin Component logic is kept for Events and Points */}
       <PinComponent type="marketplace" value={{ 
         event_id: selectedEvent?.id || selectedPointProvider?.id || selectedProduct?.id, 
         ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || selectedPointProvider?.packages.find(p => p.id === selectedPointPackage)?.name || 'Product Purchase', 
