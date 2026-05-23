@@ -557,7 +557,6 @@ export const stripCommas = (amount:string) => {
 // ==========================================
 // 1. GLOBAL API & SYSTEM CONSTANTS
 // ==========================================
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://api.blueseamobile.com.ng';
 
 export const ENDPOINTS = {
   marketplace_events: '/api/marketplace/events/',
