@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { messagingApi, Message } from '../../api/messaging.api';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { messagingApi } from '../../api/messaging.api';
+import type { Message } from '../../api/messaging.api';
 
 export const useConversations = () => {
   return useQuery({
@@ -52,7 +53,7 @@ export const useSendMessage = (conversationId: string | null) => {
 
       return { previousMessages };
     },
-    onError: (err: any, newTodo: any, context: any) => {
+    onError: (_err: any, _newTodo: any, context: any) => {
       // Rollback on failure
       if (context?.previousMessages && conversationId) {
         queryClient.setQueryData(['messaging', 'messages', conversationId], context.previousMessages);
@@ -71,7 +72,7 @@ export const useMarkAsRead = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: messagingApi.markAsRead,
-    onSuccess: (_: any, conversationId: any) => {
+    onSuccess: (_data: any, variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['messaging', 'conversations'] });
     }
   });
