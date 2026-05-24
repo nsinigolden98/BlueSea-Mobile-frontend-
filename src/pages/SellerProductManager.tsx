@@ -145,20 +145,21 @@ export default function SellerProductManager() {
   };
 
   const openEdit = (product: Product) => {
-    setFormData({
-      title: product.title,
-      description: product.description,
-      category_id: product.category.id,
-      price: product.price.toString(),
-      discount_price: product.discount_price ? product.discount_price.toString() : '',
-      stock_quantity: product.stock_quantity.toString(),
-      condition: product.condition,
-      status: product.status,
-      location: product.location,
-      lga: (product as any).lga || '',
-      delivery_type: product.delivery_type,
-      delivery_fee: product.delivery_fee.toString(),
-    });
+  setFormData({
+    title: product.title ?? '',
+    description: product.description ?? '',
+    category_id: product.category?.id ?? '',  // Optional chaining + fallback
+    price: product.price?.toString() ?? '',
+    discount_price: product.discount_price ? product.discount_price.toString() : '',
+    stock_quantity: product.stock_quantity?.toString() ?? '1',
+    condition: product.condition ?? 'new',
+    status: product.status ?? 'active',
+    location: product.location ?? '',           // ← Your specific error
+    lga: (product as any).lga ?? '',
+    delivery_type: product.delivery_type ?? 'delivery',
+    delivery_fee: product.delivery_fee?.toString() ?? '',
+  });
+  
     setExistingImages(product.images);
     setImageFiles([]);
     setImagePreviews([]);

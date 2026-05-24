@@ -79,11 +79,12 @@ export function MarketplaceMessaging() {
     }
   }, [currentMessages, pendingImagePreview, replyTarget]);
 
-  useEffect(() => {
-    if (activeConvId && activeConv?.unread_count > 0) {
-      markAsReadMutation.mutate(activeConvId);
-    }
-  }, [activeConvId, activeConv?.unread_count]);
+  // AFTER (Fixed)
+useEffect(() => {
+  if (activeConvId && (activeConv?.unread_count ?? 0) > 0) {
+    markAsReadMutation.mutate(activeConvId);
+  }
+}, [activeConvId, activeConv?.unread_count]);
 
   // --- HANDLERS ---
   const handleSendMessage = (e?: React.FormEvent) => {
