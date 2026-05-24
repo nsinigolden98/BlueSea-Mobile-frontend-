@@ -19,7 +19,7 @@ import {
   useLocations
 } from '@/hooks/merchant/useMerchant';
 import { useCategories } from '@/hooks/marketplace/useMarketplace';
-import { Product } from '@/types';
+import type { Product } from '@/types';
 
 export default function SellerProductManager() {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ export default function SellerProductManager() {
   // --- SERVER STATE ---
   const { data: productsRes, isLoading: productsLoading } = useMerchantProducts();
   const { data: categoriesRes } = useCategories();
-  
+
   const createMutation = useCreateProduct();
   const updateMutation = useUpdateProduct();
   const deleteMutation = useDeleteProduct();
@@ -52,6 +52,7 @@ export default function SellerProductManager() {
     condition: 'new',
     status: 'active',
     location: '', // Mapped to State for simplicity
+    lga: '',     // Local Government Area
     delivery_type: 'delivery',
     delivery_fee: '',
   });
@@ -62,6 +63,7 @@ export default function SellerProductManager() {
 
   // Location Data
   const { statesQuery, lgasQuery } = useLocations(formData.location);
+  const lgas = lgasQuery.data?.data || [];
 
   // --- HANDLERS ---
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +109,7 @@ export default function SellerProductManager() {
     Object.entries(formData).forEach(([key, value]) => {
       payload.append(key, value);
     });
-    
+
     // Append actual File objects
     imageFiles.forEach(file => payload.append('images', file));
     existingImages.forEach(url => payload.append('existing_images', url));
@@ -153,6 +155,7 @@ export default function SellerProductManager() {
       condition: product.condition,
       status: product.status,
       location: product.location,
+      lga: (product as any).lga || '',
       delivery_type: product.delivery_type,
       delivery_fee: product.delivery_fee.toString(),
     });
@@ -168,7 +171,7 @@ export default function SellerProductManager() {
     setEditingId(null);
     setFormData({
       title: '', description: '', category_id: '', price: '', discount_price: '',
-      stock_quantity: '1', condition: 'new', status: 'active', location: '', 
+      stock_quantity: '1', condition: 'new', status: 'active', location: '', lga: '',
       delivery_type: 'delivery', delivery_fee: '',
     });
     setImageFiles([]);
@@ -348,7 +351,7 @@ export default function SellerProductManager() {
                   <Label>Category *</Label>
                   <select className="w-full h-10 px-3 rounded-md border text-sm" value={formData.category_id} onChange={(e) => setFormData({...formData, category_id: e.target.value})}>
                     <option value="">Select Category</option>
-                    {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {categories.map((c: any) => <option key={c.id ?? ''} value={c.id ?? ''}>{c.name ?? 'Unnamed'}</option>)}
                   </select>
                 </div>
               </div>
@@ -386,10 +389,30 @@ export default function SellerProductManager() {
                 <Label className="text-sm font-bold flex items-center gap-2"><MapPin className="w-4 h-4 text-sky-500" /> Location Details *</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-xs">State</Label>
-                    <select className="w-full h-10 px-3 rounded-md border text-sm" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})}>
+  <Label className="text-xs">State</Label>
+                    <select 
+                      className="w-full h-10 px-3 rounded-md border text-sm" 
+                      value={formData.location} 
+                      onChange={(e) => setFormData({...formData, location: e.target.value, lga: ''})}
+                    >
                       <option value="">Select State</option>
-                      {statesQuery.data?.data.map((s: any) => <option key={s.name} value={s.name}>{s.name}</option>)}
+                      {statesQuery.data?.data.map((s: any) => (
+                        <option key={s.name ?? ''} value={s.name ?? ''}>{s.name ?? 'Unnamed'}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">LGA (Local Govt Area)</Label>
+                    <select 
+                      className="w-full h-10 px-3 rounded-md border text-sm" 
+                      value={formData.lga} 
+                      onChange={(e) => setFormData({...formData, lga: e.target.value})}
+                      disabled={!formData.location || lgasQuery.isLoading}
+                    >
+                      <option value="">{lgasQuery.isLoading ? 'Loading...' : 'Select LGA'}</option>
+                      {lgas.map((lga: any) => (
+                        <option key={lga.name ?? ''} value={lga.name ?? ''}>{lga.name ?? 'Unnamed'}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
