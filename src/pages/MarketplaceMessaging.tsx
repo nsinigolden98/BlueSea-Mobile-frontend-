@@ -3,7 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   Search, MoreVertical, Send, Paperclip, Check, CheckCheck, 
   Clock, ShieldCheck, ChevronLeft, ShoppingBag, 
-  ExternalLink, MessageSquare, DollarSign, Truck, Image as ImageIcon, 
+//  ExternalLink, 
+  MessageSquare, DollarSign, Truck, Image as ImageIcon, 
   X, Reply, AlertCircle, Eye, Loader2
 } from 'lucide-react';
 import { 

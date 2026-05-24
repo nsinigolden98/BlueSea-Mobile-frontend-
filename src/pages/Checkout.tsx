@@ -7,7 +7,9 @@ import { useWalletBalance } from '@/hooks/wallet/useWallet';
 import { Sidebar, PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { 
   ChevronLeft, MapPin, Package, Wallet, Truck, 
-  CheckCircle2, Loader2, ArrowRight, AlertCircle, 
+  CheckCircle2, 
+  //Loader2, 
+  ArrowRight, AlertCircle, 
   ChevronDown, ChevronUp 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

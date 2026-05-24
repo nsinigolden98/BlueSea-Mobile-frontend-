@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../api/axios';
-import { ApiResponse } from '../../types';
+import type { ApiResponse } from '../../types';
 
 interface WalletBalance {
   balance: number;

@@ -1,4 +1,5 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+//useQuery
+import { useMutation,  } from '@tanstack/react-query';
 import { ordersApi } from '../../api/orders.api';
 
 export const useCreateOrder = () => {

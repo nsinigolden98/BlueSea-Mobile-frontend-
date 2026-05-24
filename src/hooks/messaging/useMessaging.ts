@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { messagingApi } from '../../api/messaging.api';
 import type { Message } from '../../api/messaging.api';
 
@@ -72,7 +72,7 @@ export const useMarkAsRead = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: messagingApi.markAsRead,
-    onSuccess: (_data: any, variables: any) => {
+    onSuccess: (_data: any, _variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['messaging', 'conversations'] });
     }
   });
