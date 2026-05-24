@@ -36,12 +36,13 @@ export function Campaigns() {
   const [downloadingCard, setDownloadingCard] = useState<Campaign | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
   // --- SERVER STATE ---
   const { data: campaignsRes, isLoading: campaignsLoading } = useCampaigns();
   const { data: earningsRes } = useEarnings();
   const { data: commentsRes } = useCampaignComments(activeCommentsId);
-  
+
   const generateLinkMutation = useGenerateAffiliateLink();
   const submitCommentMutation = useSubmitComment();
 
@@ -59,12 +60,22 @@ export function Campaigns() {
     setTimeout(() => setShowToast({ show: false, message: '' }), 3000);
   };
 
+  const openCampaignModal = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setIsModalOpen(true);
+  };
+
+  const closeCampaignModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedCampaign(null), 300);
+  };
+
   const handleShare = async (campaign: Campaign) => {
     try {
       // 1. Generate real backend-attributed link
       const response = await generateLinkMutation.mutateAsync(campaign.id);
       const refLink = response.data.affiliate_link;
-      
+
       // 2. Share or Copy
       if (navigator.share) {
         await navigator.share({
@@ -170,7 +181,7 @@ export function Campaigns() {
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-3xl mx-auto space-y-6">
-            
+
             <div className="flex items-center justify-between gap-4 bg-sky-50 dark:bg-sky-500/10 p-4 rounded-2xl border border-sky-100 dark:border-sky-500/20">
                <div>
                   <p className="text-sm font-black text-sky-700 dark:text-sky-400">Want to sell something?</p>
@@ -200,7 +211,8 @@ export function Campaigns() {
                   return (
                     <div 
                       key={campaign.id} 
-                      className="group relative bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-500"
+                      onClick={() => openCampaignModal(campaign)}
+                      className="group relative bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-500 cursor-pointer"
                     >
                       {/* CARD HEADER */}
                       <div className="p-5 flex items-center justify-between">
@@ -224,7 +236,7 @@ export function Campaigns() {
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                        
+
                         <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
                            <div className="space-y-1">
                             <h3 className="text-xl font-black leading-tight drop-shadow-lg">{campaign.name}</h3>
@@ -234,7 +246,10 @@ export function Campaigns() {
                             </div>
                           </div>
                           <button 
-                            onClick={() => navigate(`/marketplace/product/${campaign.id}`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/marketplace/product/${campaign.id}`);
+                            }}
                             className="p-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20 hover:bg-white hover:text-slate-900 transition-all"
                           >
                             <ExternalLink className="w-4 h-4" />
@@ -260,18 +275,24 @@ export function Campaigns() {
                         <p className="text-slate-500 dark:text-slate-400 text-xs mb-6 line-clamp-2">
                           {campaign.description}
                         </p>
-                        
+
                         <div className="flex items-center justify-between border-t border-slate-50 dark:border-slate-700/50 pt-4">
                           <div className="flex items-center gap-4">
                              <button 
-                              onClick={() => setReactions(prev => ({ ...prev, [campaign.id]: prev[campaign.id] === 'liked' ? '' : 'liked' }))}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReactions(prev => ({ ...prev, [campaign.id]: prev[campaign.id] === 'liked' ? '' : 'liked' }));
+                              }}
                               className={cn("flex items-center gap-1.5 transition-colors", reactions[campaign.id] === 'liked' ? 'text-red-500' : 'text-slate-400 hover:text-red-500')}
                             >
                               <Heart className={cn("w-5 h-5", reactions[campaign.id] === 'liked' && "fill-current")} />
                               <span className="text-[10px] font-black uppercase">Like</span>
                             </button>
                             <button 
-                              onClick={() => setActiveCommentsId(campaign.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveCommentsId(campaign.id);
+                              }}
                               className="flex items-center gap-1.5 text-slate-400 hover:text-sky-500 transition-colors"
                             >
                                <MessageCircle className="w-5 h-5" />
@@ -280,14 +301,20 @@ export function Campaigns() {
                            </div>
                           <div className="flex items-center gap-2">
                              <button 
-                               onClick={() => handleShare(campaign)}
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleShare(campaign);
+                               }}
                                disabled={generateLinkMutation.isPending} 
                                className="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-xl text-xs font-black hover:scale-105 transition-all active:scale-95 disabled:opacity-50"
                              >
                                {generateLinkMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />} Promote
                             </button>
                              <button 
-                               onClick={() => setDownloadingCard(campaign)} 
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 setDownloadingCard(campaign);
+                               }} 
                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors text-slate-400"
                              >
                               <Download className="w-5 h-5" />
@@ -316,6 +343,124 @@ export function Campaigns() {
       </div>
 
       {/* --- MODALS --- */}
+
+      {/* Campaign Detail Modal */}
+      {isModalOpen && selectedCampaign && (
+        <div 
+          className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={closeCampaignModal}
+        >
+          <div 
+            className="bg-white dark:bg-slate-900 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] shadow-2xl animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header Image */}
+            <div className="relative aspect-[16/9] overflow-hidden rounded-t-[2.5rem]">
+              <img 
+                src={selectedCampaign.image_url} 
+                alt={selectedCampaign.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <button 
+                onClick={closeCampaignModal}
+                className="absolute top-4 right-4 p-3 bg-black/30 backdrop-blur-md rounded-full text-white hover:bg-black/50 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="absolute bottom-6 left-6 right-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <img 
+                    src={selectedCampaign.seller_avatar || `https://ui-avatars.com/api/?name=${selectedCampaign.seller_name}`} 
+                    alt="seller" 
+                    className="w-10 h-10 rounded-full border-2 border-white object-cover"
+                  />
+                  <div>
+                    <p className="text-white font-black text-sm">{selectedCampaign.seller_name}</p>
+                    <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider">Verified Seller</p>
+                  </div>
+                </div>
+                <h2 className="text-3xl font-black text-white leading-tight">{selectedCampaign.name}</h2>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+                            {/* Campaign Meta */}
+              <div className="flex flex-wrap gap-3">
+                <span className="px-3 py-1.5 bg-sky-500/10 text-sky-600 dark:text-sky-400 rounded-full text-xs font-black uppercase">
+                  {selectedCampaign.type}
+                </span>
+                <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-black flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> {selectedCampaign.location}
+                </span>
+                <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-black flex items-center gap-1">
+                  <Calendar className="w-3 h-3" /> Ends {new Date(selectedCampaign.end_date).toLocaleDateString()}
+                </span>
+              </div>
+
+              {/* Description */}
+              <div>
+                <h4 className="text-sm font-black text-slate-800 dark:text-white mb-2">About this Campaign</h4>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                  {selectedCampaign.description}
+                </p>
+              </div>
+
+              {/* Price & Commission */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Product Price</p>
+                  <p className="text-2xl font-black text-slate-800 dark:text-white">{formatNaira(selectedCampaign.price)}</p>
+                </div>
+                <div className="p-4 bg-sky-500/5 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/20 rounded-2xl">
+                  <p className="text-[10px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-1">Your Commission</p>
+                  <p className="text-2xl font-black text-sky-500">
+                    {selectedCampaign.commission_percent}% 
+                    <span className="text-sm text-slate-400 ml-1">
+                      ({formatNaira((selectedCampaign.price * selectedCampaign.commission_percent) / 100)})
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button 
+                  onClick={() => {
+                    handleShare(selectedCampaign);
+                  }}
+                  disabled={generateLinkMutation.isPending}
+                  className="flex-1 bg-sky-500 hover:bg-sky-600 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {generateLinkMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                  Generate Referral Link
+                </button>
+                <button 
+                  onClick={() => {
+                    setDownloadingCard(selectedCampaign);
+                    closeCampaignModal();
+                  }}
+                  className="px-6 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl font-black flex items-center justify-center gap-2 transition-all active:scale-95"
+                >
+                  <Download className="w-4 h-4" />
+                  Flyer
+                </button>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setActiveCommentsId(selectedCampaign.id);
+                  closeCampaignModal();
+                }}
+                className="w-full py-3 border border-slate-200 dark:border-slate-700 rounded-2xl font-black text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                View Discussion ({activeComments.length || 0})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Side Comment Modal */}
       {activeCommentsId !== null && (
@@ -381,7 +526,7 @@ export function Campaigns() {
             >
               <div className="absolute -top-12 -right-12 w-48 h-48 bg-sky-500/20 blur-[80px]" />
               <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-blue-600/20 blur-[80px]" />
-              
+
               <div className="relative z-10 flex flex-col h-full">
                 <div className="flex justify-between items-start mb-6">
                   <div className="font-black text-xl italic tracking-tighter text-sky-400">BLUESEA</div>
