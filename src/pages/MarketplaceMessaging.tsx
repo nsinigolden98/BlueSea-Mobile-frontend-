@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   Search, MoreVertical, Send, Paperclip, Check, CheckCheck, 
-  Package, Clock, ShieldCheck, ChevronLeft, ShoppingBag, 
+  Clock, ShieldCheck, ChevronLeft, ShoppingBag, 
   ExternalLink, MessageSquare, DollarSign, Truck, Image as ImageIcon, 
   X, Reply, AlertCircle, Eye, Loader2
 } from 'lucide-react';
@@ -12,7 +12,8 @@ import {
   useSendMessage, 
   useMarkAsRead 
 } from '@/hooks/messaging/useMessaging';
-import { Message, Conversation } from '@/api/messaging.api';
+// FIX: Added 'type' keyword for verbatimModuleSyntax compliance
+import type { Message, Conversation } from '@/api/messaging.api';
 
 const StatusBadge = ({ status }: { status: string }) => {
   const styles: Record<string, string> = {
@@ -66,7 +67,7 @@ export function MarketplaceMessaging() {
     const q = searchQuery.toLowerCase();
     return conversations.filter((c: Conversation) => 
       c.participants[0]?.name.toLowerCase().includes(q) || 
-      c.product?.name.toLowerCase().includes(q)
+      (c.product && c.product.name.toLowerCase().includes(q))
     );
   }, [conversations, searchQuery]);
 
@@ -354,6 +355,7 @@ export function MarketplaceMessaging() {
                   </div>
                 )}
 
+                {/* FIX: Restored the missing closing tags and input field here */}
                 <div className="flex items-end gap-2">
                   <div className="relative">
                     <button 
@@ -370,41 +372,30 @@ export function MarketplaceMessaging() {
                         </button>
                         {activeConv?.product && (
                            <button onClick={() => { navigate(`/marketplace/product/${activeConv.product!.id}`); setShowAttachmentMenu(false); }} className="w-full flex items-center gap-3 p-2.5 hover:bg-sky-50 dark:hover:bg-sky-900/20 rounded-xl transition-colors text-sm font-medium">
-                             <Eye className="w-4 h-4 text-indigo-500" /> View Product
+   <Eye className="w-4 h-4 text-indigo-500" /> View Product
                            </button>
                         )}
-            </div>
+                      </div>
                     )}
                   </div>
-
-                  <form onSubmit={handleSendMessage} className="flex-1 flex gap-2">
+                  
+                  <form onSubmit={handleSendMessage} className="flex-1 flex items-end gap-2">
                     <input 
-                      type="text"
+                      type="text" 
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
-                      placeholder="Type a message..."
-                      className="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-sky-500/20 outline-none"
+                      placeholder="Type a message..." 
+                      className="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-sky-500/20 outline-none"
                     />
                     <button 
                       type="submit"
-                      disabled={(!inputText.trim() && !pendingFile) || sendMessageMutation.isPending}
-                      className={`p-3 rounded-2xl transition-all shadow-lg ${inputText.trim() || pendingFile ? 'bg-sky-500 text-white shadow-sky-500/30' : 'bg-slate-200 dark:bg-slate-700 text-slate-400 opacity-50'}`}
+                      disabled={sendMessageMutation.isPending || (!inputText.trim() && !pendingFile)}
+                      className="p-3 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     >
                       {sendMessageMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                     </button>
                   </form>
                 </div>
-
-                {activeConv?.product && (
-                  <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-                    <button 
-                      onClick={() => navigate(`/marketplace/product/${activeConv.product!.id}`)}
-                      className="whitespace-nowrap flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 transition-colors"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" /> View Listing
-                    </button>
-                  </div>
-                )}
               </div>
             </footer>
           </>
