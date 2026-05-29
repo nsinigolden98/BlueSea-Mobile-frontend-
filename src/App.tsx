@@ -47,7 +47,11 @@ import {
   Checkout,
   SpinVault,
   Betting,
-  BlueSphere 
+  BlueSphere,
+  FinanceHub, SavingsVault, BlueSeaCards, BspCrypto, Pension, Insurance,
+  BusinessHub, Payroll, Invoices, Properties, Appointments, Analytics,
+  Storefronts, Freelance, Affiliate, Contracts,
+  Events, Streams, Travel, Subscriptions,Receipt, 
 } from '@/pages';
 import IdentityCenter from '@/pages/IdentityCenter';
 import HistoryPage from '@/pages/History';
@@ -160,6 +164,37 @@ function AppRoutes() {
         <Route path="/betting" element={<Betting />} />
         
             <Route path="/identity-center" element={<IdentityCenter />} />
+
+
+
+      {/* Finance Ecosystem */}
+      <Route path="/finance" element={<ProtectedRoute><FinanceHub /></ProtectedRoute>} />
+      <Route path="/finance/savings" element={<ProtectedRoute><SavingsVault /></ProtectedRoute>} />
+      <Route path="/finance/cards" element={<ProtectedRoute><BlueSeaCards /></ProtectedRoute>} />
+      <Route path="/finance/crypto" element={<ProtectedRoute><BspCrypto /></ProtectedRoute>} />
+      <Route path="/finance/pension" element={<ProtectedRoute><Pension /></ProtectedRoute>} />
+      <Route path="/finance/insurance" element={<ProtectedRoute><Insurance /></ProtectedRoute>} />
+
+      {/* Business Ecosystem */}
+      <Route path="/business" element={<ProtectedRoute><BusinessHub /></ProtectedRoute>} />
+      <Route path="/business/payroll" element={<ProtectedRoute><Payroll /></ProtectedRoute>} />
+      <Route path="/business/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+      <Route path="/business/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
+      <Route path="/business/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+      <Route path="/business/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+
+      {/* Commerce Ecosystem */}
+      <Route path="/commerce/storefronts" element={<ProtectedRoute><Storefronts /></ProtectedRoute>} />
+      <Route path="/commerce/freelance" element={<ProtectedRoute><Freelance /></ProtectedRoute>} />
+      <Route path="/commerce/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
+      <Route path="/commerce/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
+
+      {/* Experience Ecosystem */}
+      <Route path="/experience/streams" element={<ProtectedRoute><Streams /></ProtectedRoute>} />
+      <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />
+
+      <Route path="/receipt/:transactionId" element={<ProtectedRoute><Receipt /></ProtectedRoute>} />
+
 
 
         {/* Fallback */}
