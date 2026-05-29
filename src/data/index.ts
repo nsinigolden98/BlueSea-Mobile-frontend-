@@ -2234,3 +2234,22 @@ export const NIGERIAN_BANKS = [
 ];
 
 
+/*
+
+// ---- Transaction Data Loader ----
+export async function TransactionsData() {
+  // In a real app, this would fetch from the API
+  // For demo, we load from localStorage or return defaults
+  const stored = localStorage.getItem('bluesea_transactions');
+  if (stored) return JSON.parse(stored);
+  return [];
+}
+
+// ---- Bus Companies (Demo) ----
+export const BUS_COMPANIES = [
+  { id: 'guo', name: 'GUO Transport', slogan: 'The Ultimate Transport Experience' },
+  { id: 'abc', name: 'ABC Transport', slogan: 'Travel With Confidence' },
+  { id: 'libra', name: 'Libra Motors', slogan: 'Comfort On The Move' },
+  { id: 'peace', name: 'Peace Mass Transit', slogan: 'Your Peaceful Journey' },
+  { id: 'gigm', name: 'GIGM', slogan: 'Go With God' },
+];*/

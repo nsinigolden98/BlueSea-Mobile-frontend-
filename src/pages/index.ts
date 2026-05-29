@@ -54,4 +54,34 @@ export { SpinVault } from './SpinVault';
 export { Betting } from './Betting';
 // src/components/index.ts
 export { default as IdentityCenter } from './IdentityCenter';
+/*
+// ---- Finance Ecosystem ----
+export { FinanceHub } from './finance/FinanceHub';
+export { SavingsVault } from './finance/SavingsVault';
+export { BlueSeaCards } from './finance/BlueSeaCards';
+export { BspCrypto } from './finance/BspCrypto';
+export { Pension } from './finance/Pension';
+export { Insurance } from './finance/Insurance';
 
+// ---- Business Ecosystem ----
+export { BusinessHub } from './business/BusinessHub';
+export { Payroll } from './business/Payroll';
+export { Invoices } from './business/Invoices';
+export { Properties } from './business/Properties';
+export { Appointments } from './business/Appointments';
+export { Analytics } from './business/Analytics';
+
+// ---- Commerce Ecosystem ----
+export { Storefronts } from './commerce/Storefronts';
+export { Freelance } from './commerce/Freelance';
+export { Affiliate } from './commerce/Affiliate';
+export { Contracts } from './commerce/Contracts';
+
+// ---- Experience Ecosystem ----
+export { Streams } from './experience/Streams';
+export { Subscriptions } from './experience/Subscriptions';
+
+// ---- Global System Pages ----
+export { Receipt } from './global/Receipt';
+
+*/
