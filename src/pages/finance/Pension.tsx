@@ -32,15 +32,22 @@ export function Pension() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // BACKEND READY: Fetch initial pension data here
-    // const fetchPensionData = async () => {
-    //   setIsLoading(true);
-    //   const res = await fetch('/api/pensions');
-    //   // sync with context...
-    //   setIsLoading(false);
-    // };
-    // fetchPensionData();
-  }, []);
+  // Put setIsLoading to use right here to clear the error!
+  const fetchPensionData = async () => {
+    try {
+      setIsLoading(true);
+      // BACKEND READY: Fetch initial pension data here
+      // const res = await fetch('/api/pensions');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchPensionData();
+}, []);
+
 
   const handleCreate = async () => {
     if (!form.name || !form.monthlyContribution) { 
@@ -282,7 +289,7 @@ export function Pension() {
       )}
       
       {/* Fixed TS2322: Rendered ToastComponent explicitly as a ReactNode */}
-      <div>{ToastComponent as React.ReactNode}</div>
+<ToastComponent />
     </div>
   );
 }

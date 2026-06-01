@@ -307,7 +307,7 @@ export function SavingsVault() {
       )}
 
       {/* Explicit wrapper to render the Toast Component element safely inside the react template tree */}
-      <div>{ToastComponent as React.ReactNode}</div>
+<ToastComponent />
     </div>
   );
 }
