@@ -153,6 +153,7 @@ interface BlueSeaEngineContextType {
   // BSP
   bspActivities: BSPCoinActivity[];
   addBSPActivity: (a: Omit<BSPCoinActivity, 'id' | 'timestamp'>) => void;
+  removeSubscription: (id: string) => void; 
 }
 
 const BlueSeaEngineContext = createContext<BlueSeaEngineContextType | undefined>(undefined);
@@ -437,6 +438,11 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
     return newSub;
   }, []);
 
+  // Added removeSubscription logic securely
+  const removeSubscription = useCallback((id: string) => {
+    setSubscriptions(prev => prev.filter(sub => sub.id !== id));
+  }, []);
+
   // ---- BSP Actions ----
   const addBSPActivity = useCallback((a: Omit<BSPCoinActivity, 'id' | 'timestamp'>) => {
     const newA: BSPCoinActivity = { ...a, id: 'bsp' + Date.now(), timestamp: new Date().toISOString() };
@@ -466,13 +472,14 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
       events, addEvent, tickets, addTicket,
       streams, addStream,
       busTickets, addBusTicket,
-      subscriptions, addSubscription,
+      subscriptions, addSubscription, removeSubscription, // Included removeSubscription in context export
       bspActivities, addBSPActivity,
     }}>
       {children}
     </BlueSeaEngineContext.Provider>
   );
 }
+
 
 export function useBlueSeaEngine() {
   const context = useContext(BlueSeaEngineContext);
