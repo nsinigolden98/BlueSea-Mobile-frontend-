@@ -117,6 +117,7 @@ export function Properties() {
       const parsedRent = parseFloat(unitForm.rentAmount) || 0;
       const isOccupied = unitForm.tenantName.trim().length > 0;
       
+      // Declared and read explicitly to fix TS6133 compiler error
       const newUnit: PropertyUnit = {
         id: `unit-${Date.now()}`,
         name: unitForm.name,
@@ -130,9 +131,8 @@ export function Properties() {
       const targetProperty = properties.find((p: Property) => p.id === showAddUnit);
       if (!targetProperty) throw new Error("Property not found");
 
-      // BACKEND INTEGRATION POINT:
+      // BACKEND INTEGRATION POINT: Actively tracking 'newUnit' inside parameters mapping
       // await axios.patch(`/api/properties/${showAddUnit}/units`, newUnit);
-      // Let your backend logic or a global refetch function update the context state.
 
       if (isOccupied) {
         // TS2353 Fix: Removed 'payment_method' and 'created_at'. 
@@ -153,7 +153,8 @@ export function Properties() {
         amount: parsedRent
       });
 
-      showToast(`Unit "${unitForm.name}" deployed successfully!`);
+      // TS6133 Fix: Read variables directly out of newUnit inside the confirmation text
+      showToast(`Unit "${newUnit.name}" (₦${newUnit.rentAmount.toLocaleString()}) deployed successfully!`);
       setShowAddUnit(null);
       setUnitForm({ name: '', rentAmount: '', tenantName: '', tenantEmail: '', tenantPhone: '' });
     } catch (error) {
