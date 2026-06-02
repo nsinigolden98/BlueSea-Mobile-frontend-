@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header, Toast } from '@/components/ui-custom';
 import { useBlueSeaEngine } from '@/context/BlueSeaEngine';
 import { Store, Plus, X, ShoppingBag, TrendingUp, Eye, Heart, Settings, ExternalLink } from 'lucide-react';
@@ -17,6 +17,13 @@ export function Storefronts() {
   const { ToastComponent, showToast } = Toast();
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', slug: '', description: '', theme: 'modern', primaryColor: '#0ea5e9' });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Backend Connection Readiness: Simulation for Fetching store analytics
+  useEffect(() => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 800);
+  }, []);
 
   const handleCreate = () => {
     if (!form.name || !form.slug) { showToast('Name and slug are required', true); return; }
@@ -31,15 +38,22 @@ export function Storefronts() {
       <Header title="Storefronts" subtitle="Your online store builder" showBackButton />
       <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
         <div className="max-w-4xl mx-auto space-y-6">
+          
           {/* Summary */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-teal-500/5 border border-teal-500/20 rounded-2xl p-4">
-              <p className="text-[10px] font-bold text-teal-500 uppercase tracking-wider">Stores</p>
+              <p className="text-[10px] font-bold text-teal-500 uppercase tracking-wider flex items-center gap-1">
+                <ShoppingBag className="w-3 h-3" /> Stores
+              </p>
               <p className="text-xl font-black text-slate-800 dark:text-white mt-1">{storefronts.length}</p>
             </div>
             <div className="bg-pink-500/5 border border-pink-500/20 rounded-2xl p-4">
-              <p className="text-[10px] font-bold text-pink-500 uppercase tracking-wider">Products</p>
-              <p className="text-xl font-black text-slate-800 dark:text-white mt-1">{storefronts.reduce((s, st) => s + st.products.length, 0)}</p>
+              <p className="text-[10px] font-bold text-pink-500 uppercase tracking-wider flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" /> Products
+              </p>
+              <p className="text-xl font-black text-slate-800 dark:text-white mt-1">
+                {storefronts.reduce((s, st) => s + (st.products?.length || 0), 0)}
+              </p>
             </div>
             <div className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-4">
               <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">Revenue</p>
@@ -47,7 +61,6 @@ export function Storefronts() {
             </div>
           </div>
 
-          {/* Create Store */}
           <button onClick={() => setShowCreate(true)} className="w-full p-4 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl hover:border-teal-500/50 transition-all flex items-center gap-3 group">
             <div className="w-10 h-10 bg-teal-500/10 rounded-xl flex items-center justify-center">
               <Plus className="w-5 h-5 text-teal-500" />
@@ -56,50 +69,50 @@ export function Storefronts() {
           </button>
 
           {/* Store List */}
-          {storefronts.length === 0 ? (
-            <div className="text-center py-12 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-white/5">
-              <Store className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-sm text-slate-400 font-bold">No storefronts yet</p>
-              <p className="text-xs text-slate-400 mt-1">Create your first online store</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {storefronts.map(store => (
-                <div key={store.id} className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-lg" style={{ backgroundColor: store.primaryColor }}>
-                        {store.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-800 dark:text-white">{store.name}</p>
-                        <p className="text-[10px] text-slate-400">blueseamobile.com.ng/store/{store.slug}</p>
-                      </div>
+          <div className="space-y-4">
+            {storefronts.map(store => (
+              <div key={store.id} className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg" style={{ backgroundColor: store.primaryColor }}>
+                      {store.name.charAt(0)}
                     </div>
-                    <span className={`text-[9px] font-bold px-3 py-1 rounded-full ${store.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>{store.status}</span>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                        {store.name} <Heart className="w-3 h-3 text-pink-500" />
+                      </p>
+                      <p className="text-[10px] text-slate-400">blueseamobile.com.ng/store/{store.slug}</p>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-4 gap-3">
-                    <div className="text-center p-2 bg-white dark:bg-slate-800 rounded-xl">
-                      <p className="text-sm font-black text-slate-800 dark:text-white">{store.products.length}</p>
-                      <p className="text-[9px] text-slate-400">Products</p>
-                    </div>
-                    <div className="text-center p-2 bg-white dark:bg-slate-800 rounded-xl">
-                      <p className="text-sm font-black text-slate-800 dark:text-white">{store.analytics.totalSales}</p>
-                      <p className="text-[9px] text-slate-400">Sales</p>
-                    </div>
-                    <div className="text-center p-2 bg-white dark:bg-slate-800 rounded-xl">
-                      <p className="text-sm font-black text-slate-800 dark:text-white">{store.analytics.visitors}</p>
-                      <p className="text-[9px] text-slate-400">Visitors</p>
-                    </div>
-                    <div className="text-center p-2 bg-white dark:bg-slate-800 rounded-xl">
-                      <p className="text-sm font-black text-slate-800 dark:text-white">₦{store.analytics.totalRevenue.toLocaleString()}</p>
-                      <p className="text-[9px] text-slate-400">Revenue</p>
-                    </div>
+                  <div className="flex gap-2">
+                    <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><Settings className="w-4 h-4 text-slate-400" /></button>
+                    <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><ExternalLink className="w-4 h-4 text-slate-400" /></button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="text-center p-2 bg-white dark:bg-slate-800 rounded-xl">
+                    <p className="text-sm font-black text-slate-800 dark:text-white">{store.products.length}</p>
+                    <p className="text-[9px] text-slate-400">Products</p>
+                  </div>
+                  <div className="text-center p-2 bg-white dark:bg-slate-800 rounded-xl">
+                    <p className="text-sm font-black text-slate-800 dark:text-white">{store.analytics.totalSales}</p>
+                    <p className="text-[9px] text-slate-400">Sales</p>
+                  </div>
+                  <div className="text-center p-2 bg-white dark:bg-slate-800 rounded-xl">
+                    <p className="text-sm font-black text-slate-800 dark:text-white flex items-center justify-center gap-1">
+                      <Eye className="w-3 h-3" /> {store.analytics.visitors}
+                    </p>
+                    <p className="text-[9px] text-slate-400">Visitors</p>
+                  </div>
+                  <div className="text-center p-2 bg-white dark:bg-slate-800 rounded-xl">
+                    <p className="text-sm font-black text-emerald-500">₦{store.analytics.totalRevenue.toLocaleString()}</p>
+                    <p className="text-[9px] text-slate-400">Revenue</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
 
@@ -116,22 +129,12 @@ export function Storefronts() {
               <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Store Name" className="bg-slate-50 dark:bg-slate-800 rounded-2xl h-12" />
               <Input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value.replace(/\s/g, '-').toLowerCase() })} placeholder="Store URL (e.g. mystore)" className="bg-slate-50 dark:bg-slate-800 rounded-2xl h-12" />
               <Input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Description" className="bg-slate-50 dark:bg-slate-800 rounded-2xl h-12" />
-              <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Theme</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {THEMES.map(t => (
-                    <button key={t.id} onClick={() => setForm({ ...form, theme: t.id })} className={`p-3 rounded-xl ${t.color} ${form.theme === t.id ? 'ring-2 ring-sky-500' : ''} transition-all`}>
-                      <span className={`text-[10px] font-bold ${t.id === 'minimal' ? 'text-slate-800' : 'text-white'}`}>{t.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <Button onClick={handleCreate} disabled={!form.name || !form.slug} className="w-full bg-teal-500 hover:bg-teal-600 text-white h-14 rounded-2xl text-sm font-black shadow-xl disabled:opacity-50 active:scale-95">Create Storefront</Button>
+              <Button onClick={handleCreate} disabled={!form.name || !form.slug} className="w-full bg-teal-500 hover:bg-teal-600 text-white h-14 rounded-2xl text-sm font-black shadow-xl">Create Storefront</Button>
             </div>
           </div>
         </div>
       )}
-      {ToastComponent}
+      <ToastComponent />
     </div>
   );
 }

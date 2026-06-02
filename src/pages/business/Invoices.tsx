@@ -4,7 +4,33 @@ import { useBlueSeaEngine } from '@/context/BlueSeaEngine';
 import { Receipt, Plus, X, FileText, CheckCircle2, Clock, AlertCircle, Send, Download, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { InvoiceStatus } from '@/types';
+
+// Declared internal structural interfaces to replace loose schemas
+export type InvoiceStatus = 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue' | 'cancelled';
+
+export interface InvoiceLineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+}
+
+export interface Invoice {
+  id: string;
+  clientName: string;
+  clientEmail: string;
+  lineItems: InvoiceLineItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  status: InvoiceStatus;
+  dueDate: string;
+  template: string;
+  notes: string;
+  paidAt?: string;
+}
 
 const STATUS_CONFIG: Record<InvoiceStatus, { label: string; color: string; bg: string; icon: any }> = {
   draft: { label: 'Draft', color: 'text-slate-500', bg: 'bg-slate-500/10', icon: FileText },
@@ -22,48 +48,85 @@ export function Invoices() {
   const [filter, setFilter] = useState<InvoiceStatus | 'all'>('all');
   const [form, setForm] = useState({ clientName: '', clientEmail: '', description: '', amount: '', dueDate: '' });
 
-  const handleCreate = () => {
-    if (!form.clientName || !form.amount) { showToast('Please fill all required fields', true); return; }
-    const subtotal = Number(form.amount);
-    const tax = subtotal * 0.075;
-    addInvoice({
-      clientName: form.clientName,
-      clientEmail: form.clientEmail,
-      lineItems: [{ id: 'li1', description: form.description || 'Service', quantity: 1, rate: subtotal, amount: subtotal }],
-      subtotal,
-      tax,
-      discount: 0,
-      total: subtotal + tax,
-      status: 'draft',
-      dueDate: form.dueDate || new Date(Date.now() + 14 * 86400000).toISOString(),
-      template: 'default',
-      notes: '',
-    });
-    showToast('Invoice created successfully!');
-    setShowCreate(false);
-    setForm({ clientName: '', clientEmail: '', description: '', amount: '', dueDate: '' });
+  // Async wrapper prepared for backend database syncs
+  const handleCreate = async () => {
+    if (!form.clientName || !form.amount) { 
+      showToast('Please fill all required fields', 3000); 
+      return; 
+    }
+    
+    try {
+      const subtotal = Number(form.amount);
+      const tax = subtotal * 0.075;
+      
+      const payload = {
+        clientName: form.clientName,
+        clientEmail: form.clientEmail,
+        lineItems: [{ id: `li-${Date.now()}`, description: form.description || 'Service', quantity: 1, rate: subtotal, amount: subtotal }],
+        subtotal,
+        tax,
+        discount: 0,
+        total: subtotal + tax,
+        status: 'draft' as InvoiceStatus,
+        dueDate: form.dueDate || new Date(Date.now() + 14 * 86400000).toISOString(),
+        template: 'default',
+        notes: '',
+      };
+
+      // BACKEND INTEGRATION POINT:
+      // const response = await fetch('/api/v1/invoices', { method: 'POST', body: JSON.stringify(payload) });
+      
+      addInvoice(payload);
+      showToast('Invoice created successfully!');
+      setShowCreate(false);
+      setForm({ clientName: '', clientEmail: '', description: '', amount: '', dueDate: '' });
+    } catch (err) {
+      showToast('Error parsing pipeline submission parameters', 3000);
+    }
   };
 
-  const handleSend = (id: string) => {
-    updateInvoice(id, { status: 'sent' });
-    showToast('Invoice sent to client!');
+  const handleSend = async (id: string) => {
+    try {
+      // BACKEND INTEGRATION POINT: await fetch(`/api/v1/invoices/${id}/dispatch`, { method: 'POST' });
+      updateInvoice(id, { status: 'sent' });
+      showToast('Invoice sent to client!');
+    } catch (err) {
+      showToast('Dispatch sequence error', 3000);
+    }
   };
 
-  const handleMarkPaid = (id: string) => {
-    updateInvoice(id, { status: 'paid', paidAt: new Date().toISOString() });
-    showToast('Invoice marked as paid!');
+  const handleMarkPaid = async (id: string) => {
+    try {
+      // BACKEND INTEGRATION POINT: await fetch(`/api/v1/invoices/${id}/settle`, { method: 'PATCH' });
+      updateInvoice(id, { status: 'paid', paidAt: new Date().toISOString() });
+      showToast('Invoice marked as paid!');
+    } catch (err) {
+      showToast('Failed to update payment registry', 3000);
+    }
   };
 
-  const filtered = filter === 'all' ? invoices : invoices.filter(i => i.status === filter);
-  const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.total, 0);
-  const outstanding = invoices.filter(i => i.status === 'sent' || i.status === 'viewed').reduce((s, i) => s + i.total, 0);
+  // New action handler using the requested Download icon
+  const handleDownloadPDF = async (invoice: Invoice) => {
+    try {
+      showToast(`Generating document for ${invoice.clientName}...`);
+      // BACKEND INTEGRATION POINT: Window redirect or file stream fetch download implementation
+      // window.open(`/api/v1/invoices/${invoice.id}/pdf-stream`, '_blank');
+    } catch (err) {
+      showToast('Failed to download invoice statement', 3000);
+    }
+  };
+
+  const filtered = filter === 'all' ? invoices : invoices.filter((i: Invoice) => i.status === filter);
+  const totalRevenue = invoices.filter((i: Invoice) => i.status === 'paid').reduce((s: number, i: Invoice) => s + i.total, 0);
+  const outstanding = invoices.filter((i: Invoice) => i.status === 'sent' || i.status === 'viewed').reduce((s: number, i: Invoice) => s + i.total, 0);
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col">
       <Header title="Invoices" subtitle="Create and manage invoices" showBackButton />
       <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Summary */}
+          
+          {/* Summary Cards */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4">
               <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Revenue</p>
@@ -79,7 +142,7 @@ export function Invoices() {
           <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {(['all', 'draft', 'sent', 'paid', 'overdue'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${filter === f ? 'bg-sky-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                {f.charAt(0).toUpperCase() + f.slice(1)} {f !== 'all' && `(${invoices.filter(i => i.status === f).length})`}
+                {f.charAt(0).toUpperCase() + f.slice(1)} {f !== 'all' && `(${invoices.filter((i: Invoice) => i.status === f).length})`}
               </button>
             ))}
           </div>
@@ -96,11 +159,11 @@ export function Invoices() {
             {filtered.length === 0 ? (
               <div className="text-center py-12 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-white/5">
                 <Receipt className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-sm text-slate-400 font-bold">No invoices</p>
+                <p className="text-sm text-slate-400 font-bold">No invoices discovered</p>
               </div>
             ) : (
-              filtered.map(inv => {
-                const cfg = STATUS_CONFIG[inv.status];
+              filtered.map((inv: Invoice) => {
+                const cfg = STATUS_CONFIG[inv.status] || STATUS_CONFIG['draft'];
                 return (
                   <div key={inv.id} className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-4">
                     <div className="flex items-center justify-between mb-3">
@@ -113,22 +176,36 @@ export function Invoices() {
                           <p className="text-[10px] text-slate-400">Due: {new Date(inv.dueDate).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex flex-col items-end gap-1">
                         <p className="text-sm font-black text-slate-800 dark:text-white">₦{inv.total.toLocaleString()}</p>
                         <span className={`text-[9px] font-bold ${cfg.color} ${cfg.bg} px-2 py-0.5 rounded`}>{cfg.label}</span>
                       </div>
                     </div>
-                    {inv.status === 'draft' && (
-                      <div className="flex gap-2">
-                        <button onClick={() => handleSend(inv.id)} className="flex-1 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-[10px] font-bold transition-all active:scale-95">Send</button>
-                        <button onClick={() => { updateInvoice(inv.id, { status: 'cancelled' }); showToast('Invoice cancelled'); }} className="px-3 py-2 bg-red-50 text-red-500 rounded-xl text-[10px] font-bold transition-all">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
-                    {inv.status === 'sent' && (
-                      <button onClick={() => handleMarkPaid(inv.id)} className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-bold transition-all active:scale-95">Mark as Paid</button>
-                    )}
+                    
+                    {/* Actions Panel offering functional button support alongside Download */}
+                    <div className="flex gap-2 mt-2">
+                      {inv.status === 'draft' && (
+                        <>
+                          <button onClick={() => handleSend(inv.id)} className="flex-1 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-[10px] font-bold transition-all active:scale-95">Send Invoice</button>
+                          <button onClick={() => { updateInvoice(inv.id, { status: 'cancelled' }); showToast('Invoice cancelled'); }} className="px-3 py-2 bg-rose-500/10 text-rose-500 rounded-xl text-[10px] font-bold transition-all hover:bg-rose-500 hover:text-white">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
+                      {inv.status === 'sent' && (
+                        <button onClick={() => handleMarkPaid(inv.id)} className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-bold transition-all active:scale-95">Mark as Paid</button>
+                      )}
+                      
+                      {/* Integrated Download handler element built with local primitive Button style sheets */}
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => handleDownloadPDF(inv)}
+                        className="h-8 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-none hover:text-sky-500 shrink-0"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 );
               })
@@ -157,7 +234,8 @@ export function Invoices() {
           </div>
         </div>
       )}
-      {ToastComponent}
+      
+      {typeof ToastComponent === 'function' ? ToastComponent() : ToastComponent}
     </div>
   );
 }

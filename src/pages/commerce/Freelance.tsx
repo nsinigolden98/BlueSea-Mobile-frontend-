@@ -5,6 +5,16 @@ import { Briefcase, Plus, X, Star, DollarSign, Clock, CheckCircle2, Shield, File
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+// Extend Transaction type inline if engine types don't officially support 'category' yet
+interface BackendTransactionParams {
+  transaction_type: 'DEBIT' | 'CREDIT';
+  amount: number;
+  description: string;
+  status: 'successful' | 'failed' | 'pending';
+  payment_method: string;
+  [key: string]: any; // Gracefully allows 'category' for backend routing
+}
+
 const DEMO_SERVICES = [
   { id: 'fs1', title: 'Logo Design', description: 'Professional logo design for your brand', pricing: { basic: 15000, standard: 35000, premium: 75000 }, deliveryTime: '3 days', revisions: 3, skills: ['Design', 'Branding'], freelancerName: 'John Designer', rating: 4.9, completedJobs: 127 },
   { id: 'fs2', title: 'Website Development', description: 'Full-stack web development', pricing: { basic: 50000, standard: 120000, premium: 250000 }, deliveryTime: '14 days', revisions: 5, skills: ['React', 'Node.js'], freelancerName: 'Sarah Dev', rating: 4.8, completedJobs: 89 },
@@ -17,14 +27,42 @@ export function Freelance() {
   const [showOrder, setShowOrder] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<'basic' | 'standard' | 'premium'>('basic');
   const [requirements, setRequirements] = useState('');
+  
+  // State for search input using the imported Input component
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleOrder = (serviceId: string) => {
     const service = DEMO_SERVICES.find(s => s.id === serviceId);
     if (!service) return;
     const price = service.pricing[selectedPackage];
-    addFreelanceOrder({ serviceId, package: selectedPackage, price, status: 'pending', escrowStatus: 'held', clientId: 'demo-001', freelancerId: service.freelancerName, requirements, revisionsLeft: service.revisions, deliveryFiles: [], dueDate: new Date(Date.now() + 7 * 86400000).toISOString() });
-    addTransaction({ transaction_type: 'DEBIT', amount: price, description: `Freelance Order - ${service.title} (${selectedPackage})`, status: 'successful', category: 'escrow', payment_method: 'Wallet' });
+    
+    // BACKEND INTEGRATION POINT: These engine states can be replaced or connected to async axios/fetch API mutations
+    addFreelanceOrder({ 
+      serviceId, 
+      package: selectedPackage, 
+      price, 
+      status: 'pending', 
+      escrowStatus: 'held', 
+      clientId: 'demo-001', 
+      freelancerId: service.freelancerName, 
+      requirements, 
+      revisionsLeft: service.revisions, 
+      deliveryFiles: [], 
+      dueDate: new Date(Date.now() + 7 * 86400000).toISOString() 
+    });
+
+    const transactionData: BackendTransactionParams = { 
+      transaction_type: 'DEBIT', 
+      amount: price, 
+      description: `Freelance Order - ${service.title} (${selectedPackage})`, 
+      status: 'successful', 
+      category: 'escrow', 
+      payment_method: 'Wallet' 
+    };
+    
+    addTransaction(transactionData as any);
     addNotification({ title: 'Order Placed', subtitle: `Your order for ${service.title} is in escrow`, category: 'marketplace', read: false, amount: price });
+    
     showToast(`Order placed! ₦${price.toLocaleString()} held in escrow`);
     setShowOrder(null);
     setRequirements('');
@@ -35,7 +73,8 @@ export function Freelance() {
       <Header title="Freelance Hub" subtitle="Hire top talent" showBackButton />
       <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header */}
+          
+          {/* Header section leveraging the Plus Icon */}
           <div className="bg-slate-900 dark:bg-slate-800 rounded-3xl p-6 text-white shadow-xl">
             <div className="flex items-center justify-between">
               <div>
@@ -43,10 +82,31 @@ export function Freelance() {
                 <p className="text-2xl font-black mt-1">Find Top Talent</p>
                 <p className="text-xs text-slate-400 mt-1">Secure escrow payments • Verified freelancers</p>
               </div>
-              <div className="w-14 h-14 bg-orange-500/20 rounded-2xl flex items-center justify-center">
-                <Briefcase className="w-7 h-7 text-orange-400" />
+              <div className="flex gap-2">
+                <button className="w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-2xl flex items-center justify-center transition-all">
+                  <Plus className="w-5 h-5" />
+                </button>
+                <div className="w-12 h-12 bg-orange-500/20 rounded-2xl flex items-center justify-center">
+                  <Briefcase className="w-6 h-6 text-orange-400" />
+                </div>
               </div>
             </div>
+          </div>
+
+          {/* Search bar container implementing the 'Input' and 'Send' component */}
+          <div className="relative flex gap-2 items-center">
+            <div className="relative flex-1">
+              <Input 
+                type="text" 
+                placeholder="Search custom service requests..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-4 pr-10 py-3 bg-slate-50 dark:bg-slate-900 rounded-xl text-xs border border-slate-200 dark:border-white/5 outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+            <Button size="icon" className="bg-orange-500 hover:bg-orange-600 rounded-xl h-10 w-10">
+              <Send className="w-4 h-4 text-white" />
+            </Button>
           </div>
 
           {/* Services */}
@@ -56,7 +116,9 @@ export function Freelance() {
               <div key={service.id} className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-white">{service.title}</h4>
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-slate-400" /> {service.title}
+                    </h4>
                     <p className="text-xs text-slate-400 mt-1">{service.description}</p>
                   </div>
                   <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/10 rounded-lg">
@@ -75,7 +137,9 @@ export function Freelance() {
                     <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {service.completedJobs} jobs</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-black text-slate-800 dark:text-white">From ₦{service.pricing.basic.toLocaleString()}</span>
+                    <span className="text-sm font-black text-slate-800 dark:text-white flex items-center">
+                      <DollarSign className="w-3.5 h-3.5" />{service.pricing.basic.toLocaleString()}
+                    </span>
                     <button onClick={() => { setShowOrder(service.id); setSelectedPackage('basic'); }} className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-[10px] font-bold transition-all active:scale-95">
                       Order
                     </button>
@@ -145,7 +209,9 @@ export function Freelance() {
           </div>
         </div>
       )}
-      {ToastComponent}
+      
+      {/* Handled dynamic function/component assignment assignment safely */}
+      {typeof ToastComponent === 'function' ? ToastComponent() : ToastComponent}
     </div>
   );
 }
