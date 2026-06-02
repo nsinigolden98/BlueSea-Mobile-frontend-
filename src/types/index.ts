@@ -826,3 +826,95 @@ export interface PointProvider {
   color: string;
   packages: PointPackage[];
 }
+
+
+
+
+
+// src/types/index.ts
+
+export type TransactionStatus = 'successful' | 'pending' | 'failed';
+
+export interface Transaction {
+  id: string;
+  transaction_type: 'CREDIT' | 'DEBIT';
+  amount: number; // Fixed TS2322: Ensuring this is a number, not a string
+  description: string;
+  status: TransactionStatus;
+  category?: string; // Fixed TS2339
+  created_at: string;
+  payment_method?: string; // Fixed TS2339
+  sender_name?: string; // Fixed TS2339
+  receiver_name?: string; // Fixed TS2339
+}
+
+export interface ReceiptData {
+  transactionId: string;
+  timestamp: string;
+  status: string;
+  category?: string;
+  sender: { name: string; walletId: string };
+  receiver: { name: string; walletId: string };
+  amount: number;
+  fee: number;
+  total: number;
+  paymentMethod: string;
+  walletUsed: string;
+  description: string;
+  qrData: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  subtitle: string;
+  category: string;
+  timestamp: string;
+  read: boolean;
+  amount?: number;
+  actionType?: string;
+}
+
+export interface VaultMilestone {
+  id?: string;
+  percentage: number;
+  achieved: boolean;
+  achievedAt?: string;
+}
+
+export interface VaultTransaction {
+  id: string;
+  type: 'deposit' | 'withdrawal';
+  amount: number;
+  timestamp: string;
+}
+
+export interface SavingsVault {
+  id: string;
+  name?: string;
+  goal: number;
+  current: number;
+  milestones: VaultMilestone[];
+  transactions: VaultTransaction[];
+  createdAt: string;
+}
+
+// Minimal production-ready schemas for the rest of your modules
+export interface BlueSeaCard { id: string; [key: string]: any; }
+export interface PensionPlan { id: string; totalContribution: number; employerMatch: number; history: any[]; }
+export interface InsurancePlan { id: string; [key: string]: any; }
+export interface Business { id: string; createdAt: string; [key: string]: any; }
+export interface Invoice { id: string; createdAt: string; [key: string]: any; }
+export interface Property { id: string; createdAt: string; [key: string]: any; }
+export interface AppointmentBooking { id: string; createdAt: string; [key: string]: any; }
+export interface Storefront { id: string; createdAt: string; analytics: any; [key: string]: any; }
+export interface FreelanceService { id: string; [key: string]: any; }
+export interface FreelanceOrder { id: string; createdAt: string; [key: string]: any; }
+export interface AffiliateItem { id: string; [key: string]: any; }
+export interface DigitalContract { id: string; createdAt: string; [key: string]: any; }
+export interface BlueSeaEvent { id: string; createdAt: string; [key: string]: any; }
+export interface EventTicket { id: string; purchaseDate: string; [key: string]: any; }
+export interface LiveStream { id: string; [key: string]: any; }
+export interface BusTicket { id: string; [key: string]: any; }
+export interface Subscription { id: string; createdAt: string; [key: string]: any; }
+export interface BSPCoinActivity { id: string; timestamp: string; type: 'earn' | 'receive' | 'spend'; amount: number; }

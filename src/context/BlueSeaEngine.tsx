@@ -4,8 +4,8 @@
  */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import type {
-  Transaction, ReceiptData, AppNotification, TransactionStatus, TransactionCategory,
-  NotificationCategory, SavingsVault, BlueSeaCard, PensionPlan, InsurancePlan,
+  Transaction, ReceiptData, AppNotification, TransactionStatus,
+  SavingsVault, BlueSeaCard, PensionPlan, InsurancePlan,
   Business, Invoice, Property, AppointmentBooking, Storefront, FreelanceService,
   FreelanceOrder, AffiliateItem, DigitalContract, BlueSeaEvent, EventTicket,
   LiveStream, BusTicket, Subscription, BSPCoinActivity
@@ -150,10 +150,10 @@ interface BlueSeaEngineContextType {
   // Subscriptions
   subscriptions: Subscription[];
   addSubscription: (s: Omit<Subscription, 'id' | 'createdAt'>) => Subscription;
+  removeSubscription: (id: string) => void; 
   // BSP
   bspActivities: BSPCoinActivity[];
   addBSPActivity: (a: Omit<BSPCoinActivity, 'id' | 'timestamp'>) => void;
-  removeSubscription: (id: string) => void; 
 }
 
 const BlueSeaEngineContext = createContext<BlueSeaEngineContextType | undefined>(undefined);
@@ -337,7 +337,7 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
     return newPlan;
   }, []);
 
-  // ---- Business Actions ----
+// ---- Business Actions ----
   const addBusiness = useCallback((biz: Omit<Business, 'id' | 'createdAt'>) => {
     const newBiz: Business = { ...biz, id: 'b' + Date.now(), createdAt: new Date().toISOString() };
     setBusinesses(prev => [...prev, newBiz]);
