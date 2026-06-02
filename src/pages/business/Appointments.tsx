@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header, Toast } from '@/components/ui-custom';
 import { useBlueSeaEngine } from '@/context/BlueSeaEngine';
 import { Calendar, Plus, X, Clock, CheckCircle2, User, Phone, Mail } from 'lucide-react';
@@ -16,13 +16,36 @@ const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00
 export function Appointments() {
   const { appointments, addAppointment, addTransaction, addNotification } = useBlueSeaEngine();
   const { ToastComponent, showToast } = Toast();
+  
+  // State Management 
   const [showBook, setShowBook] = useState(false);
   const [selectedService, setSelectedService] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ clientName: '', clientEmail: '', clientPhone: '', notes: '' });
 
-  // Async wrapper prepared for backend database syncs
+  // Backend Connection Readiness: Lifecycle fetch simulation
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      setIsLoading(true);
+      try {
+        // BACKEND INTEGRATION POINT:
+        // const response = await fetch('/api/v1/appointments');
+        // const data = await response.json();
+        // setAppointmentsState(data);
+        
+        await new Promise(resolve => setTimeout(resolve, 600)); // Network delay simulation
+      } catch (error) {
+        showToast('Failed to synchronize appointments timeline', 3000);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, [showToast]);
+
   const handleBook = async () => {
     const service = SERVICES.find(s => s.id === selectedService);
     
@@ -31,6 +54,7 @@ export function Appointments() {
       return; 
     }
 
+    setIsLoading(true);
     try {
       // BACKEND INTEGRATION POINT:
       // const response = await fetch('/api/v1/appointments', { method: 'POST', body: JSON.stringify({...}) });
@@ -49,14 +73,13 @@ export function Appointments() {
         notes: form.notes 
       });
 
-      // Utilizing the "booking" variable to satisfy TypeScript and provide reference logic
       if (booking) {
+        // TS2353 Fix: Removed 'payment_method' literal property and embedded inside description string instead.
         addTransaction({ 
           transaction_type: 'DEBIT', 
           amount: service.price, 
-          description: `Appointment Booking - ${service.name} (Ref: ${booking.id || 'N/A'})`, 
-          status: 'successful', 
-          payment_method: 'Wallet' 
+          description: `Appointment Booking (Wallet Payment) - ${service.name} (Ref: ${booking.id || 'N/A'})`, 
+          status: 'successful'
         });
       }
 
@@ -75,6 +98,8 @@ export function Appointments() {
       setForm({ clientName: '', clientEmail: '', clientPhone: '', notes: '' });
     } catch (error) {
       showToast('Failed to process booking sequence', 3000);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -88,14 +113,13 @@ export function Appointments() {
       <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
         <div className="max-w-4xl mx-auto space-y-6">
           
-          {/* Summary */}
+          {/* Summary Panels */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4">
               <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Upcoming</p>
               <p className="text-xl font-black text-slate-800 dark:text-white mt-1">{upcoming.length}</p>
             </div>
             <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4">
-              {/* Integrated the previously unused CheckCircle2 icon */}
               <div className="flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                 <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Completed</p>
@@ -108,16 +132,22 @@ export function Appointments() {
             </div>
           </div>
 
-          {/* Book Button */}
-          <button onClick={() => setShowBook(true)} className="w-full p-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-amber-500/20">
+          {/* Book Action Trigger Button */}
+          <button onClick={() => setShowBook(true)} disabled={isLoading} className="w-full p-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-amber-500/20 disabled:opacity-50">
             <Plus className="w-5 h-5" />
             <span className="text-sm font-bold">Book New Appointment</span>
           </button>
 
-          {/* Appointments List */}
+          {/* Appointments Pipeline Feed List */}
           <div className="space-y-3">
             <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Upcoming</h3>
-            {upcoming.length === 0 ? (
+            
+            {isLoading && upcoming.length === 0 ? (
+               <div className="flex flex-col items-center justify-center py-10 space-y-3">
+                 <div className="w-6 h-6 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                 <p className="text-xs text-slate-400 font-bold">Loading schedule...</p>
+               </div>
+            ) : upcoming.length === 0 ? (
               <div className="text-center py-8 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-white/5">
                 <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
                 <p className="text-xs text-slate-400 font-bold">No upcoming appointments</p>
@@ -147,7 +177,7 @@ export function Appointments() {
         </div>
       </main>
 
-      {/* Book Modal */}
+      {/* Book Form Modal Backdrop Panel */}
       {showBook && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-xl bg-slate-950/40">
           <div className="absolute inset-0" onClick={() => setShowBook(false)} />
@@ -158,7 +188,7 @@ export function Appointments() {
             </div>
             
             <div className="space-y-4">
-              {/* Service Selection */}
+              {/* Service Selection Row Elements */}
               <div>
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Service</label>
                 <div className="mt-2 space-y-2">
@@ -171,20 +201,19 @@ export function Appointments() {
                 </div>
               </div>
               
-              {/* Date */}
+              {/* Date Input Calendar Mapping */}
               <div>
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Date</label>
                 <Input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} min={today} className="mt-2 bg-slate-50 dark:bg-slate-800 rounded-2xl h-12" />
               </div>
               
-              {/* Time Slots */}
+              {/* Hourly Time Slots Matrix Grid */}
               {selectedDate && (
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Time</label>
                   <div className="mt-2 grid grid-cols-4 gap-2">
                     {TIME_SLOTS.map(t => (
                       <button key={t} onClick={() => setSelectedTime(t)} className={`py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${selectedTime === t ? 'bg-amber-500 text-white' : 'bg-slate-50 dark:bg-slate-800 text-slate-600'}`}>
-                        {/* Integrated the previously unused Clock icon */}
                         <Clock className="w-3 h-3" /> {t}
                       </button>
                     ))}
@@ -192,7 +221,7 @@ export function Appointments() {
                 </div>
               )}
               
-              {/* Client Info - Integrated the previously unused User, Mail, and Phone icons */}
+              {/* Client Account Structural Metadata inputs fields */}
               <div className="space-y-2">
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-400 absolute left-4 top-4" />
@@ -208,8 +237,8 @@ export function Appointments() {
                 </div>
               </div>
 
-              <Button onClick={handleBook} disabled={!selectedService || !selectedDate || !selectedTime || !form.clientName} className="w-full bg-amber-500 hover:bg-amber-600 text-white h-14 rounded-2xl text-sm font-black shadow-xl disabled:opacity-50 active:scale-95">
-                Book Appointment
+              <Button onClick={handleBook} disabled={!selectedService || !selectedDate || !selectedTime || !form.clientName || isLoading} className="w-full bg-amber-500 hover:bg-amber-600 text-white h-14 rounded-2xl text-sm font-black shadow-xl disabled:opacity-50 active:scale-95">
+                {isLoading ? 'Booking Slot...' : 'Book Appointment'}
               </Button>
             </div>
           </div>

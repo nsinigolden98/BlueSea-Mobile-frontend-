@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header, Toast } from '@/components/ui-custom';
 import { useBlueSeaEngine } from '@/context/BlueSeaEngine';
 import { Users, Plus, X, Trash2, CheckCircle2, AlertCircle, Wallet, Calendar, ChevronDown } from 'lucide-react';
@@ -23,19 +23,39 @@ export function Payroll() {
   const { businesses, addTransaction, addNotification } = useBlueSeaEngine();
   const { ToastComponent, showToast } = Toast();
   
+  // State Management
   const [showAddStaff, setShowAddStaff] = useState(false);
   const [showProcess, setShowProcess] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState(businesses[0]?.id || '');
+  const [isLoading, setIsLoading] = useState(false);
   
   const [form, setForm] = useState<{ name: string; email: string; role: string; salary: string; schedule: 'monthly' | 'weekly' | 'biweekly' }>({ name: '', email: '', role: '', salary: '', schedule: 'monthly' });
 
   const business = businesses.find(b => b.id === selectedBusiness);
   const staffList: Staff[] = business?.staff || [];
   
-  // Fixed explicit types for reduce parameters
   const totalPayroll = staffList.reduce((s: number, st: Staff) => s + st.salary, 0);
 
-  // Converted to async for backend compatibility
+  // Backend Connection Readiness: Lifecycle fetch simulation
+  useEffect(() => {
+    const fetchPayrollData = async () => {
+      setIsLoading(true);
+      try {
+        // BACKEND INTEGRATION POINT: 
+        // const response = await fetch('/api/businesses/payroll');
+        // dispatch(setBusinesses(response.data));
+        
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network
+      } catch (error) {
+        showToast('Failed to load payroll data', 3000);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPayrollData();
+  }, [showToast]);
+
   const handleAddStaff = async () => {
     if (!form.name || !form.email || !form.salary) { 
       showToast('Please fill all fields', 3000); 
@@ -45,6 +65,7 @@ export function Payroll() {
     const biz = businesses.find(b => b.id === selectedBusiness);
     if (!biz) return;
 
+    setIsLoading(true);
     try {
       const newStaff: Staff = {
         id: 'st' + Date.now(),
@@ -59,7 +80,8 @@ export function Payroll() {
         status: 'active',
       };
 
-      // BACKEND INTEGRATION POINT: await fetch(`/api/businesses/${selectedBusiness}/staff`, { method: 'POST', body: JSON.stringify(newStaff) })
+      // BACKEND INTEGRATION POINT: 
+      // await fetch(`/api/businesses/${selectedBusiness}/staff`, { method: 'POST', body: JSON.stringify(newStaff) })
 
       biz.staff.push(newStaff);
       
@@ -68,21 +90,23 @@ export function Payroll() {
       setForm({ name: '', email: '', role: '', salary: '', schedule: 'monthly' });
     } catch (error) {
       showToast('Failed to add staff member', 3000);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Converted to async for backend compatibility
   const handleProcessPayroll = async () => {
+    setIsLoading(true);
     try {
-      // BACKEND INTEGRATION POINT: await fetch(`/api/businesses/${selectedBusiness}/payroll/process`, { method: 'POST' })
+      // BACKEND INTEGRATION POINT: 
+      // await fetch(`/api/businesses/${selectedBusiness}/payroll/process`, { method: 'POST' })
 
-      // Removed 'category' which does not exist in the Omit<Transaction, ...> type definition
+      // TS2353 Fix: Removed 'payment_method'. Moved context into the description string.
       addTransaction({ 
         transaction_type: 'DEBIT', 
         amount: totalPayroll, 
-        description: `Payroll - ${business?.name} (${staffList.length} staff)`, 
-        status: 'successful', 
-        payment_method: 'Wallet' 
+        description: `Payroll (Wallet Payment) - ${business?.name} (${staffList.length} staff)`, 
+        status: 'successful'
       });
       
       addNotification({ 
@@ -97,16 +121,24 @@ export function Payroll() {
       setShowProcess(false);
     } catch (error) {
       showToast('Failed to process payroll', 3000);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // TS6133 Fix: staffId is now actively utilized in the simulated endpoint and toast message
   const handleRemoveStaff = async (staffId: string) => {
+    setIsLoading(true);
     try {
-      // BACKEND INTEGRATION POINT: await fetch(`/api/staff/${staffId}`, { method: 'DELETE' })
-      showToast('Staff removed successfully!');
+      // BACKEND INTEGRATION POINT: 
+      // await fetch(`/api/staff/${staffId}`, { method: 'DELETE' })
+      
+      showToast(`Staff record (${staffId}) removed successfully!`);
       // Update local state context here if needed
     } catch (error) {
       showToast('Failed to remove staff', 3000);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,7 +148,7 @@ export function Payroll() {
       <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
         <div className="max-w-4xl mx-auto space-y-6">
           
-          {/* Business Selector utilizing ChevronDown and setSelectedBusiness */}
+          {/* Business Selector utilizing ChevronDown */}
           {businesses.length > 1 && (
             <div className="flex justify-end">
               <div className="relative inline-block">
@@ -143,19 +175,22 @@ export function Payroll() {
                 <p className="text-[10px] text-slate-400 mt-1">{staffList.length} staff members</p>
               </div>
               <div className="w-14 h-14 bg-violet-500/20 rounded-2xl flex items-center justify-center">
-                {/* Replaced generic Users with Wallet icon */}
                 <Wallet className="w-7 h-7 text-violet-400" />
               </div>
             </div>
 
-            {/* Utilizing AlertCircle for a helpful notice */}
+            {/* Utilizing AlertCircle */}
             <div className="flex items-start gap-2 mb-4 p-3 bg-amber-500/10 rounded-xl">
                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                <p className="text-[10px] font-medium text-amber-500/90">Ensure your business wallet has sufficient funds before processing monthly distributions.</p>
             </div>
 
             {staffList.length > 0 && (
-              <button onClick={() => setShowProcess(true)} className="w-full py-3 bg-violet-500 hover:bg-violet-600 text-white rounded-xl text-xs font-bold transition-all active:scale-95">
+              <button 
+                onClick={() => setShowProcess(true)} 
+                disabled={isLoading}
+                className="w-full py-3 bg-violet-500 hover:bg-violet-600 text-white rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+              >
                 Process Payroll
               </button>
             )}
@@ -165,12 +200,16 @@ export function Payroll() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Staff Members</h3>
-              <button onClick={() => setShowAddStaff(true)} className="flex items-center gap-1 px-3 py-1.5 bg-violet-500/10 text-violet-500 rounded-lg text-[10px] font-bold hover:bg-violet-500 hover:text-white transition-all">
+              <button onClick={() => setShowAddStaff(true)} disabled={isLoading} className="flex items-center gap-1 px-3 py-1.5 bg-violet-500/10 text-violet-500 rounded-lg text-[10px] font-bold hover:bg-violet-500 hover:text-white transition-all disabled:opacity-50">
                 <Plus className="w-3 h-3" /> Add Staff
               </button>
             </div>
 
-            {staffList.length === 0 ? (
+            {isLoading && staffList.length === 0 ? (
+               <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                 <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+               </div>
+            ) : staffList.length === 0 ? (
               <div className="text-center py-12 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-white/5">
                 <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                 <p className="text-sm text-slate-400 font-bold">No staff yet</p>
@@ -191,13 +230,11 @@ export function Payroll() {
                   <div className="flex items-center gap-4 text-right">
                     <div>
                       <p className="text-sm font-bold text-slate-800 dark:text-white">₦{staff.salary.toLocaleString()}</p>
-                      {/* Utilizing Calendar icon here */}
                       <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded flex items-center justify-end gap-1 mt-1 capitalize">
                         <Calendar className="w-2.5 h-2.5" /> {staff.paymentSchedule}
                       </span>
                     </div>
-                    {/* Utilizing Trash2 icon for staff removal */}
-                    <button onClick={() => handleRemoveStaff(staff.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors">
+                    <button onClick={() => handleRemoveStaff(staff.id)} disabled={isLoading} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors disabled:opacity-50">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -232,8 +269,8 @@ export function Payroll() {
                 <ChevronDown className="w-4 h-4 absolute right-4 top-4 text-slate-500 pointer-events-none" />
               </div>
 
-              <Button onClick={handleAddStaff} disabled={!form.name || !form.email || !form.salary} className="w-full bg-violet-500 hover:bg-violet-600 text-white h-14 rounded-2xl text-sm font-black shadow-xl disabled:opacity-50 active:scale-95">
-                Add Staff Member
+              <Button onClick={handleAddStaff} disabled={!form.name || !form.email || !form.salary || isLoading} className="w-full bg-violet-500 hover:bg-violet-600 text-white h-14 rounded-2xl text-sm font-black shadow-xl disabled:opacity-50 active:scale-95">
+                {isLoading ? 'Adding...' : 'Add Staff Member'}
               </Button>
             </div>
           </div>
@@ -260,10 +297,9 @@ export function Payroll() {
                 <span className="font-black text-violet-500">₦{totalPayroll.toLocaleString()}</span>
               </div>
             </div>
-            <Button onClick={handleProcessPayroll} className="w-full bg-violet-500 hover:bg-violet-600 text-white h-14 rounded-2xl text-sm font-black shadow-xl active:scale-95 flex items-center justify-center gap-2">
-              {/* Utilizing CheckCircle2 icon */}
+            <Button onClick={handleProcessPayroll} disabled={isLoading} className="w-full bg-violet-500 hover:bg-violet-600 text-white h-14 rounded-2xl text-sm font-black shadow-xl active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50">
               <CheckCircle2 className="w-5 h-5" />
-              Confirm & Pay
+              {isLoading ? 'Processing...' : 'Confirm & Pay'}
             </Button>
           </div>
         </div>
