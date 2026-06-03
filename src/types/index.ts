@@ -834,18 +834,20 @@ export interface PointProvider {
 // src/types/index.ts
 
 export type TransactionStatus = 'successful' | 'pending' | 'failed';
+export type TransactionCategory = 'airtime' | 'data' | 'deposit' | 'withdrawal' | 'bill_payment' | 'transfer' | 'savings_deposit' | 'marketplace' | 'affiliate_commission' | 'bus_booking' | 'escrow' | 'crypto' | 'pension' | 'insurance' | string;
+export type NotificationCategory = 'wallet' | 'affiliate' | 'payroll' | 'savings' | 'events' | 'streaming' | 'subscriptions' | 'security' | 'system' | string;
 
 export interface Transaction {
   id: string;
   transaction_type: 'CREDIT' | 'DEBIT';
-  amount: number; // Fixed TS2322: Ensuring this is a number, not a string
+  amount: number;
   description: string;
   status: TransactionStatus;
-  category?: string; // Fixed TS2339
+  category?: TransactionCategory; // Utilized the unused import here
   created_at: string;
-  payment_method?: string; // Fixed TS2339
-  sender_name?: string; // Fixed TS2339
-  receiver_name?: string; // Fixed TS2339
+  payment_method?: string;
+  sender_name?: string;
+  receiver_name?: string;
 }
 
 export interface ReceiptData {
@@ -868,7 +870,7 @@ export interface AppNotification {
   id: string;
   title: string;
   subtitle: string;
-  category: string;
+  category: NotificationCategory; // Utilized the unused import here
   timestamp: string;
   read: boolean;
   amount?: number;
@@ -877,6 +879,7 @@ export interface AppNotification {
 
 export interface VaultMilestone {
   id?: string;
+  label: string; // Fixed: UI mapping expected a 'label' property
   percentage: number;
   achieved: boolean;
   achievedAt?: string;
@@ -891,7 +894,9 @@ export interface VaultTransaction {
 
 export interface SavingsVault {
   id: string;
-  name?: string;
+  name: string; // Fixed: Removed optional '?' to ensure it's always a string for UI rendering
+  type: string; // Added to satisfy SavingsVault.tsx
+  interestRate: number; // Added to satisfy SavingsVault.tsx
   goal: number;
   current: number;
   milestones: VaultMilestone[];
@@ -899,13 +904,43 @@ export interface SavingsVault {
   createdAt: string;
 }
 
+export interface Property {
+  id: string;
+  name: string; // Added explicit UI fields
+  type: string; 
+  images: string[];
+  address: string;
+  price?: number;
+  createdAt: string;
+  [key: string]: any; // Backend flexibility
+}
+
+export interface PensionPlan {
+  id: string;
+  name: string; // Added explicit UI fields
+  totalContribution: number;
+  employerMatch: number;
+  projectedGrowth: number; 
+  contributionRate: number;
+  monthlyContribution: number;
+  autoDeduct: boolean;
+  history: any[];
+  [key: string]: any; // Backend flexibility
+}
+
+export interface BSPCoinActivity {
+  id: string;
+  timestamp: string;
+  type: 'earn' | 'receive' | 'spend' | 'transfer'; // Added 'transfer'
+  amount: number;
+  description?: string; // Added missing property
+}
+
 // Minimal production-ready schemas for the rest of your modules
 export interface BlueSeaCard { id: string; [key: string]: any; }
-export interface PensionPlan { id: string; totalContribution: number; employerMatch: number; history: any[]; }
 export interface InsurancePlan { id: string; [key: string]: any; }
 export interface Business { id: string; createdAt: string; [key: string]: any; }
 export interface Invoice { id: string; createdAt: string; [key: string]: any; }
-export interface Property { id: string; createdAt: string; [key: string]: any; }
 export interface AppointmentBooking { id: string; createdAt: string; [key: string]: any; }
 export interface Storefront { id: string; createdAt: string; analytics: any; [key: string]: any; }
 export interface FreelanceService { id: string; [key: string]: any; }
@@ -917,4 +952,3 @@ export interface EventTicket { id: string; purchaseDate: string; [key: string]: 
 export interface LiveStream { id: string; [key: string]: any; }
 export interface BusTicket { id: string; [key: string]: any; }
 export interface Subscription { id: string; createdAt: string; [key: string]: any; }
-export interface BSPCoinActivity { id: string; timestamp: string; type: 'earn' | 'receive' | 'spend'; amount: number; }
