@@ -10,38 +10,8 @@ import {
   Store, Wrench, Palette, Briefcase, PartyPopper, BookOpen 
 } from 'lucide-react';
 
-// Local Fallback Types ensuring zero breaking imports
+// Use a string type assignment matching the simulation types safely
 export type BusinessType = 'retail' | 'service' | 'digital_creator' | 'landlord' | 'freelancer_agency' | 'event_org' | 'education' | 'consulting';
-
-export interface Staff {
-  status: string;
-}
-
-export interface Business {
-  id: string;
-  name: string;
-  type: BusinessType;
-  description?: string;
-  address?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  walletBalance: number;
-  staff: Staff[];
-  role: string;
-}
-
-export interface PropertyUnit {
-  status: string;
-}
-
-export interface Property {
-  units: PropertyUnit[];
-}
-
-export interface Invoice {
-  status: string;
-  total: number;
-}
 
 const BUSINESS_TYPES: { type: BusinessType; label: string; icon: any }[] = [
   { type: 'retail', label: 'Retail Business', icon: Store },
@@ -70,7 +40,6 @@ export function BusinessHub() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({ name: '', type: 'retail' as BusinessType, description: '', address: '', contactEmail: '', contactPhone: '' });
 
-  // Async integration setup for backend connectivity
   const handleCreate = async () => {
     if (!form.name) { 
       showToast('Business name is required', 3000); 
@@ -78,7 +47,6 @@ export function BusinessHub() {
     }
     
     try {
-      // BACKEND INTEGRATION POINT: await axios.post('/api/businesses', form)
       addBusiness({ 
         name: form.name, 
         type: form.type, 
@@ -100,10 +68,18 @@ export function BusinessHub() {
     }
   };
 
-  // Explicit typing applied to all accumulator and mapped variables
-  const totalRevenue = invoices.filter((i: Invoice) => i.status === 'paid').reduce((s: number, i: Invoice) => s + i.total, 0);
-  const activeStaff = businesses.reduce((s: number, b: Business) => s + b.staff.filter((st: Staff) => st.status === 'active').length, 0);
-  const occupiedUnits = properties.reduce((s: number, p: Property) => s + p.units.filter((u: PropertyUnit) => u.status === 'occupied').length, 0);
+  // Safe metrics iteration parsing arrays explicitly to avoid mapping over empty variables
+  const totalRevenue = (invoices || []).filter((i: any) => i.status === 'paid').reduce((s: number, i: any) => s + (i.total || 0), 0);
+  
+  const activeStaff = (businesses || []).reduce((s: number, b: any) => {
+    const arr = Array.isArray(b.staff) ? b.staff : [];
+    return s + arr.filter((st: any) => st.status === 'active').length;
+  }, 0);
+
+  const occupiedUnits = (properties || []).reduce((s: number, p: any) => {
+    const arr = Array.isArray(p.units) ? p.units : [];
+    return s + arr.filter((u: any) => u.status === 'occupied').length;
+  }, 0);
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col">
@@ -111,12 +87,12 @@ export function BusinessHub() {
       <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
         <div className="max-w-4xl mx-auto space-y-6">
           
-          {/* Overview Stats - Now utilizing 'appointments' and 'ArrowUpRight' */}
+          {/* Overview Stats */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {[
-              { label: 'Businesses', value: businesses.length.toString(), icon: Building2, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+              { label: 'Businesses', value: (businesses || []).length.toString(), icon: Building2, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
               { label: 'Revenue', value: `₦${totalRevenue.toLocaleString()}`, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10', trend: true },
-              { label: 'Appointments', value: appointments.length.toString(), icon: Calendar, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+              { label: 'Appointments', value: (appointments || []).length.toString(), icon: Calendar, color: 'text-amber-500', bg: 'bg-amber-500/10' },
               { label: 'Staff', value: activeStaff.toString(), icon: Users, color: 'text-violet-500', bg: 'bg-violet-500/10' },
               { label: 'Occupied', value: occupiedUnits.toString(), icon: Home, color: 'text-sky-500', bg: 'bg-sky-500/10' },
             ].map(stat => (
@@ -159,33 +135,32 @@ export function BusinessHub() {
               </button>
             </div>
             
-            {businesses.length === 0 ? (
+            {(businesses || []).length === 0 ? (
               <div className="text-center py-12 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-white/5">
                 <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                 <p className="text-sm text-slate-400 font-bold">No businesses yet</p>
                 <p className="text-xs text-slate-400 mt-1">Create your first business</p>
               </div>
             ) : (
-              businesses.map((biz: Business) => {
+              businesses.map((biz: any) => {
                 const BizIcon = BUSINESS_TYPES.find(t => t.type === biz.type)?.icon || Building2;
+                const staffLength = Array.isArray(biz.staff) ? biz.staff.length : 0;
                 return (
                   <div key={biz.id} className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center">
-                        {/* Implemented professional Lucide icon mapping */}
                         <BizIcon className="w-6 h-6 text-indigo-500" />
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-bold text-slate-800 dark:text-white">{biz.name}</p>
-                        <p className="text-[10px] text-slate-400">{BUSINESS_TYPES.find(t => t.type === biz.type)?.label} • {biz.staff.length} staff</p>
+                        <p className="text-[10px] text-slate-400">{BUSINESS_TYPES.find(t => t.type === biz.type)?.label} • {staffLength} staff</p>
                       </div>
                       <div className="text-right flex flex-col items-end gap-1">
-                        {/* Integrated Wallet icon */}
                         <p className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1">
                           <Wallet className="w-3 h-3 text-slate-400" />
-                          ₦{biz.walletBalance.toLocaleString()}
+                          ₦{(biz.walletBalance || 0).toLocaleString()}
                         </p>
-                        <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded capitalize">{biz.role}</span>
+                        <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded capitalize">{biz.role || 'Owner'}</span>
                       </div>
                     </div>
                   </div>

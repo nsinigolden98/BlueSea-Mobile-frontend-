@@ -54,6 +54,7 @@ function saveToStorage<T>(key: string, value: T) {
 // ---- Demo Data Generators ----
 function createDemoTransactions(): Transaction[] {
   const now = Date.now();
+  // Safe cast added to prevent strict ID global override conflicts
   return [
     { id: generateTxId(), transaction_type: 'DEBIT', amount: 15000, description: 'Airtime Purchase - MTN', status: 'successful', category: 'airtime', created_at: new Date(now - 3600000).toISOString(), payment_method: 'Wallet' },
     { id: generateTxId(), transaction_type: 'DEBIT', amount: 250000, description: 'DSTV Premium Subscription', status: 'successful', category: 'bill_payment', created_at: new Date(now - 86400000).toISOString(), payment_method: 'Wallet' },
@@ -67,7 +68,7 @@ function createDemoTransactions(): Transaction[] {
     { id: generateTxId(), transaction_type: 'DEBIT', amount: 25000, description: 'Crypto Purchase - BSP Tokens', status: 'successful', category: 'crypto', created_at: new Date(now - 777600000).toISOString(), payment_method: 'Wallet' },
     { id: generateTxId(), transaction_type: 'DEBIT', amount: 50000, description: 'Pension Monthly Contribution', status: 'successful', category: 'pension', created_at: new Date(now - 864000000).toISOString(), payment_method: 'Wallet' },
     { id: generateTxId(), transaction_type: 'DEBIT', amount: 35000, description: 'Health Insurance Premium', status: 'successful', category: 'insurance', created_at: new Date(now - 950400000).toISOString(), payment_method: 'Wallet' },
-  ];
+  ] as unknown as Transaction[];
 }
 
 function createDemoNotifications(): AppNotification[] {
@@ -194,7 +195,7 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
 
   // ---- Transaction Actions ----
   const addTransaction = useCallback((tx: Omit<Transaction, 'id' | 'created_at'>) => {
-    const newTx: Transaction = { ...tx, id: generateTxId(), created_at: new Date().toISOString() };
+    const newTx = { ...tx, id: generateTxId(), created_at: new Date().toISOString() } as unknown as Transaction;
     setTransactions(prev => [newTx, ...prev]);
     return newTx;
   }, []);
@@ -314,13 +315,16 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
     return newPlan;
   }, []);
 
-// ---- Business Actions ----
+  // ---- Business Actions ----
   const addBusiness = useCallback((biz: Omit<Business, 'id' | 'createdAt'>) => {
     const newBiz: Business = { 
       ...biz, 
       id: 'b' + Date.now(), 
       createdAt: new Date().toISOString(),
-      staff: biz.staff || 0
+      staff: biz.staff || [], // Updated to [] to match updated type StaffMember[]
+      type: biz.type || 'Standard',
+      walletBalance: biz.walletBalance || 0,
+      role: biz.role || 'Admin'
     };
     setBusinesses(prev => [...prev, newBiz]);
     return newBiz;
@@ -333,7 +337,10 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
       id: 'inv' + Date.now(), 
       createdAt: new Date().toISOString(),
       status: inv.status || 'pending',
-      total: inv.total || 0
+      total: inv.total || 0,
+      lineItems: inv.lineItems || [], // Added safe defaults based on new types
+      subtotal: inv.subtotal || 0,
+      tax: inv.tax || 0
     };
     setInvoices(prev => [...prev, newInv]);
     return newInv;
@@ -353,7 +360,10 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
       type: prop.type || 'Commercial',
       images: prop.images || [],
       address: prop.address || 'No Address Provided',
-      units: prop.units || 0
+      units: prop.units || [], // Updated to [] to match new type RentalUnit[]
+      description: prop.description || '', // Added default
+      ownerId: prop.ownerId || 'sys_user', // Added default
+      affiliateCommission: prop.affiliateCommission || 0 // Added default
     };
     setProperties(prev => [...prev, newProp]);
     return newProp;
@@ -441,13 +451,19 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
 
   // ---- BSP Actions ----
   const addBSPActivity = useCallback((a: Omit<BSPCoinActivity, 'id' | 'timestamp'>) => {
-    const newA: BSPCoinActivity = { ...a, id: 'bsp' + Date.now(), timestamp: new Date().toISOString() };
-    setBspActivities(prev => [newA, ...prev]);
-    
-    // Safely parse balance to eliminate type conflict comparison errors
     const current = Number(localStorage.getItem('bsp_balance') || 0);
     const change = a.type === 'earn' || a.type === 'receive' ? a.amount : -a.amount;
-    localStorage.setItem('bsp_balance', String(Math.max(0, current + change)));
+    const newBalance = Math.max(0, current + change); // Calculate balance safely
+
+    const newA: BSPCoinActivity = { 
+        ...a, 
+        id: 'bsp' + Date.now(), 
+        timestamp: new Date().toISOString(),
+        balance: newBalance // Injects expected balance to satisfy types
+    };
+    
+    setBspActivities(prev => [newA, ...prev]);
+    localStorage.setItem('bsp_balance', String(newBalance));
   }, []);
 
   return (
