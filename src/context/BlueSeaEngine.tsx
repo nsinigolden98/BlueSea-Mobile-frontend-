@@ -40,10 +40,16 @@ const STORAGE_KEYS = {
 };
 
 function loadFromStorage<T>(key: string, defaultValue: T): T {
-  try { const stored = localStorage.getItem(key); return stored ? JSON.parse(stored) : defaultValue; }
-  catch { return defaultValue; }
+  try { 
+    const stored = localStorage.getItem(key); 
+    return stored ? JSON.parse(stored) : defaultValue; 
+  } catch { 
+    return defaultValue; 
+  }
 }
-function saveToStorage<T>(key: string, value: T) { localStorage.setItem(key, JSON.stringify(value)); }
+function saveToStorage<T>(key: string, value: T) { 
+  localStorage.setItem(key, JSON.stringify(value)); 
+}
 
 // ---- Demo Data Generators ----
 function createDemoTransactions(): Transaction[] {
@@ -78,80 +84,59 @@ function createDemoNotifications(): AppNotification[] {
   ];
 }
 
-// ---- Context Interface ----
 interface BlueSeaEngineContextType {
-  // Transactions
   transactions: Transaction[];
   addTransaction: (tx: Omit<Transaction, 'id' | 'created_at'>) => Transaction;
   updateTransactionStatus: (id: string, status: TransactionStatus) => void;
-  // Receipts
   generateReceipt: (tx: Transaction, overrides?: Partial<ReceiptData>) => ReceiptData;
-  // Notifications
   notifications: AppNotification[];
   addNotification: (notif: Omit<AppNotification, 'id' | 'timestamp'>) => void;
   markNotificationRead: (id: string) => void;
   unreadCount: number;
-  // Vaults
   vaults: SavingsVault[];
   addVault: (vault: Omit<SavingsVault, 'id' | 'createdAt'>) => SavingsVault;
   updateVault: (id: string, updates: Partial<SavingsVault>) => void;
   vaultDeposit: (vaultId: string, amount: number) => void;
   vaultWithdraw: (vaultId: string, amount: number) => void;
-  // Cards
   cards: BlueSeaCard[];
   addCard: (card: Omit<BlueSeaCard, 'id'>) => BlueSeaCard;
   updateCard: (id: string, updates: Partial<BlueSeaCard>) => void;
-  // Pension
   pensionPlans: PensionPlan[];
   addPensionPlan: (plan: Omit<PensionPlan, 'id'>) => PensionPlan;
   contributePension: (planId: string, amount: number) => void;
-  // Insurance
   insurancePlans: InsurancePlan[];
   addInsurancePlan: (plan: Omit<InsurancePlan, 'id'>) => InsurancePlan;
-  // Business
   businesses: Business[];
   addBusiness: (biz: Omit<Business, 'id' | 'createdAt'>) => Business;
-  // Invoices
   invoices: Invoice[];
   addInvoice: (inv: Omit<Invoice, 'id' | 'createdAt'>) => Invoice;
   updateInvoice: (id: string, updates: Partial<Invoice>) => void;
-  // Properties
   properties: Property[];
   addProperty: (prop: Omit<Property, 'id' | 'createdAt'>) => Property;
-  // Appointments
   appointments: AppointmentBooking[];
   addAppointment: (apt: Omit<AppointmentBooking, 'id' | 'createdAt'>) => AppointmentBooking;
-  // Storefronts
   storefronts: Storefront[];
   addStorefront: (store: Omit<Storefront, 'id' | 'createdAt' | 'analytics'>) => Storefront;
-  // Freelance
   freelanceServices: FreelanceService[];
   addFreelanceService: (svc: Omit<FreelanceService, 'id'>) => FreelanceService;
   freelanceOrders: FreelanceOrder[];
   addFreelanceOrder: (order: Omit<FreelanceOrder, 'id' | 'createdAt'>) => FreelanceOrder;
   updateFreelanceOrder: (id: string, updates: Partial<FreelanceOrder>) => void;
-  // Affiliate
   affiliateItems: AffiliateItem[];
-  // Contracts
   contracts: DigitalContract[];
   addContract: (c: Omit<DigitalContract, 'id' | 'createdAt'>) => DigitalContract;
   updateContract: (id: string, updates: Partial<DigitalContract>) => void;
-  // Events
   events: BlueSeaEvent[];
   addEvent: (e: Omit<BlueSeaEvent, 'id' | 'createdAt'>) => BlueSeaEvent;
   tickets: EventTicket[];
   addTicket: (t: Omit<EventTicket, 'id' | 'purchaseDate'>) => EventTicket;
-  // Streams
   streams: LiveStream[];
   addStream: (s: Omit<LiveStream, 'id'>) => LiveStream;
-  // Bus
   busTickets: BusTicket[];
   addBusTicket: (t: Omit<BusTicket, 'id'>) => BusTicket;
-  // Subscriptions
   subscriptions: Subscription[];
   addSubscription: (s: Omit<Subscription, 'id' | 'createdAt'>) => Subscription;
   removeSubscription: (id: string) => void; 
-  // BSP
   bspActivities: BSPCoinActivity[];
   addBSPActivity: (a: Omit<BSPCoinActivity, 'id' | 'timestamp'>) => void;
 }
@@ -159,49 +144,30 @@ interface BlueSeaEngineContextType {
 const BlueSeaEngineContext = createContext<BlueSeaEngineContextType | undefined>(undefined);
 
 export function BlueSeaEngineProvider({ children }: { children: React.ReactNode }) {
-  // ---- Transactions State ----
   const [transactions, setTransactions] = useState<Transaction[]>(() =>
     loadFromStorage(STORAGE_KEYS.transactions, createDemoTransactions())
   );
-  // ---- Notifications State ----
   const [notifications, setNotifications] = useState<AppNotification[]>(() =>
     loadFromStorage(STORAGE_KEYS.notifications, createDemoNotifications())
   );
-  // ---- Vaults State ----
   const [vaults, setVaults] = useState<SavingsVault[]>(() => loadFromStorage(STORAGE_KEYS.vaults, []));
-  // ---- Cards State ----
   const [cards, setCards] = useState<BlueSeaCard[]>(() => loadFromStorage(STORAGE_KEYS.cards, []));
-  // ---- Pension State ----
   const [pensionPlans, setPensionPlans] = useState<PensionPlan[]>(() => loadFromStorage(STORAGE_KEYS.pension, []));
-  // ---- Insurance State ----
   const [insurancePlans, setInsurancePlans] = useState<InsurancePlan[]>(() => loadFromStorage(STORAGE_KEYS.insurance, []));
-  // ---- Business State ----
   const [businesses, setBusinesses] = useState<Business[]>(() => loadFromStorage(STORAGE_KEYS.businesses, []));
-  // ---- Invoices State ----
   const [invoices, setInvoices] = useState<Invoice[]>(() => loadFromStorage(STORAGE_KEYS.invoices, []));
-  // ---- Properties State ----
   const [properties, setProperties] = useState<Property[]>(() => loadFromStorage(STORAGE_KEYS.properties, []));
-  // ---- Appointments State ----
   const [appointments, setAppointments] = useState<AppointmentBooking[]>(() => loadFromStorage(STORAGE_KEYS.appointments, []));
-  // ---- Storefronts State ----
   const [storefronts, setStorefronts] = useState<Storefront[]>(() => loadFromStorage(STORAGE_KEYS.storefronts, []));
-  // ---- Freelance State ----
   const [freelanceServices, setFreelanceServices] = useState<FreelanceService[]>(() => loadFromStorage(STORAGE_KEYS.freelanceServices, []));
   const [freelanceOrders, setFreelanceOrders] = useState<FreelanceOrder[]>(() => loadFromStorage('bluesea_freelance_orders', []));
-  // ---- Affiliate State ----
   const [affiliateItems] = useState<AffiliateItem[]>(() => loadFromStorage(STORAGE_KEYS.affiliateItems, []));
-  // ---- Contracts State ----
   const [contracts, setContracts] = useState<DigitalContract[]>(() => loadFromStorage(STORAGE_KEYS.contracts, []));
-  // ---- Events State ----
   const [events, setEvents] = useState<BlueSeaEvent[]>(() => loadFromStorage(STORAGE_KEYS.events, []));
   const [tickets, setTickets] = useState<EventTicket[]>(() => loadFromStorage(STORAGE_KEYS.tickets, []));
-  // ---- Streams State ----
   const [streams, setStreams] = useState<LiveStream[]>(() => loadFromStorage(STORAGE_KEYS.streams, []));
-  // ---- Bus State ----
   const [busTickets, setBusTickets] = useState<BusTicket[]>(() => loadFromStorage(STORAGE_KEYS.busTickets, []));
-  // ---- Subscriptions State ----
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => loadFromStorage(STORAGE_KEYS.subscriptions, []));
-  // ---- BSP State ----
   const [bspActivities, setBspActivities] = useState<BSPCoinActivity[]>(() => loadFromStorage(STORAGE_KEYS.bspActivity, []));
 
   // ---- Persist Effects ----
@@ -313,7 +279,18 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
 
   // ---- Pension Actions ----
   const addPensionPlan = useCallback((plan: Omit<PensionPlan, 'id'>) => {
-    const newPlan: PensionPlan = { ...plan, id: 'p' + Date.now() };
+    const newPlan: PensionPlan = {
+      ...plan,
+      id: 'p' + Date.now(),
+      name: plan.name || 'Standard Plan',
+      totalContribution: plan.totalContribution || 0,
+      employerMatch: plan.employerMatch || 0,
+      projectedGrowth: plan.projectedGrowth || 0,
+      contributionRate: plan.contributionRate || 0,
+      monthlyContribution: plan.monthlyContribution || 0,
+      autoDeduct: plan.autoDeduct || false,
+      history: plan.history || []
+    };
     setPensionPlans(prev => [...prev, newPlan]);
     return newPlan;
   }, []);
@@ -339,14 +316,25 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
 
 // ---- Business Actions ----
   const addBusiness = useCallback((biz: Omit<Business, 'id' | 'createdAt'>) => {
-    const newBiz: Business = { ...biz, id: 'b' + Date.now(), createdAt: new Date().toISOString() };
+    const newBiz: Business = { 
+      ...biz, 
+      id: 'b' + Date.now(), 
+      createdAt: new Date().toISOString(),
+      staff: biz.staff || 0
+    };
     setBusinesses(prev => [...prev, newBiz]);
     return newBiz;
   }, []);
 
   // ---- Invoice Actions ----
   const addInvoice = useCallback((inv: Omit<Invoice, 'id' | 'createdAt'>) => {
-    const newInv: Invoice = { ...inv, id: 'inv' + Date.now(), createdAt: new Date().toISOString() };
+    const newInv: Invoice = { 
+      ...inv, 
+      id: 'inv' + Date.now(), 
+      createdAt: new Date().toISOString(),
+      status: inv.status || 'pending',
+      total: inv.total || 0
+    };
     setInvoices(prev => [...prev, newInv]);
     return newInv;
   }, []);
@@ -357,7 +345,16 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
 
   // ---- Property Actions ----
   const addProperty = useCallback((prop: Omit<Property, 'id' | 'createdAt'>) => {
-    const newProp: Property = { ...prop, id: 'prop' + Date.now(), createdAt: new Date().toISOString() };
+    const newProp: Property = {
+      ...prop,
+      id: 'prop' + Date.now(),
+      createdAt: new Date().toISOString(),
+      name: prop.name || 'Unnamed Property',
+      type: prop.type || 'Commercial',
+      images: prop.images || [],
+      address: prop.address || 'No Address Provided',
+      units: prop.units || 0
+    };
     setProperties(prev => [...prev, newProp]);
     return newProp;
   }, []);
@@ -438,7 +435,6 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
     return newSub;
   }, []);
 
-  // Added removeSubscription logic securely
   const removeSubscription = useCallback((id: string) => {
     setSubscriptions(prev => prev.filter(sub => sub.id !== id));
   }, []);
@@ -447,7 +443,9 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
   const addBSPActivity = useCallback((a: Omit<BSPCoinActivity, 'id' | 'timestamp'>) => {
     const newA: BSPCoinActivity = { ...a, id: 'bsp' + Date.now(), timestamp: new Date().toISOString() };
     setBspActivities(prev => [newA, ...prev]);
-    const current = Number(localStorage.getItem('bsp_balance') || '0');
+    
+    // Safely parse balance to eliminate type conflict comparison errors
+    const current = Number(localStorage.getItem('bsp_balance') || 0);
     const change = a.type === 'earn' || a.type === 'receive' ? a.amount : -a.amount;
     localStorage.setItem('bsp_balance', String(Math.max(0, current + change)));
   }, []);
@@ -472,14 +470,13 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
       events, addEvent, tickets, addTicket,
       streams, addStream,
       busTickets, addBusTicket,
-      subscriptions, addSubscription, removeSubscription, // Included removeSubscription in context export
+      subscriptions, addSubscription, removeSubscription,
       bspActivities, addBSPActivity,
     }}>
       {children}
     </BlueSeaEngineContext.Provider>
   );
 }
-
 
 export function useBlueSeaEngine() {
   const context = useContext(BlueSeaEngineContext);

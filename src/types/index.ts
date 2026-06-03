@@ -843,7 +843,7 @@ export interface Transaction {
   amount: number;
   description: string;
   status: TransactionStatus;
-  category?: TransactionCategory; // Utilized the unused import here
+  category?: TransactionCategory;
   created_at: string;
   payment_method?: string;
   sender_name?: string;
@@ -870,7 +870,7 @@ export interface AppNotification {
   id: string;
   title: string;
   subtitle: string;
-  category: NotificationCategory; // Utilized the unused import here
+  category: NotificationCategory;
   timestamp: string;
   read: boolean;
   amount?: number;
@@ -879,7 +879,7 @@ export interface AppNotification {
 
 export interface VaultMilestone {
   id?: string;
-  label: string; // Fixed: UI mapping expected a 'label' property
+  label: string;
   percentage: number;
   achieved: boolean;
   achievedAt?: string;
@@ -894,9 +894,9 @@ export interface VaultTransaction {
 
 export interface SavingsVault {
   id: string;
-  name: string; // Fixed: Removed optional '?' to ensure it's always a string for UI rendering
-  type: string; // Added to satisfy SavingsVault.tsx
-  interestRate: number; // Added to satisfy SavingsVault.tsx
+  name: string;
+  type: string;
+  interestRate: number;
   goal: number;
   current: number;
   milestones: VaultMilestone[];
@@ -906,18 +906,19 @@ export interface SavingsVault {
 
 export interface Property {
   id: string;
-  name: string; // Added explicit UI fields
+  name: string;
   type: string; 
   images: string[];
   address: string;
   price?: number;
+  units?: number; // Added to fix Analytics layout tracking
   createdAt: string;
-  [key: string]: any; // Backend flexibility
+  [key: string]: any;
 }
 
 export interface PensionPlan {
   id: string;
-  name: string; // Added explicit UI fields
+  name: string;
   totalContribution: number;
   employerMatch: number;
   projectedGrowth: number; 
@@ -925,22 +926,38 @@ export interface PensionPlan {
   monthlyContribution: number;
   autoDeduct: boolean;
   history: any[];
-  [key: string]: any; // Backend flexibility
+  [key: string]: any;
 }
 
 export interface BSPCoinActivity {
   id: string;
   timestamp: string;
-  type: 'earn' | 'receive' | 'spend' | 'transfer'; // Added 'transfer'
+  type: 'earn' | 'receive' | 'spend' | 'transfer';
   amount: number;
-  description?: string; // Added missing property
+  description?: string;
 }
 
-// Minimal production-ready schemas for the rest of your modules
+export interface Business {
+  id: string;
+  name?: string;
+  staff?: number; // Added to fix Analytics staff metrics calculation
+  createdAt: string;
+  [key: string]: any;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber?: string;
+  clientName?: string;
+  status: 'paid' | 'pending' | 'overdue' | string; // Added to fix layout filtering maps
+  total: number; // Added to fix calculation aggregations
+  createdAt: string;
+  [key: string]: any;
+}
+
+// Remaining micro types
 export interface BlueSeaCard { id: string; [key: string]: any; }
 export interface InsurancePlan { id: string; [key: string]: any; }
-export interface Business { id: string; createdAt: string; [key: string]: any; }
-export interface Invoice { id: string; createdAt: string; [key: string]: any; }
 export interface AppointmentBooking { id: string; createdAt: string; [key: string]: any; }
 export interface Storefront { id: string; createdAt: string; analytics: any; [key: string]: any; }
 export interface FreelanceService { id: string; [key: string]: any; }
