@@ -834,12 +834,7 @@ export interface PointProvider {
 // src/types/index.ts
 
 export type TransactionStatus = 'successful' | 'pending' | 'failed';
-export type InvoiceStatus =
-  | 'draft'
-  | 'sent'
-  | 'paid'
-  | 'overdue'
-  | 'cancelled';
+
 export type TransactionCategory = 'airtime' | 'data' | 'deposit' | 'withdrawal' | 'bill_payment' | 'transfer' | 'savings_deposit' | 'marketplace' |
 'affiliate_commission' | 'bus_booking' | 'escrow' | 'crypto' | 'pension' | 'insurance' | string;
 export type NotificationCategory = 'wallet' |
@@ -865,14 +860,7 @@ export interface RentalUnit {
   [key: string]: any;
 }
 
-export interface InvoiceLineItem {
-  id?: string;
-  description: string;
-  quantity: number;
-  price?: number;
-  rate?: number;
-  amount?: number;
-}
+
 
 export interface Transaction {
   id: String; // Fixed id number vs string conflict to safely enable implicit interface merging
@@ -887,21 +875,7 @@ export interface Transaction {
   receiver_name?: string;
 }
 
-export interface ReceiptData {
-  transactionId: string;
-  timestamp: string;
-  status: string;
-  category?: string;
-  sender: { name: string; walletId: string };
-  receiver: { name: string; walletId: string };
-  amount: number;
-  fee: number;
-  total: number;
-  paymentMethod: string;
-  walletUsed: string;
-  description: string;
-  qrData: string;
-}
+
 
 export interface AppNotification {
   id: string;
@@ -994,21 +968,6 @@ export interface Business {
   [key: string]: any;
 }
 
-export interface Invoice {
-  id: string;
-  clientName: string;
-  clientEmail: string;
-  lineItems: InvoiceLineItem[];
-  subtotal: number;
-  tax: number;
-  discount: number;
-  total: number;
-  status: InvoiceStatus;
-  dueDate: string;
-  template: string;
-  notes: string;
-  paidAt?: string;
-}
 
 // Remaining micro types safely structured
 export interface BlueSeaCard { id: string; [key: string]: any; }
