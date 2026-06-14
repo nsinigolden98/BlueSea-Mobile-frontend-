@@ -52,7 +52,7 @@ import {
   FinanceHub, SavingsVault, BlueSeaCards, BspCrypto, Pension, Insurance,
   BusinessHub, Payroll, Properties, Appointments,
   Storefronts, Freelance, Affiliate, Contracts,
-   Streams, Subscriptions, 
+   Streams,Subscriptions, 
 } from '@/pages';
 import IdentityCenter from '@/pages/IdentityCenter';
 import HistoryPage from '@/pages/History';

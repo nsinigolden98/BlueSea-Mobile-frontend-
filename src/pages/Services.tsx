@@ -1,9 +1,8 @@
-// src/pages/Services.tsx
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar, Header } from '@/components/ui-custom';
-import { services, serviceCategories, featuredServiceIds, } from '@/data/services';
-import type {Service} from '@/data/services';
+import { services, serviceCategories } from '@/data/services'; // Removed featuredServiceIds
+import type { Service } from '@/data/services';
 import { cn } from '@/lib/utils';
 import {
   Smartphone, Wifi, Zap, Tv, RefreshCw, Wallet, Gift, Share2, Coins, 
@@ -12,6 +11,23 @@ import {
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat, 
   ArrowLeftRight, Search, Clock, Star, ChevronRight
 } from 'lucide-react';
+
+// Registry of validated routes extracted from AppRoutes
+const VALID_APP_ROUTES = new Set([
+  '/', '/login', '/signup', '/dashboard', '/wallet', '/airtime', '/data', 
+  '/marketplace', '/services', '/settings', '/profile', '/pin', '/light-bills', 
+  '/transactions', '/rewards', '/transaction-history', '/campaigns', '/airtime-buyback', 
+  '/group-payment', '/loyalty', '/more-services', '/notifications', '/event-manager', 
+  '/scanner', '/scanner-assignments', '/my-tickets', '/vendor-verification', '/dstv', 
+  '/gotv', '/startimes', '/showmax', '/waec-registration', '/waec-result', 
+  '/jamb-registration', '/tv-subscription', '/auto-topup', '/support', '/checkout', 
+  '/messages', '/bluesphere', '/products', '/history', '/gift-cards', '/flights', 
+  '/spin-vault', '/betting', '/identity-center', '/finance', '/finance/savings', 
+  '/finance/cards', '/finance/crypto', '/finance/pension', '/finance/insurance', 
+  '/business', '/business/payroll', '/business/properties', '/business/appointments', 
+  '/commerce/storefronts', '/commerce/freelance', '/commerce/affiliate', '/commerce/contracts', 
+  '/experience/streams', '/subscriptions'
+]);
 
 // Centralized icon map to safely render string icons from the registry
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -31,7 +47,7 @@ const Badge = ({ type }: { type: Service['badge'] }) => {
   };
   
   return (
-    <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide absolute top-3 right-3', styles[type])}>
+    <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide absolute -top-2 -right-2 border border-white dark:border-slate-900 shadow-sm z-10', styles[type])}>
       {type}
     </span>
   );
@@ -50,8 +66,8 @@ export function Services() {
   }, []);
 
   const handleNavigation = (service: Service) => {
-    // Save to recently used (keep last 4 unique)
-    const newRecents = [service.id, ...recentServiceIds.filter(id => id !== service.id)].slice(0, 4);
+    // Keep a maximum of 3 unique recent services, drop the oldest
+    const newRecents = [service.id, ...recentServiceIds.filter(id => id !== service.id)].slice(0, 3);
     setRecentServiceIds(newRecents);
     localStorage.setItem('@bluesea_recent_services', JSON.stringify(newRecents));
     
@@ -64,43 +80,47 @@ export function Services() {
     const query = searchQuery.toLowerCase();
     return services.filter(
       s => s.name.toLowerCase().includes(query) || 
-           s.description.toLowerCase().includes(query) ||
+           s.description.toLowerCase().includes(query) || // Description is still searchable
            s.category.toLowerCase().includes(query)
     );
   }, [searchQuery]);
 
-  const renderServiceCard = (service: Service, compact = false) => {
+  const renderServiceCard = (service: Service) => {
     const Icon = iconMap[service.icon] || Wallet; // Fallback icon
+    const isRouteValid = VALID_APP_ROUTES.has(service.route);
 
     return (
       <button
         key={service.id}
-        onClick={() => handleNavigation(service)}
+        onClick={() => {
+          if (!isRouteValid) {
+            console.warn(`[BlueSea Route Guard] Blocked navigation. Route "${service.route}" for service "${service.name}" does not exist in App Routes.`);
+            return;
+          }
+          handleNavigation(service);
+        }}
+        disabled={!isRouteValid}
         className={cn(
-          'group relative text-left bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800',
-          'hover:shadow-lg hover:border-sky-200 dark:hover:border-sky-800 transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-sky-500',
-          compact ? 'p-4 flex items-center gap-4' : 'p-5 flex flex-col items-start gap-4'
+          'group relative text-left bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800',
+          'hover:shadow-md hover:border-sky-300 dark:hover:border-sky-700 transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-sky-500',
+          'p-3 sm:p-4 flex items-center gap-3',
+          !isRouteValid && 'opacity-40 grayscale cursor-not-allowed hover:shadow-none hover:border-slate-200 dark:hover:border-slate-800'
         )}
       >
-        {!compact && <Badge type={service.badge} />}
+        <Badge type={service.badge} />
         
         <div className={cn(
-          'rounded-xl bg-sky-50 dark:bg-sky-950/50 flex items-center justify-center group-hover:scale-110 group-active:scale-95 transition-transform duration-300',
-          compact ? 'w-10 h-10 shrink-0' : 'w-12 h-12'
+          'rounded-lg bg-sky-50 dark:bg-sky-950/50 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shrink-0',
+          'w-9 h-9 sm:w-10 sm:h-10'
         )}>
-          <Icon className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+          <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-sky-600 dark:text-sky-400" />
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-slate-900 dark:text-white truncate">
+          <h3 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white truncate">
             {service.name}
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
-            {service.description}
-          </p>
         </div>
-
-        {compact && <ChevronRight className="w-4 h-4 text-slate-400 ml-auto" />}
       </button>
     );
   };
@@ -116,8 +136,8 @@ export function Services() {
           onMenuClick={() => setSidebarOpen(true)} 
         />
 
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar">
-          <div className="max-w-6xl mx-auto space-y-10">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto custom-scrollbar">
+          <div className="max-w-7xl mx-auto space-y-8">
             
             {/* Search Section */}
             <div className="relative">
@@ -127,18 +147,18 @@ export function Services() {
                 placeholder="Search services, bills, commerce..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm transition-shadow"
+                className="w-full pl-12 pr-4 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm transition-shadow text-sm sm:text-base"
               />
             </div>
 
-            {/* Render Search Results if searching */}
+            {/* Render Search Results */}
             {filteredCategories ? (
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
                   Search Results ({filteredCategories.length})
                 </h2>
                 {filteredCategories.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                     {filteredCategories.map(service => renderServiceCard(service))}
                   </div>
                 ) : (
@@ -149,59 +169,48 @@ export function Services() {
               </div>
             ) : (
               <>
-                {/* Featured & Recently Used (Only show when not searching) */}
-                <div className="grid lg:grid-cols-12 gap-8">
-                  {/* Featured Services */}
-                  <div className="lg:col-span-8 space-y-4">
-                    <div className="flex items-center gap-2 text-slate-900 dark:text-white mb-4">
-                      <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-                      <h2 className="text-lg font-semibold">Featured Services</h2>
+                {/* Recently Used (Max 3 Items) */}
+                {recentServiceIds.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+                      <Clock className="w-4 h-4 text-sky-500" />
+                      <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recently Used</h2>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {featuredServiceIds
+                    {/* Compact 3-column layout on all devices */}
+                    <div className="grid grid-cols-3 md:flex md:flex-row gap-3">
+                      {recentServiceIds
                         .map(id => services.find(s => s.id === id)!)
                         .filter(Boolean)
-                        .map(service => renderServiceCard(service))}
+                        .map(service => (
+                           <div key={service.id} className="md:w-64">
+                             {renderServiceCard(service)}
+                           </div>
+                        ))}
                     </div>
                   </div>
+                )}
 
-                  {/* Recently Used */}
-                  {recentServiceIds.length > 0 && (
-                    <div className="lg:col-span-4 space-y-4">
-                      <div className="flex items-center gap-2 text-slate-900 dark:text-white mb-4">
-                        <Clock className="w-5 h-5 text-sky-500" />
-                        <h2 className="text-lg font-semibold">Recently Used</h2>
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        {recentServiceIds
-                          .map(id => services.find(s => s.id === id)!)
-                          .filter(Boolean)
-                          .map(service => renderServiceCard(service, true))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <div className="h-px w-full bg-slate-200 dark:bg-slate-800/60" />
 
-                <div className="h-px w-full bg-slate-200 dark:bg-slate-800" />
-
-                {/* All Ecosystem Categories */}
-                <div className="space-y-12">
+                {/* Ecosystem Categories */}
+                <div className="space-y-10">
                   {serviceCategories.map((category) => {
                     const categoryServices = services.filter(s => s.category === category);
                     if (categoryServices.length === 0) return null;
 
                     return (
-                      <section key={category} className="space-y-5">
-                        <div className="flex items-baseline justify-between">
-                          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                      <section key={category} className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
                             {category}
                           </h2>
-                          <span className="text-sm font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+                          <span className="text-xs font-semibold text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-full">
                             {categoryServices.length}
                           </span>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        {/* High-density grid tailored for fast scanning */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                           {categoryServices.map((service) => renderServiceCard(service))}
                         </div>
                       </section>
