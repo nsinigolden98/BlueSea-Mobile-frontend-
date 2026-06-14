@@ -2,7 +2,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar, Header } from '@/components/ui-custom';
-import { services, serviceCategories, featuredServiceIds, Service } from '@/data/services';
+import { services, serviceCategories, featuredServiceIds, } from '@/data/services';
+import type {service} from '@/data/services';
 import { cn } from '@/lib/utils';
 import {
   Smartphone, Wifi, Zap, Tv, RefreshCw, Wallet, Gift, Share2, Coins, 
