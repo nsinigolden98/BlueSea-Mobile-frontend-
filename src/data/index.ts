@@ -1,4 +1,4 @@
-import type { DataPlan, Service, NavItem, Transaction, BluePointHistory, Task, Streak, Announcement, Notification, LoyaltyItem, GroupPayment, Network } from '@/types';
+import type { DataPlan,  NavItem, Transaction, BluePointHistory, Task, Streak, Announcement, Notification, LoyaltyItem, GroupPayment, Network } from '@/types';
 import { ENDPOINTS, getRequest} from '@/types';
 
 export const navItems: NavItem[] = [
