@@ -34,11 +34,7 @@ const MODULES = [
 
 export function BusinessHub() {
   const navigate = useNavigate();
-  const engine = useBlueSeaEngine();
-  
-  // Safely map engine context references without explicitly using the restricted term
-  const { businesses, addBusiness, properties, appointments } = engine;
-  const sales = engine.sales || engine.transactions || []; 
+  const { businesses, addBusiness, transactions, properties, appointments } = useBlueSeaEngine();
   
   const { ToastComponent, showToast } = Toast();
   const [showCreate, setShowCreate] = useState(false);
@@ -73,8 +69,10 @@ export function BusinessHub() {
     }
   };
 
-  // Safe metrics iteration parsing arrays explicitly to avoid mapping over empty variables
-  const totalRevenue = (sales || []).filter((s: any) => s.status === 'paid').reduce((acc: number, item: any) => acc + (item.total || 0), 0);
+  // Safe metrics calculation targeting successful tracking profiles from the global engine
+  const totalRevenue = (transactions || [])
+    .filter((t: any) => t.status === 'successful' && t.transaction_type === 'CREDIT')
+    .reduce((acc: number, item: any) => acc + (item.amount || 0), 0);
   
   const activeStaff = (businesses || []).reduce((s: number, b: any) => {
     const arr = Array.isArray(b.staff) ? b.staff : [];
