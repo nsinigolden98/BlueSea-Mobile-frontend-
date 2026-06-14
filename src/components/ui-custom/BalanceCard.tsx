@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff, Lock, Coins, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -16,8 +16,18 @@ export function BalanceCard({
   onWithdraw,
   className
 }: BalanceCardProps) {
-  const [showBalance, setShowBalance] = useState(false);
   const { user } = useAuth();
+
+  // 1. Initialize state from localStorage safely. Defaults to false (hidden) if not set.
+  const [showBalance, setShowBalance] = useState(() => {
+    const savedState = localStorage.getItem('dashboard_showBalance');
+    return savedState === 'true';
+  });
+
+  // 2. Save to localStorage whenever the user clicks the toggle
+  useEffect(() => {
+    localStorage.setItem('dashboard_showBalance', String(showBalance));
+  }, [showBalance]);
 
   const lockedBalance = user?.lockedBalance || '₦0.00';
   const availableBalance = user?.balance || '₦0.00';
@@ -38,7 +48,7 @@ export function BalanceCard({
       </div>
 
       <div className="relative z-10 flex flex-col h-full">  
-        {/* 1. Available Balance Label */}
+        {/* Available Balance Label & Toggle */}
         <div className="flex items-center justify-between mb-2">  
           <span className="text-sm text-sky-100 font-medium">Available Balance</span>  
           <button   
@@ -53,16 +63,16 @@ export function BalanceCard({
           </button>  
         </div>  
 
-        {/* 2. Large Balance Amount */}
+        {/* Large Balance Amount */}
         <div className="mb-6">  
           <span className="text-3xl md:text-4xl font-bold text-white tracking-tight">  
             {showBalance ? `${availableBalance.toLocaleString()}` : '******'}  
           </span>  
         </div>  
 
-        {/* 3. Statistics Row */}
+        {/* Statistics Row */}
         <div className="flex flex-wrap gap-2">  
-          {/* Locked Balance always renders, content hidden if toggle is off */}
+          {/* Locked Balance */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/10">  
             <Lock className="w-3.5 h-3.5 text-sky-200" />  
             <span className="text-[11px] font-semibold text-white">
@@ -70,15 +80,15 @@ export function BalanceCard({
             </span>  
           </div>
 
-          {/* BSP Points always visible */}
+          {/* 3. BSP Points (Now respects the toggle) */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/10">  
             <Coins className="w-3.5 h-3.5 text-amber-300" />  
             <span className="text-[11px] font-semibold text-white">
-              {user?.balance?.toLocaleString() || '0'} BSP
+              {showBalance ? (user?.totalPoints?.toLocaleString() || '0') : '***'} BSP
             </span>  
           </div>
 
-          {/* Account Status always visible */}
+          {/* Account Status */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/10">  
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />  
             <span className="text-[11px] font-semibold text-white">
