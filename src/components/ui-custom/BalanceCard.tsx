@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff, Lock, Coins, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+// 1. Import the API utilities used in the Rewards page
+import { getRequest, ENDPOINTS } from '@/types'; 
 
 interface BalanceCardProps {
   showActions?: boolean;
@@ -18,16 +20,41 @@ export function BalanceCard({
 }: BalanceCardProps) {
   const { user } = useAuth();
 
-  // 1. Initialize state from localStorage safely. Defaults to false (hidden) if not set.
+  // Visibility state (persisted)
   const [showBalance, setShowBalance] = useState(() => {
     const savedState = localStorage.getItem('dashboard_showBalance');
     return savedState === 'true';
   });
 
-  // 2. Save to localStorage whenever the user clicks the toggle
+  // 2. State to hold the live BSP points. 
+  // We initialize it with the context value so it doesn't show 0 while loading.
+  const [bspPoints, setBspPoints] = useState<number>(user?.bspBalance || 0);
+
+  // Save visibility toggle to localStorage
   useEffect(() => {
     localStorage.setItem('dashboard_showBalance', String(showBalance));
   }, [showBalance]);
+
+  // 3. Fetch the live BSP points just like the Rewards page does
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchLiveBsp = async () => {
+      try {
+        const res = await getRequest(ENDPOINTS.bonus_summary);
+        // If the request succeeds and we get current_points, update the state
+        if (isMounted && res?.data?.current_points !== undefined) {
+          setBspPoints(res.data.current_points);
+        }
+      } catch (error) {
+        console.error("Failed to sync live BSP points:", error);
+      }
+    };
+
+    fetchLiveBsp();
+
+    return () => { isMounted = false; };
+  }, []);
 
   const lockedBalance = user?.lockedBalance || '₦0.00';
   const availableBalance = user?.balance || '₦0.00';
@@ -80,11 +107,11 @@ export function BalanceCard({
             </span>  
           </div>
 
-          {/* 3. BSP Points (Now respects the toggle) */}
+          {/* 4. Live BSP Points with Toggle */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/10">  
             <Coins className="w-3.5 h-3.5 text-amber-300" />  
             <span className="text-[11px] font-semibold text-white">
-              {showBalance ? (user?.totalPoints?.toLocaleString() || '0') : '***'} BSP
+              {showBalance ? bspPoints.toLocaleString() : '***'} BSP
             </span>  
           </div>
 
