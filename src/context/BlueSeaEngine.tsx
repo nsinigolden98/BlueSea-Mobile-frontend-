@@ -8,7 +8,7 @@ import type {
   SavingsVault, BlueSeaCard, PensionPlan, InsurancePlan,
   Business, Property, AppointmentBooking, Storefront, FreelanceService,
   FreelanceOrder, AffiliateItem, DigitalContract, BlueSeaEvent, EventTicket,
-  LiveStream, BusTicket, Subscription, BSPCoinActivity
+  LiveStream, BusTicket, Subscription, BSPCoinActivity, Invoice, ReceiptData
 } from '@/types';
 
 // ---- Transaction Engine ----
@@ -201,16 +201,16 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const updateTransactionStatus = useCallback((id: string, status: TransactionStatus) => {
-    setTransactions(prev => prev.map(t => t.id === id ? { ...t, status } : t));
+    setTransactions(prev => prev.map(t => String(t.id) === String(id) ? { ...t, status } : t));
   }, []);
 
   // ---- Receipt Generator ----
   const generateReceipt = useCallback((tx: Transaction, overrides?: Partial<ReceiptData>): ReceiptData => {
     return {
-      transactionId: tx.id,
+      transactionId: String(tx.id),
       timestamp: tx.created_at,
       status: tx.status,
-      category: tx.category,
+      category: tx.category || 'general',
       sender: { name: tx.sender_name || 'BlueSea User', walletId: 'BSW' + Math.random().toString(36).slice(2, 10).toUpperCase() },
       receiver: { name: tx.receiver_name || tx.description, walletId: 'BSW' + Math.random().toString(36).slice(2, 10).toUpperCase() },
       amount: tx.amount,
@@ -315,7 +315,7 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
     return newPlan;
   }, []);
 
-  // ---- Business Actions ----
+// ---- Business Actions ----
   const addBusiness = useCallback((biz: Omit<Business, 'id' | 'createdAt'>) => {
     const newBiz: Business = { 
       ...biz, 
