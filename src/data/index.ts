@@ -17,7 +17,7 @@ export const navItems: NavItem[] = [
 ];
 
 
-
+/*
 export const services: Service[] = [
   { id: '1', name: 'Market Place', icon: 'Store', category: 'Special Features' },
   { id: '2', name: 'Group Payment', icon: 'Users', category: 'Special Features' },
@@ -32,7 +32,7 @@ export const services: Service[] = [
   { id: '11', name: 'Blue Point', icon: 'Coins', category: 'Value Added' },
   { id: '12', name: 'Airtime Buyback', icon: 'RefreshCw', category: 'Special Features' },
   { id: '13', name: 'BlueSpere', icon: 'Orbit', category: 'Value Added' },
-];
+]; */
   
 export const TransactionsData= async ():Promise<Transaction[]> => {
   try {
