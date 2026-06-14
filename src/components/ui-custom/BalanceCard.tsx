@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff, Lock, Coins, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-// 1. Import the API utilities used in the Rewards page
-import { getRequest, ENDPOINTS } from '@/types'; 
+import { getRequest, ENDPOINTS } from '@/types'; // Imported exactly like the Rewards page
 
 interface BalanceCardProps {
   showActions?: boolean;
@@ -20,38 +19,38 @@ export function BalanceCard({
 }: BalanceCardProps) {
   const { user } = useAuth();
 
-  // Visibility state (persisted)
+  // 1. Visibility toggle state (persisted in localStorage)
   const [showBalance, setShowBalance] = useState(() => {
     const savedState = localStorage.getItem('dashboard_showBalance');
     return savedState === 'true';
   });
 
-  // 2. State to hold the live BSP points. 
-  // We initialize it with the context value so it doesn't show 0 while loading.
-  const [bspPoints, setBspPoints] = useState<number>(user?.bspBalance || 0);
+  // 2. State for the ACTUAL Reward Balance
+  const [rewardBalance, setRewardBalance] = useState<number>(0);
 
-  // Save visibility toggle to localStorage
+  // Save visibility toggle to storage
   useEffect(() => {
     localStorage.setItem('dashboard_showBalance', String(showBalance));
   }, [showBalance]);
 
-  // 3. Fetch the live BSP points just like the Rewards page does
+  // 3. Fetch the Reward Balance directly from the bonus_summary endpoint
   useEffect(() => {
     let isMounted = true;
 
-    const fetchLiveBsp = async () => {
+    const fetchRewardBalance = async () => {
       try {
-        const res = await getRequest(ENDPOINTS.bonus_summary);
-        // If the request succeeds and we get current_points, update the state
-        if (isMounted && res?.data?.current_points !== undefined) {
-          setBspPoints(res.data.current_points);
+        const summaryRes = await getRequest(ENDPOINTS.bonus_summary);
+        
+        if (isMounted && summaryRes?.data) {
+          // This exactly matches how "totalPoints" is calculated on the Rewards page
+          setRewardBalance(summaryRes.data.current_points ?? 0);
         }
       } catch (error) {
-        console.error("Failed to sync live BSP points:", error);
+        console.error("Failed to load reward balance for Balance Card", error);
       }
     };
 
-    fetchLiveBsp();
+    fetchRewardBalance();
 
     return () => { isMounted = false; };
   }, []);
@@ -107,11 +106,11 @@ export function BalanceCard({
             </span>  
           </div>
 
-          {/* 4. Live BSP Points with Toggle */}
+          {/* Actual Reward Balance (from endpoint) */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/10">  
             <Coins className="w-3.5 h-3.5 text-amber-300" />  
             <span className="text-[11px] font-semibold text-white">
-              {showBalance ? bspPoints.toLocaleString() : '***'} BSP
+              {showBalance ? rewardBalance.toLocaleString() : '***'} BSP
             </span>  
           </div>
 
