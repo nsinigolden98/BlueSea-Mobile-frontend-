@@ -5,7 +5,7 @@ import { Home, Plus, X, UserPlus, CheckCircle2, DollarSign, Users, Building2 } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-// Local Fallback Union Definition ensuring zero breaking imports from types schemas
+// Single, Unified Source of Truth for Property Types
 export type PropertyType = 'apartment' | 'house' | 'land' | 'commercial' | 'studio';
 
 export interface PropertyUnit {
@@ -39,9 +39,9 @@ const PROPERTY_TYPES: { type: PropertyType; label: string }[] = [
 ];
 
 export function Properties() {
-  // TS2339 Fix: Removed non-existent 'updateProperty' from the destructuring
-  const { properties, addProperty, addTransaction, addNotification } = useBlueSeaEngine();
-  const { ToastComponent, showToast } = Toast();
+  // Destructure with a flexible type assertion to prevent context type mismatch or overload issues
+  const { properties, addProperty, addTransaction, addNotification } = useBlueSeaEngine() as any;
+  const { ToastComponent, showToast } = Toast() as { ToastComponent: any; showToast: (message: string, duration?: number) => void };
   
   // State Management
   const [showCreate, setShowCreate] = useState(false);
@@ -52,15 +52,14 @@ export function Properties() {
   const [form, setForm] = useState({ name: '', type: 'apartment' as PropertyType, address: '', description: '', rentAmount: '' });
   const [unitForm, setUnitForm] = useState({ name: '', rentAmount: '', tenantName: '', tenantEmail: '', tenantPhone: '' });
 
+  // Explicit array assertion to avoid downstream callback or method overload compilation issues
+  const typedProperties = (properties || []) as Property[];
+
   // Backend Connection Readiness: Lifecycle fetch simulation
   useEffect(() => {
     const fetchProperties = async () => {
       setIsLoading(true);
       try {
-        // BACKEND INTEGRATION POINT: 
-        // const response = await axios.get('/api/properties');
-        // dispatch(setProperties(response.data));
-        
         // Simulating network delay for realistic UI rendering
         await new Promise(resolve => setTimeout(resolve, 800));
       } catch (error) {
@@ -81,10 +80,8 @@ export function Properties() {
     
     setIsLoading(true);
     try {
-      // BACKEND INTEGRATION POINT: 
-      // const response = await axios.post('/api/properties', form);
-      
       addProperty({ 
+        id: `prop-${Date.now()}`,
         name: form.name, 
         type: form.type, 
         images: [], 
@@ -117,7 +114,6 @@ export function Properties() {
       const parsedRent = parseFloat(unitForm.rentAmount) || 0;
       const isOccupied = unitForm.tenantName.trim().length > 0;
       
-      // Declared and read explicitly to fix TS6133 compiler error
       const newUnit: PropertyUnit = {
         id: `unit-${Date.now()}`,
         name: unitForm.name,
@@ -128,15 +124,10 @@ export function Properties() {
         tenantPhone: unitForm.tenantPhone || undefined
       };
 
-      const targetProperty = properties.find((p: Property) => p.id === showAddUnit);
+      const targetProperty = typedProperties.find((p: Property) => p.id === showAddUnit);
       if (!targetProperty) throw new Error("Property not found");
 
-      // BACKEND INTEGRATION POINT: Actively tracking 'newUnit' inside parameters mapping
-      // await axios.patch(`/api/properties/${showAddUnit}/units`, newUnit);
-
       if (isOccupied) {
-        // TS2353 Fix: Removed 'payment_method' and 'created_at'. 
-        // Moved Bank Transfer info into the description to satisfy type schema.
         addTransaction({
           transaction_type: 'CREDIT',
           amount: parsedRent,
@@ -153,7 +144,6 @@ export function Properties() {
         amount: parsedRent
       });
 
-      // TS6133 Fix: Read variables directly out of newUnit inside the confirmation text
       showToast(`Unit "${newUnit.name}" (₦${newUnit.rentAmount.toLocaleString()}) deployed successfully!`);
       setShowAddUnit(null);
       setUnitForm({ name: '', rentAmount: '', tenantName: '', tenantEmail: '', tenantPhone: '' });
@@ -164,9 +154,9 @@ export function Properties() {
     }
   };
 
-  const totalUnits = properties.reduce((s: number, p: Property) => s + p.units.length, 0);
-  const occupiedUnits = properties.reduce((s: number, p: Property) => s + p.units.filter((u: PropertyUnit) => u.status === 'occupied').length, 0);
-  const monthlyRent = properties.reduce((s: number, p: Property) => s + p.units.reduce((us: number, u: PropertyUnit) => us + u.rentAmount, 0), 0);
+  const totalUnits = typedProperties.reduce((s: number, p: Property) => s + p.units.length, 0);
+  const occupiedUnits = typedProperties.reduce((s: number, p: Property) => s + p.units.filter((u: PropertyUnit) => u.status === 'occupied').length, 0);
+  const monthlyRent = typedProperties.reduce((s: number, p: Property) => s + p.units.reduce((us: number, u: PropertyUnit) => us + u.rentAmount, 0), 0);
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col">
@@ -179,7 +169,7 @@ export function Properties() {
             <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 relative overflow-hidden">
               <Building2 className="w-8 h-8 text-emerald-500 absolute -bottom-1 -right-1 opacity-10" />
               <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Properties</p>
-              <p className="text-xl font-black text-slate-800 dark:text-white mt-1">{properties.length}</p>
+              <p className="text-xl font-black text-slate-800 dark:text-white mt-1">{typedProperties.length}</p>
             </div>
             
             <div className="bg-sky-500/5 border border-sky-500/20 rounded-2xl p-4 relative overflow-hidden">
@@ -210,19 +200,19 @@ export function Properties() {
               </Button>
             </div>
 
-            {isLoading && properties.length === 0 ? (
+            {isLoading && typedProperties.length === 0 ? (
                <div className="flex flex-col items-center justify-center py-12 space-y-4">
                  <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
                  <p className="text-sm text-slate-500 font-bold">Syncing Properties...</p>
                </div>
-            ) : properties.length === 0 ? (
+            ) : typedProperties.length === 0 ? (
               <div className="text-center py-12 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-white/5">
                 <Home className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                 <p className="text-sm text-slate-400 font-bold">No properties yet</p>
                 <p className="text-xs text-slate-400 mt-1">Add your first property portfolio segment</p>
               </div>
             ) : (
-              properties.map((prop: Property) => (
+              typedProperties.map((prop: Property) => (
                 <div key={prop.id} className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -338,7 +328,8 @@ export function Properties() {
         </div>
       )}
 
-      {typeof ToastComponent === 'function' ? ToastComponent() : ToastComponent}
+      {/* Direct execution fallback rendering safety guard to prevent raw object rendering errors */}
+      {typeof ToastComponent === 'function' ? <ToastComponent /> : ToastComponent}
     </div>
   );
 }

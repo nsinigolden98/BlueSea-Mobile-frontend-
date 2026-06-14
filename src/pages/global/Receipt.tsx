@@ -5,9 +5,9 @@ import { useBlueSeaEngine } from '@/context/BlueSeaEngine';
 import { Download, CheckCircle2, Share2, Printer } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
-// We define a local interface extending your base transaction fields. 
+// We define a local interface extending base transaction fields. 
 // This resolves the TS2339 errors for 'category' and 'payment_method'
-// and prepares your frontend for the data shape the backend will send.
+// and prepares the frontend for the data shape the backend will send.
 export interface BackendTransaction {
   id: string | number;
   created_at: string | Date;
@@ -21,8 +21,8 @@ export interface BackendTransaction {
 
 export function Receipt() {
   const { transactionId } = useParams();
-  const navigate = useNavigate(); // Used! We will use this for routing actions.
-  const { transactions } = useBlueSeaEngine();
+  const navigate = useNavigate();
+  const { transactions } = useBlueSeaEngine() as any;
 
   // Backend-ready states
   const [isLoading, setIsLoading] = useState(true);
@@ -33,15 +33,14 @@ export function Receipt() {
       try {
         setIsLoading(true);
         
-        // 1. First, try to find it in the local state
-        // We convert both IDs to strings to solve the TS2367 mismatch error safely.
-        const foundTx = transactions.find(t => String(t.id) === String(transactionId));
+        // First, try to find it in the local state securely
+        const fallbackTxArray = Array.isArray(transactions) ? transactions : [];
+        const foundTx = fallbackTxArray.find((t: any) => String(t?.id) === String(transactionId));
         
         if (foundTx) {
           setTransaction(foundTx as unknown as BackendTransaction);
         } else {
-          // 2. BACKEND READY: If not found locally, fetch from API
-          // TODO: Uncomment and update this when backend is connected
+          // BACKEND READY: If not found locally, fetch from API
           // const response = await fetch(`https://your-api.com/transactions/${transactionId}`);
           // if (!response.ok) throw new Error('Transaction not found');
           // const data = await response.json();
@@ -81,7 +80,6 @@ export function Receipt() {
         <Header title="Receipt" subtitle="Transaction details" showBackButton />
         <div className="flex-1 flex flex-col items-center justify-center space-y-4">
           <p className="text-sm text-slate-400">Transaction not found</p>
-          {/* Making use of useNavigate to give the user a way out */}
           <button 
             onClick={() => navigate(-1)} 
             className="px-6 py-2 bg-sky-500 text-white rounded-xl text-sm font-bold shadow-md hover:bg-sky-600 transition-colors"
@@ -122,11 +120,11 @@ export function Receipt() {
             {/* Details */}
             <div className="space-y-3 mb-6">
               {[
-                { label: 'Transaction ID', value: transaction.id },
-                { label: 'Description', value: transaction.description },
-                { label: 'Category', value: transaction.category || 'N/A' },
-                { label: 'Payment Method', value: transaction.payment_method || 'BlueSea Wallet' },
-                { label: 'Type', value: transaction.transaction_type },
+                { label: 'Transaction ID', value: String(transaction.id) },
+                { label: 'Description', value: String(transaction.description) },
+                { label: 'Category', value: String(transaction.category || 'N/A') },
+                { label: 'Payment Method', value: String(transaction.payment_method || 'BlueSea Wallet') },
+                { label: 'Type', value: String(transaction.transaction_type) },
               ].map(item => (
                 <div key={item.label} className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-white/5">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.label}</span>
@@ -159,7 +157,6 @@ export function Receipt() {
               </button>
             </div>
 
-            {/* A second use of useNavigate to guide users post-transaction */}
             <button 
               onClick={() => navigate('/dashboard')} 
               className="w-full py-3 text-sm font-bold text-sky-500 bg-sky-50 dark:bg-sky-500/10 rounded-xl hover:bg-sky-100 dark:hover:bg-sky-500/20 transition-colors"

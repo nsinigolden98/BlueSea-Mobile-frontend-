@@ -348,5 +348,5 @@ export function Scanner() {
       <ToastComponent />
       <LoaderComponent />
     </div>
-  );
+  ); 
 }

@@ -834,9 +834,10 @@ export interface PointProvider {
 // src/types/index.ts
 
 export type TransactionStatus = 'successful' | 'pending' | 'failed';
-export type TransactionCategory = 'airtime' | 'data' | 'deposit' | 'withdrawal' | 'bill_payment' | 'transfer' | 'savings_deposit' | 'marketplace' | 'affiliate_commission' | 'bus_booking' | 'escrow' | 'crypto' | 'pension' | 'insurance' | string;
-export type NotificationCategory = 'wallet' | 'affiliate' | 'payroll' | 'savings' | 'events' | 'streaming' | 'subscriptions' | 'security' | 'system' | string;
-
+export type TransactionCategory = 'airtime' | 'data' | 'deposit' | 'withdrawal' | 'bill_payment' | 'transfer' | 'savings_deposit' | 'marketplace' |
+'affiliate_commission' | 'bus_booking' | 'escrow' | 'crypto' | 'pension' | 'insurance' | string;
+export type NotificationCategory = 'wallet' |
+'affiliate' | 'payroll' | 'savings' | 'events' | 'streaming' | 'subscriptions' | 'security' | 'system' | string;
 // Sub-interfaces required by downstream components to fix .map/reduce issues
 export interface StaffMember {
   id: string;
@@ -860,11 +861,11 @@ export interface InvoiceLineItem {
 }
 
 export interface Transaction {
-  id: string; // If global overrides persist, change to 'string | any'
+  id: number; // Fixed id number vs string conflict to safely enable implicit interface merging
   transaction_type: 'CREDIT' | 'DEBIT';
   amount: number;
   description: string;
-  status: any; // Safely bypasses 'TransactionStatus' vs built-in declaration clashes
+  status: string; // Fixed status string vs any conflict to align perfectly with top layer layout
   category?: TransactionCategory;
   created_at: string;
   payment_method?: string;
@@ -900,7 +901,8 @@ export interface AppNotification {
 }
 
 export interface VaultMilestone {
-  id: string; // Changed from id?: string to explicitly match Milestone tracking expectations
+  id: string;
+  // Changed from id?: string to explicitly match Milestone tracking expectations
   label: string;
   percentage: number;
   achieved: boolean;
@@ -934,9 +936,11 @@ export interface Property {
   address: string;
   price?: number;
   units?: RentalUnit[]; // Updated: Components expect an iterable structural array, not a number
-  description?: string; // Required by Properties.tsx
+  description?: string;
+  // Required by Properties.tsx
   ownerId?: string;     // Required by Properties.tsx
-  affiliateCommission?: number; // Required by Properties.tsx
+  affiliateCommission?: number;
+  // Required by Properties.tsx
   createdAt: string;
   [key: string]: any;
 }
@@ -967,9 +971,11 @@ export interface Business {
   id: string;
   name?: string;
   staff?: StaffMember[]; // Updated: Analytics & Payroll components expect array properties
-  type?: string;          // Required by BusinessHub.tsx
+  type?: string;
+  // Required by BusinessHub.tsx
   walletBalance?: number; // Required by BusinessHub.tsx
-  role?: string;          // Required by BusinessHub.tsx
+  role?: string;
+  // Required by BusinessHub.tsx
   createdAt: string;
   [key: string]: any;
 }
@@ -980,9 +986,10 @@ export interface Invoice {
   clientName?: string;
   clientEmail?: string; // Required by Invoices.tsx
   lineItems?: InvoiceLineItem[]; // Required by Invoices.tsx
-  subtotal?: number;    // Required by Invoices.tsx
+  subtotal?: number;
+  // Required by Invoices.tsx
   tax?: number;         // Required by Invoices.tsx
-  status: any;          // Handles local vs string layout pipeline checks cleanly
+  status: string;       // Consolidates local vs string layout pipeline checks cleanly
   total: number; 
   createdAt: string;
   [key: string]: any;
@@ -1002,3 +1009,4 @@ export interface EventTicket { id: string; purchaseDate: string; [key: string]: 
 export interface LiveStream { id: string; [key: string]: any; }
 export interface BusTicket { id: string; [key: string]: any; }
 export interface Subscription { id: string; createdAt: string; [key: string]: any; }
+}

@@ -180,4 +180,4 @@ export function ScannerAssignments() {
       <LoaderComponent />
     </div>
   );
-}
+} 
