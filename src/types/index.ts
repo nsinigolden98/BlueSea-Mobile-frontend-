@@ -842,9 +842,14 @@ export type NotificationCategory = 'wallet' |
 export interface StaffMember {
   id: string;
   name: string;
+  email: string;
   role: string;
   salary: number;
-  [key: string]: any;
+  paymentSchedule: 'monthly' | 'weekly' | 'biweekly';
+  deductions?: any[];
+  bonuses?: any[];
+  nextPayDate: string;
+  status: string;
 }
 
 export interface RentalUnit {
@@ -982,17 +987,18 @@ export interface Business {
 
 export interface Invoice {
   id: string;
-  invoiceNumber?: string;
-  clientName?: string;
-  clientEmail?: string; // Required by Invoices.tsx
-  lineItems?: InvoiceLineItem[]; // Required by Invoices.tsx
-  subtotal?: number;
-  // Required by Invoices.tsx
-  tax?: number;         // Required by Invoices.tsx
-  status: string;       // Consolidates local vs string layout pipeline checks cleanly
-  total: number; 
-  createdAt: string;
-  [key: string]: any;
+  clientName: string;
+  clientEmail: string;
+  lineItems: InvoiceLineItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  status: InvoiceStatus;
+  dueDate: string;
+  template: string;
+  notes: string;
+  paidAt?: string;
 }
 
 // Remaining micro types safely structured

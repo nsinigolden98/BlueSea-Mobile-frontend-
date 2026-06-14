@@ -4,20 +4,7 @@ import { useBlueSeaEngine } from '@/context/BlueSeaEngine';
 import { Users, Plus, X, Trash2, CheckCircle2, AlertCircle, Wallet, Calendar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
-// Define explicit interfaces for backend type safety
-export interface Staff {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  salary: number;
-  paymentSchedule: 'monthly' | 'weekly' | 'biweekly';
-  deductions?: any[];
-  bonuses?: any[];
-  nextPayDate: string;
-  status: string;
-}
+import { StaffMember } from '@/types';
 
 export function Payroll() {
   const { businesses, addTransaction, addNotification } = useBlueSeaEngine();
@@ -32,9 +19,9 @@ export function Payroll() {
   const [form, setForm] = useState<{ name: string; email: string; role: string; salary: string; schedule: 'monthly' | 'weekly' | 'biweekly' }>({ name: '', email: '', role: '', salary: '', schedule: 'monthly' });
 
   const business = businesses.find(b => b.id === selectedBusiness);
-  const staffList: Staff[] = business?.staff || [];
+  const staffList: StaffMember[] = business?.staff || [];
   
-  const totalPayroll = staffList.reduce((s: number, st: Staff) => s + st.salary, 0);
+  const totalPayroll = staffList.reduce((s: number, st: StaffMember) => s + st.salary, 0);
 
   // Backend Connection Readiness: Lifecycle fetch simulation
   useEffect(() => {
@@ -67,7 +54,7 @@ export function Payroll() {
 
     setIsLoading(true);
     try {
-      const newStaff: Staff = {
+      const newStaff: StaffMember = {
         id: 'st' + Date.now(),
         name: form.name,
         email: form.email,
@@ -83,6 +70,9 @@ export function Payroll() {
       // BACKEND INTEGRATION POINT: 
       // await fetch(`/api/businesses/${selectedBusiness}/staff`, { method: 'POST', body: JSON.stringify(newStaff) })
 
+      if (!biz.staff) {
+        biz.staff = [];
+      }
       biz.staff.push(newStaff);
       
       showToast(`${form.name} added to staff!`);
@@ -216,7 +206,7 @@ export function Payroll() {
                 <p className="text-xs text-slate-400 mt-1">Add your first team member</p>
               </div>
             ) : (
-              staffList.map((staff: Staff) => (
+              staffList.map((staff: StaffMember) => (
                 <div key={staff.id} className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-violet-500/10 rounded-xl flex items-center justify-center shrink-0">
@@ -284,7 +274,7 @@ export function Payroll() {
           <div className="relative bg-white dark:bg-slate-900 sm:rounded-[2rem] rounded-t-[2rem] p-6 w-full max-w-md shadow-2xl border-t sm:border border-slate-200 dark:border-white/10">
             <h3 className="text-lg font-black text-slate-900 dark:text-white mb-4">Process Payroll</h3>
             <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mb-4 space-y-3">
-              {staffList.map((s: Staff) => (
+              {staffList.map((s: StaffMember) => (
                 <div key={s.id} className="flex justify-between text-sm">
                   <span className="text-slate-600 dark:text-slate-300">{s.name}</span>
                   <span className="font-bold text-slate-800 dark:text-white">₦{s.salary.toLocaleString()}</span>
