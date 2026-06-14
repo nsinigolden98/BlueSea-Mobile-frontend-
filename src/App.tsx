@@ -48,11 +48,11 @@ import {
   SpinVault,
   Betting,
   BlueSphere,
-  /*
+  
   FinanceHub, SavingsVault, BlueSeaCards, BspCrypto, Pension, Insurance,
-  BusinessHub, Payroll, Invoices, Properties, Appointments, Analytics,
+  BusinessHub, Payroll, Properties, Appointments,
   Storefronts, Freelance, Affiliate, Contracts,
-  Events, Streams, Travel, Subscriptions,Receipt, */ 
+  Events, Streams, Travel, Subscriptions, 
 } from '@/pages';
 import IdentityCenter from '@/pages/IdentityCenter';
 import HistoryPage from '@/pages/History';
