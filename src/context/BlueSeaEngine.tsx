@@ -4,9 +4,9 @@
  */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import type {
-  Transaction, ReceiptData, AppNotification, TransactionStatus,
+  Transaction, AppNotification, TransactionStatus,
   SavingsVault, BlueSeaCard, PensionPlan, InsurancePlan,
-  Business, Invoice, Property, AppointmentBooking, Storefront, FreelanceService,
+  Business, Property, AppointmentBooking, Storefront, FreelanceService,
   FreelanceOrder, AffiliateItem, DigitalContract, BlueSeaEvent, EventTicket,
   LiveStream, BusTicket, Subscription, BSPCoinActivity
 } from '@/types';

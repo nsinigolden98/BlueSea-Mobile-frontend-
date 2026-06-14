@@ -863,7 +863,7 @@ export interface RentalUnit {
 
 
 export interface Transaction {
-  id: String; // Fixed id number vs string conflict to safely enable implicit interface merging
+  id: Number; // Fixed id number vs string conflict to safely enable implicit interface merging
   transaction_type: 'CREDIT' | 'DEBIT';
   amount: number;
   description: string;
