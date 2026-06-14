@@ -51,10 +51,9 @@ export const services: Service[] = [
 
   // Business Tools
   { id: 'bt-1', name: 'Payroll', description: 'Automate staff salaries', icon: 'Calculator', route: '/business/payroll', category: 'Business Tools' },
-  { id: 'bt-2', name: 'Invoices', description: 'Generate & track payments', icon: 'FileText', route: '/business/invoices', category: 'Business Tools' },
-  { id: 'bt-3', name: 'Properties', description: 'Manage real estate assets', icon: 'Building', route: '/business/properties', category: 'Business Tools' },
-  { id: 'bt-4', name: 'Appointments', description: 'Schedule client bookings', icon: 'Calendar', route: '/business/appointments', category: 'Business Tools' },
-  { id: 'bt-5', name: 'Analytics', description: 'Business insights & reports', icon: 'PieChart', route: '/business/analytics', category: 'Business Tools' },
+  { id: 'bt-2', name: 'Properties', description: 'Manage real estate assets', icon: 'Building', route: '/business/properties', category: 'Business Tools' },
+  { id: 'bt-3', name: 'Appointments', description: 'Schedule client bookings', icon: 'Calendar', route: '/business/appointments', category: 'Business Tools' },
+
 
   // Community & Experience
   { id: 'ce-1', name: 'Group Payment', description: 'Split bills with friends', icon: 'Users', route: '/group-payment', category: 'Community & Experience' },
