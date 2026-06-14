@@ -11,50 +11,48 @@ interface QuickAction {
 }
 
 const actions: QuickAction[] = [
-  { 
-    id: 'airtime', 
-    label: 'Buy Airtime', 
-    icon: Smartphone, 
+  {
+    id: 'airtime',
+    label: 'Buy Airtime',
+    icon: Smartphone,
     path: '/airtime',
-    color: 'from-blue-500 to-blue-600'
+    color: 'text-sky-500'
   },
-  { 
-    id: 'data', 
-    label: 'Buy Data', 
-    icon: Wifi, 
+  {
+    id: 'data',
+    label: 'Buy Data',
+    icon: Wifi,
     path: '/data',
-    color: 'from-sky-500 to-sky-600'
+    color: 'text-emerald-500'
   },
-  { 
-    id: 'group', 
-    label: 'Group Payments', 
-    icon: Users, 
+  {
+    id: 'group',
+    label: 'Group Payments',
+    icon: Users,
     path: '/group-payment',
-    color: 'from-cyan-500 to-cyan-600'
+    color: 'text-cyan-500'
   },
-  { 
-    id: 'bills', 
-    label: 'Light Bills', 
-    icon: Lightbulb, 
+  {
+    id: 'bills',
+    label: 'Light Bills',
+    icon: Lightbulb,
     path: '/light-bills',
-    color: 'from-teal-500 to-teal-600'
+    color: 'text-amber-500'
   },
-  { 
-    id: 'flight', 
-    label: 'Flight', 
-    icon: Plane, 
+  {
+    id: 'flight',
+    label: 'Flight',
+    icon: Plane,
     path: '/flights',
-    color: 'from-violet-500 to-violet-600'
+    color: 'text-blue-500'
   },
-
-  { 
-    id: 'gift', 
-    label: 'Gift Card', 
-    icon: Gift, 
+  {
+    id: 'gift',
+    label: 'Gift Card',
+    icon: Gift,
     path: '/gift-cards',
-    color: 'from-indigo-500 to-indigo-600'
+    color: 'text-pink-500'
   },
-
 ];
 
 interface QuickActionsProps {
@@ -65,31 +63,27 @@ export function QuickActions({ className }: QuickActionsProps) {
   const navigate = useNavigate();
 
   return (
-    <div className={cn('space-y-4', className)}>
-      <h2 className="text-lg font-semibold text-slate-800 dark:text-white">Quick Actions</h2>
-      
-      <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
-        {actions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <button
-              key={action.id}
-              onClick={() => navigate(action.path)}
-              className={cn(
-                'group flex flex-col items-center gap-3 p-4 rounded-2xl',
-                'bg-gradient-to-br shadow-md hover:shadow-lg transition-all duration-200',
-                'hover:-translate-y-0.5',
-                action.color
-              )}
-            >
-              <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
-                <Icon className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-sm font-medium text-white">{action.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <>
+      {actions.map((action) => {
+        const Icon = action.icon;
+        return (
+          <button
+            key={action.id}
+            onClick={() => navigate(action.path)}
+            className={cn(
+              "group flex flex-col items-center gap-2 min-w-[72px]", 
+              className
+            )}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 flex items-center justify-center transition-all duration-200 hover:border-sky-500/30 dark:hover:border-sky-400/30 hover:-translate-y-0.5">
+              <Icon className={cn("w-6 h-6", action.color)} />
+            </div>
+            <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300">
+              {action.label}
+            </span>
+          </button>
+        );
+      })}
+    </>
   );
 }
