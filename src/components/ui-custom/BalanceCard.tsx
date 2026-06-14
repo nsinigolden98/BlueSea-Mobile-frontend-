@@ -74,7 +74,7 @@ export function BalanceCard({
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/10">  
             <Coins className="w-3.5 h-3.5 text-amber-300" />  
             <span className="text-[11px] font-semibold text-white">
-              {user?.Balance?.toLocaleString() || '0'} BSP
+              {user?.balance?.toLocaleString() || '0'} BSP
             </span>  
           </div>
 
