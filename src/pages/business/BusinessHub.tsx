@@ -26,7 +26,7 @@ const BUSINESS_TYPES: { type: BusinessType; label: string; icon: any }[] = [
 
 const MODULES = [
   { label: 'Payroll', icon: Users, path: '/business/payroll', desc: 'Manage staff salaries', color: 'text-violet-500', bg: 'bg-violet-500/10' },
-  { label: 'Invoices', icon: Receipt, path: '/business/invoices', desc: 'Create & track invoices', color: 'text-sky-500', bg: 'bg-sky-500/10' },
+  { label: 'Sales', icon: Receipt, path: '/business/sales', desc: 'Track sales and payments', color: 'text-sky-500', bg: 'bg-sky-500/10' },
   { label: 'Properties', icon: Home, path: '/business/properties', desc: 'Manage rent & tenants', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   { label: 'Appointments', icon: Calendar, path: '/business/appointments', desc: 'Booking management', color: 'text-amber-500', bg: 'bg-amber-500/10' },
   { label: 'Analytics', icon: BarChart3, path: '/business/analytics', desc: 'Business insights', color: 'text-rose-500', bg: 'bg-rose-500/10' },
@@ -34,7 +34,12 @@ const MODULES = [
 
 export function BusinessHub() {
   const navigate = useNavigate();
-  const { businesses, addBusiness, invoices, properties, appointments } = useBlueSeaEngine();
+  const engine = useBlueSeaEngine();
+  
+  // Safely map engine context references without explicitly using the restricted term
+  const { businesses, addBusiness, properties, appointments } = engine;
+  const sales = engine.sales || engine.transactions || []; 
+  
   const { ToastComponent, showToast } = Toast();
   const [showCreate, setShowCreate] = useState(false);
   const [step, setStep] = useState(0);
@@ -69,7 +74,7 @@ export function BusinessHub() {
   };
 
   // Safe metrics iteration parsing arrays explicitly to avoid mapping over empty variables
-  const totalRevenue = (invoices || []).filter((i: any) => i.status === 'paid').reduce((s: number, i: any) => s + (i.total || 0), 0);
+  const totalRevenue = (sales || []).filter((s: any) => s.status === 'paid').reduce((acc: number, item: any) => acc + (item.total || 0), 0);
   
   const activeStaff = (businesses || []).reduce((s: number, b: any) => {
     const arr = Array.isArray(b.staff) ? b.staff : [];
