@@ -834,6 +834,12 @@ export interface PointProvider {
 // src/types/index.ts
 
 export type TransactionStatus = 'successful' | 'pending' | 'failed';
+export type InvoiceStatus =
+  | 'draft'
+  | 'sent'
+  | 'paid'
+  | 'overdue'
+  | 'cancelled';
 export type TransactionCategory = 'airtime' | 'data' | 'deposit' | 'withdrawal' | 'bill_payment' | 'transfer' | 'savings_deposit' | 'marketplace' |
 'affiliate_commission' | 'bus_booking' | 'escrow' | 'crypto' | 'pension' | 'insurance' | string;
 export type NotificationCategory = 'wallet' |
@@ -860,13 +866,16 @@ export interface RentalUnit {
 }
 
 export interface InvoiceLineItem {
+  id?: string;
   description: string;
   quantity: number;
-  price: number;
+  price?: number;
+  rate?: number;
+  amount?: number;
 }
 
 export interface Transaction {
-  id: number; // Fixed id number vs string conflict to safely enable implicit interface merging
+  id: String; // Fixed id number vs string conflict to safely enable implicit interface merging
   transaction_type: 'CREDIT' | 'DEBIT';
   amount: number;
   description: string;

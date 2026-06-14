@@ -4,7 +4,7 @@ import { useBlueSeaEngine } from '@/context/BlueSeaEngine';
 import { Users, Plus, X, Trash2, CheckCircle2, AlertCircle, Wallet, Calendar, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { StaffMember } from '@/types';
+import type { StaffMember } from '@/types';
 
 export function Payroll() {
   const { businesses, addTransaction, addNotification } = useBlueSeaEngine();
