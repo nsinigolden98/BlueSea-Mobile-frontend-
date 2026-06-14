@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar, Header } from '@/components/ui-custom';
-import { services, serviceCategories } from '@/data/services'; // Removed featuredServiceIds
+import { services, serviceCategories } from '@/data/services';
 import type { Service } from '@/data/services';
 import { cn } from '@/lib/utils';
 import {
@@ -47,7 +47,9 @@ const Badge = ({ type }: { type: Service['badge'] }) => {
   };
   
   return (
-    <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide absolute -top-2 -right-2 border border-white dark:border-slate-900 shadow-sm z-10', styles[type])}>
+    <span className={cn('flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide absolute -top-2 -right-2 border border-white dark:border-slate-900 shadow-sm z-10', styles[type])}>
+      {/* Actively using the Star icon for highlight badges */}
+      {(type === 'Recommended' || type === 'Popular') && <Star className="w-2.5 h-2.5 fill-current" />}
       {type}
     </span>
   );
@@ -80,7 +82,7 @@ export function Services() {
     const query = searchQuery.toLowerCase();
     return services.filter(
       s => s.name.toLowerCase().includes(query) || 
-           s.description.toLowerCase().includes(query) || // Description is still searchable
+           s.description.toLowerCase().includes(query) || 
            s.category.toLowerCase().includes(query)
     );
   }, [searchQuery]);
@@ -121,6 +123,9 @@ export function Services() {
             {service.name}
           </h3>
         </div>
+
+        {/* Actively using the ChevronRight icon as a clean interaction indicator */}
+        <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-sky-500 transition-colors shrink-0" />
       </button>
     );
   };
