@@ -8,7 +8,7 @@ import type {
   SavingsVault, BlueSeaCard, PensionPlan, InsurancePlan,
   Business, Property, AppointmentBooking, Storefront, FreelanceService,
   FreelanceOrder, AffiliateItem, DigitalContract, BlueSeaEvent, EventTicket,
-  LiveStream, BusTicket, Subscription, BSPCoinActivity, Invoice, ReceiptData
+  LiveStream, BusTicket, Subscription, BSPCoinActivity
 } from '@/types';
 
 // ---- Transaction Engine ----
@@ -24,7 +24,6 @@ const STORAGE_KEYS = {
   pension: 'bluesea_pension',
   insurance: 'bluesea_insurance',
   businesses: 'bluesea_businesses',
-  invoices: 'bluesea_invoices',
   properties: 'bluesea_properties',
   appointments: 'bluesea_appointments',
   storefronts: 'bluesea_storefronts',
@@ -89,7 +88,6 @@ interface BlueSeaEngineContextType {
   transactions: Transaction[];
   addTransaction: (tx: Omit<Transaction, 'id' | 'created_at'>) => Transaction;
   updateTransactionStatus: (id: string, status: TransactionStatus) => void;
-  generateReceipt: (tx: Transaction, overrides?: Partial<ReceiptData>) => ReceiptData;
   notifications: AppNotification[];
   addNotification: (notif: Omit<AppNotification, 'id' | 'timestamp'>) => void;
   markNotificationRead: (id: string) => void;
@@ -109,9 +107,6 @@ interface BlueSeaEngineContextType {
   addInsurancePlan: (plan: Omit<InsurancePlan, 'id'>) => InsurancePlan;
   businesses: Business[];
   addBusiness: (biz: Omit<Business, 'id' | 'createdAt'>) => Business;
-  invoices: Invoice[];
-  addInvoice: (inv: Omit<Invoice, 'id' | 'createdAt'>) => Invoice;
-  updateInvoice: (id: string, updates: Partial<Invoice>) => void;
   properties: Property[];
   addProperty: (prop: Omit<Property, 'id' | 'createdAt'>) => Property;
   appointments: AppointmentBooking[];
@@ -156,7 +151,6 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
   const [pensionPlans, setPensionPlans] = useState<PensionPlan[]>(() => loadFromStorage(STORAGE_KEYS.pension, []));
   const [insurancePlans, setInsurancePlans] = useState<InsurancePlan[]>(() => loadFromStorage(STORAGE_KEYS.insurance, []));
   const [businesses, setBusinesses] = useState<Business[]>(() => loadFromStorage(STORAGE_KEYS.businesses, []));
-  const [invoices, setInvoices] = useState<Invoice[]>(() => loadFromStorage(STORAGE_KEYS.invoices, []));
   const [properties, setProperties] = useState<Property[]>(() => loadFromStorage(STORAGE_KEYS.properties, []));
   const [appointments, setAppointments] = useState<AppointmentBooking[]>(() => loadFromStorage(STORAGE_KEYS.appointments, []));
   const [storefronts, setStorefronts] = useState<Storefront[]>(() => loadFromStorage(STORAGE_KEYS.storefronts, []));
@@ -179,7 +173,6 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
   React.useEffect(() => { saveToStorage(STORAGE_KEYS.pension, pensionPlans); }, [pensionPlans]);
   React.useEffect(() => { saveToStorage(STORAGE_KEYS.insurance, insurancePlans); }, [insurancePlans]);
   React.useEffect(() => { saveToStorage(STORAGE_KEYS.businesses, businesses); }, [businesses]);
-  React.useEffect(() => { saveToStorage(STORAGE_KEYS.invoices, invoices); }, [invoices]);
   React.useEffect(() => { saveToStorage(STORAGE_KEYS.properties, properties); }, [properties]);
   React.useEffect(() => { saveToStorage(STORAGE_KEYS.appointments, appointments); }, [appointments]);
   React.useEffect(() => { saveToStorage(STORAGE_KEYS.storefronts, storefronts); }, [storefronts]);
@@ -201,27 +194,7 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const updateTransactionStatus = useCallback((id: string, status: TransactionStatus) => {
-    setTransactions(prev => prev.map(t => String(t.id) === String(id) ? { ...t, status } : t));
-  }, []);
-
-  // ---- Receipt Generator ----
-  const generateReceipt = useCallback((tx: Transaction, overrides?: Partial<ReceiptData>): ReceiptData => {
-    return {
-      transactionId: String(tx.id),
-      timestamp: tx.created_at,
-      status: tx.status,
-      category: tx.category || 'general',
-      sender: { name: tx.sender_name || 'BlueSea User', walletId: 'BSW' + Math.random().toString(36).slice(2, 10).toUpperCase() },
-      receiver: { name: tx.receiver_name || tx.description, walletId: 'BSW' + Math.random().toString(36).slice(2, 10).toUpperCase() },
-      amount: tx.amount,
-      fee: tx.amount * 0.005,
-      total: tx.amount * 1.005,
-      paymentMethod: tx.payment_method || 'BlueSea Wallet',
-      walletUsed: 'BlueSea Naira Wallet',
-      description: tx.description,
-      qrData: `https://blueseamobile.com.ng/verify/${tx.id}`,
-      ...overrides,
-    };
+    setTransactions(prev => prev.map(t => String(t.id) === id ? { ...t, status } : t));
   }, []);
 
   // ---- Notification Actions ----
@@ -314,40 +287,20 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
     setInsurancePlans(prev => [...prev, newPlan]);
     return newPlan;
   }, []);
-
-// ---- Business Actions ----
+  
+  // ---- Business Actions ----
   const addBusiness = useCallback((biz: Omit<Business, 'id' | 'createdAt'>) => {
     const newBiz: Business = { 
       ...biz, 
       id: 'b' + Date.now(), 
       createdAt: new Date().toISOString(),
-      staff: biz.staff || [], // Updated to [] to match updated type StaffMember[]
+      staff: biz.staff || [], 
       type: biz.type || 'Standard',
       walletBalance: biz.walletBalance || 0,
       role: biz.role || 'Admin'
     };
     setBusinesses(prev => [...prev, newBiz]);
     return newBiz;
-  }, []);
-
-  // ---- Invoice Actions ----
-  const addInvoice = useCallback((inv: Omit<Invoice, 'id' | 'createdAt'>) => {
-    const newInv: Invoice = { 
-      ...inv, 
-      id: 'inv' + Date.now(), 
-      createdAt: new Date().toISOString(),
-      status: inv.status || 'pending',
-      total: inv.total || 0,
-      lineItems: inv.lineItems || [], // Added safe defaults based on new types
-      subtotal: inv.subtotal || 0,
-      tax: inv.tax || 0
-    };
-    setInvoices(prev => [...prev, newInv]);
-    return newInv;
-  }, []);
-
-  const updateInvoice = useCallback((id: string, updates: Partial<Invoice>) => {
-    setInvoices(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
   }, []);
 
   // ---- Property Actions ----
@@ -360,10 +313,10 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
       type: prop.type || 'Commercial',
       images: prop.images || [],
       address: prop.address || 'No Address Provided',
-      units: prop.units || [], // Updated to [] to match new type RentalUnit[]
-      description: prop.description || '', // Added default
-      ownerId: prop.ownerId || 'sys_user', // Added default
-      affiliateCommission: prop.affiliateCommission || 0 // Added default
+      units: prop.units || [], 
+      description: prop.description || '', 
+      ownerId: prop.ownerId || 'sys_user', 
+      affiliateCommission: prop.affiliateCommission || 0 
     };
     setProperties(prev => [...prev, newProp]);
     return newProp;
@@ -382,8 +335,8 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
     setStorefronts(prev => [...prev, newStore]);
     return newStore;
   }, []);
-
-  // ---- Freelance Actions ----
+  
+    // ---- Freelance Actions ----
   const addFreelanceService = useCallback((svc: Omit<FreelanceService, 'id'>) => {
     const newSvc: FreelanceService = { ...svc, id: 'fs' + Date.now() };
     setFreelanceServices(prev => [...prev, newSvc]);
@@ -453,13 +406,13 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
   const addBSPActivity = useCallback((a: Omit<BSPCoinActivity, 'id' | 'timestamp'>) => {
     const current = Number(localStorage.getItem('bsp_balance') || 0);
     const change = a.type === 'earn' || a.type === 'receive' ? a.amount : -a.amount;
-    const newBalance = Math.max(0, current + change); // Calculate balance safely
+    const newBalance = Math.max(0, current + change); 
 
     const newA: BSPCoinActivity = { 
         ...a, 
         id: 'bsp' + Date.now(), 
         timestamp: new Date().toISOString(),
-        balance: newBalance // Injects expected balance to satisfy types
+        balance: newBalance 
     };
     
     setBspActivities(prev => [newA, ...prev]);
@@ -469,14 +422,12 @@ export function BlueSeaEngineProvider({ children }: { children: React.ReactNode 
   return (
     <BlueSeaEngineContext.Provider value={{
       transactions, addTransaction, updateTransactionStatus,
-      generateReceipt,
       notifications, addNotification, markNotificationRead, unreadCount,
       vaults, addVault, updateVault, vaultDeposit, vaultWithdraw,
       cards, addCard, updateCard,
       pensionPlans, addPensionPlan, contributePension,
       insurancePlans, addInsurancePlan,
       businesses, addBusiness,
-      invoices, addInvoice, updateInvoice,
       properties, addProperty,
       appointments, addAppointment,
       storefronts, addStorefront,
