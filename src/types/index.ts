@@ -1009,4 +1009,3 @@ export interface EventTicket { id: string; purchaseDate: string; [key: string]: 
 export interface LiveStream { id: string; [key: string]: any; }
 export interface BusTicket { id: string; [key: string]: any; }
 export interface Subscription { id: string; createdAt: string; [key: string]: any; }
-}
