@@ -436,7 +436,7 @@ export function Wallet() {
               <div className="absolute top-6 right-12 md:right-10 flex gap-2 z-20 pointer-events-auto">
                 <button 
                   onClick={() => setCardModalOpen(true)}
-                  className="flex items-center gap-3 px-3 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full text-[10px] font-bold text-white shadow-lg hover:bg-white/20 transition-all active:scale-90"
+                  className="flex items-center gap-3 px-6 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full text-[10px] font-bold text-white shadow-lg hover:bg-white/20 transition-all active:scale-90"
                 >
                   <CreditCard className="w-3 h-3" />
                   <span>Card</span>
