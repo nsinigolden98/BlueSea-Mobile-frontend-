@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Sidebar, Header, Loader } from '@/components/ui-custom';
 import { getRequest, postRequest, ENDPOINTS, API_BASE } from '@/types';
 import { cn } from '@/lib/utils';
-// FIX: Added missing Button import
 import { Button } from '@/components/ui/button'; 
 import { 
   QrCode, 
@@ -13,7 +12,11 @@ import {
   Scan,
   Check,
   X,
-  Clock
+  Clock,
+  ChevronRight,
+  Ticket,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 
 interface ScannerAssignment {
@@ -74,7 +77,12 @@ export function ScannerAssignments() {
             }))
           : [];
 
-        setAssignments(mappedData);
+        // REQUIREMENT 1: Deduplicate assignments by event_id to prevent duplicates
+        const deduplicatedData = mappedData.filter((item, index, self) =>
+          index === self.findIndex((t) => t.event_id === item.event_id)
+        );
+
+        setAssignments(deduplicatedData);
       }
     } catch (error) {
       console.error('Failed to load scanner assignments:', error);
@@ -88,9 +96,6 @@ export function ScannerAssignments() {
     try {
       showLoader();
       let endpoint = '';
-      
-      // FIX: Cast ENDPOINTS to any here to stop TypeScript from failing the build 
-      // over keys not explicitly declared in your config.
       const anyEndpoints = ENDPOINTS as any;
 
       if (action === 'accept') {
@@ -124,7 +129,6 @@ export function ScannerAssignments() {
     if (!dateString) return 'Date TBD';
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
-        weekday: 'short',
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -138,189 +142,244 @@ export function ScannerAssignments() {
     navigate(`/scanner?event=${eventId}`);
   };
 
-  const hasStatusSupport = assignments.some(a => a.status !== undefined);
-  const activeAssignments = hasStatusSupport 
-    ? assignments.filter(a => a.status === 'active' || a.status === 'accepted' || a.status === 'pending')
-    : assignments;
-  const completedAssignments = hasStatusSupport ? assignments.filter(a => a.status === 'completed') : [];
-  const pastAssignments = hasStatusSupport ? assignments.filter(a => a.status === 'expired' || a.status === 'rejected') : [];
+  // REQUIREMENT 8: Simplify section structures into Current and History
+  const currentAssignments = assignments.filter(
+    a => !a.status || ['active', 'accepted', 'pending'].includes(a.status)
+  );
+  
+  const historyAssignments = assignments.filter(
+    a => a.status && ['completed', 'expired', 'rejected'].includes(a.status)
+  );
 
-  const renderAssignmentCard = (assignment: ScannerAssignment) => (
-    <div
-      key={assignment.event_id}
-      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col justify-between"
-    >
-      <div>
-        {assignment.event_banner && (
-          <div className="h-32 bg-slate-200 dark:bg-slate-800 relative">
-            <img 
-              src={getImageUrl(assignment.event_banner)} 
-              alt={assignment.event_title}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-          </div>
-        )}
-        
-        <div className="p-5">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h3 className="text-lg font-semibold text-slate-800 dark:text-white truncate">
-                  {assignment.event_title}
-                </h3>
+  const renderAssignmentCard = (assignment: ScannerAssignment) => {
+    const hasBanner = !!assignment.event_banner;
+    
+    return (
+      <div
+        key={assignment.event_id}
+        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between group"
+      >
+        <div>
+          {/* REQUIREMENT 4, 5 & 7: Hero Header Layout with Premium Text Overlay */}
+          <div className="h-44 relative w-full bg-slate-900 overflow-hidden flex flex-col justify-end p-4">
+            {hasBanner ? (
+              <img 
+                src={getImageUrl(assignment.event_banner)} 
+                alt={assignment.event_title}
+                className="w-full h-full object-cover absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 opacity-90" />
+            )}
+            
+            {/* Ambient Dark Premium Vignette Layer */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-black/20" />
+
+            {/* REQUIREMENT 4: Prominent Assignment Status Badge on the Top Layer */}
+            <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+              {assignment.status ? (
                 <span className={cn(
-                  'px-2 py-0.5 text-xs font-medium rounded-full shrink-0',
-                  assignment.role === 'vendor'
-                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-                    : 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400'
+                  'px-2.5 py-1 text-[11px] font-semibold tracking-wide uppercase rounded-md shadow-sm flex items-center gap-1 backdrop-blur-md border',
+                  assignment.status === 'pending' && 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                  assignment.status === 'accepted' && 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+                  assignment.status === 'active' && 'bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse',
+                  assignment.status === 'completed' && 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+                  assignment.status === 'rejected' && 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+                  assignment.status === 'expired' && 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
                 )}>
-                  {assignment.role === 'vendor' ? 'Organizer' : 'Scanner'}
+                  {assignment.status === 'pending' && <Clock className="w-3 h-3" />}
+                  {assignment.status}
                 </span>
-                
-                {assignment.status && (
-                  <span className={cn(
-                    'px-2 py-0.5 text-xs font-medium rounded-full flex items-center gap-1 shrink-0',
-                    assignment.status === 'pending' && 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
-                    assignment.status === 'accepted' && 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400',
-                    assignment.status === 'active' && 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-                    assignment.status === 'completed' && 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
-                    assignment.status === 'rejected' && 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
-                    assignment.status === 'expired' && 'bg-slate-100 dark:bg-slate-800 text-slate-400'
-                  )}>
-                    {assignment.status === 'pending' && <Clock className="w-3 h-3" />}
-                    {assignment.status}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+              ) : (
+                <span className="px-2.5 py-1 text-[11px] font-semibold tracking-wide uppercase rounded-md shadow-sm bg-blue-500/20 text-blue-400 border border-blue-500/30 backdrop-blur-md">
+                  Assigned
+                </span>
+              )}
+            </div>
+
+            <div className="absolute top-3 left-3 z-10">
+              <span className={cn(
+                'px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded border backdrop-blur-md',
+                assignment.role === 'vendor'
+                  ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                  : 'bg-sky-500/20 text-sky-300 border-sky-500/30'
+              )}>
+                {assignment.role === 'vendor' ? 'Organizer' : 'Scanner'}
+              </span>
+            </div>
+
+            {/* Title & Metadata Overlaid cleanly onto Event Banner */}
+            <div className="relative z-10 space-y-1">
+              <h3 className="text-base font-bold text-white line-clamp-1 drop-shadow-sm">
+                {assignment.event_title}
+              </h3>
+              <p className="text-xs text-slate-300 line-clamp-1 font-medium opacity-90">
                 by {assignment.vendor}
               </p>
             </div>
           </div>
-
-          <div className="flex flex-wrap gap-4 text-sm mb-4">
-            <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-              <Calendar className="w-4 h-4 shrink-0" />
-              <span className="truncate">{formatDate(assignment.event_date)}</span>
+          
+          {/* REQUIREMENT 5: Card Meta Section */}
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/40 grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 min-w-0">
+              <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span className="truncate font-medium">{formatDate(assignment.event_date)}</span>
             </div>
-            <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-              <MapPin className="w-4 h-4 shrink-0" />
-              <span className="truncate">{assignment.event_location}</span>
+            <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 min-w-0 justify-end">
+              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span className="truncate font-medium">{assignment.event_location}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-center">
-              <p className="text-xl font-bold text-slate-800 dark:text-white">
-                {assignment.statistics?.total_tickets ?? 0}
-              </p>
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">Total</p>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-center">
-              <p className="text-xl font-bold text-green-500">
-                {assignment.statistics?.scanned_tickets ?? 0}
-              </p>
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">Scanned</p>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-center">
-              <p className="text-xl font-bold text-sky-500">
-                {assignment.statistics?.remaining ?? 0}
-              </p>
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">Remaining</p>
+          {/* REQUIREMENT 2 & 3: Redesigned Premium KPI Metrics Container */}
+          <div className="p-4 bg-white dark:bg-slate-900">
+            <div className="grid grid-cols-3 gap-2.5">
+              
+              {/* Total Tickets KPI */}
+              <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl p-2.5 flex flex-col justify-between transition-colors hover:bg-slate-100/50 dark:hover:bg-slate-800/70">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total</span>
+                  <Ticket className="w-3 h-3 text-slate-400" />
+                </div>
+                <p className="text-lg font-extrabold text-slate-800 dark:text-slate-100 tabular-nums leading-none">
+                  {assignment.statistics?.total_tickets ?? 0}
+                </p>
+              </div>
+
+              {/* Scanned Tickets KPI */}
+              <div className="bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-100/50 dark:border-emerald-900/20 rounded-xl p-2.5 flex flex-col justify-between transition-colors hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider">Scanned</span>
+                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                </div>
+                <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums leading-none">
+                  {assignment.statistics?.scanned_tickets ?? 0}
+                </p>
+              </div>
+
+              {/* Remaining Tickets KPI */}
+              <div className="bg-sky-50/30 dark:bg-sky-950/10 border border-sky-100/50 dark:border-sky-900/20 rounded-xl p-2.5 flex flex-col justify-between transition-colors hover:bg-sky-50/60 dark:hover:bg-sky-950/20">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-sky-600/80 dark:text-sky-400/80 uppercase tracking-wider">Left</span>
+                  <AlertCircle className="w-3 h-3 text-sky-500" />
+                </div>
+                <p className="text-lg font-extrabold text-sky-600 dark:text-sky-400 tabular-nums leading-none">
+                  {assignment.statistics?.remaining ?? 0}
+                </p>
+              </div>
+
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="p-5 pt-0 mt-auto border-t border-slate-50 dark:border-slate-800/50">
-        <div className="pt-4">
+        {/* REQUIREMENT 5: Standardized Operations Action Layout Footer */}
+        <div className="p-4 pt-0 bg-white dark:bg-slate-900">
           {assignment.status === 'pending' ? (
             <div className="flex gap-2">
               <Button 
                 onClick={() => handleUpdateStatus(assignment.event_id, 'reject')}
                 variant="outline" 
-                className="flex-1 border-red-200 hover:bg-red-50 text-red-600 dark:border-red-900/30 dark:hover:bg-red-950/20"
+                className="flex-1 h-10 border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-rose-950/20 dark:hover:text-rose-400 text-xs font-semibold rounded-xl transition-all"
               >
-                <X className="w-4 h-4 mr-2" /> Reject
+                <X className="w-3.5 h-3.5 mr-1.5" /> Reject
               </Button>
               <Button 
                 onClick={() => handleUpdateStatus(assignment.event_id, 'accept')}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-all"
               >
-                <Check className="w-4 h-4 mr-2" /> Accept
+                <Check className="w-3.5 h-3.5 mr-1.5" /> Accept
               </Button>
             </div>
           ) : assignment.status === 'rejected' ? (
-            <div className="w-full text-center text-sm font-medium text-red-500 bg-red-50 dark:bg-red-950/20 py-2.5 rounded-xl">
-              Assignment Rejected
+            <div className="w-full text-center text-xs font-semibold text-rose-500 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100/30 py-2.5 rounded-xl">
+              Assignment Cancelled / Declined
             </div>
           ) : (
             <Button
               onClick={() => goToScanner(assignment.event_id)}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white shadow-sm font-medium rounded-xl"
+              className="w-full h-10 bg-slate-900 hover:bg-slate-800 dark:bg-sky-600 dark:hover:bg-sky-500 text-white shadow-sm text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all group-hover:bg-sky-600 dark:group-hover:bg-sky-500"
             >
-              <Scan className="w-4 h-4 mr-2" /> Open Scanner
+              <Scan className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" /> Open Operations Scanner
             </Button>
           )}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Header 
-          title="Scanner Assignments" 
-          subtitle="Events you're assigned to scan"
+          title="Operations Center" 
+          subtitle="Manage validation pipelines and scanner assignments"
           onMenuClick={() => setSidebarOpen(true)} 
         />
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          <div className="max-w-6xl mx-auto space-y-8">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto space-y-6">
+          {/* REQUIREMENT 10: Breadcrumb-style Upper Navigation Experience Header */}
+          <div className="max-w-[1600px] mx-auto border-b border-slate-200/60 dark:border-slate-900 pb-4 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <span className="hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer transition-colors" onClick={() => navigate('/marketplace')}>Marketplace</span>
+              <ChevronRight className="w-3 h-3 text-slate-300" />
+              <span className="text-slate-900 dark:text-slate-200 font-semibold">Scanner Assignments</span>
+            </div>
+          </div>
+
+          <div className="max-w-[1600px] mx-auto space-y-10">
             {loading ? (
-              <div className="flex justify-center py-12">
+              <div className="flex justify-center py-20">
                 <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
               </div>
             ) : assignments.length === 0 ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center max-w-3xl mx-auto">
-                <QrCode className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-                <p className="text-slate-500 dark:text-slate-400">No scanner assignments</p>
-                <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-                  Contact event organizers to get scanner access
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 p-16 text-center max-w-xl mx-auto shadow-sm">
+                <div className="w-14 h-14 mx-auto bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                  <QrCode className="w-6 h-6 text-slate-400 dark:text-slate-500" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No Assignments Found</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                  Your profile is currently not bound to an active scanner pipeline. Please contact your administrator.
                 </p>
               </div>
             ) : (
               <>
-                {activeAssignments.length > 0 && (
+                {/* REQUIREMENT 8: Current Assignments Layout Block */}
+                {currentAssignments.length > 0 && (
                   <div className="space-y-4">
-                    {hasStatusSupport && <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 px-1">Active Assignments</h2>}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {activeAssignments.map(renderAssignmentCard)}
+                    <div className="flex items-center gap-2 px-1">
+                      <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        Current Assignments
+                      </h2>
+                      <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400">
+                        {currentAssignments.length}
+                      </span>
+                    </div>
+                    {/* REQUIREMENT 6: Responsive Column Layout Strategy */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {currentAssignments.map(renderAssignmentCard)}
                     </div>
                   </div>
                 )}
 
-                {completedAssignments.length > 0 && (
-                  <div className="space-y-4 pt-4">
-                    <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 px-1">Completed Assignments</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-75">
-                      {completedAssignments.map(renderAssignmentCard)}
+                {/* REQUIREMENT 8: History Layout Block */}
+                {historyAssignments.length > 0 && (
+                  <div className="space-y-4 pt-4 border-t border-slate-200/60 dark:border-slate-900">
+                    <div className="flex items-center gap-2 px-1">
+                      <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        History
+                      </h2>
+                      <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400">
+                        {historyAssignments.length}
+                      </span>
                     </div>
-                  </div>
-                )}
-
-                {pastAssignments.length > 0 && (
-                  <div className="space-y-4 pt-4">
-                    <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 px-1">Past & Rejected Assignments</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-60">
-                      {pastAssignments.map(renderAssignmentCard)}
+                    {/* REQUIREMENT 6: Responsive Column Layout Strategy */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 opacity-75">
+                      {historyAssignments.map(renderAssignmentCard)}
                     </div>
                   </div>
                 )}
