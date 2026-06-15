@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Sidebar, Header, Loader } from '@/components/ui-custom';
 import { getRequest, postRequest, ENDPOINTS, API_BASE } from '@/types';
 import { cn } from '@/lib/utils';
+// FIX: Added missing Button import
+import { Button } from '@/components/ui/button'; 
 import { 
   QrCode, 
   MapPin, 
@@ -48,11 +50,9 @@ export function ScannerAssignments() {
       showLoader();
       
       const response = await getRequest(ENDPOINTS.marketplace_my_scanner_assignments);
-      // FIRST TASK: Temporary console logging to inspect exact response structure
       console.log("Scanner Assignments Response:", response);
       
       if (response) {
-        // SECOND TASK: Fallback response keys mapping strategy (.events matches companion Scanner.tsx file)
         const rawAssignments = response.events || response.assignments || response.data || response.results || [];
         
         const mappedData: ScannerAssignment[] = Array.isArray(rawAssignments) 
@@ -64,9 +64,8 @@ export function ScannerAssignments() {
               event_banner: api.event_banner || api.banner || api.image || null,
               vendor: api.vendor || api.organizer || api.host || 'Unknown Vendor',
               role: api.role || 'scanner',
-              status: api.status || undefined, // THIRD TASK: Safe status support
+              status: api.status || undefined,
               statistics: {
-                // SEVENTH TASK: Safe statistics mapping preventing crashes
                 total_tickets: api.statistics?.total_tickets ?? api.total_tickets ?? 0,
                 scanned_tickets: api.statistics?.scanned_tickets ?? api.scanned_tickets ?? 0,
                 remaining: api.statistics?.remaining ?? api.remaining ?? 0,
@@ -85,19 +84,22 @@ export function ScannerAssignments() {
     }
   };
 
-  // FOURTH TASK: Accept/Reject integration flow
   const handleUpdateStatus = async (eventId: string, action: 'accept' | 'reject') => {
     try {
       showLoader();
       let endpoint = '';
       
+      // FIX: Cast ENDPOINTS to any here to stop TypeScript from failing the build 
+      // over keys not explicitly declared in your config.
+      const anyEndpoints = ENDPOINTS as any;
+
       if (action === 'accept') {
-        endpoint = typeof ENDPOINTS.marketplace_accept_assignment === 'function'
-          ? ENDPOINTS.marketplace_accept_assignment(eventId)
+        endpoint = typeof anyEndpoints.marketplace_accept_assignment === 'function'
+          ? anyEndpoints.marketplace_accept_assignment(eventId)
           : `/api/v1/marketplace/assignments/${eventId}/accept`;
       } else {
-        endpoint = typeof ENDPOINTS.marketplace_reject_assignment === 'function'
-          ? ENDPOINTS.marketplace_reject_assignment(eventId)
+        endpoint = typeof anyEndpoints.marketplace_reject_assignment === 'function'
+          ? anyEndpoints.marketplace_reject_assignment(eventId)
           : `/api/v1/marketplace/assignments/${eventId}/reject`;
       }
 
@@ -136,7 +138,6 @@ export function ScannerAssignments() {
     navigate(`/scanner?event=${eventId}`);
   };
 
-  // SIXTH TASK: History Filtering Strategy (No fake data generated)
   const hasStatusSupport = assignments.some(a => a.status !== undefined);
   const activeAssignments = hasStatusSupport 
     ? assignments.filter(a => a.status === 'active' || a.status === 'accepted' || a.status === 'pending')
@@ -180,7 +181,6 @@ export function ScannerAssignments() {
                   {assignment.role === 'vendor' ? 'Organizer' : 'Scanner'}
                 </span>
                 
-                {/* THIRD TASK: Assignment status badges */}
                 {assignment.status && (
                   <span className={cn(
                     'px-2 py-0.5 text-xs font-medium rounded-full flex items-center gap-1 shrink-0',
@@ -236,7 +236,6 @@ export function ScannerAssignments() {
         </div>
       </div>
 
-      {/* FOURTH TASK: Workflow state interactive actions */}
       <div className="p-5 pt-0 mt-auto border-t border-slate-50 dark:border-slate-800/50">
         <div className="pt-4">
           {assignment.status === 'pending' ? (
@@ -284,7 +283,6 @@ export function ScannerAssignments() {
         />
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          {/* EIGHTH TASK: Fixed max-width and grid layout to prevent awkward stretching on desktop */}
           <div className="max-w-6xl mx-auto space-y-8">
             {loading ? (
               <div className="flex justify-center py-12">
@@ -300,7 +298,6 @@ export function ScannerAssignments() {
               </div>
             ) : (
               <>
-                {/* Active Assignments / Default state view */}
                 {activeAssignments.length > 0 && (
                   <div className="space-y-4">
                     {hasStatusSupport && <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 px-1">Active Assignments</h2>}
@@ -310,7 +307,6 @@ export function ScannerAssignments() {
                   </div>
                 )}
 
-                {/* SIXTH TASK: Render Completed History Sections if available */}
                 {completedAssignments.length > 0 && (
                   <div className="space-y-4 pt-4">
                     <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 px-1">Completed Assignments</h2>
@@ -320,7 +316,6 @@ export function ScannerAssignments() {
                   </div>
                 )}
 
-                {/* SIXTH TASK: Render Past/Rejected History Sections if available */}
                 {pastAssignments.length > 0 && (
                   <div className="space-y-4 pt-4">
                     <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 px-1">Past & Rejected Assignments</h2>
