@@ -7,6 +7,9 @@ import { Button } from '../ui/button';
 interface PinComponentProps {
   type: string;
   value: object;
+  onSuccess?: (response?: any) => void;
+  onError?: (error?: any) => void;
+  onFailure?: (error?: any) => void;
 }
 
 interface Message {
@@ -121,7 +124,7 @@ export function PinModal() {
   };
 
 
-  const PinComponent = ({type, value}: PinComponentProps) => {
+  const PinComponent = ({type, value, onSuccess, onError, onFailure}: PinComponentProps) => {
     const [pin, setPin] = useState({
           user_pin:['', '','',''],
         });
@@ -165,11 +168,35 @@ export function PinModal() {
     
     const makeTransaction = async () => {
       showLoader();
-      
-      const response = await completeTransaction(type, { ...value, transaction_pin: pin.user_pin.join('') });
-      hidePinModal();
-      hideLoader();
-      setMessage(response);
+      try {
+        const response = await completeTransaction(type, { ...value, transaction_pin: pin.user_pin.join('') });
+        hidePinModal();
+        hideLoader();
+        setMessage(response);
+
+        if (type === 'add-scanner') {
+          const isSuccess = !!response && (
+            response.success === true || 
+            response.state === true || 
+            (!response.error && response.code === '00') ||
+            (!response.error && response.success !== false && response.state !== false)
+          );
+
+          if (isSuccess) {
+            if (onSuccess) onSuccess(response);
+          } else {
+            if (onError) onError(response);
+            else if (onFailure) onFailure(response);
+          }
+        }
+      } catch (error) {
+        hidePinModal();
+        hideLoader();
+        if (type === 'add-scanner') {
+          if (onError) onError(error);
+          else if (onFailure) onFailure(error);
+        }
+      }
     }
       
     

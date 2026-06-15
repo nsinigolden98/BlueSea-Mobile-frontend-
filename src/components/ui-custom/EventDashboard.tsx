@@ -85,6 +85,18 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
     showPinModal();
   };
 
+  const handleScannerSuccess = () => {
+    setAddingScanner(false);
+    setShowScannerModal(false);
+    setScannerEmail('');
+    showToast('Scanner added successfully.');
+  };
+
+  const handleScannerError = (error?: any) => {
+    setAddingScanner(false);
+    showToast(error?.message || 'Failed to add scanner. Please try again.');
+  };
+
   const handleConfirmWithdraw = () => {
     if (!event || profit <= 0) return;
     setWithdrawing(true);
@@ -233,7 +245,8 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
             </div>
           </div>
         )}
-{/* 5. Affiliate Promotion Section */}
+
+        {/* 5. Affiliate Promotion Section */}
         <div className="mb-8 p-5 bg-indigo-50/30 dark:bg-indigo-900/10 border border-indigo-100/50 dark:border-indigo-900/30 rounded-2xl">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -426,11 +439,18 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
                 </Button>
               </div>
             </div>
-            <PinComponent type="add-scanner" value={ { event_id: event.id, user_email: scannerEmail }} />
+            <PinComponent 
+              type="add-scanner" 
+              value={{ event_id: event.id, user_email: scannerEmail }} 
+              onSuccess={handleScannerSuccess}
+              onError={handleScannerError}
+              onFailure={handleScannerError}
+            />
+            <ToastComponent />
           </div>
         )}
 
-        {/* Withdraw Modal */}
+ {/* Withdraw Modal */}
         {showWithdrawModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl">
