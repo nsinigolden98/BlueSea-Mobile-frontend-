@@ -140,7 +140,7 @@ export function LightBills() {
     localStorage.setItem('light_recent_meters', JSON.stringify(updated));
   };
 
-  const handleContinue = async () => {
+    const handleContinue = async () => {
     if (!meterNumber || !meterType || !biller || !amount) {
       showToast('Please fill in all fields');
       return;
@@ -184,11 +184,24 @@ export function LightBills() {
       
       if (response.success) {
         const customerDetails = response.response || response.data || {};
-        setVerificationData(customerDetails);
-        setCustomer(`Customer: ${customerDetails.Customer_Name || 'Verified'}`);
-        setIsVerified(true);
+        
+        // STRICT CHECK: Ensure actual customer data was returned before verifying
+        if (customerDetails.Customer_Name || customerDetails.Customer_Number || customerDetails.Address) {
+          setVerificationData(customerDetails);
+          setCustomer(`Customer: ${customerDetails.Customer_Name || 'Verified'}`);
+          setIsVerified(true);
+        } else {
+          // Triggers if API returns 200 OK but payload is empty/null
+          showToast('Customer not found. Please check the meter details and try again.');
+          setIsVerified(false);
+          setVerificationData(null);
+          setCustomer('');
+        }
       } else {
         showToast(response.error || 'Failed to verify meter details.');
+        setIsVerified(false);
+        setVerificationData(null);
+        setCustomer('');
       }
       return;
     }
@@ -202,6 +215,7 @@ export function LightBills() {
     // Normal Payment Flow - Step 3: Trigger PIN Modal
     showPinModal();
   };
+
 
   const bodyDivRef = useRef<HTMLDivElement>(null);
 
