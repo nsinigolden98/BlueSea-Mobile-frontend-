@@ -443,13 +443,6 @@ export function Wallet() {
                   <CreditCard className="w-3 h-3" />
                   <span>Card</span>
                 </button>
-                <button 
-                  onClick={() => setGooglePayModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full text-[10px] font-bold text-white shadow-lg hover:bg-white/20 transition-all active:scale-90"
-                >
-                  <Smartphone className="w-3 h-3" />
-                  <span>G-Pay</span>
-                </button>
               </div>
               <BalanceCard
                 showActions={true}
@@ -738,33 +731,7 @@ export function Wallet() {
         </div>
       )}
 
-      {/* --- GOOGLE PAY COMING SOON MODAL --- */}
-      {googlePayModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 backdrop-blur-2xl bg-slate-950/40">
-          <div 
-            className="absolute inset-0" 
-            onClick={() => setGooglePayModalOpen(false)} 
-          />
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-10 w-full max-w-sm shadow-2xl text-center animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner border border-slate-100 dark:border-white/5">
-              <Smartphone className="w-10 h-10 text-sky-500" />
-            </div>
-            <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Google Pay</h3>
-            <div className="px-6 py-2 bg-sky-500/10 rounded-full inline-block mt-3">
-               <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">Coming Soon</p>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-6 leading-relaxed px-4">
-              We're working on bringing seamless Google Pay integration to your BlueSea wallet. Stay tuned for updates!
-            </p>
-            <Button 
-              onClick={() => setGooglePayModalOpen(false)}
-              className="w-full mt-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 h-14 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-950/20 dark:shadow-white/5 active:scale-95 transition-all"
-            >
-              Got it
-            </Button>
-          </div>
-        </div>
-      )}
+      
 
       {/* BlueSea Connect Confirmation Modal */}
       {isConnectConfirmOpen && (
