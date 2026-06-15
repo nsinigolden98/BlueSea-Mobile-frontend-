@@ -87,7 +87,6 @@ export function Wallet() {
 
   // --- Card Support States ---
   const [cardModalOpen, setCardModalOpen] = useState(false);
-  const [googlePayModalOpen, setGooglePayModalOpen] = useState(false);
   const [savedCard, setSavedCard] = useState<{ name: string; number: string; expiry: string } | null>(null);
   const [newCard, setNewCard] = useState({ name: '', number: '', expiry: '', cvv: '' });
 
