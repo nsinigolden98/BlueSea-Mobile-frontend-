@@ -17,7 +17,6 @@ import {
   Search, 
   ChevronLeft, 
   CreditCard, 
-  Smartphone, 
   CheckCircle2, 
   AlertCircle,
   Zap,
