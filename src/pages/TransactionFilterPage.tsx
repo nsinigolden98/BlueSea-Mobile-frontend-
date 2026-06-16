@@ -15,22 +15,22 @@ import { parseTransactionInfo, type ParsedTransaction } from '@/utils/transactio
 
 type DateFilter = 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'last_year' | 'custom' | 'all';
 
-// Helper to map parsed service providers to the exact endpoint slugs needed
+// Universal parser that normalizes any incoming database format into the exact slug the API requires
 const getBillerSlug = (provider: string = '') => {
-  const p = provider.toUpperCase();
-  if (p.includes('IKEDC')) return 'ikeja-electric';
-  if (p.includes('EKEDC')) return 'eko-electric';
-  if (p.includes('KEDCO')) return 'kano-electric';
-  if (p.includes('PHED')) return 'portharcourt-electric';
-  if (p.includes('JED')) return 'jos-electric';
-  if (p.includes('IBEDC')) return 'ibadan-electric';
-  if (p.includes('KAEDCO')) return 'kaduna-electric';
-  if (p.includes('AEDC')) return 'abuja-electric';
-  if (p.includes('EEDC')) return 'enugu-electric';
-  if (p.includes('BEDC')) return 'benin-electric';
-  if (p.includes('ABA')) return 'aba-electric';
-  if (p.includes('YEDC')) return 'yola-electric';
-  return '';
+  const p = provider.toLowerCase();
+  if (p.includes('ikeja') || p.includes('ikedc')) return 'ikeja-electric';
+  if (p.includes('eko') || p.includes('ekedc')) return 'eko-electric';
+  if (p.includes('kano') || p.includes('kedco')) return 'kano-electric';
+  if (p.includes('port') || p.includes('phed')) return 'portharcourt-electric';
+  if (p.includes('jos') || p.includes('jed')) return 'jos-electric';
+  if (p.includes('ibadan') || p.includes('ibedc')) return 'ibadan-electric';
+  if (p.includes('kaduna') || p.includes('kaedco')) return 'kaduna-electric';
+  if (p.includes('abuja') || p.includes('aedc')) return 'abuja-electric';
+  if (p.includes('enugu') || p.includes('eedc')) return 'enugu-electric';
+  if (p.includes('benin') || p.includes('bedc')) return 'benin-electric';
+  if (p.includes('aba')) return 'aba-electric';
+  if (p.includes('yola') || p.includes('yedc')) return 'yola-electric';
+  return provider; // Fallback directly to string if it's already a slug
 };
 
 export const TransactionFilterPage: React.FC = () => {
@@ -73,32 +73,64 @@ export const TransactionFilterPage: React.FC = () => {
     fetchTransactions();
   }, [showToast]);
 
-  // Live Electricity Metadata Fetcher
+  // RELENTLESS LIVE API DATA FETCH BLOCK
   useEffect(() => {
     const fetchLiveDetails = async () => {
-      if (!selectedTransaction || selectedTransaction.parsed.category !== 'ELECTRICITY') {
+      if (!selectedTransaction) return;
+
+      const category = selectedTransaction.parsed?.category || '';
+      const desc = (selectedTransaction.description || '').toUpperCase();
+      
+      // Target transaction fallback identifiers to confirm it is an electricity transaction
+      const isElectricity = category === 'ELECTRICITY' || desc.includes('LIGHT') || desc.includes('ELECTRIC') || desc.includes('METER');
+      
+      if (!isElectricity) {
         setLiveMeterData(null);
         return;
       }
 
-      const meterNum = selectedTransaction.parsed.meterNumber;
-      const billerSlug = getBillerSlug(selectedTransaction.parsed.serviceProvider);
+      const txAny = selectedTransaction as any;
       
-      if (!meterNum || !billerSlug) return;
+      // Highly robust multi-tier lookup sequence
+      const meterNum = txAny.billerCode || 
+                       txAny.metadata?.meter_number || 
+                       txAny.metadata?.billerCode || 
+                       txAny.parsed?.meterNumber ||
+                       txAny.recipient_number;
+
+      const rawBiller = txAny.biller_name || 
+                        txAny.metadata?.biller_name || 
+                        txAny.metadata?.plan ||
+                        txAny.parsed?.serviceProvider || 
+                        '';
+
+      const rawType = txAny.meter_type || 
+                      txAny.metadata?.meter_type || 
+                      txAny.metadata?.plan_type || 
+                      (txAny.parsed?.token ? 'prepaid' : 'postpaid');
+
+      const billerSlug = getBillerSlug(rawBiller);
+      const meterTypeFormatted = String(rawType).toLowerCase().includes('post') ? 'postpaid' : 'prepaid';
+      
+      if (!meterNum || !billerSlug) {
+        console.warn("BlueSea Platform: Data points insufficient for background query", { meterNum, billerSlug });
+        return;
+      }
 
       setLoadingMeterData(true);
       try {
         const data = {
           meter_number: Number(meterNum),
-          meter_type: selectedTransaction.parsed.token ? 'prepaid' : 'postpaid',
+          meter_type: meterTypeFormatted,
           biller: billerSlug
         };
+        
         const response = await postRequest(ENDPOINTS.electricity_user, data);
         if (response?.success) {
           setLiveMeterData(response.response || response.data || {});
         }
       } catch (error) {
-        console.error("Failed to fetch live meter details", error);
+        console.error("Live user payload processing failed:", error);
       } finally {
         setLoadingMeterData(false);
       }
@@ -190,7 +222,6 @@ export const TransactionFilterPage: React.FC = () => {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       <div className="flex-1 flex flex-col min-w-0">
-        {/* PREMIUM HEADER */}
         <header className="sticky top-0 z-30 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-4 py-5 flex items-center gap-4 transition-colors">
           <button 
             onClick={() => navigate(-1)} 
@@ -207,7 +238,6 @@ export const TransactionFilterPage: React.FC = () => {
         </header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full max-w-5xl mx-auto space-y-6">
-          
           {/* CONTROL CENTER */}
           <div className="bg-white dark:bg-slate-900/50 rounded-3xl p-5 border border-slate-200/50 dark:border-slate-800 shadow-sm dark:shadow-none">
             <div className="flex flex-col md:flex-row gap-4 items-end">
@@ -247,7 +277,6 @@ export const TransactionFilterPage: React.FC = () => {
               )}
             </div>
 
-            {/* FINANCIAL SUMMARY PELLETS */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-5 pt-5 border-t border-slate-100 dark:border-slate-800/50">
               <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl flex flex-col justify-center hidden md:flex">
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Volume</span>
@@ -264,7 +293,7 @@ export const TransactionFilterPage: React.FC = () => {
             </div>
           </div>
 
-          {/* SMART TRANSACTION LIST */}
+          {/* TRANSACTION LIST */}
           <div className="space-y-3">
             {loading ? (
                <div className="p-10 text-center text-slate-400 animate-pulse font-medium">Loading ledger...</div>
@@ -275,7 +304,10 @@ export const TransactionFilterPage: React.FC = () => {
             ) : (
               <div className="bg-white dark:bg-slate-900/30 rounded-3xl border border-slate-200/50 dark:border-slate-800 overflow-hidden shadow-sm dark:shadow-none divide-y divide-slate-100 dark:divide-slate-800/50">
                 {filteredTransactions.map((tx) => {
-                  const isElectricity = tx.parsed.category === 'ELECTRICITY';
+                  const category = tx.parsed?.category || '';
+                  const descUpper = (tx.description || '').toUpperCase();
+                  const isElectricity = category === 'ELECTRICITY' || descUpper.includes('LIGHT') || descUpper.includes('ELECTRIC') || descUpper.includes('METER');
+                  
                   const Icon = isElectricity ? Zap : tx.parsed.icon;
                   const isCredit = tx.transaction_type === 'CREDIT';
                   
@@ -297,10 +329,10 @@ export const TransactionFilterPage: React.FC = () => {
 
                         <div className="flex flex-col truncate min-w-0">
                           <span className="font-semibold text-slate-900 dark:text-slate-100 truncate text-sm md:text-base tracking-tight">
-                            {tx.parsed.title}
+                            {isElectricity ? 'Light Bill Purchase' : tx.parsed.title}
                           </span>
                           <span className="text-xs md:text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                            {tx.receiver_name || tx.sender_name || tx.parsed.recipientNumber || tx.parsed.recipientName || (tx.parsed.category === 'UNKNOWN' ? tx.description : tx.parsed.category.replace('_', ' '))}
+                            {tx.receiver_name || tx.sender_name || tx.parsed.recipientNumber || tx.parsed.recipientName || tx.description}
                           </span>
                         </div>
                       </div>
@@ -325,27 +357,30 @@ export const TransactionFilterPage: React.FC = () => {
         </main>
       </div>
 
-      {/* RECEIPT MODAL WITH DESCOPED TYPE RUNTIME ACCESS BYPASS */}
+      {/* RECEIPT MODAL */}
       {selectedTransaction && (() => {
         const dynamicTx = selectedTransaction as any;
+        const category = dynamicTx.parsed?.category || '';
+        const descUpper = (dynamicTx.description || '').toUpperCase();
+        const isElectricity = category === 'ELECTRICITY' || descUpper.includes('LIGHT') || descUpper.includes('ELECTRIC') || descUpper.includes('METER');
+        
+  // Dynamic variable access resolution paths
+        const matchedMeterNumber = dynamicTx.billerCode || dynamicTx.metadata?.meter_number || dynamicTx.metadata?.billerCode || dynamicTx.parsed?.meterNumber || dynamicTx.recipient_number || '-';
+        const matchedToken = dynamicTx.metadata?.token || dynamicTx.parsed?.token || dynamicTx.token;
+
         return (
           <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center sm:p-4 print:hidden">
-            <div className="absolute inset-0 bg-slate-900/60 dark:bg-[#050810]/80 backdrop-blur-sm transition-opacity" onClick={() => setSelectedTransaction(null)} />
+            <div className="absolute inset-0 bg-slate-900/60 dark:bg-[#050810]/80 backdrop-blur-sm" onClick={() => setSelectedTransaction(null)} />
             
-            <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-t-[2rem] md:rounded-[2rem] shadow-2xl dark:shadow-blue-900/5 max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200 border border-slate-200/50 dark:border-slate-800">
+            <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-t-[2rem] md:rounded-[2rem] shadow-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200 border border-slate-200/50 dark:border-slate-800">
               
-              {/* Modal Header */}
               <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-all shrink-0 aspect-square",
-                    dynamicTx.parsed.category === 'ELECTRICITY' ? "bg-amber-500 text-white animate-pulse" : "bg-blue-600 text-white"
+                    isElectricity ? "bg-amber-500 text-white" : "bg-blue-600 text-white"
                   )}>
-                    {dynamicTx.parsed.category === 'ELECTRICITY' ? (
-                      <Zap className="w-5 h-5 fill-current" />
-                    ) : (
-                      <dynamicTx.parsed.icon className="w-5 h-5" />
-                    )}
+                    {isElectricity ? <Zap className="w-5 h-5 fill-current" /> : <dynamicTx.parsed.icon className="w-5 h-5" />}
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 dark:text-white">Transaction Receipt</h3>
@@ -357,10 +392,7 @@ export const TransactionFilterPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Modal Body */}
               <div className="p-6 overflow-y-auto relative" id="printable-receipt">
-                
-{/* Massive Amount Display */}
                 <div className="text-center pb-6">
                   <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Total Cost</span>
                   <div className={cn(
@@ -376,50 +408,30 @@ export const TransactionFilterPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* INTEGRATED IDENTITY BANNER */}
-                {(dynamicTx.receiver_name || dynamicTx.sender_name) && (
-                  <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl flex items-center gap-3 border border-slate-100 dark:border-slate-800/60">
-                    <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-sm shrink-0 aspect-square">
-                      <User className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-slate-400 uppercase font-bold tracking-wider">Party Detail</p>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                        {dynamicTx.transaction_type === 'DEBIT' 
-                          ? `To: ${dynamicTx.receiver_name || 'BlueSea User'}`
-                          : `From: ${dynamicTx.sender_name || 'BlueSea User'}`
-                        }
-                      </p>
-                    </div>
-                    <ShieldCheck className="w-4 h-4 text-emerald-500 ml-auto shrink-0" />
-                  </div>
-                )}
-
-                {/* DEDICATED LIVE API ELECTRICITY METER CONFIGURATIONS */}
-                {dynamicTx.parsed.category === 'ELECTRICITY' && (
+                {/* LIGHT BILL CORE DESIGNATED INTERFACE */}
+                {isElectricity && (
                   <div className="mb-6 space-y-6 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl relative overflow-hidden">
-                    
                     <Zap className="absolute -right-6 -bottom-6 w-32 h-32 text-amber-500/[0.04] dark:text-amber-400/[0.03] pointer-events-none transform rotate-12 shrink-0 aspect-square" />
 
                     <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800 relative z-10">
-                      <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Meter Mode Variant</span>
+                      <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Meter Variant Mode</span>
                       <span className={cn(
                         "px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest",
-                        dynamicTx.parsed.token ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500"
+                        matchedToken ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500"
                       )}>
-                        {dynamicTx.parsed.token ? 'PREPAID' : 'POSTPAID'}
+                        {matchedToken ? 'PREPAID' : 'POSTPAID'}
                       </span>
                     </div>
 
-                    {dynamicTx.parsed.token && (
+                    {matchedToken && (
                       <div className="p-4 bg-sky-500/5 dark:bg-sky-500/10 border border-sky-500/20 rounded-xl space-y-1 relative z-10">
                         <Label className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-widest block">Token Number</Label>
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-lg font-mono font-black text-slate-900 dark:text-sky-100 tracking-wider">
-                            {dynamicTx.parsed.token.match(/.{1,4}/g)?.join('-') || dynamicTx.parsed.token}
+                            {String(matchedToken).match(/.{1,4}/g)?.join('-') || matchedToken}
                           </p>
                           <button 
-                            onClick={() => copyToClipboard(dynamicTx.parsed.token!, 'token')}
+                            onClick={() => copyToClipboard(String(matchedToken), 'token')}
                             className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sky-500 shrink-0"
                           >
                             {copiedId === 'token' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -428,24 +440,25 @@ export const TransactionFilterPage: React.FC = () => {
                       </div>
                     )}
 
+                    {/* ONLY 4 FIELDS PRESERVED HERE AS MANDATED */}
                     <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-xs pt-1 relative z-10">
                       <div>
                         <span className="text-slate-400 block mb-0.5">Customer Name</span>
                         <span className="font-bold text-slate-900 dark:text-slate-200 uppercase">
                           {loadingMeterData ? (
-                            <span className="animate-pulse text-slate-400">Fetching...</span>
+                            <span className="animate-pulse text-blue-500 font-semibold">Fetching...</span>
                           ) : (
-                            liveMeterData?.Customer_Name || dynamicTx.parsed.customerName || dynamicTx.metadata?.customerName || '-'
+                            liveMeterData?.Customer_Name || dynamicTx.parsed?.customerName || dynamicTx.metadata?.customerName || '-'
                           )}
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400 block mb-0.5">Customer Address</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-200 line-clamp-1 uppercase">
+                        <span className="font-bold text-slate-900 dark:text-slate-200 uppercase line-clamp-2">
                           {loadingMeterData ? (
-                            <span className="animate-pulse text-slate-400">Fetching...</span>
+                            <span className="animate-pulse text-blue-500 font-semibold">Fetching...</span>
                           ) : (
-                            liveMeterData?.Address || dynamicTx.parsed.customerAddress || dynamicTx.metadata?.customerAddress || '-'
+                            liveMeterData?.Address || dynamicTx.parsed?.customerAddress || dynamicTx.metadata?.customerAddress || '-'
                           )}
                         </span>
                       </div>
@@ -453,15 +466,15 @@ export const TransactionFilterPage: React.FC = () => {
                         <span className="text-slate-400 block mb-0.5">Customer Phone / Number</span>
                         <span className="font-bold text-slate-900 dark:text-slate-200 font-mono">
                           {loadingMeterData ? (
-                            <span className="animate-pulse text-slate-400">Fetching...</span>
+                            <span className="animate-pulse text-blue-500 font-semibold">Fetching...</span>
                           ) : (
-                            liveMeterData?.Customer_Number || dynamicTx.parsed.recipientNumber || dynamicTx.parsed.meterNumber || '-'
+                            liveMeterData?.Customer_Number || dynamicTx.metadata?.customerNumber || matchedMeterNumber
                           )}
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400 block mb-0.5">Token Units</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-200">
+                        <span className="font-bold text-slate-900 dark:text-slate-200 text-sm">
                           {dynamicTx.amount ? `${Math.floor(Number(dynamicTx.amount) / 70)} kWh` : '-'}
                         </span>
                       </div>
@@ -469,41 +482,30 @@ export const TransactionFilterPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Two Column Grid Architecture */}
+                {/* Standard Structural Ledger Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 relative z-10">
-                  {/* Column 1: Core Details */}
                   <div className="space-y-5">
                     <div>
                       <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Service Type</Label>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">{dynamicTx.parsed.title}</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">{isElectricity ? 'Electricity Bill' : dynamicTx.parsed.title}</p>
                     </div>
-                    
                     <div>
                       <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Date & Time</Label>
                       <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">{formatDate(dynamicTx.created_at)}</p>
                     </div>
-
                     <div>
-                      <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Full Description</Label>
+                      <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Activity Log Description</Label>
                       <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                         {dynamicTx.description}
                       </p>
                     </div>
                   </div>
 
-                  {/* Column 2: Extracted Metadata & References */}
                   <div className="space-y-5">
-                    {dynamicTx.parsed.recipientNumber && dynamicTx.parsed.category !== 'ELECTRICITY' && (
+                    {!isElectricity && dynamicTx.parsed.recipientNumber && (
                        <div>
-                         <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Target Phone</Label>
+                         <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Target Account/Phone</Label>
                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 font-mono">{dynamicTx.parsed.recipientNumber}</p>
-                       </div>
-                    )}
-
-                    {dynamicTx.parsed.meterNumber && dynamicTx.parsed.category !== 'ELECTRICITY' && (
-                       <div>
-                         <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Meter Number</Label>
-                         <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 font-mono">{dynamicTx.parsed.meterNumber}</p>
                        </div>
                     )}
 
@@ -518,16 +520,14 @@ export const TransactionFilterPage: React.FC = () => {
                         </button>
                       </div>
                     </div>
-                    
                     <div>
-                      <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">System ID</Label>
+                      <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">System Audit ID</Label>
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-500 font-mono">{dynamicTx.id}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Action Footer */}
               <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-3">
                 <Button 
                   variant="outline" 
@@ -548,7 +548,7 @@ export const TransactionFilterPage: React.FC = () => {
         );
       })()}
 
-      {/* SHARE FORMAT ACTION SHEET MODAL */}
+      {/* SHARE RECENT sheet */}
       {shareModalOpen && selectedTransaction && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-slate-950/40 p-4">
           <div className="absolute inset-0" onClick={() => setShareModalOpen(false)} />
@@ -588,7 +588,6 @@ export const TransactionFilterPage: React.FC = () => {
         </div>
       )}
 
-      {/* Global Print Layouts Injection */}
       <style>{`
         @media print {
           body * { visibility: hidden; }
