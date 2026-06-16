@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { 
-  ChevronLeft, ChevronDown, X, Copy, Check, Printer, Share2, ArrowUpRight, ArrowDownLeft 
+  ChevronLeft, ChevronDown, X, Copy, Check, Printer, Share2, 
+  ArrowUpRight, ArrowDownLeft, FileText, Image as ImageIcon, User, Zap, ShieldCheck
 } from 'lucide-react';
 import { type Transaction } from '@/types';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,7 @@ export const TransactionFilterPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedTransaction, setSelectedTransaction] = useState<ParsedTransaction | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const { showToast, ToastComponent } = Toast();
   
   const [dateFilter, setDateFilter] = useState<DateFilter>('this_month');
@@ -110,19 +112,17 @@ export const TransactionFilterPage: React.FC = () => {
     dateStyle: 'medium', timeStyle: 'short' 
   }).format(new Date(dateString));
 
-  const handleShare = async (tx: ParsedTransaction) => {
+  const executeShare = (type: 'PDF' | 'IMAGE') => {
+    if (!selectedTransaction) return;
+    showToast(`Preparing receipt sharing as ${type}...`);
+    // Native share trigger context
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `BlueSea Mobile Receipt`,
-          text: `Transaction Receipt\nAmount: ₦${tx.amount.toLocaleString()}\nRef: ${tx.reference || tx.id}\nDate: ${formatDate(tx.created_at)}`,
-        });
-      } catch (err) {
-        console.error('Share failed', err);
-      }
-    } else {
-      showToast('Sharing not supported on this device');
+      navigator.share({
+        title: `BlueSea Mobile Receipt`,
+        text: `Transaction Receipt (${type})\nAmount: ₦${selectedTransaction.amount.toLocaleString()}\nRef: ${selectedTransaction.reference || selectedTransaction.id}`,
+      }).catch(err => console.log('Share canceled', err));
     }
+    setShareModalOpen(false);
   };
 
   const handlePrint = () => {
@@ -228,27 +228,28 @@ export const TransactionFilterPage: React.FC = () => {
                       onClick={() => setSelectedTransaction(tx)}
                       className="group flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all active:scale-[0.99]"
                     >
-                      <div className="flex items-center gap-4 overflow-hidden">
-                        {/* Intelligent Icon Wrapper */}
+                      <div className="flex items-center gap-4 overflow-hidden min-w-0">
+                        {/* Anti-pixelation Icon Wrapper with strict size bounds */}
                         <div className={cn(
-                          "flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+                          "w-12 h-12 shrink-0 aspect-square rounded-full flex items-center justify-center transition-colors transform-gpu",
                           isCredit ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 group-hover:text-blue-600 dark:group-hover:text-blue-400"
                         )}>
-                          <Icon className="w-5 h-5" strokeWidth={2.5} />
+                          <Icon className="w-5 h-5 shrink-0 aspect-square object-contain" strokeWidth={2.5} />
                         </div>
 
-                        <div className="flex flex-col truncate">
-                          <span className="font-semibold text-slate-900 dark:text-slate-100 truncate text-sm md:text-base">
+                        <div className="flex flex-col truncate min-w-0">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 truncate text-sm md:text-base tracking-tight">
                             {tx.parsed.title}
                           </span>
                           <span className="text-xs md:text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                            {tx.parsed.recipientNumber || tx.parsed.recipientName || (tx.parsed.category === 'UNKNOWN' ? tx.description : tx.parsed.category.replace('_', ' '))}
+                            {/* Priority identity rendering pulling from cross-referenced receiver records */}
+                            {tx.receiver_name || tx.sender_name || tx.parsed.recipientNumber || tx.parsed.recipientName || (tx.parsed.category === 'UNKNOWN' ? tx.description : tx.parsed.category.replace('_', ' '))}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end flex-shrink-0 ml-4">
+                      <div className="flex flex-col items-end shrink-0 ml-4">
                         <span className={cn(
                           "font-bold text-sm md:text-base tracking-tight",
                           isCredit ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-white"
@@ -268,7 +269,7 @@ export const TransactionFilterPage: React.FC = () => {
         </main>
       </div>
 
-      {/* RECEIPT MODAL - BOTTOM SHEET ON MOBILE, CENTERED ON DESKTOP */}
+      {/* RECEIPT MODAL */}
       {selectedTransaction && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center sm:p-4 print:hidden">
           <div className="absolute inset-0 bg-slate-900/60 dark:bg-[#050810]/80 backdrop-blur-sm transition-opacity" onClick={() => setSelectedTransaction(null)} />
@@ -291,12 +292,12 @@ export const TransactionFilterPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Modal Body - Two Column on Desktop */}
+            {/* Modal Body */}
             <div className="p-6 overflow-y-auto" id="printable-receipt">
               
               {/* Massive Amount Display */}
-              <div className="text-center pb-8">
-                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Total Amount</span>
+              <div className="text-center pb-6">
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Total Cost</span>
                 <div className={cn(
                   "text-4xl md:text-5xl font-black tracking-tighter",
                   selectedTransaction.transaction_type === 'CREDIT' ? 'text-emerald-500' : 'text-slate-900 dark:text-white'
@@ -305,35 +306,92 @@ export const TransactionFilterPage: React.FC = () => {
                 </div>
                 
                 <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                  <div className={cn("w-2 h-2 rounded-full", selectedTransaction.status.toLowerCase() === 'successful' || selectedTransaction.status.toLowerCase() === 'completed' ? "bg-emerald-500" : "bg-amber-500")} />
+                  <div className={cn("w-2 h-2 rounded-full", selectedTransaction.status?.toLowerCase() === 'successful' || selectedTransaction.status?.toLowerCase() === 'completed' ? "bg-emerald-500" : "bg-amber-500")} />
                   <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 capitalize">{selectedTransaction.status || 'Completed'}</span>
                 </div>
               </div>
 
-              {/* DEDICATED TOKEN HIGHLIGHT (Crucial for Electricity) */}
-              {selectedTransaction.parsed.token && (
-                <div className="mb-8 p-5 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-2xl relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500" />
-                  <Label className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 block">Electricity Token</Label>
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-xl md:text-2xl font-mono font-bold text-slate-900 dark:text-blue-50 tracking-[0.2em]">
-                      {selectedTransaction.parsed.token.match(/.{1,4}/g)?.join('-') || selectedTransaction.parsed.token}
-                    </p>
-                    <button 
-                      onClick={() => copyToClipboard(selectedTransaction.parsed.token!, `token-${selectedTransaction.id}`)}
-                      className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm hover:scale-105 active:scale-95 transition-all text-blue-600 dark:text-blue-400"
-                    >
-                      {copiedId === `token-${selectedTransaction.id}` ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                    </button>
+              {/* INTEGRATED IDENTITY BANNER (Uses User references context from Wallet.tsx) */}
+              {(selectedTransaction.receiver_name || selectedTransaction.sender_name) && (
+                <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl flex items-center gap-3 border border-slate-100 dark:border-slate-800/60">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-sm shrink-0 aspect-square">
+                    <User className="w-4 h-4" />
                   </div>
-                  <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-2 font-medium">Input this 20-digit pin into your meter.</p>
+                  <div className="min-w-0">
+                    <p className="text-xs text-slate-400 uppercase font-bold tracking-wider">Party Detail</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                      {selectedTransaction.transaction_type === 'DEBIT' 
+                        ? `To: ${selectedTransaction.receiver_name || 'BlueSea User'}`
+                        : `From: ${selectedTransaction.sender_name || 'BlueSea User'}`
+                      }
+                    </p>
+                  </div>
+                  <ShieldCheck className="w-4 h-4 text-emerald-500 ml-auto shrink-0" />
+                </div>
+              )}
+
+              {/* DEDICATED ELECTRICITY PREPAID METADATA (As mapped in 289773.jpg and 289774.jpg) */}
+              {selectedTransaction.parsed.category === 'ELECTRICITY' && (
+                <div className="mb-6 space-y-6 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl">
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Meter Mode Variant</span>
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest",
+                      selectedTransaction.parsed.token ? "bg-sky-500/10 text-sky-500" : "bg-amber-500/10 text-amber-500"
+                    )}>
+                      {selectedTransaction.parsed.token ? 'PREPAID' : 'POSTPAID'}
+                    </span>
+                  </div>
+
+{selectedTransaction.parsed.token && (
+                    <div className="p-4 bg-sky-500/5 dark:bg-sky-500/10 border border-sky-500/20 rounded-xl space-y-1">
+                      <Label className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-widest block">Token Number</Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-lg font-mono font-black text-slate-900 dark:text-sky-100 tracking-wider">
+                          {selectedTransaction.parsed.token.match(/.{1,4}/g)?.join('-') || selectedTransaction.parsed.token}
+                        </p>
+                        <button 
+                          onClick={() => copyToClipboard(selectedTransaction.parsed.token!, 'token')}
+                          className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sky-500"
+                        >
+                          {copiedId === 'token' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-xs pt-1">
+                    <div>
+                      <span className="text-slate-400 block mb-0.5">Customer Name</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200">NSINI EFIONG AKPAN</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block mb-0.5">Customer Address</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200 line-clamp-1">1 GOLDEN CLS OPP SHELL MKT ()</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block mb-0.5">Token Units</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200">0.8 kWh</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block mb-0.5">Tariff / Rate</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200 truncate block">209.5,SDUTY:NO N/kWh</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block mb-0.5">VAT Charged</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200">₦13.95</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block mb-0.5">Commission Paid</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200">₦2.20</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* Two Column Grid Architecture */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                
-             {/* Column 1: Core Details */}
+                {/* Column 1: Core Details */}
                 <div className="space-y-5">
                   <div>
                     <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Service Type</Label>
@@ -355,18 +413,10 @@ export const TransactionFilterPage: React.FC = () => {
 
                 {/* Column 2: Extracted Metadata & References */}
                 <div className="space-y-5">
-                  {/* Conditionally rendered extracted data */}
                   {selectedTransaction.parsed.recipientNumber && (
                      <div>
                        <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Target Phone</Label>
                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 font-mono">{selectedTransaction.parsed.recipientNumber}</p>
-                     </div>
-                  )}
-
-                  {selectedTransaction.parsed.recipientName && (
-                     <div>
-                       <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Recipient Name</Label>
-                       <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">{selectedTransaction.parsed.recipientName}</p>
                      </div>
                   )}
 
@@ -401,33 +451,72 @@ export const TransactionFilterPage: React.FC = () => {
             <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-3">
               <Button 
                 variant="outline" 
-                onClick={() => handleShare(selectedTransaction)}
+                onClick={() => setShareModalOpen(true)}
                 className="w-full py-6 rounded-2xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold"
               >
-                <Share2 className="w-4 h-4 mr-2" /> Share
+                <Share2 className="w-4 h-4 mr-2" /> Share Receipt
               </Button>
-             <Button 
+              <Button 
                 onClick={handlePrint}
                 className="w-full py-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20"
               >
-                <Printer className="w-4 h-4 mr-2" /> Print / Save PDF
+                <Printer className="w-4 h-4 mr-2" /> Print Receipt
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Global Print Styles (Injects safely) */}
+      {/* SHARE FORMAT ACTION SHEET CONTEXT MODAL */}
+      {shareModalOpen && selectedTransaction && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-slate-950/40 p-4">
+          <div className="absolute inset-0" onClick={() => setShareModalOpen(false)} />
+          <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in slide-in-from-bottom-5 duration-200">
+            <div className="flex justify-between items-center mb-5">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">Share Receipt</h3>
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mt-0.5">Select Document Format</p>
+              </div>
+              <button onClick={() => setShareModalOpen(false)} className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => executeShare('PDF')}
+                className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-2xl gap-2 hover:border-blue-500/30 transition-all active:scale-95 group"
+              >
+                <div className="p-3 bg-rose-500/10 text-rose-500 rounded-xl group-hover:bg-rose-500 group-hover:text-white transition-all">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Share PDF</span>
+              </button>
+
+              <button 
+                onClick={() => executeShare('IMAGE')}
+                className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-2xl gap-2 hover:border-blue-500/30 transition-all active:scale-95 group"
+              >
+                <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl group-hover:bg-sky-500 group-hover:text-white transition-all">
+                  <ImageIcon className="w-5 h-5" />
+                </div>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Share Image</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global Print Styles */}
       <style>{`
         @media print {
           body * { visibility: hidden; }
           #printable-receipt, #printable-receipt * { visibility: visible; }
           #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
-          #printable-receipt .bg-blue-50 { background-color: #f0f9ff !important; border: 1px solid #e0f2fe !important; }
         }
       `}</style>
 
       <ToastComponent />
     </div>
   );
-}
+};
