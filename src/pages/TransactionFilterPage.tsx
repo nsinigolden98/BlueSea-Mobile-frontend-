@@ -8,12 +8,30 @@ import {
   ChevronLeft, ChevronDown, X, Copy, Check, Printer, Share2, 
   ArrowUpRight, ArrowDownLeft, FileText, Image as ImageIcon, User, Zap, ShieldCheck
 } from 'lucide-react';
-import { type Transaction } from '@/types';
+import { type Transaction, ENDPOINTS, postRequest } from '@/types';
 import { cn } from '@/lib/utils';
 import { TransactionsData } from '@/data';
 import { parseTransactionInfo, type ParsedTransaction } from '@/utils/transactionParser';
 
 type DateFilter = 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'last_year' | 'custom' | 'all';
+
+// Helper to map parsed service providers to the exact endpoint slugs needed
+const getBillerSlug = (provider: string = '') => {
+  const p = provider.toUpperCase();
+  if (p.includes('IKEDC')) return 'ikeja-electric';
+  if (p.includes('EKEDC')) return 'eko-electric';
+  if (p.includes('KEDCO')) return 'kano-electric';
+  if (p.includes('PHED')) return 'portharcourt-electric';
+  if (p.includes('JED')) return 'jos-electric';
+  if (p.includes('IBEDC')) return 'ibadan-electric';
+  if (p.includes('KAEDCO')) return 'kaduna-electric';
+  if (p.includes('AEDC')) return 'abuja-electric';
+  if (p.includes('EEDC')) return 'enugu-electric';
+  if (p.includes('BEDC')) return 'benin-electric';
+  if (p.includes('ABA')) return 'aba-electric';
+  if (p.includes('YEDC')) return 'yola-electric';
+  return '';
+};
 
 export const TransactionFilterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,12 +41,18 @@ export const TransactionFilterPage: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<ParsedTransaction | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  
+  // Live Endpoint Verification States
+  const [liveMeterData, setLiveMeterData] = useState<any>(null);
+  const [loadingMeterData, setLoadingMeterData] = useState(false);
+  
   const { showToast, ToastComponent } = Toast();
   
   const [dateFilter, setDateFilter] = useState<DateFilter>('this_month');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
+  // Initial Transaction Fetch
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -48,6 +72,40 @@ export const TransactionFilterPage: React.FC = () => {
     };
     fetchTransactions();
   }, [showToast]);
+
+  // Live Electricity Metadata Fetcher
+  useEffect(() => {
+    const fetchLiveDetails = async () => {
+      if (!selectedTransaction || selectedTransaction.parsed.category !== 'ELECTRICITY') {
+        setLiveMeterData(null);
+        return;
+      }
+
+      const meterNum = selectedTransaction.parsed.meterNumber;
+      const billerSlug = getBillerSlug(selectedTransaction.parsed.serviceProvider);
+      
+      if (!meterNum || !billerSlug) return;
+
+      setLoadingMeterData(true);
+      try {
+        const data = {
+          meter_number: Number(meterNum),
+          meter_type: selectedTransaction.parsed.token ? 'prepaid' : 'postpaid',
+          biller: billerSlug
+        };
+        const response = await postRequest(ENDPOINTS.electricity_user, data);
+        if (response?.success) {
+          setLiveMeterData(response.response || response.data || {});
+        }
+      } catch (error) {
+        console.error("Failed to fetch live meter details", error);
+      } finally {
+        setLoadingMeterData(false);
+      }
+    };
+
+    fetchLiveDetails();
+  }, [selectedTransaction]);
 
   const filteredTransactions = useMemo(() => {
     const start = new Date();
@@ -302,7 +360,7 @@ export const TransactionFilterPage: React.FC = () => {
               {/* Modal Body */}
               <div className="p-6 overflow-y-auto relative" id="printable-receipt">
                 
-                {/* Massive Amount Display */}
+{/* Massive Amount Display */}
                 <div className="text-center pb-6">
                   <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Total Cost</span>
                   <div className={cn(
@@ -337,7 +395,7 @@ export const TransactionFilterPage: React.FC = () => {
                   </div>
                 )}
 
-     {/* DEDICATED DYNAMIC ELECTRICITY METER CONFIGURATIONS */}
+                {/* DEDICATED LIVE API ELECTRICITY METER CONFIGURATIONS */}
                 {dynamicTx.parsed.category === 'ELECTRICITY' && (
                   <div className="mb-6 space-y-6 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl relative overflow-hidden">
                     
@@ -374,37 +432,37 @@ export const TransactionFilterPage: React.FC = () => {
                       <div>
                         <span className="text-slate-400 block mb-0.5">Customer Name</span>
                         <span className="font-bold text-slate-900 dark:text-slate-200 uppercase">
-                          {dynamicTx.parsed.customerName || dynamicTx.metadata?.customerName || '-'}
+                          {loadingMeterData ? (
+                            <span className="animate-pulse text-slate-400">Fetching...</span>
+                          ) : (
+                            liveMeterData?.Customer_Name || dynamicTx.parsed.customerName || dynamicTx.metadata?.customerName || '-'
+                          )}
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400 block mb-0.5">Customer Address</span>
                         <span className="font-bold text-slate-900 dark:text-slate-200 line-clamp-1 uppercase">
-                          {dynamicTx.parsed.customerAddress || dynamicTx.metadata?.customerAddress || '-'}
+                          {loadingMeterData ? (
+                            <span className="animate-pulse text-slate-400">Fetching...</span>
+                          ) : (
+                            liveMeterData?.Address || dynamicTx.parsed.customerAddress || dynamicTx.metadata?.customerAddress || '-'
+                          )}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block mb-0.5">Customer Phone / Number</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-200 font-mono">
+                          {loadingMeterData ? (
+                            <span className="animate-pulse text-slate-400">Fetching...</span>
+                          ) : (
+                            liveMeterData?.Customer_Number || dynamicTx.parsed.recipientNumber || dynamicTx.parsed.meterNumber || '-'
+                          )}
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400 block mb-0.5">Token Units</span>
                         <span className="font-bold text-slate-900 dark:text-slate-200">
-                          {dynamicTx.parsed.tokenUnits || dynamicTx.metadata?.tokenUnits || '-'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block mb-0.5">Tariff / Rate</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-200 truncate block">
-                          {dynamicTx.parsed.tariff || dynamicTx.metadata?.tariff || '-'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block mb-0.5">VAT Charged</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-200">
-                          {dynamicTx.parsed.vat ? `₦${Number(dynamicTx.parsed.vat).toLocaleString()}` : dynamicTx.metadata?.vat ? `₦${dynamicTx.metadata.vat}` : '-'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block mb-0.5">Commission Paid</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-200">
-                          {dynamicTx.parsed.commission ? `₦${Number(dynamicTx.parsed.commission).toLocaleString()}` : dynamicTx.metadata?.commission ? `₦${dynamicTx.metadata.commission}` : '-'}
+                          {dynamicTx.amount ? `${Math.floor(Number(dynamicTx.amount) / 70)} kWh` : '-'}
                         </span>
                       </div>
                     </div>
@@ -435,14 +493,14 @@ export const TransactionFilterPage: React.FC = () => {
 
                   {/* Column 2: Extracted Metadata & References */}
                   <div className="space-y-5">
-                    {dynamicTx.parsed.recipientNumber && (
+                    {dynamicTx.parsed.recipientNumber && dynamicTx.parsed.category !== 'ELECTRICITY' && (
                        <div>
                          <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Target Phone</Label>
                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 font-mono">{dynamicTx.parsed.recipientNumber}</p>
                        </div>
                     )}
 
-                    {dynamicTx.parsed.meterNumber && (
+                    {dynamicTx.parsed.meterNumber && dynamicTx.parsed.category !== 'ELECTRICITY' && (
                        <div>
                          <Label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Meter Number</Label>
                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 font-mono">{dynamicTx.parsed.meterNumber}</p>
