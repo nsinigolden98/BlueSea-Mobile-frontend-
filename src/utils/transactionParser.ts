@@ -1,10 +1,14 @@
 import { type Transaction } from '@/types';
-import { Zap, Phone, Wifi, Send, MonitorPlay, GraduationCap, ShoppingCart, Ticket, Gift, CreditCard, Users, Landmark, type LucideIcon } from 'lucide-react';
+import { 
+  Zap, Phone, Wifi, Send, MonitorPlay, GraduationCap, 
+  ShoppingCart, Ticket, Gift, CreditCard, Users, Landmark, 
+  type LucideIcon 
+} from 'lucide-react';
 
 export type TransactionCategory = 
   | 'ELECTRICITY' | 'AIRTIME' | 'DATA' | 'WALLET_FUNDING' 
   | 'INTERNAL_TRANSFER' | 'WITHDRAWAL' | 'CABLE_TV' 
-  | 'EDUCATION' | 'MARKETPLACE' | 'GROUP_PAYMENT' | 'UNKNOWN';
+  | 'EDUCATION' | 'MARKETPLACE' | 'GROUP_PAYMENT' | 'REWARD' | 'UNKNOWN';
 
 export interface ParsedDetails {
   category: TransactionCategory;
@@ -96,13 +100,25 @@ export const parseTransactionInfo = (transaction: Transaction): ParsedDetails =>
     details.serviceProvider = desc.match(PATTERNS.EDUCATION)?.[1];
     details.title = `${details.serviceProvider} Registration/Result`;
   }
-  // 8. Marketplace / Tickets
-  else if (desc.includes('EVENT') || desc.includes('TICKET') || desc.includes('MARKETPLACE')) {
+  // 8. Marketplace - Event Tickets
+  else if (desc.includes('EVENT') || desc.includes('TICKET')) {
     details.category = 'MARKETPLACE';
     details.icon = Ticket;
+    details.title = 'Event Ticket Purchase';
+  }
+  // 9. Marketplace - Physical Store Items (Uses ShoppingCart)
+  else if (desc.includes('MARKETPLACE') || desc.includes('SHOP') || desc.includes('STORE')) {
+    details.category = 'MARKETPLACE';
+    details.icon = ShoppingCart;
     details.title = 'Marketplace Purchase';
   }
-  // 9. Groups
+  // 10. Platform Financial Rewards & Cashbacks (Uses Gift)
+  else if (desc.includes('CASHBACK') || desc.includes('BONUS') || desc.includes('REWARD') || desc.includes('REFERRAL')) {
+    details.category = 'REWARD';
+    details.icon = Gift;
+    details.title = 'Reward / Cashback Credit';
+  }
+  // 11. Groups
   else if (desc.includes('GROUP')) {
     details.category = 'GROUP_PAYMENT';
     details.icon = Users;

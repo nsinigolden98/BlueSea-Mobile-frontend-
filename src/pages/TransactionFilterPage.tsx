@@ -15,7 +15,7 @@ import { parseTransactionInfo, type ParsedTransaction } from '@/utils/transactio
 
 type DateFilter = 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'last_year' | 'custom' | 'all';
 
-export function TransactionFilterPage() {
+export const TransactionFilterPage: React.FC = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [transactions, setTransactions] = useState<ParsedTransaction[]>([]);
@@ -32,7 +32,7 @@ export function TransactionFilterPage() {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        const rawTransactions = await TransactionsData();
+        const rawTransactions: Transaction[] = await TransactionsData();
         // Pass through intelligence layer
         const parsedData = rawTransactions.map(tx => ({
           ...tx,
@@ -407,11 +407,11 @@ export function TransactionFilterPage() {
               >
                 <Share2 className="w-4 h-4 mr-2" /> Share
               </Button>
-              <Button 
+             <Button 
                 onClick={handlePrint}
                 className="w-full py-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20"
               >
-                <DownloadCloud className="w-4 h-4 mr-2" /> Save PDF
+                <Printer className="w-4 h-4 mr-2" /> Print / Save PDF
               </Button>
             </div>
           </div>
