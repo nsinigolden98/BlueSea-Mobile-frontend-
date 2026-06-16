@@ -228,7 +228,6 @@ export const TransactionFilterPage: React.FC = () => {
                       className="group flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all active:scale-[0.99]"
                     >
                       <div className="flex items-center gap-4 overflow-hidden min-w-0">
-                        {/* Anti-pixelation layout structure protection wrapper */}
                         <div className={cn(
                           "w-12 h-12 shrink-0 aspect-square rounded-full flex items-center justify-center transition-colors transform-gpu",
                           isCredit ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
@@ -336,11 +335,10 @@ export const TransactionFilterPage: React.FC = () => {
                 </div>
               )}
 
-  {/* DEDICATED ELECTRICITY METER CONFIGURATIONS */}
+  {/* DEDICATED DYNAMIC ELECTRICITY METER CONFIGURATIONS */}
               {selectedTransaction.parsed.category === 'ELECTRICITY' && (
                 <div className="mb-6 space-y-6 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl relative overflow-hidden">
                   
-                  {/* Luxury Background Ambient Zap Watermark Accent */}
                   <Zap className="absolute -right-6 -bottom-6 w-32 h-32 text-amber-500/[0.04] dark:text-amber-400/[0.03] pointer-events-none transform rotate-12 shrink-0 aspect-square" />
 
                   <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800 relative z-10">
@@ -373,27 +371,39 @@ export const TransactionFilterPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-xs pt-1 relative z-10">
                     <div>
                       <span className="text-slate-400 block mb-0.5">Customer Name</span>
-                      <span className="font-bold text-slate-900 dark:text-slate-200">NSINI EFIONG AKPAN</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200 uppercase">
+                        {selectedTransaction.parsed.customerName || selectedTransaction.metadata?.customerName || '-'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-slate-400 block mb-0.5">Customer Address</span>
-                      <span className="font-bold text-slate-900 dark:text-slate-200 line-clamp-1">1 GOLDEN CLS OPP SHELL MKT ()</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200 line-clamp-1 uppercase">
+                        {selectedTransaction.parsed.customerAddress || selectedTransaction.metadata?.customerAddress || '-'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-slate-400 block mb-0.5">Token Units</span>
-                      <span className="font-bold text-slate-900 dark:text-slate-200">0.8 kWh</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200">
+                        {selectedTransaction.parsed.tokenUnits || selectedTransaction.metadata?.tokenUnits || '-'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-slate-400 block mb-0.5">Tariff / Rate</span>
-                      <span className="font-bold text-slate-900 dark:text-slate-200 truncate block">209.5,SDUTY:NO N/kWh</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200 truncate block">
+                        {selectedTransaction.parsed.tariff || selectedTransaction.metadata?.tariff || '-'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-slate-400 block mb-0.5">VAT Charged</span>
-                      <span className="font-bold text-slate-900 dark:text-slate-200">₦13.95</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200">
+                        {selectedTransaction.parsed.vat ? `₦${Number(selectedTransaction.parsed.vat).toLocaleString()}` : selectedTransaction.metadata?.vat ? `₦${selectedTransaction.metadata.vat}` : '-'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-slate-400 block mb-0.5">Commission Paid</span>
-                      <span className="font-bold text-slate-900 dark:text-slate-200">₦2.20</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-200">
+                        {selectedTransaction.parsed.commission ? `₦${Number(selectedTransaction.parsed.commission).toLocaleString()}` : selectedTransaction.metadata?.commission ? `₦${selectedTransaction.metadata.commission}` : '-'}
+                      </span>
                     </div>
                   </div>
                 </div>
