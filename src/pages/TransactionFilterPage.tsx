@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { 
-  ChevronLeft, ChevronDown, X, Copy, Check, Printer, Share2, 
-  DownloadCloud, ArrowUpRight, ArrowDownLeft 
+  ChevronLeft, ChevronDown, X, Copy, Check, Printer, Share2, ArrowUpRight, ArrowDownLeft 
 } from 'lucide-react';
 import { type Transaction } from '@/types';
 import { cn } from '@/lib/utils';
