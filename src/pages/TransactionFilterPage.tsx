@@ -34,7 +34,6 @@ export const TransactionFilterPage: React.FC = () => {
       try {
         setLoading(true);
         const rawTransactions: Transaction[] = await TransactionsData();
-        // Pass through intelligence layer
         const parsedData = rawTransactions.map(tx => ({
           ...tx,
           parsed: parseTransactionInfo(tx)
@@ -115,7 +114,6 @@ export const TransactionFilterPage: React.FC = () => {
   const executeShare = (type: 'PDF' | 'IMAGE') => {
     if (!selectedTransaction) return;
     showToast(`Preparing receipt sharing as ${type}...`);
-    // Native share trigger context
     if (navigator.share) {
       navigator.share({
         title: `BlueSea Mobile Receipt`,
@@ -219,7 +217,8 @@ export const TransactionFilterPage: React.FC = () => {
             ) : (
               <div className="bg-white dark:bg-slate-900/30 rounded-3xl border border-slate-200/50 dark:border-slate-800 overflow-hidden shadow-sm dark:shadow-none divide-y divide-slate-100 dark:divide-slate-800/50">
                 {filteredTransactions.map((tx) => {
-                  const Icon = tx.parsed.icon;
+                  const isElectricity = tx.parsed.category === 'ELECTRICITY';
+                  const Icon = isElectricity ? Zap : tx.parsed.icon;
                   const isCredit = tx.transaction_type === 'CREDIT';
                   
                   return (
@@ -229,13 +228,14 @@ export const TransactionFilterPage: React.FC = () => {
                       className="group flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all active:scale-[0.99]"
                     >
                       <div className="flex items-center gap-4 overflow-hidden min-w-0">
-                        {/* Anti-pixelation Icon Wrapper with strict size bounds */}
+                        {/* Anti-pixelation layout structure protection wrapper */}
                         <div className={cn(
                           "w-12 h-12 shrink-0 aspect-square rounded-full flex items-center justify-center transition-colors transform-gpu",
                           isCredit ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
-                                   : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                                   : isElectricity ? "bg-amber-500/10 text-amber-500 dark:text-amber-400"
+                                                   : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 group-hover:text-blue-600 dark:group-hover:text-blue-400"
                         )}>
-                          <Icon className="w-5 h-5 shrink-0 aspect-square object-contain" strokeWidth={2.5} />
+                          <Icon className={cn("w-5 h-5 shrink-0 aspect-square object-contain", isElectricity && "fill-current")} strokeWidth={2.5} />
                         </div>
 
                         <div className="flex flex-col truncate min-w-0">
@@ -243,7 +243,6 @@ export const TransactionFilterPage: React.FC = () => {
                             {tx.parsed.title}
                           </span>
                           <span className="text-xs md:text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                            {/* Priority identity rendering pulling from cross-referenced receiver records */}
                             {tx.receiver_name || tx.sender_name || tx.parsed.recipientNumber || tx.parsed.recipientName || (tx.parsed.category === 'UNKNOWN' ? tx.description : tx.parsed.category.replace('_', ' '))}
                           </span>
                         </div>
@@ -279,8 +278,15 @@ export const TransactionFilterPage: React.FC = () => {
             {/* Modal Header */}
             <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-inner">
-                  <selectedTransaction.parsed.icon className="w-5 h-5 text-white" />
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-all shrink-0 aspect-square",
+                  selectedTransaction.parsed.category === 'ELECTRICITY' ? "bg-amber-500 text-white animate-pulse" : "bg-blue-600 text-white"
+                )}>
+                  {selectedTransaction.parsed.category === 'ELECTRICITY' ? (
+                    <Zap className="w-5 h-5 fill-current" />
+                  ) : (
+                    <selectedTransaction.parsed.icon className="w-5 h-5" />
+                  )}
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white">Transaction Receipt</h3>
@@ -293,7 +299,7 @@ export const TransactionFilterPage: React.FC = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto" id="printable-receipt">
+            <div className="p-6 overflow-y-auto relative" id="printable-receipt">
               
               {/* Massive Amount Display */}
               <div className="text-center pb-6">
@@ -311,7 +317,7 @@ export const TransactionFilterPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* INTEGRATED IDENTITY BANNER (Uses User references context from Wallet.tsx) */}
+              {/* INTEGRATED IDENTITY BANNER */}
               {(selectedTransaction.receiver_name || selectedTransaction.sender_name) && (
                 <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl flex items-center gap-3 border border-slate-100 dark:border-slate-800/60">
                   <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-sm shrink-0 aspect-square">
@@ -330,10 +336,14 @@ export const TransactionFilterPage: React.FC = () => {
                 </div>
               )}
 
-              {/* DEDICATED ELECTRICITY PREPAID METADATA (As mapped in 289773.jpg and 289774.jpg) */}
+  {/* DEDICATED ELECTRICITY METER CONFIGURATIONS */}
               {selectedTransaction.parsed.category === 'ELECTRICITY' && (
-                <div className="mb-6 space-y-6 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl">
-                  <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="mb-6 space-y-6 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl relative overflow-hidden">
+                  
+                  {/* Luxury Background Ambient Zap Watermark Accent */}
+                  <Zap className="absolute -right-6 -bottom-6 w-32 h-32 text-amber-500/[0.04] dark:text-amber-400/[0.03] pointer-events-none transform rotate-12 shrink-0 aspect-square" />
+
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800 relative z-10">
                     <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">Meter Mode Variant</span>
                     <span className={cn(
                       "px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest",
@@ -343,8 +353,8 @@ export const TransactionFilterPage: React.FC = () => {
                     </span>
                   </div>
 
-{selectedTransaction.parsed.token && (
-                    <div className="p-4 bg-sky-500/5 dark:bg-sky-500/10 border border-sky-500/20 rounded-xl space-y-1">
+                  {selectedTransaction.parsed.token && (
+                    <div className="p-4 bg-sky-500/5 dark:bg-sky-500/10 border border-sky-500/20 rounded-xl space-y-1 relative z-10">
                       <Label className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-widest block">Token Number</Label>
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-lg font-mono font-black text-slate-900 dark:text-sky-100 tracking-wider">
@@ -352,7 +362,7 @@ export const TransactionFilterPage: React.FC = () => {
                         </p>
                         <button 
                           onClick={() => copyToClipboard(selectedTransaction.parsed.token!, 'token')}
-                          className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sky-500"
+                          className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sky-500 shrink-0"
                         >
                           {copiedId === 'token' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         </button>
@@ -360,7 +370,7 @@ export const TransactionFilterPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-xs pt-1">
+                  <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-xs pt-1 relative z-10">
                     <div>
                       <span className="text-slate-400 block mb-0.5">Customer Name</span>
                       <span className="font-bold text-slate-900 dark:text-slate-200">NSINI EFIONG AKPAN</span>
@@ -390,7 +400,7 @@ export const TransactionFilterPage: React.FC = () => {
               )}
 
               {/* Two Column Grid Architecture */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 relative z-10">
                 {/* Column 1: Core Details */}
                 <div className="space-y-5">
                   <div>
@@ -433,7 +443,7 @@ export const TransactionFilterPage: React.FC = () => {
                       <p className="text-sm font-semibold text-slate-900 dark:text-slate-200 font-mono truncate">
                         {selectedTransaction.reference || selectedTransaction.id}
                       </p>
-                      <button onClick={() => copyToClipboard(selectedTransaction.reference || String(selectedTransaction.id), 'ref')} className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                      <button onClick={() => copyToClipboard(selectedTransaction.reference || String(selectedTransaction.id), 'ref')} className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-50 dark:bg-slate-800 rounded-lg shrink-0">
                         {copiedId === 'ref' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
@@ -467,7 +477,7 @@ export const TransactionFilterPage: React.FC = () => {
         </div>
       )}
 
-      {/* SHARE FORMAT ACTION SHEET CONTEXT MODAL */}
+      {/* SHARE FORMAT ACTION SHEET MODAL */}
       {shareModalOpen && selectedTransaction && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-slate-950/40 p-4">
           <div className="absolute inset-0" onClick={() => setShareModalOpen(false)} />
@@ -507,7 +517,7 @@ export const TransactionFilterPage: React.FC = () => {
         </div>
       )}
 
-      {/* Global Print Styles */}
+      {/* Global Print Layouts Injection */}
       <style>{`
         @media print {
           body * { visibility: hidden; }
