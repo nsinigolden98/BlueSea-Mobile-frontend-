@@ -17,7 +17,7 @@ export interface User {
   transactions?: Transaction[];
   referral_code: string;
 }
-
+ 
 // Transaction Types
 export interface Transaction {
     id: number;
