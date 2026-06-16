@@ -251,7 +251,7 @@ export const TransactionFilterPage: React.FC = () => {
                       <div className="flex flex-col items-end shrink-0 ml-4">
                         <span className={cn(
                           "font-bold text-sm md:text-base tracking-tight",
-                          isCredit ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-white"
+                          isCredit ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
                         )}>
                           {isCredit ? '+' : '-'}₦{Number(tx.amount).toLocaleString()}
                         </span>
