@@ -306,7 +306,7 @@ export const TransactionFilterPage: React.FC = () => {
                 <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Total Cost</span>
                 <div className={cn(
                   "text-4xl md:text-5xl font-black tracking-tighter",
-                  selectedTransaction.transaction_type === 'CREDIT' ? 'text-emerald-500' : 'text-slate-900 dark:text-white'
+                  selectedTransaction.transaction_type === 'CREDIT' ? 'text-emerald-500' : 'text-rose-500'
                 )}>
                   {selectedTransaction.transaction_type === 'CREDIT' ? '+' : '-'}₦{Number(selectedTransaction.amount).toLocaleString()}
                 </div>
