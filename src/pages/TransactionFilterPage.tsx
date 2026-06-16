@@ -364,7 +364,7 @@ export const TransactionFilterPage: React.FC = () => {
         const descUpper = (dynamicTx.description || '').toUpperCase();
         const isElectricity = category === 'ELECTRICITY' || descUpper.includes('LIGHT') || descUpper.includes('ELECTRIC') || descUpper.includes('METER');
         
-  // Dynamic variable access resolution paths
+ // Dynamic variable access resolution paths
         const matchedMeterNumber = dynamicTx.billerCode || dynamicTx.metadata?.meter_number || dynamicTx.metadata?.billerCode || dynamicTx.parsed?.meterNumber || dynamicTx.recipient_number || '-';
         const matchedToken = dynamicTx.metadata?.token || dynamicTx.parsed?.token || dynamicTx.token;
 
@@ -402,9 +402,16 @@ export const TransactionFilterPage: React.FC = () => {
                     {dynamicTx.transaction_type === 'CREDIT' ? '+' : '-'}₦{Number(dynamicTx.amount).toLocaleString()}
                   </div>
                   
-                  <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    <div className={cn("w-2 h-2 rounded-full", dynamicTx.status?.toLowerCase() === 'successful' || dynamicTx.status?.toLowerCase() === 'completed' ? "bg-emerald-500" : "bg-amber-500")} />
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 capitalize">{dynamicTx.status || 'Completed'}</span>
+                  {/* LUXURY SECURED BADGES FLOW (Uses ShieldCheck) */}
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
+                    <div className={cn("inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700")}>
+                      <div className={cn("w-2 h-2 rounded-full", dynamicTx.status?.toLowerCase() === 'successful' || dynamicTx.status?.toLowerCase() === 'completed' ? "bg-emerald-500" : "bg-amber-500")} />
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 capitalize">{dynamicTx.status || 'Completed'}</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
+                      <span className="text-xs font-bold tracking-tight">Verified Secure Ledger</span>
+                    </div>
                   </div>
                 </div>
 
@@ -440,17 +447,20 @@ export const TransactionFilterPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* ONLY 4 FIELDS PRESERVED HERE AS MANDATED */}
+                    {/* ONLY 4 FIELDS PRESERVED HERE AS MANDATED (Uses User icon premium badge) */}
                     <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-xs pt-1 relative z-10">
-                      <div>
-                        <span className="text-slate-400 block mb-0.5">Customer Name</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-200 uppercase">
-                          {loadingMeterData ? (
-                            <span className="animate-pulse text-blue-500 font-semibold">Fetching...</span>
-                          ) : (
-                            liveMeterData?.Customer_Name || dynamicTx.parsed?.customerName || dynamicTx.metadata?.customerName || '-'
-                          )}
-                        </span>
+                      <div className="flex gap-2">
+                        <User className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-slate-400 block mb-0.5">Customer Name</span>
+                          <span className="font-bold text-slate-900 dark:text-slate-200 uppercase">
+                            {loadingMeterData ? (
+                              <span className="animate-pulse text-blue-500 font-semibold">Fetching...</span>
+                            ) : (
+                              liveMeterData?.Customer_Name || dynamicTx.parsed?.customerName || dynamicTx.metadata?.customerName || '-'
+                            )}
+                          </span>
+                        </div>
                       </div>
                       <div>
                         <span className="text-slate-400 block mb-0.5">Customer Address</span>
