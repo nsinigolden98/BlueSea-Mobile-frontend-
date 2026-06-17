@@ -119,7 +119,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     return value;
   };
 
-  // RESPECTFUL ASSIGNMENT: All icons mapping flawlessly to server payloads
   const getIconForKey = (key: string) => {
     const k = key.toLowerCase();
     if (k.includes('amount') || k.includes('price')) return Wallet;
@@ -184,7 +183,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             {!showReceipt ? "Processing Transaction" : isSuccess ? "Transaction Successful" : "Transaction Declined"}
           </h1>
           <p className="tm-subheadline">
-            {!showReceipt ? "Securing your request..." : isSuccess ? (toastMessage || "Your transaction is complete.") : friendlyErrorMessage}
+            {!showReceipt ? (processingMessages[visualStep] || "Securing your request...") : isSuccess ? (toastMessage || "Your transaction is complete.") : friendlyErrorMessage}
           </p>
         </header>
 
