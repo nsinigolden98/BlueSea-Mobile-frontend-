@@ -1,6 +1,10 @@
-/* LIGHT & DARK MODE VARIABLES */
+/* ==========================================================================
+   PRODUCTION FINTECH DESIGN SYSTEM - LIGHT & DARK THEME ENGINE
+   ========================================================================== */
+
+/* GLOBAL LIGHT THEME TOKENS (DEFAULT SYSTEM STATE) */
 :root {
-  --tm-backdrop: rgba(15, 23, 42, 0.7);
+  --tm-backdrop: rgba(15, 23, 42, 0.6);
   --tm-bg: #f8fafc;           
   --tm-card-bg: #ffffff;      
   --tm-text-main: #0f172a;    
@@ -19,9 +23,10 @@
   --tm-danger-light: #fee2e2; 
 }
 
+/* GLOBAL DARK THEME TOKENS (TRIGGERS VIA SYSTEM SETTING OR CLASS IMPLEMENTATION) */
 @media (prefers-color-scheme: dark) {
   :root {
-    --tm-backdrop: rgba(2, 6, 23, 0.85); 
+    --tm-backdrop: rgba(2, 6, 23, 0.8); 
     --tm-bg: #0f172a;           
     --tm-card-bg: #1e293b;      
     --tm-text-main: #f8fafc;    
@@ -35,8 +40,27 @@
     --tm-danger: #ef4444;       
     --tm-danger-light: rgba(239, 68, 68, 0.15);
     
-    --tm-sky-light: rgba(14, 165, 233, 0.15);
+    --tm-sky-light: rgba(14, 165, 233, 0.12);
   }
+}
+
+/* FAIL-SAFE fallback: If your framework uses a class toggle on <html> or <body> */
+.dark, .dark-mode, [data-theme="dark"] {
+  --tm-backdrop: rgba(2, 6, 23, 0.8); 
+  --tm-bg: #0f172a;           
+  --tm-card-bg: #1e293b;      
+  --tm-text-main: #f8fafc;    
+  --tm-text-muted: #94a3b8;   
+  --tm-border: #334155;       
+  --tm-border-light: #1e293b; 
+  
+  --tm-success: #22c55e;      
+  --tm-success-light: rgba(34, 197, 94, 0.15);
+  
+  --tm-danger: #ef4444;       
+  --tm-danger-light: rgba(239, 68, 68, 0.15);
+  
+  --tm-sky-light: rgba(14, 165, 233, 0.12);
 }
 
 /* OVERLAY */
@@ -44,8 +68,8 @@
   position: fixed;
   inset: 0;
   background: var(--tm-backdrop);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,10 +86,11 @@
   background: var(--tm-bg);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
   animation: modalEnter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: background-color 0.3s ease, color 0.3s ease;
   
-  /* Mobile Priority */
+  /* Mobile Priority Defaults */
   width: 100vw;
   height: 100dvh;
   border-radius: 0;
@@ -88,6 +113,7 @@
   padding: 2.5rem 1.5rem 1.5rem;
   background: var(--tm-card-bg);
   border-bottom: 1px solid var(--tm-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .tm-icon-wrapper {
@@ -104,6 +130,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 0.3s ease;
 }
 
 .tm-processing-ring { background: var(--tm-sky-light); }
@@ -120,6 +147,7 @@
   font-weight: 800;
   color: var(--tm-text-main);
   margin: 0 0 0.25rem 0;
+  transition: color 0.3s ease;
 }
 
 .tm-subheadline {
@@ -127,6 +155,7 @@
   color: var(--tm-text-muted);
   margin: 0;
   font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 /* SCROLLABLE BODY */
@@ -152,6 +181,7 @@
   padding: 1.5rem;
   border-radius: 16px;
   border: 1px solid var(--tm-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .tm-step {
@@ -177,6 +207,7 @@
   width: 2px;
   background: var(--tm-border);
   z-index: 1;
+  transition: background-color 0.3s ease;
 }
 
 .tm-step-dot {
@@ -233,7 +264,8 @@
   background: var(--tm-card-bg);
   border-radius: 16px;
   border: 1px solid var(--tm-border);
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .tm-receipt-badge {
@@ -253,6 +285,7 @@
   color: var(--tm-text-main);
   margin: 0;
   line-height: 1;
+  transition: color 0.3s ease;
 }
 
 .tm-receipt-subtext {
@@ -260,6 +293,7 @@
   color: var(--tm-text-muted);
   margin: 0.5rem 0 0;
   font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 /* TOKEN / PIN HIGHLIGHT BOX */
@@ -272,6 +306,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .tm-highlight-label {
@@ -287,6 +322,7 @@
   color: var(--tm-text-main);
   letter-spacing: 2px;
   font-family: monospace;
+  transition: color 0.3s ease;
 }
 
 .tm-highlight-hint {
@@ -300,6 +336,7 @@
   border-radius: 16px;
   border: 1px solid var(--tm-border);
   padding: 1.25rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .tm-section-title {
@@ -311,6 +348,7 @@
   border-bottom: 1px solid var(--tm-border-light);
   padding-bottom: 0.5rem;
   letter-spacing: 0.05em;
+  transition: color 0.3s ease, border-color 0.3s ease;
 }
 
 .tm-receipt-grid {
@@ -332,6 +370,7 @@
   gap: 0.5rem;
   color: var(--tm-text-muted);
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .tm-receipt-icon { opacity: 0.6; }
@@ -341,6 +380,7 @@
   font-weight: 700;
   text-align: right;
   max-width: 60%;
+  transition: color 0.3s ease;
 }
 
 /* FOOTER BUTTONS */
@@ -350,6 +390,7 @@
   border-top: 1px solid var(--tm-border);
   display: flex;
   gap: 1rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .tm-footer.hidden { display: none; }
@@ -365,7 +406,7 @@
   font-size: 0.95rem;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   border: none;
 }
 
@@ -374,18 +415,18 @@
 .tm-btn-primary {
   background: var(--tm-sky-main);
   color: white;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
 }
 
 .tm-btn-primary:hover { background: var(--tm-sky-dark); }
 
 .tm-btn-secondary {
   background: transparent;
-  color: var(--tm-sky-dark);
+  color: var(--tm-text-main);
   border: 1px solid var(--tm-border);
 }
 
-/* ANIMATIONS */
+/* ANIMATIONS AND TRANSITION UTILITIES */
 .spin { animation: spin 1.5s linear infinite; }
 .pop-in { animation: popBounce 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
 .slide-up { animation: slideUp 0.5s forwards cubic-bezier(0.2, 0.8, 0.2, 1); opacity: 0; }
