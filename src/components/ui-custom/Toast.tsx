@@ -1,24 +1,26 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Loader2, 
-  CircleCheckBig, 
-  CircleX, 
+  CheckCircle2, 
+  XCircle, 
   RefreshCw, 
   FileText,
   ShieldCheck,
   Wifi,
-  Clock3,
+  Clock,
   Hash,
   Wallet,
   User,
   CreditCard,
-  Smartphone
+  Smartphone,
+  ChevronRight,
+  ExternalLink,
+  MapPin
 } from 'lucide-react';
-import './Toast.css'
+import './Toast.css';
 import './TransactionModal.css';
 
-
-
+// --- EXACT TOAST IMPLEMENTATION PRESERVED ---
 export function Toast() {
   const [toastData, setToastData] = useState<{ msg: string; visible: boolean }>({
     msg: '',
@@ -40,24 +42,18 @@ export function Toast() {
         {toastData.msg}
       </div>
     );
-  
-
   };
 
   return { showToast, ToastComponent };
 }
 
- 
-
-
-
-
+// --- UPGRADED TRANSACTION MODAL ---
 interface TransactionModalProps {
   isSuccess: boolean | null; // null: processing, true: success, false: failure
   onClose: () => void;
   toastMessage?: string;
-  transactionData?: Record<string, any>; // Dynamic payload from API
-  errorData?: any; // Raw serializer error objects
+  transactionData?: Record<string, any>; 
+  errorData?: any; 
   onRetry?: () => void;
   onViewReceipt?: () => void;
 }
@@ -75,8 +71,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const [isDone, setIsDone] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
-  // --- ERROR PARSING ARCHITECTURE ---
-  // Converts messy backend serializer objects into human-readable text
+  // Parse backend serializers safely
   const parseErrorMessage = useCallback((error: any, fallback: string) => {
     if (!error) return fallback;
     if (typeof error === 'string') return error;
@@ -84,9 +79,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       const keys = Object.keys(error);
       if (keys.length > 0) {
         const firstError = error[keys[0]];
-        // Handle array of errors: {'plan': ['Selected data plan is no longer available.']}
         if (Array.isArray(firstError)) return firstError[0]?.message || firstError[0];
-        // Handle string error: {'network': 'Network timeout.'}
         if (typeof firstError === 'string') return firstError;
       }
     } catch (e) {
@@ -99,25 +92,24 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     return parseErrorMessage(errorData, toastMessage || "Transaction could not be completed. Please try again.");
   }, [errorData, toastMessage, parseErrorMessage]);
 
-  // --- DYNAMIC STATE MESSAGING ---
   const processingMessages = [
-    "Establishing secure connection...",
-    "Verifying transaction request...",
-    "Awaiting provider confirmation...",
-    "Finalizing transaction..."
+    "Establishing secure channel...",
+    "Confirming network response...",
+    "Awaiting provider verification...",
+    "Final settlement in progress..."
   ];
 
   useEffect(() => {
     if (isSuccess !== null) return;
     const interval = setInterval(() => {
       setProcessingStep((prev) => (prev < processingMessages.length - 1 ? prev + 1 : prev));
-    }, 1800);
+    }, 1500);
     return () => clearInterval(interval);
   }, [isSuccess, processingMessages.length]);
 
   useEffect(() => {
     if (isSuccess !== null) {
-      const timer = setTimeout(() => setIsDone(true), 600);
+      const timer = setTimeout(() => setIsDone(true), 500);
       return () => clearTimeout(timer);
     }
   }, [isSuccess]);
@@ -126,29 +118,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     setIsExiting(true);
     setTimeout(() => {
       onClose();
-      // Optional: Remove if your app relies on SPA routing rather than hard reloads
-      // window.location.reload(); 
+      window.location.reload(); 
     }, 400);
-  };
-
-  // --- DYNAMIC METADATA RENDERER ---
-  const renderDataRow = (key: string, value: any, Icon: React.ElementType) => {
-    if (value === null || value === undefined || value === '') return null;
-    
-    // Humanize keys (e.g., 'meter_number' -> 'Meter Number')
-    const formattedLabel = key
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, char => char.toUpperCase());
-
-    return (
-      <div className="meta-row" key={key}>
-        <div className="meta-label">
-          <Icon size={14} className="meta-icon" />
-          <span>{formattedLabel}</span>
-        </div>
-        <div className="meta-value">{value}</div>
-      </div>
-    );
   };
 
   const getIconForKey = (key: string) => {
@@ -157,109 +128,128 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     if (k.includes('user') || k.includes('recipient') || k.includes('name')) return User;
     if (k.includes('ref') || k.includes('id')) return Hash;
     if (k.includes('network') || k.includes('channel')) return Wifi;
-    if (k.includes('time') || k.includes('date')) return Clock3;
+    if (k.includes('time') || k.includes('date')) return Clock;
     if (k.includes('card') || k.includes('meter')) return CreditCard;
     if (k.includes('product') || k.includes('plan')) return Smartphone;
-    return FileText;
+    if (k.includes('location')) return MapPin;
+    return ExternalLink;
   };
 
-  // Split data into Summary (Top priority) and Details (Technical)
-  const summaryKeys = ['amount', 'product', 'network', 'recipient', 'meter_number', 'account_number', 'bank_name'];
-  
+  const renderDataRow = (key: string, value: any, Icon: React.ElementType) => {
+    if (value === null || value === undefined || value === '') return null;
+    const formattedLabel = key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+
+    return (
+      <div className="tm-detail-row" key={key}>
+        <span className="tm-detail-label">
+          <Icon className="tm-detail-icon" /> {formattedLabel}
+        </span>
+        <span className="tm-detail-value">{value}</span>
+      </div>
+    );
+  };
+
+  const summaryKeys = ['amount', 'product', 'network', 'recipient', 'meter_number', 'account_number', 'bank_name', 'title'];
   const summaryData = Object.entries(transactionData).filter(([k]) => summaryKeys.includes(k.toLowerCase()));
   const detailsData = Object.entries(transactionData).filter(([k]) => !summaryKeys.includes(k.toLowerCase()));
 
   return (
-    <div 
-      className={`bs-overlay ${isExiting ? 'bs-exit' : ''}`}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-    >
-      <section className="bs-modal-card">
+    <div className={`tm-overlay ${isExiting ? 'tm-exit' : ''}`}>
+      <section className="tm-modal-card">
         
-        {/* HEADER SECTION */}
-        <header className="bs-header" aria-live="assertive">
-          <div className="bs-icon-container">
-            {isSuccess === null && <Loader2 className="bs-icon processing-spin" size={56} />}
-            {isSuccess === true && isDone && <CircleCheckBig className="bs-icon success-pop" size={56} />}
-            {isSuccess === false && isDone && <CircleX className="bs-icon failure-pop" size={56} />}
+        {/* HEADER */}
+        <header className="tm-header">
+          <div className="tm-icon-wrapper">
+            {isSuccess === null && (
+              <div className="tm-processing-ring">
+                <Loader2 className="tm-icon spin text-sky" size={48} />
+              </div>
+            )}
+            {isSuccess === true && isDone && (
+              <div className="tm-status-ring success-bg">
+                <CheckCircle2 className="tm-icon text-success pop-in" size={56} />
+              </div>
+            )}
+            {isSuccess === false && isDone && (
+              <div className="tm-status-ring failure-bg">
+                <XCircle className="tm-icon text-danger pop-in" size={56} />
+              </div>
+            )}
           </div>
           
-          <h1 id="modal-title" className="bs-headline">
-            {isSuccess === null && "Processing Transaction"}
-            {isSuccess === true && isDone && "Transaction Successful"}
-            {isSuccess === false && isDone && "Transaction Declined"}
+          <h1 className="tm-headline">
+            {isSuccess === null ? "Processing..." : isSuccess ? "Transaction Successful" : "Transaction Declined"}
           </h1>
-          
-          <p className="bs-subheadline">
+          <p className="tm-subheadline">
             {isSuccess === null && processingMessages[processingStep]}
-            {isSuccess === true && isDone && (toastMessage || "Your transaction was completed successfully.")}
+            {isSuccess === true && isDone && (toastMessage || "Your transaction was securely completed.")}
             {isSuccess === false && isDone && friendlyErrorMessage}
           </p>
         </header>
 
-        {/* SCROLLABLE CONTENT AREA */}
-        <div className="bs-content-scroll">
-          
-          {/* TRANSACTION TIMELINE */}
-          <div className="bs-timeline">
-            <div className={`timeline-step ${processingStep >= 0 || isSuccess !== null ? 'active' : ''}`}>
-              <div className="step-indicator">✓</div>
-              <span>Request Submitted</span>
-            </div>
-            <div className={`timeline-step ${processingStep >= 1 || isSuccess !== null ? 'active' : ''}`}>
-              <div className="step-indicator">✓</div>
-              <span>Security Verified</span>
-            </div>
-            <div className={`timeline-step ${isSuccess === null ? 'processing' : isSuccess ? 'active' : 'failed'}`}>
-              <div className="step-indicator">
-                {isSuccess === null ? <Loader2 size={12} className="spin" /> : isSuccess ? '✓' : '✕'}
+        {/* SCROLLABLE BODY */}
+        <div className="tm-body">
+          <div className="tm-content-max">
+            
+            {/* ELABORATE TIMELINE */}
+            <div className="tm-timeline">
+              <div className={`tm-timeline-step ${processingStep >= 0 || isSuccess !== null ? 'active' : ''}`}>
+                <div className="tm-step-icon"><CheckCircle2 size={16} /></div>
+                <div className="tm-step-text">Request Submitted</div>
               </div>
-              <span>{isSuccess === false ? 'Provider Rejected' : 'Provider Processing'}</span>
-            </div>
-            <div className={`timeline-step ${isSuccess === true ? 'active' : isSuccess === false ? 'dimmed' : ''}`}>
-              <div className="step-indicator">{isSuccess === true ? '✓' : '○'}</div>
-              <span>{isSuccess === false ? 'Transaction Cancelled' : 'Settlement Complete'}</span>
-            </div>
-          </div>
-
-          {/* DYNAMIC SUMMARY CARD */}
-          {summaryData.length > 0 && isDone && (
-            <div className="bs-card summary-card fade-in-up">
-              <h3 className="card-title">Transaction Summary</h3>
-              <div className="card-body">
-                {summaryData.map(([key, value]) => renderDataRow(key, value, getIconForKey(key)))}
+              <div className={`tm-timeline-step ${processingStep >= 1 || isSuccess !== null ? 'active' : ''}`}>
+                <div className="tm-step-icon"><CheckCircle2 size={16} /></div>
+                <div className="tm-step-text">Security Verified</div>
+              </div>
+              <div className={`tm-timeline-step ${isSuccess === null ? 'processing' : isSuccess ? 'active' : 'failed'}`}>
+                <div className="tm-step-icon">
+                  {isSuccess === null ? <Loader2 size={16} className="spin" /> : isSuccess ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                </div>
+                <div className="tm-step-text">{isSuccess === false ? 'Provider Rejected' : 'Provider Processing'}</div>
+              </div>
+              <div className={`tm-timeline-step ${isSuccess === true ? 'active' : isSuccess === false ? 'dimmed' : ''} no-line`}>
+                <div className="tm-step-icon">{isSuccess === true ? <CheckCircle2 size={16} /> : <Clock size={16} />}</div>
+                <div className="tm-step-text">{isSuccess === false ? 'Transaction Cancelled' : 'Settlement Complete'}</div>
               </div>
             </div>
-          )}
 
-          {/* DYNAMIC DETAILS CARD */}
-          {detailsData.length > 0 && isDone && (
-            <div className="bs-card details-card fade-in-up delayed">
-              <h3 className="card-title">Transaction Details</h3>
-              <div className="card-body">
-                {detailsData.map(([key, value]) => renderDataRow(key, value, getIconForKey(key)))}
-                <div className="meta-row">
-                  <div className="meta-label"><ShieldCheck size={14} className="meta-icon"/> Security Status</div>
-                  <div className="meta-value">Verified & Secured</div>
+            {/* DYNAMIC SUMMARY SECTION */}
+            {summaryData.length > 0 && isDone && (
+              <div className="tm-data-card slide-up">
+                <h3 className="tm-card-title">Transaction Summary</h3>
+                <div className="tm-card-content">
+                  {summaryData.map(([key, value]) => renderDataRow(key, value, getIconForKey(key)))}
                 </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* DYNAMIC DETAILS SECTION */}
+            {detailsData.length > 0 && isDone && (
+              <div className="tm-data-card slide-up delay-1">
+                <h3 className="tm-card-title">Transaction Details</h3>
+                <div className="tm-card-content">
+                  {detailsData.map(([key, value]) => renderDataRow(key, value, getIconForKey(key)))}
+                  <div className="tm-detail-row">
+                    <span className="tm-detail-label"><ShieldCheck className="tm-detail-icon"/> Security Status</span>
+                    <span className="tm-detail-value text-success">Verified</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* ACTION BUTTONS */}
-        <footer className={`bs-footer ${isDone ? 'fade-in-up' : 'hidden'}`}>
+        {/* FOOTER */}
+        <footer className={`tm-footer ${isDone ? 'slide-up' : 'hidden'}`}>
           {isSuccess === true && (
             <>
               {onViewReceipt && (
-                <button className="bs-btn bs-btn-secondary" onClick={onViewReceipt}>
-                  <FileText size={18} /> View Receipt
+                <button className="tm-btn tm-btn-secondary" onClick={onViewReceipt}>
+                  <FileText size={18} /> Receipt
                 </button>
               )}
-              <button className="bs-btn bs-btn-primary" onClick={handleClose} autoFocus>
-                Done
+              <button className="tm-btn tm-btn-primary" onClick={handleClose}>
+                Done <ChevronRight size={18} />
               </button>
             </>
           )}
@@ -267,17 +257,16 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           {isSuccess === false && (
             <>
               {onRetry && (
-                <button className="bs-btn bs-btn-secondary" onClick={onRetry}>
+                <button className="tm-btn tm-btn-secondary" onClick={onRetry}>
                   <RefreshCw size={18} /> Retry
                 </button>
               )}
-              <button className="bs-btn bs-btn-primary" onClick={handleClose} autoFocus>
-                Done
+              <button className="tm-btn tm-btn-primary" onClick={handleClose}>
+                Done <ChevronRight size={18} />
               </button>
             </>
           )}
         </footer>
-
       </section>
     </div>
   );
