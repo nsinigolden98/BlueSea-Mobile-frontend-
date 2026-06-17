@@ -90,7 +90,8 @@ export function PinModal() {
     const [visibleDigitIndex, setVisibleDigitIndex] = useState<number | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
     // Memory Protection: Clear PIN and states
     const resetState = useCallback(() => {
