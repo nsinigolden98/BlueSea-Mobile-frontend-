@@ -121,10 +121,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     if (k.includes('user') || k.includes('name') || k.includes('recipient')) return User;
     if (k.includes('phone') || k.includes('number')) return Smartphone;
     if (k.includes('network') || k.includes('channel')) return Wifi;
-    if (k.includes('ref') || k.includes('id')) return Hash;
+    if (k.includes('ref') || k.includes('id') || k.includes('session')) return Hash;
     if (k.includes('card') || k.includes('meter')) return CreditCard;
     if (k.includes('token') || k.includes('electricity') || k.includes('power')) return Lightbulb;
     if (k.includes('pin') || k.includes('waec') || k.includes('jamb')) return GraduationCap;
+    if (k.includes('time') || k.includes('date') || k.includes('timestamp')) return Clock;
+    if (k.includes('location') || k.includes('address') || k.includes('delivery')) return MapPin;
+    if (k.includes('link') || k.includes('url') || k.includes('external')) return ExternalLink;
     return FileText;
   };
 
