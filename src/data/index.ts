@@ -1952,11 +1952,32 @@ description: "T2 N200 - 250MB Anytime Data Plan (7 Days)"
 }
 ] as const;
 
+export const mtn_dict = Object.fromEntries(
+  MTN_DATA.map(plan => [
+    plan.description,
+    [plan.id, plan.price]
+  ])
+);
+
+export const airtel_dict = Object.fromEntries(
+  AIRTEL_DATA.map(plan => [
+    plan.description,
+    [plan.id, plan.price]
+  ])
+);
+
+export const glo_dict = Object.fromEntries(
+  GLO_DATA.map(plan => [
+    plan.description,
+    [plan.id, plan.price]
+  ])
+);
+
 export const etisalat_dict = Object.fromEntries(
-NINEMOBILE_DATA.map(plan => [
-plan.id,
-[plan.id, plan.price]
-])
+  NINEMOBILE_DATA.map(plan => [
+    plan.description,
+    [plan.id, plan.price]
+  ])
 );
 
 
