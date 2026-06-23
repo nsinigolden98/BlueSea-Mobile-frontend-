@@ -37,6 +37,10 @@ export function Dashboard() {
     };
     loadData();
   }, []);
+  
+  
+  const redirect = () => (window.location.href = '/transaction-history');
+  
 
   const activeAnnouncements = announcements.filter(
     a => !dismissedAnnouncements.includes(a.id) && a.priority === 'high'
@@ -135,7 +139,9 @@ export function Dashboard() {
                     ₦{weeklyStats.amount.toLocaleString()} <span className="text-slate-500 dark:text-slate-500 font-normal ml-1">spent • {weeklyStats.count} transactions</span>  
                   </p>  
                 </div>  
-                <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600" />  
+                <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600" 
+                onClick={redirect}
+                />  
               </div>  
             </div>  
 
