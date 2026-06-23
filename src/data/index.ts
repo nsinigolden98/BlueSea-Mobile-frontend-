@@ -14,6 +14,7 @@ export const navItems: NavItem[] = [
   { id: 'support', label: 'Support', icon: 'Headphones', path: '/support' },
     { id: 'bluespere', label: 'BlueSpere', icon: 'Orbit', path: '/bluesphere' },
   { id: 'more-services', label: 'More Services', icon: 'Grid3X3', path: '/more-services' },
+  { id: 'payroll-pro', label: 'Payroll Pro', icon: 'ShieldCheck', path: '/payroll-pro' },
 ];
 
 

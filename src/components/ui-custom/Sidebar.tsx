@@ -20,6 +20,7 @@ import {
   PlaneTakeoff,
   QrCode,
   Orbit,
+  ShieldCheck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -41,6 +42,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   PlaneTakeoff,
   QrCode,
   Orbit,
+  ShieldCheck
 };
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
