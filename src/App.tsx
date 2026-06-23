@@ -63,6 +63,15 @@ import { AuthLoader } from '@/components/ui-custom';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
+import PayrollProHome from './screens/payroll-pro/PayrollProHome';
+import CreateCompany from './screens/payroll-pro/CreateCompany';
+import CompanyWorkspace from './screens/payroll-pro/CompanyWorkspace';
+import BranchDetails from './screens/payroll-pro/BranchDetails';
+import EmployeeProfile from './screens/payroll-pro/EmployeeProfile';
+import EmployeePortal from './screens/payroll-pro/EmployeePortal';
+import AddEmployee from './screens/payroll-pro/AddEmployee';
+import CreateBranch from './screens/payroll-pro/CreateBranch';
+import PayrollDetail from './screens/payroll-pro/PayrollDetail';
 
 /**
  * Global Layout Wrapper
@@ -165,6 +174,20 @@ function AppRoutes() {
         <Route path="/betting" element={<Betting />} />
         
             <Route path="/identity-center" element={<IdentityCenter />} />
+
+
+
+
+ <Route path="/payroll-pro" element={<PayrollProHome />} />
+      <Route path="/payroll-pro/create-company" element={<CreateCompany />} />
+      <Route path="/payroll-pro/company/:companyId" element={<CompanyWorkspace />} />
+      <Route path="/payroll-pro/company/:companyId/add-employee" element={<AddEmployee />} />
+      <Route path="/payroll-pro/company/:companyId/create-branch" element={<CreateBranch />} />
+      <Route path="/payroll-pro/branch/:branchId" element={<BranchDetails />} />
+      <Route path="/payroll-pro/employee/:employeeId" element={<EmployeeProfile />} />
+      <Route path="/payroll-pro/portal/:companyId" element={<EmployeePortal />} />
+      <Route path="/payroll-pro/payroll/:payrollId" element={<PayrollDetail />} />
+
 
 
 
