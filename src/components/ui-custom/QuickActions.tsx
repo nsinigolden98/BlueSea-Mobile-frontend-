@@ -29,7 +29,7 @@ const actions: QuickAction[] = [
     id: 'pay-roll',
     label: 'Pay Roll',
     icon: ShieldCheckIcon,
-    path: '/pay-roll',
+    path: '/payroll-pro',
     color: 'text-cyan-500'
   },
   {
