@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, Wifi, ShieldCheckIcon, Plane, Gift, Lightbulb, ShieldCheck } from 'lucide-react';
+import { Smartphone, Wifi, ShieldCheckIcon, Plane, Gift, Lightbulb,} from 'lucide-react';
 
 interface QuickAction {
   id: string;
