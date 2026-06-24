@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { ArrowLeft, Check, ChevronRight, UserPlus } from 'lucide-react';
+import { Sidebar, Header } from '@/components/ui-custom';
 
 type Step = 'personal' | 'employment' | 'payroll' | 'success';
 
@@ -21,6 +22,7 @@ export default function AddEmployee() {
   const { companyId } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('personal');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '', email: '', phone: '',
     department: 'operations', role: 'employee', employmentType: 'full_time',
@@ -45,145 +47,212 @@ export default function AddEmployee() {
   };
 
   return (
-    <div className="tm-page">
-      <div className="tm-nav-header px-4 py-4">
-        <button onClick={handleBack} className="flex items-center gap-2 text-sm font-bold text-[var(--tm-text-muted)] hover:text-[var(--tm-text-main)] transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-          {step === 'personal' ? 'Back' : 'Previous'}
-        </button>
-      </div>
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
+      
+      <style dangerouslySetInnerHTML={{ __html: `
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      ` }} />
 
-      <div className="max-w-lg mx-auto px-4 py-4">
-        {/* Progress */}
-        <div className="flex items-center gap-2 mb-6">
-          {(['personal', 'employment', 'payroll'] as Step[]).map((s, i) => (
-            <div key={s} className="flex items-center gap-2 flex-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                step === s ? 'bg-[var(--tm-sky-main)] text-white' :
-                (['personal', 'employment', 'payroll'].indexOf(step) > i) ? 'bg-[var(--tm-success)] text-white' :
-                'bg-[var(--tm-border)] text-[var(--tm-text-muted)]'
-              }`}>
-                {(['personal', 'employment', 'payroll'].indexOf(step) > i) ? <Check className="w-4 h-4" /> : i + 1}
-              </div>
-              {i < 2 && <div className={`flex-1 h-1 rounded-full ${
-                (['personal', 'employment', 'payroll'].indexOf(step) > i) ? 'bg-[var(--tm-success)]' : 'bg-[var(--tm-border)]'
-              }`} />}
-            </div>
-          ))}
-        </div>
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {step === 'personal' && (
-          <div className="animate-slide-up">
-            <h2 className="text-xl font-extrabold text-[var(--tm-text-main)] mb-1">Personal Information</h2>
-            <p className="text-sm text-[var(--tm-text-muted)] mb-6">Enter the employee's basic details</p>
-            <div className="space-y-4">
-              <div>
-                <label className="tm-label">Full Name</label>
-                <input type="text" className="tm-input" placeholder="e.g. John Doe" value={formData.fullName} onChange={e => updateField('fullName', e.target.value)} />
-              </div>
-              <div>
-                <label className="tm-label">Email Address</label>
-                <input type="email" className="tm-input" placeholder="e.g. john@company.ng" value={formData.email} onChange={e => updateField('email', e.target.value)} />
-              </div>
-              <div>
-                <label className="tm-label">Phone Number</label>
-                <input type="tel" className="tm-input" placeholder="+234 800 000 0000" value={formData.phone} onChange={e => updateField('phone', e.target.value)} />
-              </div>
-              <button onClick={handleNext} className="tm-btn-primary w-full mt-4">
-                Continue <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
+      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 transition-colors duration-300">
+        <Header 
+          title="Onboard Personnel" 
+          subtitle="Directory Registry Wizard" 
+          onMenuClick={() => setSidebarOpen(true)} 
+        />
+
+        {/* Dynamic Navigation Top Bar */}
+        {step !== 'success' && (
+          <div className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-200 dark:border-white/5 px-4 md:px-6 py-3 flex items-center justify-between">
+            <button 
+              onClick={handleBack} 
+              className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl shadow-sm"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              {step === 'personal' ? 'Back' : 'Previous Step'}
+            </button>
+            <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">
+              Form Context: {step}
+            </span>
           </div>
         )}
 
-        {step === 'employment' && (
-          <div className="animate-slide-up">
-            <h2 className="text-xl font-extrabold text-[var(--tm-text-main)] mb-1">Employment Details</h2>
-            <p className="text-sm text-[var(--tm-text-muted)] mb-6">Set their role and department</p>
-            <div className="space-y-4">
-              <div>
-                <label className="tm-label">Department</label>
-                <select className="tm-input" value={formData.department} onChange={e => updateField('department', e.target.value)}>
-                  {departments.map(d => <option key={d} value={d}>{d.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="tm-label">Role</label>
-                <select className="tm-input" value={formData.role} onChange={e => updateField('role', e.target.value)}>
-                  <option value="employee">Employee</option>
-                  <option value="branch_manager">Branch Manager</option>
-                  <option value="hr">HR Manager</option>
-                  <option value="finance">Finance</option>
-                </select>
-              </div>
-              <div>
-                <label className="tm-label">Employment Type</label>
-                <select className="tm-input" value={formData.employmentType} onChange={e => updateField('employmentType', e.target.value)}>
-                  {employmentTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="tm-label">Employment Date</label>
-                <input type="date" className="tm-input" value={formData.employmentDate} onChange={e => updateField('employmentDate', e.target.value)} />
-              </div>
-              <button onClick={handleNext} className="tm-btn-primary w-full mt-4">
-                Continue <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Main Entry Panel Viewport */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide max-w-lg w-full mx-auto pb-24">
+          
+          {/* Progress Indicator Track */}
+          {step !== 'success' && (
+            <div className="flex items-center gap-2 mb-8 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-white/5 p-3 rounded-2xl">
+              {(['personal', 'employment', 'payroll'] as Step[]).map((s, i) => {
+                const currentIdx = ['personal', 'employment', 'payroll'].indexOf(step);
+                const isCompleted = currentIdx > i;
+                const isActive = step === s;
 
-        {step === 'payroll' && (
-          <div className="animate-slide-up">
-            <h2 className="text-xl font-extrabold text-[var(--tm-text-main)] mb-1">Payroll Information</h2>
-            <p className="text-sm text-[var(--tm-text-muted)] mb-6">Set salary and bank details</p>
-            <div className="space-y-4">
-              <div>
-                <label className="tm-label">Monthly Salary (&#8358;)</label>
-                <input type="number" className="tm-input" placeholder="e.g. 200000" value={formData.salary} onChange={e => updateField('salary', e.target.value)} />
-              </div>
-              <div>
-                <label className="tm-label">Branch</label>
-                <select className="tm-input" value={formData.branch} onChange={e => updateField('branch', e.target.value)}>
-                  <option value="branch_001">Apapa Head Office</option>
-                  <option value="branch_002">Ikeja Operations Center</option>
-                  <option value="branch_003">Port Harcourt Branch</option>
-                </select>
-              </div>
-              <div>
-                <label className="tm-label">Bank Name</label>
-                <input type="text" className="tm-input" placeholder="e.g. GTBank" value={formData.bankName} onChange={e => updateField('bankName', e.target.value)} />
-              </div>
-              <div>
-                <label className="tm-label">Account Number</label>
-                <input type="text" className="tm-input" placeholder="10 digit account number" value={formData.bankAccountNumber} onChange={e => updateField('bankAccountNumber', e.target.value)} />
-              </div>
-              <button onClick={handleNext} className="tm-btn-primary w-full mt-4">
-                <UserPlus className="w-5 h-5" />
-                Save Employee
-              </button>
+                return (
+                  <div key={s} className="flex items-center gap-2 flex-1">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-extrabold transition-all border ${
+                      isActive 
+                        ? 'bg-sky-500 border-sky-500 text-white shadow-sm shadow-sky-500/20' 
+                        : isCompleted 
+                        ? 'bg-emerald-500 border-emerald-500 text-white' 
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-400 dark:text-slate-500'
+                    }`}>
+                      {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : i + 1}
+                    </div>
+                    {i < 2 && (
+                      <div className={`flex-1 h-0.5 rounded-full ${
+                        isCompleted ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-white/10'
+                      }`} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          </div>
-        )}
+          )}
 
-        {step === 'success' && (
-          <div className="animate-pop-in text-center py-8">
-            <div className="w-20 h-20 rounded-full bg-[var(--tm-success-light)] flex items-center justify-center mx-auto mb-4">
-              <Check className="w-10 h-10 text-[var(--tm-success)]" />
+          {/* STEP 1: PERSONAL INFORMATION */}
+          {step === 'personal' && (
+            <div className="space-y-5 animate-slide-up">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Personal Description</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Enter the node entity's basic communication details.</p>
+              </div>
+              
+              <div className="space-y-4 pt-1">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Full Legal Name</label>
+                  <input type="text" className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="e.g. John Doe" value={formData.fullName} onChange={e => updateField('fullName', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Corporate Email Address</label>
+                  <input type="email" className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="e.g. john@company.ng" value={formData.email} onChange={e => updateField('email', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Mobile Phone Vector</label>
+                  <input type="tel" className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="+234 800 000 0000" value={formData.phone} onChange={e => updateField('phone', e.target.value)} />
+                </div>
+                
+                <button onClick={handleNext} className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 active:scale-[0.99] text-white text-xs font-bold px-4 py-3 rounded-xl transition-all shadow-sm shadow-sky-500/10">
+                  Continue Operation <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <h2 className="text-xl font-extrabold text-[var(--tm-text-main)] mb-2">Employee Added</h2>
-            <p className="text-sm text-[var(--tm-text-muted)] mb-6">{formData.fullName || 'Employee'} has been successfully added.</p>
-            <div className="flex flex-col gap-3 max-w-[280px] mx-auto">
-              <button onClick={() => { setFormData({ fullName: '', email: '', phone: '', department: 'operations', role: 'employee', employmentType: 'full_time', employmentDate: '', salary: '', branch: 'branch_001', manager: '', bankName: '', bankAccountNumber: '', bankAccountName: '' }); setStep('personal'); }} className="tm-btn-primary">
-                <UserPlus className="w-5 h-5" />
-                Add Another Employee
-              </button>
-              <button onClick={() => navigate(`/payroll-pro/company/${companyId}`)} className="tm-btn-secondary">
-                Back to Company
-              </button>
+          )}
+
+          {/* STEP 2: EMPLOYMENT DETAILS */}
+          {step === 'employment' && (
+            <div className="space-y-5 animate-slide-up">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Employment Assignment</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Configure operational unit and hierarchy metrics.</p>
+              </div>
+              
+              <div className="space-y-4 pt-1">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Operational Department</label>
+                  <select className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all" value={formData.department} onChange={e => updateField('department', e.target.value)}>
+                    {departments.map(d => <option key={d} value={d}>{d.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Access Role Tier</label>
+                  <select className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all" value={formData.role} onChange={e => updateField('role', e.target.value)}>
+                    <option value="employee">Standard Employee</option>
+                    <option value="branch_manager">Branch Manager Node</option>
+                    <option value="hr">HR Administrator</option>
+                    <option value="finance">Finance Controller</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Classification Framework</label>
+                  <select className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all" value={formData.employmentType} onChange={e => updateField('employmentType', e.target.value)}>
+                    {employmentTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Activation Date</label>
+                  <input type="date" className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all" value={formData.employmentDate} onChange={e => updateField('employmentDate', e.target.value)} />
+                </div>
+                
+                <button onClick={handleNext} className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 active:scale-[0.99] text-white text-xs font-bold px-4 py-3 rounded-xl transition-all shadow-sm shadow-sky-500/10">
+                  Continue Allocation <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* STEP 3: PAYROLL INFORMATION */}
+          {step === 'payroll' && (
+            <div className="space-y-5 animate-slide-up">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Financial Ledger Sync</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Map base salary values and clearing bank credentials.</p>
+              </div>
+              
+              <div className="space-y-4 pt-1">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Base Monthly Remuneration (₦)</label>
+                  <input type="number" className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="e.g. 200000" value={formData.salary} onChange={e => updateField('salary', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Target Allocation Facility</label>
+                  <select className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all" value={formData.branch} onChange={e => updateField('branch', e.target.value)}>
+                    <option value="branch_001">Apapa Head Office</option>
+                    <option value="branch_002">Ikeja Operations Center</option>
+                    <option value="branch_003">Port Harcourt Branch</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Settlement Institution Name</label>
+                  <input type="text" className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="e.g. GTBank" value={formData.bankName} onChange={e => updateField('bankName', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Ledger Settlement Account Number</label>
+                  <input type="text" className="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="10 digit numeric string" value={formData.bankAccountNumber} onChange={e => updateField('bankAccountNumber', e.target.value)} />
+                </div>
+                
+                <button onClick={handleNext} className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] text-white text-xs font-bold px-4 py-3 rounded-xl transition-all shadow-sm shadow-emerald-500/10">
+                  <UserPlus className="w-4 h-4" /> Save Directory Entry
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: SUCCESS OVERLAY BANNER */}
+          {step === 'success' && (
+            <div className="text-center py-10 px-4 max-w-sm mx-auto animate-scale-up">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center mx-auto mb-5 border border-emerald-500/20">
+                <Check className="w-7 h-7 text-emerald-500 stroke-[3.5]" />
+              </div>
+              <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Personnel Synced</h2>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[240px] mx-auto leading-relaxed">
+                Core identity variables for <span className="font-bold text-slate-700 dark:text-slate-300">{formData.fullName || 'New Node'}</span> have successfully populated database states.
+              </p>
+              
+              <div className="flex flex-col gap-2.5 mt-8 max-w-[240px] mx-auto">
+                <button 
+                  onClick={() => { 
+                    setFormData({ fullName: '', email: '', phone: '', department: 'operations', role: 'employee', employmentType: 'full_time', employmentDate: '', salary: '', branch: 'branch_001', manager: '', bankName: '', bankAccountNumber: '', bankAccountName: '' }); 
+                    setStep('personal'); 
+                  }} 
+                  className="inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm shadow-sky-500/10"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  Register Another Node
+                </button>
+                <button 
+                  onClick={() => navigate(`/payroll-pro/company/${companyId}`)} 
+                  className="inline-flex items-center justify-center bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300 text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm"
+                >
+                  Return to Company Log
+                </button>
+              </div>
+            </div>
+          )}
+
+        </main>
       </div>
     </div>
   );
