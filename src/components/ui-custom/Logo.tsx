@@ -1,6 +1,12 @@
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
+// If logo.png is in the SAME folder as this file:
+//import logoImg from './logo.png'; 
+
+// OR if logo.png is ONE folder above this file, uncomment this line instead:
+import logoImg from '../../logo.png';
+
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
@@ -9,9 +15,15 @@ interface LogoProps {
 
 export function Logo({ size = 'md', showText = true, className }: LogoProps) {
   const sizeClasses = {
-    sm: 'w-8 h-8 text-sm',
-    md: 'w-10 h-10 text-base',
-    lg: 'w-14 h-14 text-lg',
+    sm: 'w-8 h-8',
+    md: 'w-10 h-10',
+    lg: 'w-14 h-14',
+  };
+
+  const dimensions = {
+    sm: { width: 32, height: 32 },
+    md: { width: 40, height: 40 },
+    lg: { width: 56, height: 56 },
   };
 
   const textSizes = {
@@ -22,14 +34,16 @@ export function Logo({ size = 'md', showText = true, className }: LogoProps) {
 
   return (
     <Link to="/" className={cn('flex items-center gap-2', className)}>
-      <div 
-        className={cn(
-          'rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center font-bold text-white shadow-lg',
-          sizeClasses[size]
-        )}
-      >
-        <span className="font-bold tracking-tight">BS</span>
-      </div>
+      <img
+        src={logoImg}
+        alt="BlueSea Mobile Logo"
+        width={dimensions[size].width}
+        height={dimensions[size].height}
+        loading="lazy"
+        decoding="async"
+        className={cn('object-contain', sizeClasses[size])}
+      />
+      
       {showText && (
         <div className="flex flex-col">
           <span className={cn('font-bold text-slate-800 dark:text-white leading-tight', textSizes[size])}>
