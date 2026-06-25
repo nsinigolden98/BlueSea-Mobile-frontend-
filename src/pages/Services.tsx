@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils';
 import {
   Smartphone, Wifi, Zap, Tv, RefreshCw, Wallet, Gift, Share2, Coins, 
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank, 
-  CreditCard, Bitcoin, Umbrella, ShieldCheck, Calculator, FileText, 
-  Building, ShieldCheckIcon, PieChart, Users, Orbit, PlaySquare, Repeat, 
+  CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheckIcon, FileText, 
+  Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat, 
   ArrowLeftRight, Search, Clock, Star, ChevronRight
 } from 'lucide-react';
 
@@ -33,7 +33,7 @@ const VALID_APP_ROUTES = new Set([
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Smartphone, Wifi, Zap, Tv, RefreshCw, Wallet, Gift, Share2, Coins,
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank,
-  CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheckIcon, FileText,
+  CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheck, FileText,
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat,
   ArrowLeftRight,
 };
