@@ -8,7 +8,7 @@ import {
   Smartphone, Wifi, Zap, Tv, RefreshCw, Wallet, Gift, Share2, Coins, 
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank, 
   CreditCard, Bitcoin, Umbrella, ShieldCheck, Calculator, FileText, 
-  Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat, 
+  Building, ShieldCheckIcon, PieChart, Users, Orbit, PlaySquare, Repeat, 
   ArrowLeftRight, Search, Clock, Star, ChevronRight
 } from 'lucide-react';
 
