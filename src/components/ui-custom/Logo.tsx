@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 // If logo.png is in the SAME folder as this file:
-//import logoImg from './logo.png'; 
+import logoImg from './logo.png'; 
 
 // OR if logo.png is ONE folder above this file, uncomment this line instead:
-import logoImg from '../../logo.png';
+//import logoImg from '../logo.png';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
