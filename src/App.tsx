@@ -50,7 +50,7 @@ import {
   BlueSphere,
   
   FinanceHub, SavingsVault, BlueSeaCards, BspCrypto, Pension, Insurance,
-  BusinessHub, Payroll, Properties, Appointments,
+  BusinessHub, Properties, Appointments,
   Storefronts, Freelance, Affiliate, Contracts,
    Streams,Subscriptions, 
 } from '@/pages';
@@ -201,7 +201,6 @@ function AppRoutes() {
 
       {/* Business Ecosystem */}
       <Route path="/business" element={<ProtectedRoute><BusinessHub /></ProtectedRoute>} />
-      <Route path="/business/payroll" element={<ProtectedRoute><Payroll /></ProtectedRoute>} />
       <Route path="/business/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
       <Route path="/business/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
 

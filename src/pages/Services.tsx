@@ -24,7 +24,7 @@ const VALID_APP_ROUTES = new Set([
   '/messages', '/bluesphere', '/products', '/history', '/gift-cards', '/flights', 
   '/spin-vault', '/betting', '/identity-center', '/finance', '/finance/savings', 
   '/finance/cards', '/finance/crypto', '/finance/pension', '/finance/insurance', 
-  '/business', '/business/payroll', '/business/properties', '/business/appointments', 
+  '/business', '/payroll-pro', '/business/properties', '/business/appointments', 
   '/commerce/storefronts', '/commerce/freelance', '/commerce/affiliate', '/commerce/contracts', 
   '/experience/streams', '/subscriptions'
 ]);
@@ -33,7 +33,7 @@ const VALID_APP_ROUTES = new Set([
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Smartphone, Wifi, Zap, Tv, RefreshCw, Wallet, Gift, Share2, Coins,
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank,
-  CreditCard, Bitcoin, Umbrella, ShieldCheck, Calculator, FileText,
+  CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheckIcon, FileText,
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat,
   ArrowLeftRight,
 };

@@ -50,7 +50,7 @@ export const services: Service[] = [
   { id: 'fi-5', name: 'Insurance', description: 'Protect what matters most', icon: 'ShieldCheck', route: '/finance/insurance', category: 'Finance' },
 
   // Business Tools
-  { id: 'bt-1', name: 'Payroll', description: 'Automate staff salaries', icon: 'Calculator', route: '/business/payroll', category: 'Business Tools' },
+  { id: 'bt-1', name: 'Payroll', description: 'Automate staff salaries', icon: 'ShieldCheckIcon', route: '/payroll-pro', category: 'Business Tools' },
   { id: 'bt-2', name: 'Properties', description: 'Manage real estate assets', icon: 'Building', route: '/business/properties', category: 'Business Tools' },
   { id: 'bt-3', name: 'Appointments', description: 'Schedule client bookings', icon: 'Calendar', route: '/business/appointments', category: 'Business Tools' },
 

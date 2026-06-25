@@ -65,7 +65,6 @@ export { Insurance } from './finance/Insurance';
 
 // ---- Business Ecosystem ----
 export { BusinessHub } from './business/BusinessHub';
-export { Payroll } from './business/Payroll';
 export { Properties } from './business/Properties';
 export { Appointments } from './business/Appointments';
 
