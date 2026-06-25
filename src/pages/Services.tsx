@@ -33,7 +33,7 @@ const VALID_APP_ROUTES = new Set([
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Smartphone, Wifi, Zap, Tv, RefreshCw, Wallet, Gift, Share2, Coins,
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank,
-  CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheck, FileText,
+  CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheckIcon, FileText,
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat,
   ArrowLeftRight,
 };
