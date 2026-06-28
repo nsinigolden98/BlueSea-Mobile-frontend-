@@ -16,17 +16,20 @@ import {
 const VALID_APP_ROUTES = new Set([
   '/', '/login', '/signup', '/dashboard', '/wallet', '/airtime', '/data', 
   '/marketplace', '/services', '/settings', '/profile', '/pin', '/light-bills', 
-  '/transactions', '/rewards', '/transaction-history', '/campaigns', '/airtime-buyback', 
+  '/transactions', '/rewards', '/transaction-history',  '/airtime-buyback', 
   '/group-payment', '/loyalty', '/more-services', '/notifications', '/event-manager', 
   '/scanner', '/scanner-assignments', '/my-tickets', '/vendor-verification', '/dstv', 
   '/gotv', '/startimes', '/showmax', '/waec-registration', '/waec-result', 
   '/jamb-registration', '/tv-subscription', '/auto-topup', '/support', '/checkout', 
-  '/messages', '/bluesphere', '/products', '/history', '/gift-cards', '/flights', 
-  '/spin-vault', '/betting', '/identity-center', '/finance', '/finance/savings', 
+  '/messages',  '/products', '/history', '/identity-center',  
+   
+  /*
+   '/finance/savings', 
   '/finance/cards', '/finance/crypto', '/finance/pension', '/finance/insurance', 
   '/business', '/payroll-pro', '/business/properties', '/business/appointments', 
   '/commerce/storefronts', '/commerce/freelance', '/commerce/affiliate', '/commerce/contracts', 
-  '/experience/streams', '/subscriptions'
+  '/experience/streams', '/subscriptions',
+  '/bluesphere', '/campaigns', '/gift-cards', '/flights', '/spin-vault', '/betting', '/finance',*/
 ]);
 
 // Centralized icon map to safely render string icons from the registry
