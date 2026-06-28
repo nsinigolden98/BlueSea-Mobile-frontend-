@@ -5,9 +5,9 @@ import { navItems } from '@/data';
 import { useAuth } from '@/context/AuthContext';
 import {
   LayoutGrid,
-  HandCoins,
+ // HandCoins,
   Smartphone,
-  Wifi,
+ // Wifi,
   Store,
   Globe,
   Gift,
@@ -17,10 +17,10 @@ import {
   Bell,
   Headphones,
   Grid3X3,
-  PlaneTakeoff,
+ // PlaneTakeoff,
   QrCode,
-  Orbit,
-  ShieldCheck
+  //Orbit,
+  //ShieldCheck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -30,19 +30,19 @@ interface SidebarProps {
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutGrid,
-  HandCoins,
+ // HandCoins,
   Smartphone,
-  Wifi,
+ // Wifi,
   Store,
   Globe,
   Gift,
   Bell,
   Headphones,
   Grid3X3,
-  PlaneTakeoff,
+ // PlaneTakeoff,
   QrCode,
-  Orbit,
-  ShieldCheck
+  //Orbit,
+ // ShieldCheck
 };
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {

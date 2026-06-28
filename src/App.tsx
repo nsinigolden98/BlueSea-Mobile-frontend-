@@ -49,10 +49,10 @@ import {
   Betting,
   BlueSphere,
   
-  FinanceHub, SavingsVault, BlueSeaCards, BspCrypto, Pension, Insurance,
+/* // FinanceHub, SavingsVault, BlueSeaCards, BspCrypto, Pension, Insurance,
   BusinessHub, Properties, Appointments,
   Storefronts, Freelance, Affiliate, Contracts,
-   Streams,Subscriptions, 
+   Streams,Subscriptions, */
 } from '@/pages';
 import IdentityCenter from '@/pages/IdentityCenter';
 import HistoryPage from '@/pages/History';
@@ -63,7 +63,7 @@ import { AuthLoader } from '@/components/ui-custom';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
-import PayrollProHome from './screens/payroll-pro/PayrollProHome';
+/*import PayrollProHome from './screens/payroll-pro/PayrollProHome';
 import CreateCompany from './screens/payroll-pro/CreateCompany';
 import CompanyWorkspace from './screens/payroll-pro/CompanyWorkspace';
 import BranchDetails from './screens/payroll-pro/BranchDetails';
@@ -71,7 +71,7 @@ import EmployeeProfile from './screens/payroll-pro/EmployeeProfile';
 import EmployeePortal from './screens/payroll-pro/EmployeePortal';
 import AddEmployee from './screens/payroll-pro/AddEmployee';
 import CreateBranch from './screens/payroll-pro/CreateBranch';
-import PayrollDetail from './screens/payroll-pro/PayrollDetail';
+import PayrollDetail from './screens/payroll-pro/PayrollDetail';*/
 
 /**
  * Global Layout Wrapper
@@ -177,7 +177,7 @@ function AppRoutes() {
 
 
 
-
+{/* Payroll Pro Routes 
  <Route path="/payroll-pro" element={<PayrollProHome />} />
       <Route path="/payroll-pro/create-company" element={<CreateCompany />} />
       <Route path="/payroll-pro/company/:companyId" element={<CompanyWorkspace />} />
@@ -186,34 +186,34 @@ function AppRoutes() {
       <Route path="/payroll-pro/branch/:branchId" element={<BranchDetails />} />
       <Route path="/payroll-pro/employee/:employeeId" element={<EmployeeProfile />} />
       <Route path="/payroll-pro/portal/:companyId" element={<EmployeePortal />} />
-      <Route path="/payroll-pro/payroll/:payrollId" element={<PayrollDetail />} />
+      <Route path="/payroll-pro/payroll/:payrollId" element={<PayrollDetail />} />*/}
 
 
 
 
-      {/* Finance Ecosystem */}
+      {/* Finance Ecosystem 
       <Route path="/finance" element={<ProtectedRoute><FinanceHub /></ProtectedRoute>} />
       <Route path="/finance/savings" element={<ProtectedRoute><SavingsVault /></ProtectedRoute>} />
       <Route path="/finance/cards" element={<ProtectedRoute><BlueSeaCards /></ProtectedRoute>} />
       <Route path="/finance/crypto" element={<ProtectedRoute><BspCrypto /></ProtectedRoute>} />
       <Route path="/finance/pension" element={<ProtectedRoute><Pension /></ProtectedRoute>} />
-      <Route path="/finance/insurance" element={<ProtectedRoute><Insurance /></ProtectedRoute>} /> 
+      <Route path="/finance/insurance" element={<ProtectedRoute><Insurance /></ProtectedRoute>} /> */}
 
-      {/* Business Ecosystem */}
+      {/* Business Ecosystem 
       <Route path="/business" element={<ProtectedRoute><BusinessHub /></ProtectedRoute>} />
       <Route path="/business/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
-      <Route path="/business/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+      <Route path="/business/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />*/}
 
 
-      {/* Commerce Ecosystem */}
+      {/* Commerce Ecosystem 
       <Route path="/commerce/storefronts" element={<ProtectedRoute><Storefronts /></ProtectedRoute>} />
       <Route path="/commerce/freelance" element={<ProtectedRoute><Freelance /></ProtectedRoute>} />
       <Route path="/commerce/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
-      <Route path="/commerce/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} /> 
+      <Route path="/commerce/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} /> */}
 
-      {/* Experience Ecosystem */}
+      {/* Experience Ecosystem 
       <Route path="/experience/streams" element={<ProtectedRoute><Streams /></ProtectedRoute>} />
-      <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />
+      <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />*/}
 
 
 
