@@ -242,17 +242,6 @@ export const airtimeAmounts = [50, 100, 200, 500, 1000, 2000];
 
 export const networks = ['MTN', 'Glo', 'Airtel', '9mobile'] as const;
 
-export type Network = typeof networks[number];
-
-export interface DataPlan {
-  id: string;
-  price: number;
-  size: string;
-  validity: string;
-  planType: string;
-  network: Network;
-  description: string;
-}
 
 // ---------------------------------------------------------
 // 1. RAW DICTIONARIES (OLD STRUCTURE + NEW CORRECT DATA)
