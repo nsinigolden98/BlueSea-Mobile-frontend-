@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react'; // Added useMemo
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar, Header, PinModal, TransactionModal, Toast } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,7 @@ export function Data() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<Network>('MTN');
   const [phoneNumber, setPhoneNumber] = useState(defaultNumber);
-  const [selectedPlanType, setSelectedPlanType] = useState<string>('Daily'); // Changed type to string for dynamism
+  const [selectedPlanType, setSelectedPlanType] = useState<string>('Daily');
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
@@ -32,7 +32,7 @@ export function Data() {
   const [recentNumbers, setRecentNumbers] = useState<string[]>([]);
   const [showRecentDropdown, setShowRecentDropdown] = useState(false);
 
-  // Group payment state (Untouched)
+  // Group payment state
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
@@ -96,7 +96,7 @@ export function Data() {
     localStorage.setItem('data_recent_numbers', JSON.stringify(updated));
   };
 
-  // Fixed payload: Sending plan.id (or key) instead of description to resolve "invalid_choice"
+  // Fixed payload: standardized to selectedPlan?.id per the recent data structures
   const payload = isGroupPayment ? {
     name: groupName,
     description: groupDescription,
@@ -104,10 +104,10 @@ export function Data() {
     sub_number: phoneNumber,
     target_amount: Number(selectedPlan?.price || 0),
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
-    plan: selectedPlan?.id || selectedPlan?.key, 
+    plan: selectedPlan?.id, 
     plan_type: selectedNetwork === '9mobile' ? 'etisalat': selectedNetwork.toLowerCase()
   } : {
-    plan: selectedPlan?.id || selectedPlan?.key,
+    plan: selectedPlan?.id,
     billersCode: phoneNumber,
     phone_number: phoneNumber,
   };
@@ -256,42 +256,41 @@ export function Data() {
                   )}
                 </div>
 
+                {/* Plan Types */}
+                <div className="space-y-3">
+                  <Label className="px-1 text-slate-500 dark:text-slate-400">Select Plan Type</Label>
+                  <div className="relative group">
+                    <div 
+                      className={cn(
+                        "flex flex-nowrap gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide",
+                        "[mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]"
+                      )}
+                      style={{
+                        scrollbarWidth: 'none', 
+                        msOverflowStyle: 'none',
+                        WebkitOverflowScrolling: 'touch'
+                      }}
+                    >
+                      {availablePlanTypes.map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setSelectedPlanType(type)}
+                          className={cn(
+                            'whitespace-nowrap px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 active:scale-90',
+                            'animate-in fade-in slide-in-from-right-4',
+                            selectedPlanType === type
+                              ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2 dark:ring-offset-slate-900 shadow-lg shadow-sky-500/20'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent'
+                          )}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
-
-             <div className="space-y-3">
-  <Label className="px-1 text-slate-500 dark:text-slate-400">Select Plan Type</Label>
-  
-  <div className="relative group">
-    <div 
-      className={cn(
-        "flex flex-nowrap gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide",
-        "[mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]"
-      )}
-      style={{
-        scrollbarWidth: 'none', 
-        msOverflowStyle: 'none',
-        WebkitOverflowScrolling: 'touch'
-      }}
-    >
-      {availablePlanTypes.map((type) => (
-        <button
-          key={type}
-          onClick={() => setSelectedPlanType(type)}
-          className={cn(
-            'whitespace-nowrap px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 active:scale-90',
-            'animate-in fade-in slide-in-from-right-4',
-            selectedPlanType === type
-              ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2 dark:ring-offset-slate-900 shadow-lg shadow-sky-500/20'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent'
-          )}
-        >
-          {type}
-        </button>
-      ))}
-    </div>
-  </div>
-</div>
-
+                {/* Plan Grid */}
                 <div className="grid grid-cols-3 gap-2 md:gap-3">
                   {filteredPlans.map((plan) => (
                     <button
@@ -322,7 +321,7 @@ export function Data() {
                   ))}
                 </div>
 
-                {/* Group Payment Toggle (Untouched) */}
+                {/* Group Payment Toggle */}
                 <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 transition-colors">
                   <div className="flex items-center gap-3">
                     <Users className="w-5 h-5 text-sky-500" />

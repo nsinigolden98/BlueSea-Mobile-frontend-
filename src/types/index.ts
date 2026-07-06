@@ -34,14 +34,12 @@ export type Network = 'MTN' | 'Glo' | 'Airtel' | '9mobile';
 
 export interface DataPlan {
   id: string;
-  size: string;
   price: number;
+  size: string;
   validity: string;
+  planType: string;
   network: Network;
-  // Added "Weekend" and "Special" here:
-  planType: "Daily" | "Weekly" | "Monthly" | "Extravalue" | "Social" | "Night" | "Binge" | "Mega" | "TV" | "Campus" | "DG" | "AlwaysOn" | "YouTube" | "MiFi" | "Router" | "Unlimited" | "Anytime" | "Weekend" | "Special";
   description: string;
-  key?: string; // Added optional key for 9mobile
 }
 
 
