@@ -132,13 +132,12 @@ export function Dashboard() {
                 </button>  
               </div>  
 
-              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-3 flex items-center justify-between shadow-sm">  
+              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-3 flex items-center justify-between shadow-sm"> onClick={redirect}
                 <div className="flex items-center gap-2">  
                   <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />  
                   <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">  
                     ₦{weeklyStats.amount.toLocaleString()} <span className="text-slate-500 dark:text-slate-500 font-normal ml-1">spent • {weeklyStats.count} transactions</span>  
                   </p>  
-                  onClick={redirect}
                 </div>  
                 <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600" 
                 onClick={redirect}
