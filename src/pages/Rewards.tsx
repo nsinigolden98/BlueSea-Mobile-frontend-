@@ -61,7 +61,7 @@ export function Rewards() {
   const navigate = useNavigate();
   const { showToast, ToastComponent } = Toast();
   const { LoaderComponent, showLoader, hideLoader } = Loader();
-  const {user} = useAuth()
+  const { user } = useAuth();
 
   const referralLink = `https://blueseamobile.com.ng/login?ref=${user?.referral_code}`;
 
@@ -130,20 +130,26 @@ export function Rewards() {
   const redeemedPoints = summary?.lifetime_redeemed ?? 0;
   const referralCount = summary?.referral_count ?? 0;
   const completedReferrals = summary?.completed_referrals ?? 0;
-  // const pendingReferrals = referralCount - completedReferrals;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
+      {/* Sidebar Panel Overlay (Sits over layout view at z-50 when invoked) */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header 
-          title="Rewards" 
-          subtitle="Earn & Redeem BluePoints"
-          onMenuClick={() => setSidebarOpen(true)} 
-        />
+      {/* Main Viewport Content Context Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+        
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+          <Header 
+            title="Rewards" 
+            subtitle="Earn & Redeem BluePoints"
+            onMenuClick={() => setSidebarOpen(true)} 
+          />
+        </div>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        {/* ISOLATED SCROLLABLE CONTENT AREA */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Points Summary Card */}
             <div className="bg-gradient-to-br from-sky-400 via-sky-500 to-sky-600 rounded-2xl p-6 text-white shadow-lg shadow-sky-500/25">
@@ -210,7 +216,7 @@ export function Rewards() {
               ))}
             </div>
 
-            {/* Content */}
+            {/* Content Switcher */}
             {loading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
@@ -251,29 +257,29 @@ export function Rewards() {
                 )}
               </div>
             ) : activeTab === 'referral' ? (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-8 text-center">
-                    <div className="w-16 h-16 bg-sky-100 dark:bg-sky-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Users className="w-8 h-8 text-sky-500" />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Referral Earnings</h3>
-                    <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-6 text-sm">
-                        Invite friends and earn 50 BluePoints when they complete their first transaction.
-                    </p>
-                    <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
-                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                            <p className="text-[10px] text-slate-400 uppercase font-bold">Total</p>
-                            <p className="text-lg font-bold text-slate-800 dark:text-white">{referralCount}</p>
-                        </div>
-                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                            <p className="text-[10px] text-slate-400 uppercase font-bold">Completed</p>
-                            <p className="text-lg font-bold text-green-500">{completedReferrals}</p>
-                        </div>
-                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                            <p className="text-[10px] text-slate-400 uppercase font-bold">Bonus Earned</p>
-                            <p className="text-lg font-bold text-sky-500">{completedReferrals * 50}</p>
-                        </div>
-                    </div>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-8 text-center">
+                <div className="w-16 h-16 bg-sky-100 dark:bg-sky-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-sky-500" />
                 </div>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Referral Earnings</h3>
+                <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-6 text-sm">
+                  Invite friends and earn 50 BluePoints when they complete their first transaction.
+                </p>
+                <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold">Total</p>
+                    <p className="text-lg font-bold text-slate-800 dark:text-white">{referralCount}</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold">Completed</p>
+                    <p className="text-lg font-bold text-green-500">{completedReferrals}</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                    <p className="text-[10px] text-slate-400 uppercase font-bold">Bonus Earned</p>
+                    <p className="text-lg font-bold text-sky-500">{completedReferrals * 50}</p>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="space-y-6">
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -284,9 +290,9 @@ export function Rewards() {
                     { id: 'YT', Icon: Youtube, ph: 'YT Channel' }
                   ].map((s) => (
                     <div key={s.id} className="flex-shrink-0 flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-1.5 rounded-xl">
-                       <s.Icon className="w-4 h-4 text-slate-400 ml-1" />
-                       <input type="text" placeholder={s.ph} className="bg-transparent border-none text-xs focus:ring-0 w-20 dark:text-white p-0" />
-                       <button onClick={() => handleSocialVerify(s.id)} className="p-1.5 bg-green-500 text-white rounded-lg"><Check className="w-3 h-3" /></button>
+                      <s.Icon className="w-4 h-4 text-slate-400 ml-1" />
+                      <input type="text" placeholder={s.ph} className="bg-transparent border-none text-xs focus:ring-0 w-20 dark:text-white p-0" />
+                      <button onClick={() => handleSocialVerify(s.id)} className="p-1.5 bg-green-500 text-white rounded-lg"><Check className="w-3 h-3" /></button>
                     </div>
                   ))}
                 </div>
@@ -294,34 +300,34 @@ export function Rewards() {
                 <div className="space-y-3">
                   {tasks.map((task) => (
                     <div key={task.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-                        <div className="p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/20 flex items-center justify-center text-sky-500">
-                                    {task.type === 'video' ? <PlayCircle className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
-                                </div>
-                                <div>
-                                    <p className="font-medium text-slate-800 dark:text-white text-sm">{task.name}</p>
-                                    <p className="text-[10px] font-bold text-sky-500 uppercase">+{task.points} Points</p>
-                                </div>
-                            </div>
-                            <Button 
-                                size="sm"
-                                variant={task.status === 'start' ? 'default' : 'secondary'}
-                                className={cn("h-8 text-xs", task.status === 'start' ? 'bg-sky-500' : '')}
-                                onClick={() => task.type === 'video' ? setExpandedTask(expandedTask === task.id ? null : task.id) : null}
-                            >
-                                {task.status === 'start' ? 'Start' : 'Pending'}
-                            </Button>
+                      <div className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/20 flex items-center justify-center text-sky-500">
+                            {task.type === 'video' ? <PlayCircle className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
+                          </div>
+                          <div>
+                            <p className="font-medium text-slate-800 dark:text-white text-sm">{task.name}</p>
+                            <p className="text-[10px] font-bold text-sky-500 uppercase">+{task.points} Points</p>
+                          </div>
                         </div>
-                        {expandedTask === task.id && (
-                            <div className="px-4 pb-4 pt-2 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                                <p className="text-[10px] text-slate-500 mb-2">Find the hidden code in the video</p>
-                                <div className="flex gap-2">
-                                    <input value={youtubeCode} onChange={(e) => setYoutubeCode(e.target.value)} placeholder="Code" className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1 text-xs dark:text-white" />
-                                    <Button size="sm" className="bg-sky-500 h-8" onClick={handleVerifyYoutube}>Verify</Button>
-                                </div>
-                            </div>
-                        )}
+                        <Button 
+                          size="sm"
+                          variant={task.status === 'start' ? 'default' : 'secondary'}
+                          className={cn("h-8 text-xs", task.status === 'start' ? 'bg-sky-500' : '')}
+                          onClick={() => task.type === 'video' ? setExpandedTask(expandedTask === task.id ? null : task.id) : null}
+                        >
+                          {task.status === 'start' ? 'Start' : 'Pending'}
+                        </Button>
+                      </div>
+                      {expandedTask === task.id && (
+                        <div className="px-4 pb-4 pt-2 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                          <p className="text-[10px] text-slate-500 mb-2">Find the hidden code in the video</p>
+                          <div className="flex gap-2">
+                            <input value={youtubeCode} onChange={(e) => setYoutubeCode(e.target.value)} placeholder="Code" className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1 text-xs dark:text-white" />
+                            <Button size="sm" className="bg-sky-500 h-8" onClick={handleVerifyYoutube}>Verify</Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -329,12 +335,16 @@ export function Rewards() {
             )}
           </div>
         </main>
+
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER (Hidden on Desktop viewports) */}
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
+          <MobileBottomNavigation />
+        </div>
       </div>
+
+      {/* Persistent global layout alerts and animations */}
       <ToastComponent />
       <LoaderComponent />
-      
-      {/* 3. Production Mobile Bottom Navigation Bar */}
-      <MobileBottomNavigation />
     </div>
   );
 }
@@ -358,6 +368,7 @@ function StatCard({ icon, label, value, color, isBalance }: { icon: React.ReactN
   );
 }
 
+// Contextually rendered placeholder for missing transaction histories
 function EmptyState({ icon, text }: { icon: React.ReactNode, text: string }) {
   return (
     <div className="text-center py-12">
@@ -366,4 +377,3 @@ function EmptyState({ icon, text }: { icon: React.ReactNode, text: string }) {
     </div>
   );
 }
- 

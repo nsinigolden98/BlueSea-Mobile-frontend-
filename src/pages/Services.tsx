@@ -24,14 +24,6 @@ const VALID_APP_ROUTES = new Set([
   '/gotv', '/startimes', '/showmax', '/waec-registration', '/waec-result', 
   '/jamb-registration', '/tv-subscription', '/auto-topup', '/support', '/checkout', 
   '/messages',  '/products', '/history', '/identity-center',  
-   
-  /*
-   '/finance/savings', 
-  '/finance/cards', '/finance/crypto', '/finance/pension', '/finance/insurance', 
-  '/business', '/payroll-pro', '/business/properties', '/business/appointments', 
-  '/commerce/storefronts', '/commerce/freelance', '/commerce/affiliate', '/commerce/contracts', 
-  '/experience/streams', '/subscriptions',
-  '/bluesphere', '/campaigns', '/gift-cards', '/flights', '/spin-vault', '/betting', '/finance',*/
 ]);
 
 // Centralized icon map to safely render string icons from the registry
@@ -53,7 +45,6 @@ const Badge = ({ type }: { type: Service['badge'] }) => {
   
   return (
     <span className={cn('flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide absolute -top-2 -right-2 border border-white dark:border-slate-900 shadow-sm z-10', styles[type])}>
-      {/* Actively using the Star icon for highlight badges */}
       {(type === 'Recommended' || type === 'Popular') && <Star className="w-2.5 h-2.5 fill-current" />}
       {type}
     </span>
@@ -73,7 +64,6 @@ export function Services() {
   }, []);
 
   const handleNavigation = (service: Service) => {
-    // Keep a maximum of 3 unique recent services, drop the oldest
     const newRecents = [service.id, ...recentServiceIds.filter(id => id !== service.id)].slice(0, 3);
     setRecentServiceIds(newRecents);
     localStorage.setItem('@bluesea_recent_services', JSON.stringify(newRecents));
@@ -93,7 +83,7 @@ export function Services() {
   }, [searchQuery]);
 
   const renderServiceCard = (service: Service) => {
-    const Icon = iconMap[service.icon] || Wallet; // Fallback icon
+    const Icon = iconMap[service.icon] || Wallet;
     const isRouteValid = VALID_APP_ROUTES.has(service.route);
 
     return (
@@ -129,24 +119,30 @@ export function Services() {
           </h3>
         </div>
 
-        {/* Actively using the ChevronRight icon as a clean interaction indicator */}
         <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-sky-500 transition-colors shrink-0" />
       </button>
     );
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex font-sans">
+    <div className="h-screen bg-slate-50 dark:bg-slate-950 flex font-sans overflow-hidden">
+      {/* Sidebar Panel Overlay (Sits over layout context at z-50 when active) */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header 
-          title="Super App Hub" 
-          subtitle="Explore the BlueSea Ecosystem"
-          onMenuClick={() => setSidebarOpen(true)} 
-        />
+      {/* Main Viewport Content Context Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+        
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-950">
+          <Header 
+            title="Super App Hub" 
+            subtitle="Explore the BlueSea Ecosystem"
+            onMenuClick={() => setSidebarOpen(true)} 
+          />
+        </div>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto custom-scrollbar">
+        {/* ISOLATED SCROLLABLE CONTENT AREA */}
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-7xl mx-auto space-y-8">
             
             {/* Search Section */}
@@ -179,14 +175,13 @@ export function Services() {
               </div>
             ) : (
               <>
-                {/* Recently Used (Max 3 Items) */}
+                {/* Recently Used */}
                 {recentServiceIds.length > 0 && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-slate-900 dark:text-white">
                       <Clock className="w-4 h-4 text-sky-500" />
                       <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recently Used</h2>
                     </div>
-                    {/* Compact 3-column layout on all devices */}
                     <div className="grid grid-cols-3 md:flex md:flex-row gap-3">
                       {recentServiceIds
                         .map(id => services.find(s => s.id === id)!)
@@ -219,7 +214,6 @@ export function Services() {
                           </span>
                         </div>
                         
-                        {/* High-density grid tailored for fast scanning */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                           {categoryServices.map((service) => renderServiceCard(service))}
                         </div>
@@ -231,10 +225,12 @@ export function Services() {
             )}
           </div>
         </main>
+
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER (Hidden on Desktop natively) */}
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
+          <MobileBottomNavigation />
+        </div>
       </div>
-      
-      {/* 3. Production Mobile Bottom Navigation Bar */}
-      <MobileBottomNavigation />
     </div>
   );
 }

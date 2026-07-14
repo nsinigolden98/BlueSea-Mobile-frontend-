@@ -6,7 +6,7 @@ import {
   QuickActions,
   TransactionList
 } from '@/components/ui-custom';
-import { announcements, TransactionsData } from '@/data';
+import { TransactionsData } from '@/data';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
 import { type Transaction } from '@/types';
@@ -24,7 +24,7 @@ import { useNavigate } from 'react-router-dom';
 
 export function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>([]);
+  
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const navigate = useNavigate();
 
@@ -42,10 +42,7 @@ export function Dashboard() {
   
   const redirect = () => (window.location.href = '/transaction-history');
 
-  const activeAnnouncements = announcements.filter(
-    a => !dismissedAnnouncements.includes(a.id) && a.priority === 'high'
-  );
-
+  
   const weeklyStats = useMemo(() => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -101,27 +98,6 @@ export function Dashboard() {
           />  
         </div>
 
-        {/* 1. AUTO-SCROLL BILLBOARD (Fixed directly underneath the Header) */}  
-        {activeAnnouncements.length > 0 && (  
-          <div className="shrink-0 bg-slate-50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-white/5 py-2 overflow-hidden group z-20">  
-            <div className="animate-marquee flex items-center">  
-              {[...activeAnnouncements, ...activeAnnouncements].map((announcement, idx) => (  
-                <div key={`${announcement.id}-${idx}`} className="flex items-center gap-3 px-8 border-r border-slate-200 dark:border-white/5">  
-                  <Megaphone className="w-3 h-3 text-sky-500 dark:text-sky-400" />  
-                  <span className="text-[11px] font-medium tracking-wide text-slate-500 dark:text-slate-400">  
-                    {announcement.title}: {announcement.content}  
-                  </span>  
-                  <button   
-                    onClick={() => setDismissedAnnouncements([...dismissedAnnouncements, announcement.id])}  
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"  
-                  >  
-                    <X className="w-3 h-3 text-slate-400 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white" />  
-                  </button>  
-                </div>  
-              ))}  
-            </div>  
-          </div>  
-        )}  
 
         {/* ISOLATED SCROLLABLE PAGE CONTENT CONTAINER */}  
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">  
