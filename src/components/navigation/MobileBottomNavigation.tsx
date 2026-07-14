@@ -1,3 +1,5 @@
+// /src/components/navigation/MobileBottomNavigation.tsx
+
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -48,7 +50,7 @@ export function MobileBottomNavigation() {
               }
             >
               <div className={cn(navStyles.iconContainer, isActive ? navStyles.activeIcon : navStyles.inactiveIcon)}>
-                <Icon className="w-5 h-5" />
+                <Icon className="w-[22px] h-[22px] transition-transform" />
               </div>
               <span className={cn(navStyles.label, isActive ? navStyles.activeLabel : navStyles.inactiveLabel)}>
                 {item.label}
@@ -83,7 +85,7 @@ export function MobileBottomNavigation() {
                     {getInitials()}
                   </div>
                 ) : (
-                  <User className="w-3.5 h-3.5 text-slate-500" />
+                  <User className="w-4 h-4 text-slate-500" />
                 )}
               </div>
               <span className={cn(navStyles.label, isProfileActive ? navStyles.activeLabel : navStyles.inactiveLabel)}>
