@@ -7,6 +7,8 @@ import {
   TransactionList
 } from '@/components/ui-custom';
 import { announcements, TransactionsData } from '@/data';
+import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
+
 import { type Transaction } from '@/types';
 import {
   Megaphone,
@@ -201,6 +203,9 @@ export function Dashboard() {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm">  
                <TransactionList />  
             </div>  
+            
+      {/* 3. Production Mobile Bottom Navigation Bar */}
+      <MobileBottomNavigation />
           </div>  
         </main>  
       </div>  
