@@ -141,6 +141,11 @@ export function Dashboard() {
                 {recentTransactions.length > 0 ? (
                   recentTransactions.map((tx) => {  
                     const isDebit = tx.transaction_type === 'DEBIT';  
+                    
+                    // Safe typecasting to handle dynamic runtime API keys without breaking TS strict compiler rules
+                    const txExtended = tx as Record<string, any>;
+                    const displayName = txExtended.title || txExtended.narration || txExtended.description || (isDebit ? 'Spends / Debits' : 'Received Funds');
+
                     return (  
                       <div key={tx.id} className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">  
                         <div className="flex items-center gap-3 min-w-0">  
@@ -152,7 +157,7 @@ export function Dashboard() {
                           </div>  
                           <div className="min-w-0">  
                             <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">  
-                              {tx.title || tx.narration || (isDebit ? 'Spends / Debits' : 'Received Funds')}  
+                              {displayName}  
                             </p>  
                             <p className="text-[10px] text-slate-400 dark:text-slate-500">  
                               {new Date(tx.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}  
