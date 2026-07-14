@@ -40,9 +40,7 @@ export function Dashboard() {
     loadData();
   }, []);
   
-  
   const redirect = () => (window.location.href = '/transaction-history');
-  
 
   const activeAnnouncements = announcements.filter(
     a => !dismissedAnnouncements.includes(a.id) && a.priority === 'high'
@@ -72,7 +70,7 @@ export function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
+    <div className="h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes marquee {
           0% { transform: translateX(0); }
@@ -88,18 +86,24 @@ export function Dashboard() {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       ` }} />  
 
+      {/* Sidebar Panel Overlay (Sits over everything at z-50 when active) */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />  
 
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 transition-colors duration-300">  
-        <Header  
-          title="Dashboard"  
-          subtitle="The Trusted Way To Stay Connected"  
-          onMenuClick={() => setSidebarOpen(true)}  
-        />  
+      {/* Main Viewport Content Context Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-950 transition-colors duration-300 relative">  
+        
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-white dark:bg-slate-950">
+          <Header  
+            title="Dashboard"  
+            subtitle="The Trusted Way To Stay Connected"  
+            onMenuClick={() => setSidebarOpen(true)}  
+          />  
+        </div>
 
-        {/* 1. AUTO-SCROLL BILLBOARD */}  
+        {/* 1. AUTO-SCROLL BILLBOARD (Fixed directly underneath the Header) */}  
         {activeAnnouncements.length > 0 && (  
-          <div className="bg-slate-50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-white/5 py-2 overflow-hidden group">  
+          <div className="shrink-0 bg-slate-50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-white/5 py-2 overflow-hidden group z-20">  
             <div className="animate-marquee flex items-center">  
               {[...activeAnnouncements, ...activeAnnouncements].map((announcement, idx) => (  
                 <div key={`${announcement.id}-${idx}`} className="flex items-center gap-3 px-8 border-r border-slate-200 dark:border-white/5">  
@@ -119,7 +123,8 @@ export function Dashboard() {
           </div>  
         )}  
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">  
+        {/* ISOLATED SCROLLABLE PAGE CONTENT CONTAINER */}  
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">  
           <div className="max-w-4xl mx-auto space-y-5">  
               
             {/* 2. BALANCE CARD & WEEKLY SUMMARY */}  
@@ -142,7 +147,7 @@ export function Dashboard() {
                   </p>  
                 </div>  
                 <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600" 
-                onClick={redirect}
+                  onClick={redirect}
                 />  
               </div>  
             </div>  
@@ -178,7 +183,7 @@ export function Dashboard() {
               </div>  
             </section>  
 
-            {/* REWARDS (The only remaining gradient) */}  
+            {/* REWARDS */}  
             <div  
               onClick={() => navigate('/rewards')}  
               className="bg-gradient-to-br from-sky-500 to-sky-700 rounded-2xl p-4 text-white cursor-pointer hover:shadow-lg hover:shadow-sky-500/20 transition-all active:scale-[0.98] shadow-sm"  
@@ -203,13 +208,15 @@ export function Dashboard() {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm">  
                <TransactionList />  
             </div>  
-            
-      {/* 3. Production Mobile Bottom Navigation Bar */}
-      <MobileBottomNavigation />
           </div>  
         </main>  
+
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER (Hidden on Desktop natively) */}
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
+          <MobileBottomNavigation />
+        </div>
+
       </div>  
     </div>
   );
 }
-
