@@ -8,7 +8,6 @@ import { patchRequest, ENDPOINTS } from '@/types';
 import { Loader } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
-
 export function Profile() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -95,7 +94,7 @@ export function Profile() {
       } catch (error) {
         console.error('Failed to fetch states', error);
       } finally {
-        setLoadingLocations(prev => ({ ...prev, states: false }));
+        setLoadingLocations(prev => ({ ...prev, states: true }));
       }
     };
     fetchStates();
@@ -194,7 +193,6 @@ export function Profile() {
     showLoader();
 
     try {
-      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 800));
 
       const dataToSave = {
@@ -202,14 +200,9 @@ export function Profile() {
         updatedAt: new Date().toISOString()
       };
 
-      // TODO: Send location to backend
-      // await patchRequest(ENDPOINTS.user, { deliveryLocation: dataToSave });
-
       localStorage.setItem('marketplace_delivery_location', JSON.stringify(dataToSave));
       setDeliveryLocation(dataToSave);
       setIsEditingLocation(false);
-      
-      // Feedback via existing pattern if any, otherwise local state UI
     } catch (error) {
       console.error('Failed to save location:', error);
     } finally {
@@ -227,294 +220,308 @@ export function Profile() {
   const selectClassName = "flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:placeholder:text-slate-400 dark:focus-visible:ring-slate-300 appearance-none";
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-        <button 
-          onClick={() => navigate(-1)}
-          className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-xl font-bold text-slate-800 dark:text-white">My Profile</h1>
-      </div>
-
-      <main className="p-4 md:p-6">
-        <div className="max-w-2xl mx-auto">
-          {/* Profile Picture */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative">
-              {imagePreview || user?.profilePicture ? (
-                <img 
-                  src={imagePreview || user?.profilePicture} 
-                  alt="Profile" 
-                  className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-slate-800"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
-                  <span className="text-3xl font-bold text-slate-600 dark:text-slate-300">
-                    {user?.firstName?.[0]}{user?.surname?.[0]}
-                  </span>
-                </div>
-              )}
-              <button 
-                onClick={handleImageClick}
-                disabled={uploading}
-                className="absolute bottom-0 right-0 w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center shadow-lg hover:bg-sky-600 transition-colors disabled:opacity-50"
-              >
-                {uploading ? (
-                  <Upload className="w-4 h-4 text-white animate-spin" />
-                ) : (
-                  <Camera className="w-4 h-4 text-white" />
-                )}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-            </div>
-            <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Tap camera to change profile picture</p>
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden font-sans">
+      
+      {/* Primary Layout Container Viewport Context */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+        
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-white dark:bg-slate-900">
+          <div className="flex items-center gap-3 px-4 py-4 border-b border-slate-100 dark:border-slate-800">
+            <button 
+              onClick={() => navigate(-1)}
+              className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-bold text-slate-800 dark:text-white">My Profile</h1>
           </div>
+        </div>
 
-          {/* Profile Fields Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-6">
-            {profileFields.map((field, index) => (
-              <div
-                key={field.id}
-                className={cn(
-                  'flex items-center justify-between p-4',
-                  index !== profileFields.length - 1 && 'border-b border-slate-100 dark:border-slate-800'
+        {/* ISOLATED SCROLLABLE CONTENT AREA */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
+          <div className="max-w-2xl mx-auto">
+            
+            {/* Profile Picture */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="relative">
+                {imagePreview || user?.profilePicture ? (
+                  <img 
+                    src={imagePreview || user?.profilePicture} 
+                    alt="Profile" 
+                    className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-slate-800"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
+                    <span className="text-3xl font-bold text-slate-600 dark:text-slate-300">
+                      {user?.firstName?.[0]}{user?.surname?.[0]}
+                    </span>
+                  </div>
                 )}
-              >
-                <div className="text-left flex-1">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{field.label}</p>
-                  {field.id === 'phone' && editingPhone ? (
-                    <div className="flex gap-2 mt-1">
+                <button 
+                  onClick={handleImageClick}
+                  disabled={uploading}
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center shadow-lg hover:bg-sky-600 transition-colors disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <Upload className="w-4 h-4 text-white animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4 text-white" />
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </div>
+              <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Tap camera to change profile picture</p>
+            </div>
+
+            {/* Profile Fields Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-6">
+              {profileFields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className={cn(
+                    'flex items-center justify-between p-4',
+                    index !== profileFields.length - 1 && 'border-b border-slate-100 dark:border-slate-800'
+                  )}
+                >
+                  <div className="text-left flex-1">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{field.label}</p>
+                    {field.id === 'phone' && editingPhone ? (
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          type="tel"
+                          maxLength={11}
+                          value={phoneValue}
+                          onChange={(e) => setPhoneValue(e.target.value)}
+                          placeholder="Enter phone number"
+                          className="flex-1"
+                        />
+                        <button
+                          onClick={handleSavePhone}
+                          className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                        >
+                          <Save className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingPhone(false);
+                            setPhoneValue(user?.phone || '');
+                          }}
+                          className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-slate-800 dark:text-white">{field.value || 'Not set'}</p>
+                        {field.editable && !editingPhone && (
+                          <button
+                            onClick={() => setEditingPhone(true)}
+                            className="text-xs text-sky-500 hover:text-sky-600"
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Delivery Location Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-6">
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-slate-400" />
+                  <h3 className="font-semibold text-slate-800 dark:text-white">Delivery Location</h3>
+                </div>
+                {deliveryLocation && !isEditingLocation && (
+                  <button
+                    onClick={() => setIsEditingLocation(true)}
+                    className="text-xs text-sky-500 hover:text-sky-600 font-medium"
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+
+              <div className="p-4">
+                {!deliveryLocation && !isEditingLocation ? (
+                  <div className="py-4 text-center">
+                    <button
+                      onClick={() => setIsEditingLocation(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-xl font-medium hover:bg-sky-600 transition-colors"
+                    >
+                      Add Delivery Location
+                    </button>
+                  </div>
+                ) : isEditingLocation ? (
+                  <div className="space-y-4">
+                    {/* Country Select */}
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">Country</label>
+                      <div className="relative">
+                        <select
+                          value={locationForm.country}
+                          onChange={(e) => setLocationForm({ ...locationForm, country: e.target.value, state: '', city: '' })}
+                          className={cn(selectClassName, errors.country && "border-red-500")}
+                          disabled={loadingLocations.countries}
+                        >
+                          <option value="">{loadingLocations.countries ? 'Loading countries...' : 'Select Country'}</option>
+                          {countries.map((c) => (
+                            <option key={c.iso2} value={c.country}>{c.country}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                      </div>
+                      {errors.country && <p className="text-[10px] text-red-500 ml-1">{errors.country}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* State Select */}
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">State</label>
+                        <div className="relative">
+                          <select
+                            value={locationForm.state}
+                            onChange={(e) => setLocationForm({ ...locationForm, state: e.target.value, city: '' })}
+                            className={cn(selectClassName, errors.state && "border-red-500")}
+                            disabled={!locationForm.country || loadingLocations.states}
+                          >
+                            <option value="">{loadingLocations.states ? 'Loading...' : 'Select State'}</option>
+                            {states.map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
+                        {errors.state && <p className="text-[10px] text-red-500 ml-1">{errors.state}</p>}
+                      </div>
+
+                      {/* City/LGA Select */}
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">City / LGA</label>
+                        <div className="relative">
+                          <select
+                            value={locationForm.city}
+                            onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })}
+                            className={cn(selectClassName, errors.city && "border-red-500")}
+                            disabled={!locationForm.state || loadingLocations.cities}
+                          >
+                            <option value="">{loadingLocations.cities ? 'Loading...' : 'Select City'}</option>
+                            {cities.map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
+                        {errors.city && <p className="text-[10px] text-red-500 ml-1">{errors.city}</p>}
+                      </div>
+                    </div>
+
+{/* Address Line */}
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">Address Line</label>
                       <Input
-                        type="tel"
-                        maxLength={11}
-                        value={phoneValue}
-                        onChange={(e) => setPhoneValue(e.target.value)}
-                        placeholder="Enter phone number"
-                        className="flex-1"
+                        placeholder="Street address, apartment, suite"
+                        value={locationForm.addressLine}
+                        onChange={(e) => setLocationForm({ ...locationForm, addressLine: e.target.value })}
+                        className={errors.addressLine ? "border-red-500" : ""}
                       />
+                      {errors.addressLine && <p className="text-[10px] text-red-500 ml-1">{errors.addressLine}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Landmark */}
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">Landmark (Optional)</label>
+                        <Input
+                          placeholder="e.g. Near Big Plaza"
+                          value={locationForm.landmark}
+                          onChange={(e) => setLocationForm({ ...locationForm, landmark: e.target.value })}
+                        />
+                      </div>
+
+                      {/* Postal Code */}
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">Postal Code (Optional)</label>
+                        <Input
+                          placeholder="100001"
+                          value={locationForm.postalCode}
+                          onChange={(e) => setLocationForm({ ...locationForm, postalCode: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
                       <button
-                        onClick={handleSavePhone}
-                        className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                        onClick={handleSaveLocation}
+                        disabled={savingLocation}
+                        className="flex-1 h-11 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                       >
                         <Save className="w-4 h-4" />
+                        {savingLocation ? 'Saving...' : 'Save Location'}
                       </button>
                       <button
                         onClick={() => {
-                          setEditingPhone(false);
-                          setPhoneValue(user?.phone || '');
+                          setIsEditingLocation(false);
+                          setLocationForm(deliveryLocation || {
+                            country: '', state: '', city: '', addressLine: '', landmark: '', postalCode: ''
+                          });
+                          setErrors({});
                         }}
-                        className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        className="px-4 h-11 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                       >
-                        <X className="w-4 h-4" />
+                        Cancel
                       </button>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-slate-800 dark:text-white">{field.value || 'Not set'}</p>
-                      {field.editable && !editingPhone && (
-                        <button
-                          onClick={() => setEditingPhone(true)}
-                          className="text-xs text-sky-500 hover:text-sky-600"
-                        >
-                          Edit
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Delivery Location Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-6">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-slate-400" />
-                <h3 className="font-semibold text-slate-800 dark:text-white">Delivery Location</h3>
-              </div>
-              {deliveryLocation && !isEditingLocation && (
-                <button
-                  onClick={() => setIsEditingLocation(true)}
-                  className="text-xs text-sky-500 hover:text-sky-600 font-medium"
-                >
-                  Edit
-                </button>
-              )}
-            </div>
-
-            <div className="p-4">
-              {!deliveryLocation && !isEditingLocation ? (
-                <div className="py-4 text-center">
-                  <button
-                    onClick={() => setIsEditingLocation(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-xl font-medium hover:bg-sky-600 transition-colors"
-                  >
-                    Add Delivery Location
-                  </button>
-                </div>
-              ) : isEditingLocation ? (
-                <div className="space-y-4">
-                  {/* Country Select */}
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">Country</label>
-                    <div className="relative">
-                      <select
-                        value={locationForm.country}
-                        onChange={(e) => setLocationForm({ ...locationForm, country: e.target.value, state: '', city: '' })}
-                        className={cn(selectClassName, errors.country && "border-red-500")}
-                        disabled={loadingLocations.countries}
-                      >
-                        <option value="">{loadingLocations.countries ? 'Loading countries...' : 'Select Country'}</option>
-                        {countries.map((c) => (
-                          <option key={c.iso2} value={c.country}>{c.country}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
-                    </div>
-                    {errors.country && <p className="text-[10px] text-red-500 ml-1">{errors.country}</p>}
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* State Select */}
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">State</label>
-                      <div className="relative">
-                        <select
-                          value={locationForm.state}
-                          onChange={(e) => setLocationForm({ ...locationForm, state: e.target.value, city: '' })}
-                          className={cn(selectClassName, errors.state && "border-red-500")}
-                          disabled={!locationForm.country || loadingLocations.states}
-                        >
-                          <option value="">{loadingLocations.states ? 'Loading...' : 'Select State'}</option>
-                          {states.map((s) => (
-                            <option key={s} value={s}>{s}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1 p-2 bg-sky-50 dark:bg-sky-900/30 rounded-lg">
+                        <CheckCircle2 className="w-4 h-4 text-sky-500" />
                       </div>
-                      {errors.state && <p className="text-[10px] text-red-500 ml-1">{errors.state}</p>}
-                    </div>
-
-                    {/* City/LGA Select */}
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">City / LGA</label>
-                      <div className="relative">
-                        <select
-                          value={locationForm.city}
-                          onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })}
-                          className={cn(selectClassName, errors.city && "border-red-500")}
-                          disabled={!locationForm.state || loadingLocations.cities}
-                        >
-                          <option value="">{loadingLocations.cities ? 'Loading...' : 'Select City'}</option>
-                          {cities.map((c) => (
-                            <option key={c} value={c}>{c}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
-                      </div>
-                      {errors.city && <p className="text-[10px] text-red-500 ml-1">{errors.city}</p>}
-                    </div>
-                  </div>
-
-                  {/* Address Line */}
-                  <div className="space-y-1">
-                    <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">Address Line</label>
-                    <Input
-                      placeholder="Street address, apartment, suite"
-                      value={locationForm.addressLine}
-                      onChange={(e) => setLocationForm({ ...locationForm, addressLine: e.target.value })}
-                      className={errors.addressLine ? "border-red-500" : ""}
-                    />
-                    {errors.addressLine && <p className="text-[10px] text-red-500 ml-1">{errors.addressLine}</p>}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Landmark */}
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">Landmark (Optional)</label>
-                      <Input
-                        placeholder="e.g. Near Big Plaza"
-                        value={locationForm.landmark}
-                        onChange={(e) => setLocationForm({ ...locationForm, landmark: e.target.value })}
-                      />
-                    </div>
-
-                    {/* Postal Code */}
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-500 dark:text-slate-400 ml-1">Postal Code (Optional)</label>
-                      <Input
-                        placeholder="100001"
-                        value={locationForm.postalCode}
-                        onChange={(e) => setLocationForm({ ...locationForm, postalCode: e.target.value })}
-                      />
-                    </div>
-                  </div>
-    <div className="flex gap-3 pt-2">
-                    <button
-                      onClick={handleSaveLocation}
-                      disabled={savingLocation}
-                      className="flex-1 h-11 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      {savingLocation ? 'Saving...' : 'Save Location'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsEditingLocation(false);
-                        setLocationForm(deliveryLocation || {
-                          country: '', state: '', city: '', addressLine: '', landmark: '', postalCode: ''
-                        });
-                        setErrors({});
-                      }}
-                      className="px-4 h-11 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1 p-2 bg-sky-50 dark:bg-sky-900/30 rounded-lg">
-                      <CheckCircle2 className="w-4 h-4 text-sky-500" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-800 dark:text-white leading-tight">
-                        {deliveryLocation.addressLine}
-                      </p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        {deliveryLocation.city}, {deliveryLocation.state}
-                      </p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
-                        {deliveryLocation.country} {deliveryLocation.postalCode && `• ${deliveryLocation.postalCode}`}
-                      </p>
-                      {deliveryLocation.landmark && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 italic">
-                          Landmark: {deliveryLocation.landmark}
+                      <div>
+                        <p className="font-medium text-slate-800 dark:text-white leading-tight">
+                          {deliveryLocation.addressLine}
                         </p>
-                      )}
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                          {deliveryLocation.city}, {deliveryLocation.state}
+                        </p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          {deliveryLocation.country} {deliveryLocation.postalCode && `• ${deliveryLocation.postalCode}`}
+                        </p>
+                        {deliveryLocation.landmark && (
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 italic">
+                            Landmark: {deliveryLocation.landmark}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
+
           </div>
+        </main>
+
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER (Hidden natively on Desktop viewports) */}
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
+          <MobileBottomNavigation />
         </div>
-      </main>
+      </div>
+
       <LoaderComponent />
-      
-      {/* 3. Production Mobile Bottom Navigation Bar */}
-      <MobileBottomNavigation />
     </div>
   );
 }
