@@ -9,7 +9,7 @@ interface BalanceCardProps {
   onDeposit?: () => void;
   onWithdraw?: () => void;
   className?: string;
-}
+} 
 
 export function BalanceCard({
   showActions = false,
