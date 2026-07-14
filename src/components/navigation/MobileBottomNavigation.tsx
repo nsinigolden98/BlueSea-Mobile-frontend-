@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { Home, Gift, Compass, User } from 'lucide-react';
+import { Home, Gift, Compass, Store, User } from 'lucide-react';
 import { navStyles } from './MobileBottomNavigation.styles';
 
 interface NavigationItem {
@@ -19,6 +19,7 @@ export function MobileBottomNavigation() {
   const bottomNavItems: NavigationItem[] = [
     { id: 'home', label: 'Home', path: '/dashboard', icon: Home },
     { id: 'rewards', label: 'Rewards', path: '/rewards', icon: Gift },
+    { id: 'marketplace', label: 'MarketPlace', path: '/marketplace', icon: Store },
     { id: 'explore', label: 'Explore', path: '/services', icon: Compass },
   ];
 
