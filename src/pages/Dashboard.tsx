@@ -11,14 +11,12 @@ import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavi
 
 import { type Transaction } from '@/types';
 import {
-  Megaphone,
   ChevronRight,
   Wallet,
   Plane,
   Hotel,
   Ticket,
   Shield,
-  X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
