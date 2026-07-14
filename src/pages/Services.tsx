@@ -11,6 +11,8 @@ import {
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat, 
   ArrowLeftRight, Search, Clock, Star, ChevronRight
 } from 'lucide-react';
+import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
+
 
 // Registry of validated routes extracted from AppRoutes
 const VALID_APP_ROUTES = new Set([
@@ -230,6 +232,9 @@ export function Services() {
           </div>
         </main>
       </div>
+      
+      {/* 3. Production Mobile Bottom Navigation Bar */}
+      <MobileBottomNavigation />
     </div>
   );
 }

@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { patchRequest, ENDPOINTS } from '@/types';
 import { Loader } from '@/components/ui-custom';
+import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
+
 
 export function Profile() {
   const navigate = useNavigate();
@@ -510,6 +512,9 @@ export function Profile() {
         </div>
       </main>
       <LoaderComponent />
+      
+      {/* 3. Production Mobile Bottom Navigation Bar */}
+      <MobileBottomNavigation />
     </div>
   );
 }

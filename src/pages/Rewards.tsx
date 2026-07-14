@@ -19,6 +19,8 @@ import {
   Youtube,
   PlayCircle,
 } from 'lucide-react';
+import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
+
 import { useAuth } from '@/context/AuthContext';
 
 // Interfaces updated to be more resilient to backend changes
@@ -330,6 +332,9 @@ export function Rewards() {
       </div>
       <ToastComponent />
       <LoaderComponent />
+      
+      {/* 3. Production Mobile Bottom Navigation Bar */}
+      <MobileBottomNavigation />
     </div>
   );
 }
