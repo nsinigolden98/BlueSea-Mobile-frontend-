@@ -3,10 +3,10 @@ import {
   Sidebar,
   BalanceCard,
   QuickActions,
- // TransactionList
+  TransactionList
 } from '@/components/ui-custom';
 import { DashboardHeader } from '@/components/ui-custom/DashboardHeader';
-//import { TransactionsData } from '@/data';
+import { TransactionsData } from '@/data';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
 import { type Transaction } from '@/types';
@@ -64,7 +64,7 @@ export function Dashboard() {
   ];
 
   return (
-    <div className="h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
+    <div className="h-screen bg-white dark:bg-slate-955 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes marquee {
           0% { transform: translateX(0); }
@@ -170,10 +170,10 @@ export function Dashboard() {
               </div>  
             </div>  
 
-            {/* TRANSACTION LIST
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm">  
+            {/* RESPONSIVE TRANSACTION LIST CONTAINER */}
+            <div className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm">  
                <TransactionList />  
-            </div>   */}  
+            </div>  
           </div>  
         </main>  
 
