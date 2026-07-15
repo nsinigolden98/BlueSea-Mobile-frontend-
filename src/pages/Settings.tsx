@@ -92,7 +92,7 @@ export function Settings() {
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         
         {/* FIXED APP HEADER LAYER */}
-        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-955">
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-950">
           <Header 
             title="Settings" 
             subtitle="System Core Preferences" 
