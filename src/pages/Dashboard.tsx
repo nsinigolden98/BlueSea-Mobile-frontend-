@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   Sidebar,
-  Header,
   BalanceCard,
   QuickActions,
   TransactionList
 } from '@/components/ui-custom';
+import { DashboardHeader } from '@/components/ui-custom/DashboardHeader';
 import { TransactionsData } from '@/data';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
@@ -40,7 +40,6 @@ export function Dashboard() {
   
   const redirect = () => (window.location.href = '/transaction-history');
 
-  
   const weeklyStats = useMemo(() => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -87,21 +86,14 @@ export function Dashboard() {
       {/* Main Viewport Content Context Area */}
       <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-950 transition-colors duration-300 relative">  
         
-        {/* FIXED APP HEADER LAYER */}
-        <div className="sticky top-0 z-30 shrink-0 bg-white dark:bg-slate-950">
-          <Header  
-            title="Dashboard"  
-            subtitle="The Trusted Way To Stay Connected"  
-            onMenuClick={() => setSidebarOpen(true)}  
-          />  
-        </div>
-
+        {/* NEW PREMIUM FIXED GLASS HEADER */}
+        <DashboardHeader />
 
         {/* ISOLATED SCROLLABLE PAGE CONTENT CONTAINER */}  
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">  
           <div className="max-w-4xl mx-auto space-y-5">  
               
-            {/* 2. BALANCE CARD & WEEKLY SUMMARY */}  
+            {/* BALANCE CARD & WEEKLY SUMMARY */}  
             <div className="space-y-5">  
               <div className="relative group">  
                 <BalanceCard />  
@@ -120,13 +112,13 @@ export function Dashboard() {
                     ₦{weeklyStats.amount.toLocaleString()} <span className="text-slate-500 dark:text-slate-500 font-normal ml-1">spent • {weeklyStats.count} transactions</span>  
                   </p>  
                 </div>  
-                <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600" 
+                <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600 cursor-pointer" 
                   onClick={redirect}
                 />  
               </div>  
             </div>  
 
-            {/* 3. QUICK ACTIONS (Horizontal Scroll) */}  
+            {/* QUICK ACTIONS (Horizontal Scroll) */}  
             <section className="space-y-3 pt-2">  
               <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">Quick Actions</h3>  
               <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">  
@@ -136,7 +128,7 @@ export function Dashboard() {
               </div>  
             </section>  
 
-            {/* 4. EXPLORE SERVICES GRID */}  
+            {/* EXPLORE SERVICES GRID */}  
             <section className="space-y-3 pt-2">  
               <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">Explore Services</h3>  
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">  
@@ -178,14 +170,14 @@ export function Dashboard() {
               </div>  
             </div>  
 
-            {/* 5. TRANSACTION LIST */}  
+            {/* TRANSACTION LIST */}  
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm">  
                <TransactionList />  
             </div>  
           </div>  
         </main>  
 
-        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER (Hidden on Desktop natively) */}
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER */}
         <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
           <MobileBottomNavigation />
         </div>
