@@ -100,50 +100,50 @@ export function Services() {
         className={cn(
           'group relative text-left bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800',
           'hover:shadow-md hover:border-sky-300 dark:hover:border-sky-700 transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-sky-500',
-          'p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3',
+          'p-2 sm:p-4 flex items-center gap-1.5 sm:gap-3 w-full',
           !isRouteValid && 'opacity-40 grayscale cursor-not-allowed hover:shadow-none hover:border-slate-200 dark:hover:border-slate-800'
         )}
       >
         <Badge type={service.badge} />
         
         <div className={cn(
-          'rounded-lg bg-sky-50 dark:bg-sky-950/50 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shrink-0',
-          'w-8 h-8 sm:w-10 sm:h-10'
+          'rounded-lg bg-sky-50 dark:bg-sky-955 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shrink-0',
+          'w-7 h-7 sm:w-10 sm:h-10'
         )}>
-          <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-sky-600 dark:text-sky-400" />
+          <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-sky-600 dark:text-sky-400" />
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-xs sm:text-base text-slate-900 dark:text-white truncate">
+          <h3 className="font-semibold text-[10px] xs:text-xs sm:text-base text-slate-900 dark:text-white truncate">
             {service.name}
           </h3>
         </div>
 
-        <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-sky-500 transition-colors shrink-0" />
+        <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300 dark:text-slate-600 group-hover:text-sky-500 transition-colors shrink-0" />
       </button>
     );
   };
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex font-sans overflow-hidden">
-      {/* Sidebar Panel Overlay */}
+      {/* Sidebar Panel Overlay (Sits over layout context at z-50 when active) */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Viewport Content Context Area */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         
         {/* FIXED APP HEADER LAYER */}
-        <header className="sticky top-0 z-30 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
           <Header 
             title="Super App Hub" 
             subtitle="Explore the BlueSea Ecosystem"
             onMenuClick={() => setSidebarOpen(true)} 
           />
-        </header>
+        </div>
 
         {/* ISOLATED SCROLLABLE CONTENT AREA */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto scrollbar-hide z-10">
-          <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+          <div className="max-w-7xl mx-auto space-y-8">
             
             {/* Search Section */}
             <div className="relative">
@@ -164,7 +164,7 @@ export function Services() {
                   Search Results ({filteredCategories.length})
                 </h2>
                 {filteredCategories.length > 0 ? (
-                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                     {filteredCategories.map(service => renderServiceCard(service))}
                   </div>
                 ) : (
@@ -175,26 +175,30 @@ export function Services() {
               </div>
             ) : (
               <>
-                {/* Recently Used (Saves space safely on mobile) */}
+                {/* Recently Used */}
                 {recentServiceIds.length > 0 && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-slate-900 dark:text-white">
                       <Clock className="w-4 h-4 text-sky-500" />
                       <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recently Used</h2>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-3 md:flex md:flex-row gap-3">
                       {recentServiceIds
                         .map(id => services.find(s => s.id === id)!)
                         .filter(Boolean)
-                        .map(service => renderServiceCard(service))}
+                        .map(service => (
+                           <div key={service.id} className="md:w-64">
+                             {renderServiceCard(service)}
+                           </div>
+                        ))}
                     </div>
                   </div>
                 )}
 
-                <div className="h-px w-full bg-slate-100 dark:bg-slate-800" />
+                <div className="h-px w-full bg-slate-200 dark:bg-slate-800/60" />
 
                 {/* Ecosystem Categories */}
-                <div className="space-y-8 sm:space-y-10">
+                <div className="space-y-10">
                   {serviceCategories.map((category) => {
                     const categoryServices = services.filter(s => s.category === category);
                     if (categoryServices.length === 0) return null;
@@ -210,7 +214,7 @@ export function Services() {
                           </span>
                         </div>
                         
-                        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                           {categoryServices.map((service) => renderServiceCard(service))}
                         </div>
                       </section>
@@ -222,8 +226,8 @@ export function Services() {
           </div>
         </main>
 
-        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER */}
-        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER (Hidden on Desktop natively) */}
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
           <MobileBottomNavigation />
         </div>
       </div>
