@@ -83,16 +83,16 @@ export function Settings() {
   ];
 
   return (
-    <div className="h-screen bg-slate-50 dark:bg-slate-955 flex font-sans overflow-hidden transition-colors duration-300">
+    <div className="h-screen bg-slate-50 dark:bg-slate-955 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
       
       {/* Structural Sidebar Navigation Drawer */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Panel Viewport */}
-      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative">
         
-        {/* FIXED APP HEADER LAYER */}
-        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-950">
+        {/* Unified Layout Control Header (Fixed) */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-955">
           <Header 
             title="Settings" 
             subtitle="System Core Preferences" 
@@ -100,8 +100,8 @@ export function Settings() {
           />
         </div>
 
-        {/* ISOLATED SCROLLABLE CONTENT AREA */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
+        {/* Viewport Content Wrapper (Only this part scrolls) */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-2xl mx-auto space-y-4">
             
             {/* Main Settings Group */}
@@ -195,7 +195,7 @@ export function Settings() {
         </main>
 
         {/* FIXED MOBILE BOTTOM NAVIGATION LAYER */}
-        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
           <MobileBottomNavigation />
         </div>
       </div>
