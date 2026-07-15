@@ -7,7 +7,6 @@ import {
   Lock, 
   LogOut, 
   ChevronRight,
-  ArrowLeft,
   Moon,
   Sun,
   Bell,
@@ -17,6 +16,7 @@ import {
 import { useTheme } from '@/context/ThemeContext';
 import { useEffect, useState } from 'react';
 import { Sidebar, Header } from '@/components/ui-custom';
+import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
 export function Settings() {
   const navigate = useNavigate();
@@ -83,37 +83,25 @@ export function Settings() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
+    <div className="h-screen bg-slate-50 dark:bg-slate-955 flex font-sans overflow-hidden transition-colors duration-300">
       
       {/* Structural Sidebar Navigation Drawer */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Panel Viewport */}
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
         
-        {/* Unified Layout Control Header */}
-        <Header 
-          title="Settings" 
-          subtitle="System Core Preferences" 
-          onMenuClick={() => setSidebarOpen(true)} 
-        />
-
-        {/* Structural Navigation Context Anchor Row */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/60 px-4 md:px-6 py-3 flex items-center justify-between">
-          <button 
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Go Back
-          </button>
-          <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500 hidden sm:inline-block">
-            Session Configuration
-          </span>
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-955">
+          <Header 
+            title="Settings" 
+            subtitle="System Core Preferences" 
+            onMenuClick={() => setSidebarOpen(true)} 
+          />
         </div>
 
-        {/* Viewport Content Wrapper */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        {/* ISOLATED SCROLLABLE CONTENT AREA */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-2xl mx-auto space-y-4">
             
             {/* Main Settings Group */}
@@ -205,6 +193,11 @@ export function Settings() {
             </button>
           </div>
         </main>
+
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER */}
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+          <MobileBottomNavigation />
+        </div>
       </div>
     </div>
   );
