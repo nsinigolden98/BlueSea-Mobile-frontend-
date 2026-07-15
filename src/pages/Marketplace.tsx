@@ -30,6 +30,7 @@ import type { MarketplaceEvent } from '@/types';
 import { marketplaceApi } from '@/api/marketplace.api';
 import { messagingApi } from '@/api/messaging.api';
 import type { Product, Category } from '@/types';
+import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
 // --- UNIVERSAL COMPONENTS ---
 const VerifiedBadge = ({ className }: { className?: string }) => (
@@ -639,11 +640,14 @@ export function Marketplace() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden font-sans">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex items-center justify-between px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-30">
+      {/* Primary Layout Container Viewport Context */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+        
+        {/* FIXED APP HEADER LAYER */}
+        <header className="flex items-center justify-between px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-30 shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
@@ -686,7 +690,8 @@ export function Marketplace() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        {/* ISOLATED SCROLLABLE CONTENT AREA */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-5xl mx-auto space-y-6">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -714,6 +719,11 @@ export function Marketplace() {
             {renderContent()}
           </div>
         </main>
+
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER */}
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
+          <MobileBottomNavigation />
+        </div>
       </div>
 
       <PinComponent type="marketplace" value={{ 
