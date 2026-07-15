@@ -3,10 +3,10 @@ import {
   Sidebar,
   BalanceCard,
   QuickActions,
-  TransactionList
+ // TransactionList
 } from '@/components/ui-custom';
 import { DashboardHeader } from '@/components/ui-custom/DashboardHeader';
-import { TransactionsData } from '@/data';
+//import { TransactionsData } from '@/data';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
 import { type Transaction } from '@/types';
@@ -170,10 +170,10 @@ export function Dashboard() {
               </div>  
             </div>  
 
-            {/* TRANSACTION LIST */}  
+            {/* TRANSACTION LIST
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm">  
                <TransactionList />  
-            </div>  
+            </div>   */}  
           </div>  
         </main>  
 
