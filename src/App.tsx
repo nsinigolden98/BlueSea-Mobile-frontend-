@@ -2,7 +2,6 @@ import { BrowserRouter, Navigate, Route, Routes, Outlet, useLocation } from 'rea
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 //import { Header } from '@/components/ui-custom/Header';
-import LiveTicker from '@/components/ui/LiveTicker';
 import {
   LandingPage,
   AuthPage,
@@ -75,22 +74,14 @@ import PayrollDetail from './screens/payroll-pro/PayrollDetail';*/
 
 /**
  * Global Layout Wrapper
- * Handles the persistent Header and the conditional LiveTicker
+ * Handles the persistent Header
  */
 function MainLayout() {
-  const location = useLocation();
-
-  // Exclude ticker from Landing, Login, and Signup pages
-  const excludedPaths = ['/', '/login', '/signup'];
-  const shouldShowTicker = !excludedPaths.includes(location.pathname);
-
   return (
     <div className="flex flex-col min-h-screen">
       {/* Persistent Header
-<Header title="BlueSea Mobile" />
- */}
-      {/* Conditional LiveTicker - Only renders if not on an excluded path */}
-      {shouldShowTicker && <LiveTicker />}
+      <Header title="BlueSea Mobile" />
+      */}
 
       {/* Page Content */}
       <main className="flex-1">
@@ -117,7 +108,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Wrap everything in the MainLayout to ensure Header and Ticker logic are global */}
+      {/* Wrap everything in the MainLayout to ensure Header logic is global */}
       <Route element={<MainLayout />}>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -173,50 +164,7 @@ function AppRoutes() {
         <Route path="/spin-vault" element={<SpinVault />} />
         <Route path="/betting" element={<Betting />} />
         
-            <Route path="/identity-center" element={<IdentityCenter />} />
-
-
-
-{/* Payroll Pro Routes 
- <Route path="/payroll-pro" element={<PayrollProHome />} />
-      <Route path="/payroll-pro/create-company" element={<CreateCompany />} />
-      <Route path="/payroll-pro/company/:companyId" element={<CompanyWorkspace />} />
-      <Route path="/payroll-pro/company/:companyId/add-employee" element={<AddEmployee />} />
-      <Route path="/payroll-pro/company/:companyId/create-branch" element={<CreateBranch />} />
-      <Route path="/payroll-pro/branch/:branchId" element={<BranchDetails />} />
-      <Route path="/payroll-pro/employee/:employeeId" element={<EmployeeProfile />} />
-      <Route path="/payroll-pro/portal/:companyId" element={<EmployeePortal />} />
-      <Route path="/payroll-pro/payroll/:payrollId" element={<PayrollDetail />} />*/}
-
-
-
-
-      {/* Finance Ecosystem 
-      <Route path="/finance" element={<ProtectedRoute><FinanceHub /></ProtectedRoute>} />
-      <Route path="/finance/savings" element={<ProtectedRoute><SavingsVault /></ProtectedRoute>} />
-      <Route path="/finance/cards" element={<ProtectedRoute><BlueSeaCards /></ProtectedRoute>} />
-      <Route path="/finance/crypto" element={<ProtectedRoute><BspCrypto /></ProtectedRoute>} />
-      <Route path="/finance/pension" element={<ProtectedRoute><Pension /></ProtectedRoute>} />
-      <Route path="/finance/insurance" element={<ProtectedRoute><Insurance /></ProtectedRoute>} /> */}
-
-      {/* Business Ecosystem 
-      <Route path="/business" element={<ProtectedRoute><BusinessHub /></ProtectedRoute>} />
-      <Route path="/business/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
-      <Route path="/business/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />*/}
-
-
-      {/* Commerce Ecosystem 
-      <Route path="/commerce/storefronts" element={<ProtectedRoute><Storefronts /></ProtectedRoute>} />
-      <Route path="/commerce/freelance" element={<ProtectedRoute><Freelance /></ProtectedRoute>} />
-      <Route path="/commerce/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
-      <Route path="/commerce/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} /> */}
-
-      {/* Experience Ecosystem 
-      <Route path="/experience/streams" element={<ProtectedRoute><Streams /></ProtectedRoute>} />
-      <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />*/}
-
-
-
+        <Route path="/identity-center" element={<IdentityCenter />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
@@ -231,7 +179,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <QueryClientProvider client={queryClient}>
-          <AppRoutes />
+            <AppRoutes />
           </QueryClientProvider>
         </BrowserRouter>
       </AuthProvider>

@@ -2,8 +2,7 @@
 
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/context/AuthContext';
-import { Home, Gift, Compass, Store, User } from 'lucide-react';
+import { Home, Gift, Compass, Store, Settings } from 'lucide-react';
 import { navStyles } from './MobileBottomNavigation.styles';
 
 interface NavigationItem {
@@ -14,7 +13,6 @@ interface NavigationItem {
 }
 
 export function MobileBottomNavigation() {
-  const { user } = useAuth();
   const location = useLocation();
 
   // Primary destinations mapped to their respective routes
@@ -23,15 +21,8 @@ export function MobileBottomNavigation() {
     { id: 'rewards', label: 'Rewards', path: '/rewards', icon: Gift },
     { id: 'marketplace', label: 'MarketPlace', path: '/marketplace', icon: Store },
     { id: 'explore', label: 'Explore', path: '/services', icon: Compass },
+    { id: 'settings', label: 'Settings', path: '/settings', icon: Settings },
   ];
-
-  // Helper utility to generate user initials if avatar image is absent
-  const getInitials = (): string => {
-    if (!user) return 'U';
-    const first = user.firstName?.trim().charAt(0) || '';
-    const surname = user.surname?.trim().charAt(0) || '';
-    return `${first}${surname}`.toUpperCase() || 'U';
-  };
 
   return (
     <div className={navStyles.wrapper} aria-label="Mobile Navigation Bar">
@@ -59,42 +50,6 @@ export function MobileBottomNavigation() {
             </NavLink>
           );
         })}
-
-        {/* Profile Navigation (Dynamically handles local/remote profiles) */}
-        {(() => {
-          const isProfileActive = location.pathname === '/profile';
-          return (
-            <NavLink
-              to="/profile"
-              className={cn(navStyles.link, "group", isProfileActive && "active-nav-link")}
-            >
-              <div 
-                className={cn(
-                  navStyles.avatarWrapper, 
-                  isProfileActive ? navStyles.activeAvatar : navStyles.inactiveAvatar
-                )}
-              >
-                {user?.profilePicture ? (
-                  <img
-                    src={user.profilePicture}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : user?.firstName || user?.surname ? (
-                  <div className={navStyles.avatarInitials}>
-                    {getInitials()}
-                  </div>
-                ) : (
-                  <User className="w-4 h-4 text-slate-500" />
-                )}
-              </div>
-              <span className={cn(navStyles.label, isProfileActive ? navStyles.activeLabel : navStyles.inactiveLabel)}>
-                Profile
-              </span>
-              <div className={isProfileActive ? navStyles.indicator : navStyles.hiddenIndicator} />
-            </NavLink>
-          );
-        })()}
       </nav>
     </div>
   );
