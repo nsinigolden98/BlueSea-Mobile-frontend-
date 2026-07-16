@@ -17,15 +17,25 @@ import {
   Ticket,
   Briefcase,
   Network,
-  LayoutGrid
+  LayoutGrid,
+  Award
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const navigate = useNavigate();
+
+  // Synced state to ensure all sensitive details toggle together
+  const [showBalance, setShowBalance] = useState(() => {
+    const savedState = localStorage.getItem('dashboard_showBalance');
+    return savedState === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('dashboard_showBalance', String(showBalance));
+  }, [showBalance]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -60,25 +70,21 @@ export function Dashboard() {
   const premiumServices = [
     {
       label: 'BlueSea Connect',
-      description: "BlueSea's private partner gateway.",
       icon: Network,
       path: '/connect'
     },
     {
       label: 'Payroll Pro',
-      description: 'Business payroll management.',
       icon: Briefcase,
       path: '/payroll-pro'
     },
     {
       label: 'Travel',
-      description: 'Premium flight and travel booking.',
       icon: Plane,
       path: '/flights'
     },
     {
       label: 'Events',
-      description: 'Clean, broad event ticket access.',
       icon: Ticket,
       path: '/marketplace'
     }
@@ -101,47 +107,47 @@ export function Dashboard() {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       ` }} />  
 
-      {/* Sidebar Panel Overlay (Sits over everything at z-50 when active) */}
+      {/* Sidebar Panel Overlay */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />  
 
       {/* Main Viewport Content Context Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-955 transition-colors duration-300 relative">  
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-950 transition-colors duration-300 relative">  
         
-        {/* NEW PREMIUM FIXED GLASS HEADER */}
+        {/* PREMIUM FIXED GLASS HEADER */}
         <DashboardHeader />
 
         {/* ISOLATED SCROLLABLE PAGE CONTENT CONTAINER */}  
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">  
           <div className="max-w-4xl mx-auto space-y-5">  
               
-            {/* BALANCE CARD & FLOATING SUMMARY */}  
-            <div className="flex flex-col">  
-              <div className="relative group">  
-                <BalanceCard />  
-                <button  
-                  onClick={() => navigate('/wallet')}  
-                  className="absolute bottom-6 right-6 w-10 h-10 bg-white/10 dark:bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-xl active:scale-95 z-20"  
-                >  
-                  <Wallet className="w-5 h-5" />  
-                </button>  
-              </div>  
+            {/* BALANCE CARD & INTEGRATED FLOATING SUMMARY */}  
+            <div className="flex flex-col relative">  
+              <BalanceCard showBalance={showBalance} onToggleBalance={setShowBalance} />  
+              
+              <button  
+                onClick={() => navigate('/wallet')}  
+                className="absolute bottom-14 right-6 w-10 h-10 bg-white/10 dark:bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-xl active:scale-95 z-20"  
+              >  
+                <Wallet className="w-5 h-5" />  
+              </button>  
 
-              {/* Connected floating extension of the balance card */}
+              {/* Natural floating extension attached directly underneath with tight overlap */}
               <button
                 onClick={redirect}
-                className="mx-4 -mt-3 bg-slate-50 dark:bg-slate-800 border-x border-b border-slate-200 dark:border-white/5 rounded-b-xl px-4 py-3.5 flex items-center justify-between shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors z-10 text-left cursor-pointer"
+                className="mx-3 -mt-1.5 bg-slate-50 dark:bg-slate-800 border-x border-b border-slate-200 dark:border-white/5 rounded-b-xl px-4 py-3 flex items-center justify-between shadow-md hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors z-0 text-left cursor-pointer"
               >  
                 <div className="flex items-center gap-2">  
                   <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />  
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">  
-                    ₦{weeklyStats.amount.toLocaleString()} <span className="text-slate-500 dark:text-slate-500 font-normal ml-1">spent • {weeklyStats.count} transactions</span>  
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">  
+                    {showBalance ? `₦${weeklyStats.amount.toLocaleString()}` : '******'}{" "}
+                    <span className="text-slate-500 dark:text-slate-500 font-normal ml-1">spent • {weeklyStats.count} transactions</span>  
                   </p>  
                 </div>  
                 <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600" />  
               </button>  
             </div>  
 
-            {/* QUICK ACTIONS (Horizontal Scroll) */}  
+            {/* QUICK ACTIONS */}  
             <section className="space-y-3 pt-2">  
               <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">Quick Actions</h3>  
               <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">  
@@ -151,27 +157,22 @@ export function Dashboard() {
               </div>  
             </section>  
 
-            {/* BLUESEA EXCLUSIVES (PREMIUM SERVICES REPLACE EXPLORE SERVICES) */}  
+            {/* BLUESEA EXCLUSIVES (Compact, Two Column Grid) */}  
             <section className="space-y-3 pt-2">  
               <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">BlueSea Exclusives</h3>  
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">  
+              <div className="grid grid-cols-2 gap-3">  
                 {premiumServices.map((service) => (  
                   <div  
                     key={service.label}  
                     onClick={() => navigate(service.path)}  
-                    className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-sm"  
+                    className="flex items-center gap-2.5 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-sm h-12 min-w-0"  
                   >  
-                    <div className="w-10 h-10 shrink-0 rounded-lg bg-white dark:bg-slate-700/50 flex items-center justify-center border border-slate-100 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">  
-                      <service.icon className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />  
+                    <div className="w-7 h-7 shrink-0 rounded-lg bg-white dark:bg-slate-700/50 flex items-center justify-center border border-slate-100 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">  
+                      <service.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />  
                     </div>  
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">  
-                        {service.label}  
-                      </span>  
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5">
-                        {service.description}
-                      </p>
-                    </div>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">  
+                      {service.label}  
+                    </span>  
                   </div>  
                 ))}  
               </div>  
@@ -202,8 +203,8 @@ export function Dashboard() {
             >  
               <div className="flex items-center justify-between">  
                 <div className="flex items-center gap-4">  
-                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">  
-                    🎁  
+                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white">  
+                    <Award className="w-5 h-5 text-amber-300" />  
                   </div>  
                   <div>  
                     <h3 className="font-bold text-sm">BluePoints Reward</h3>  

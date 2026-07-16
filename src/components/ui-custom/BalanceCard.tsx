@@ -9,28 +9,46 @@ interface BalanceCardProps {
   onDeposit?: () => void;
   onWithdraw?: () => void;
   className?: string;
+  showBalance?: boolean;
+  onToggleBalance?: (show: boolean) => void;
 } 
 
 export function BalanceCard({
   showActions = false,
   onDeposit,
   onWithdraw,
-  className
+  className,
+  showBalance,
+  onToggleBalance
 }: BalanceCardProps) {
   const { user } = useAuth();
 
-  // 1. Visibility toggle state (persisted in localStorage)
-  const [showBalance, setShowBalance] = useState(() => {
+  // 1. Fallback local state if props are not provided
+  const [localShowBalance, setLocalShowBalance] = useState(() => {
     const savedState = localStorage.getItem('dashboard_showBalance');
     return savedState === 'true';
   });
 
+  const isBalanceVisible = showBalance !== undefined ? showBalance : localShowBalance;
+
+  const handleToggle = () => {
+    const nextState = !isBalanceVisible;
+    if (onToggleBalance) {
+      onToggleBalance(nextState);
+    } else {
+      setLocalShowBalance(nextState);
+      localStorage.setItem('dashboard_showBalance', String(nextState));
+    }
+  };
+
   // 2. State for the ACTUAL Reward Balance
   const [rewardBalance, setRewardBalance] = useState<number>(0);
 
-  // Save visibility toggle to storage
+  // Sync internal state when parent state updates if uncontrolled
   useEffect(() => {
-    localStorage.setItem('dashboard_showBalance', String(showBalance));
+    if (showBalance !== undefined) {
+      localStorage.setItem('dashboard_showBalance', String(showBalance));
+    }
   }, [showBalance]);
 
   // 3. Fetch the Reward Balance directly from the bonus_summary endpoint
@@ -77,10 +95,10 @@ export function BalanceCard({
         <div className="flex items-center gap-2 mb-2">  
           <span className="text-sm text-sky-100 font-medium">Available Balance</span>  
           <button   
-            onClick={() => setShowBalance(!showBalance)}  
+            onClick={handleToggle}  
             className="p-1 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"  
           >  
-            {showBalance ? (  
+            {isBalanceVisible ? (  
               <EyeOff className="w-4 h-4 text-white" />  
             ) : (  
               <Eye className="w-4 h-4 text-white" />  
@@ -91,7 +109,7 @@ export function BalanceCard({
         {/* Large Balance Amount */}
         <div className="mb-6">  
           <span className="text-3xl md:text-4xl font-bold text-white tracking-tight">  
-            {showBalance ? `${availableBalance.toLocaleString()}` : '******'}  
+            {isBalanceVisible ? `${availableBalance.toLocaleString()}` : '******'}  
           </span>  
         </div>  
 
@@ -101,7 +119,7 @@ export function BalanceCard({
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/10">  
             <Lock className="w-3.5 h-3.5 text-sky-200" />  
             <span className="text-[11px] font-semibold text-white">
-              Locked: {showBalance ? lockedBalance : '******'}
+              Locked: {isBalanceVisible ? lockedBalance : '******'}
             </span>  
           </div>
 
@@ -109,7 +127,7 @@ export function BalanceCard({
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/10">  
             <Coins className="w-3.5 h-3.5 text-amber-300" />  
             <span className="text-[11px] font-semibold text-white">
-              {showBalance ? rewardBalance.toLocaleString() : '***'} BSP
+              {isBalanceVisible ? rewardBalance.toLocaleString() : '***'} BSP
             </span>  
           </div>
 
