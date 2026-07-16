@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext'; // Safely using your actual auth context
-import logoImg from './logo.png'; 
+import logo from './logo.png'; // Fixed: Changed 'logoImg' to 'logo' to match usage below
 
 export const SplashScreen: React.FC = () => {
   const navigate = useNavigate();
