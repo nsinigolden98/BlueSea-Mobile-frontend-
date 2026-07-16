@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff, Lock, Coins, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { getRequest, ENDPOINTS } from '@/types'; // Imported exactly like the Rewards page
+import { getRequest, ENDPOINTS } from '@/types';
 
 interface BalanceCardProps {
   showActions?: boolean;
@@ -42,7 +42,6 @@ export function BalanceCard({
         const summaryRes = await getRequest(ENDPOINTS.bonus_summary);
         
         if (isMounted && summaryRes?.data) {
-          // This exactly matches how "totalPoints" is calculated on the Rewards page
           setRewardBalance(summaryRes.data.current_points ?? 0);
         }
       } catch (error) {
@@ -74,12 +73,12 @@ export function BalanceCard({
       </div>
 
       <div className="relative z-10 flex flex-col h-full">  
-        {/* Available Balance Label & Toggle */}
-        <div className="flex items-center justify-between mb-2">  
+        {/* Available Balance Label & Closely Aligned Toggle */}
+        <div className="flex items-center gap-2 mb-2">  
           <span className="text-sm text-sky-100 font-medium">Available Balance</span>  
           <button   
             onClick={() => setShowBalance(!showBalance)}  
-            className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"  
+            className="p-1 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"  
           >  
             {showBalance ? (  
               <EyeOff className="w-4 h-4 text-white" />  
@@ -106,7 +105,7 @@ export function BalanceCard({
             </span>  
           </div>
 
-          {/* Actual Reward Balance (from endpoint) */}
+          {/* Actual Reward Balance */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/10">  
             <Coins className="w-3.5 h-3.5 text-amber-300" />  
             <span className="text-[11px] font-semibold text-white">

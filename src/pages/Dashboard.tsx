@@ -14,9 +14,10 @@ import {
   ChevronRight,
   Wallet,
   Plane,
-  Hotel,
   Ticket,
-  Shield,
+  Briefcase,
+  Network,
+  LayoutGrid
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -56,11 +57,31 @@ export function Dashboard() {
 
   }, [transactions]);
 
-  const exploreServices = [
-    { label: 'Flights', icon: Plane, path: '/flights' },
-    { label: 'Hotels', icon: Hotel, path: '/hotels' },
-    { label: 'Events', icon: Ticket, path: '/marketplace' },
-    { label: 'Insurance', icon: Shield, path: '/insurance' },
+  const premiumServices = [
+    {
+      label: 'BlueSea Connect',
+      description: "BlueSea's private partner gateway.",
+      icon: Network,
+      path: '/connect'
+    },
+    {
+      label: 'Payroll Pro',
+      description: 'Business payroll management.',
+      icon: Briefcase,
+      path: '/payroll-pro'
+    },
+    {
+      label: 'Travel',
+      description: 'Premium flight and travel booking.',
+      icon: Plane,
+      path: '/flights'
+    },
+    {
+      label: 'Events',
+      description: 'Clean, broad event ticket access.',
+      icon: Ticket,
+      path: '/marketplace'
+    }
   ];
 
   return (
@@ -84,7 +105,7 @@ export function Dashboard() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />  
 
       {/* Main Viewport Content Context Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-950 transition-colors duration-300 relative">  
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-slate-955 transition-colors duration-300 relative">  
         
         {/* NEW PREMIUM FIXED GLASS HEADER */}
         <DashboardHeader />
@@ -93,8 +114,8 @@ export function Dashboard() {
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">  
           <div className="max-w-4xl mx-auto space-y-5">  
               
-            {/* BALANCE CARD & WEEKLY SUMMARY */}  
-            <div className="space-y-5">  
+            {/* BALANCE CARD & FLOATING SUMMARY */}  
+            <div className="flex flex-col">  
               <div className="relative group">  
                 <BalanceCard />  
                 <button  
@@ -105,17 +126,19 @@ export function Dashboard() {
                 </button>  
               </div>  
 
-              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-3 flex items-center justify-between shadow-sm">  
+              {/* Connected floating extension of the balance card */}
+              <button
+                onClick={redirect}
+                className="mx-4 -mt-3 bg-slate-50 dark:bg-slate-800 border-x border-b border-slate-200 dark:border-white/5 rounded-b-xl px-4 py-3.5 flex items-center justify-between shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors z-10 text-left cursor-pointer"
+              >  
                 <div className="flex items-center gap-2">  
                   <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />  
                   <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">  
                     ₦{weeklyStats.amount.toLocaleString()} <span className="text-slate-500 dark:text-slate-500 font-normal ml-1">spent • {weeklyStats.count} transactions</span>  
                   </p>  
                 </div>  
-                <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600 cursor-pointer" 
-                  onClick={redirect}
-                />  
-              </div>  
+                <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600" />  
+              </button>  
             </div>  
 
             {/* QUICK ACTIONS (Horizontal Scroll) */}  
@@ -128,26 +151,49 @@ export function Dashboard() {
               </div>  
             </section>  
 
-            {/* EXPLORE SERVICES GRID */}  
+            {/* BLUESEA EXCLUSIVES (PREMIUM SERVICES REPLACE EXPLORE SERVICES) */}  
             <section className="space-y-3 pt-2">  
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">Explore Services</h3>  
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">  
-                {exploreServices.map((service) => (  
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">BlueSea Exclusives</h3>  
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">  
+                {premiumServices.map((service) => (  
                   <div  
                     key={service.label}  
                     onClick={() => navigate(service.path)}  
-                    className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-sm"  
+                    className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-sm"  
                   >  
-                    <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700/50 flex items-center justify-center border border-slate-100 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">  
-                      <service.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />  
+                    <div className="w-10 h-10 shrink-0 rounded-lg bg-white dark:bg-slate-700/50 flex items-center justify-center border border-slate-100 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">  
+                      <service.icon className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />  
                     </div>  
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">  
-                      {service.label}  
-                    </span>  
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">  
+                        {service.label}  
+                      </span>  
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5">
+                        {service.description}
+                      </p>
+                    </div>
                   </div>  
                 ))}  
               </div>  
             </section>  
+
+            {/* EXPLORE ALL SERVICES NAV CARD */}
+            <div  
+              onClick={() => navigate('/services')}  
+              className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-[0.99] shadow-sm"  
+            >  
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-700/50 flex items-center justify-center border border-slate-100 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">  
+                  <LayoutGrid className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />  
+                </div>  
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">  
+                  Explore All Services
+                </span>  
+              </div>
+              <div className="bg-slate-100 dark:bg-slate-700 p-1.5 rounded-lg group-hover:bg-sky-500/10 transition-colors">
+                <ChevronRight className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400" />
+              </div>
+            </div>
 
             {/* REWARDS */}  
             <div  

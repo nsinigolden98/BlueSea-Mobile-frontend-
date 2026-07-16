@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, Wifi, ShieldCheckIcon, Plane, Gift, Lightbulb,} from 'lucide-react';
+import { Smartphone, Wifi, Lightbulb, Gift, Tv } from 'lucide-react';
 
 interface QuickAction {
   id: string;
@@ -9,50 +9,43 @@ interface QuickAction {
   path: string;
   color: string;
 }
-
+ 
 const actions: QuickAction[] = [
   {
     id: 'airtime',
-    label: 'Buy Airtime',
+    label: 'Airtime',
     icon: Smartphone,
     path: '/airtime',
     color: 'text-sky-500'
   },
   {
     id: 'data',
-    label: 'Buy Data',
+    label: 'Data',
     icon: Wifi,
     path: '/data',
     color: 'text-emerald-500'
   },
   {
-    id: 'pay-roll',
-    label: 'Pay Roll',
-    icon: ShieldCheckIcon,
-    path: '/payroll-pro',
-    color: 'text-cyan-500'
-  },
-  {
-    id: 'bills',
-    label: 'Light Bills',
+    id: 'electricity',
+    label: 'Electricity Bills',
     icon: Lightbulb,
     path: '/light-bills',
     color: 'text-amber-500'
   },
   {
-    id: 'flight',
-    label: 'Flight',
-    icon: Plane,
-    path: '/flights',
-    color: 'text-blue-500'
-  },
-  {
     id: 'gift',
-    label: 'Gift Card',
+    label: 'Gift Cards',
     icon: Gift,
     path: '/gift-cards',
     color: 'text-pink-500'
   },
+  {
+    id: 'tv',
+    label: 'TV Subscription',
+    icon: Tv,
+    path: '/tv-subscription',
+    color: 'text-indigo-500'
+  }
 ];
 
 interface QuickActionsProps {
