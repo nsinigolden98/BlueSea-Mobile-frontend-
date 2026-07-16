@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Headphones } from 'lucide-react';
+import { Bell, Headset } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getRequest, ENDPOINTS } from '@/types';
 import { cn } from '@/lib/utils';
@@ -64,15 +64,23 @@ export function DashboardHeader() {
             )}
             aria-label="View profile settings"
           >
-            {/* Premium Brand Accent Ring */}
+            {/* Premium Brand Accent Ring (Animated Slow Spin) */}
             <div 
               className={cn(
-                "p-[2.5px] rounded-full transition-transform duration-300 ease-out",
-                "bg-gradient-to-tr from-sky-400 to-blue-600 dark:from-sky-500 dark:to-indigo-500",
+                "relative w-12 h-12 rounded-full overflow-hidden transition-transform duration-300 ease-out",
                 "group-hover:scale-105 group-active:scale-95 shadow-sm"
               )}
             >
-              <div className="bg-white dark:bg-slate-900 p-[1.5px] rounded-full">
+              {/* Spinning dual-color gradient background */}
+              <div 
+                className={cn(
+                  "absolute inset-0 animate-[spin_8s_linear_infinite]",
+                  "bg-gradient-to-tr from-sky-400 via-blue-600 to-sky-400 dark:from-sky-500 dark:via-indigo-500 dark:to-sky-500"
+                )}
+              />
+              
+              {/* Inner Static Mask and Profile Image Container */}
+              <div className="absolute inset-[2.5px] bg-white dark:bg-slate-900 rounded-full p-[1.5px] flex items-center justify-center">
                 {user?.profilePicture ? (
                   <img 
                     src={user.profilePicture} 
@@ -90,11 +98,11 @@ export function DashboardHeader() {
 
           {/* Typography Stack */}
           <div className="flex flex-col justify-center min-w-0 select-none">
-            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 tracking-wider uppercase leading-none mb-1">
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wider uppercase leading-none mb-1">
               Hi,
             </span>
             <span className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 leading-tight truncate max-w-[140px] xs:max-w-[200px] sm:max-w-xs">
-              {user?.firstName || 'Guest'} {user?.surname || ''}
+              {(user?.firstName || 'Guest').toUpperCase()} 👋
             </span>
           </div>
         </div>
@@ -114,7 +122,7 @@ export function DashboardHeader() {
               "hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
             )}
           >
-            <Headphones className="w-5 h-5 stroke-[1.75]" />
+            <Headset className="w-5 h-5 stroke-[1.75]" />
           </button>
 
           {/* Notification Icon Button */}
