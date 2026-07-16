@@ -56,6 +56,7 @@ import {
 import IdentityCenter from '@/pages/IdentityCenter';
 import HistoryPage from '@/pages/History';
 import Flights from '@/pages/Flights';  
+import RootRoute from './components/RootRoute';
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
 import { AuthLoader } from '@/components/ui-custom';
@@ -111,7 +112,7 @@ function AppRoutes() {
       {/* Wrap everything in the MainLayout to ensure Header logic is global */}
       <Route element={<MainLayout />}>
         {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<RootRoute />} />
         <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
         <Route path="/signup" element={<PublicRoute><AuthPage /></PublicRoute>} />
         <Route path="/event/:eventId" element={<EventPublic />} />
