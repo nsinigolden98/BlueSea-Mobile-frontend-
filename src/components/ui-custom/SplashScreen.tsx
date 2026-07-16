@@ -117,18 +117,18 @@ export const SplashScreen: React.FC = () => {
         {/* Clean white circular container with shadow to ensure high visibility against the brand background */}
         <div className="w-28 h-28 flex items-center justify-center bg-white rounded-full shadow-xl shadow-sky-900/30 mb-6 p-4">
           <img 
-            src={logo} 
+            src={Logo} 
             alt="BlueSea Mobile Logo" 
             className="w-full h-full object-contain pointer-events-none"
             onError={(e) => {
               // Fallback placeholder in case there are asset pipeline matching issues
               e.currentTarget.style.display = 'none';
-              const fallback = document.getElementById('logo-fallback');
+              const fallback = document.getElementById('Logo-fallback');
               if (fallback) fallback.classList.remove('hidden');
             }}
           />
           {/* SVG Fallback markup so your builds never look broken */}
-          <div id="logo-fallback" className="hidden flex flex-col items-center justify-center text-sky-600 font-black text-2xl">
+          <div id="Logo-fallback" className="hidden flex flex-col items-center justify-center text-sky-600 font-black text-2xl">
             BS
           </div>
         </div>
