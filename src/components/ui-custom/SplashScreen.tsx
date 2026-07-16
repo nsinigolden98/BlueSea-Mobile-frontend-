@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext'; // Safely using your actual auth context
-import logo from '@/assets/logo.png'; // Correct path to your branding logo
+import { Logo } from '@/components/ui-custom';
 
 export const SplashScreen: React.FC = () => {
   const navigate = useNavigate();
