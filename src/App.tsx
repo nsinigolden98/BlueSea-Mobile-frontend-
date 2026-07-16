@@ -3,7 +3,6 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 //import { Header } from '@/components/ui-custom/Header';
 import {
-  LandingPage,
   AuthPage,
   Dashboard,
   Wallet,
@@ -56,7 +55,7 @@ import {
 import IdentityCenter from '@/pages/IdentityCenter';
 import HistoryPage from '@/pages/History';
 import Flights from '@/pages/Flights';  
-import RootRoute from './components/RootRoute';
+import RootRoute from './components/ui-custom/RootRoute';
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
 import { AuthLoader } from '@/components/ui-custom';

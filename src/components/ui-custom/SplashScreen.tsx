@@ -1,60 +1,75 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-// TODO: Update these paths to match your project's architecture
-import logo from '/assets/logo.png'; 
-import { authService } from '/services/authService'; // Adjust path to your auth service
+import { useAuth } from '@/context/AuthContext'; // Safely using your actual auth context
+import logo from '@/assets/logo.png'; // Correct path to your branding logo
 
 export const SplashScreen: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, loading } = useAuth();
   const [statusText, setStatusText] = useState('Preparing your experience');
 
   useEffect(() => {
-    const initializeApp = async () => {
-      // 1. Enforce a minimum display time (e.g., 2.5s) to guarantee high-quality UX transition
+    let active = true;
+
+    // Parallel execution block
+    const handleAuthTransition = async () => {
+      const token = sessionStorage.getItem('token');
+
+      // 1. Instant exit route if no session token exists
+      if (!token) {
+        // Clear any residual state and exit immediately to login
+        sessionStorage.removeItem('token');
+        if (active) navigate('/login', { replace: true });
+        return;
+      }
+
+      // 2. Guarantee a premium 2.5-second minimum display time for splash animations
       const minimumDelay = new Promise((resolve) => setTimeout(resolve, 2500));
 
-      // 2. Perform the authentication check routine
-      const authCheck = async () => {
-        const token = sessionStorage.getItem('token');
-
-        if (!token) {
-          navigate('/login', { replace: true });
-          return;
-        }
-
-        try {
-          setStatusText('Authenticating secure session');
-          
-          // Validate token with your existing auth service
-          const isValid = await authService.validateToken(token);
-
-          if (isValid) {
-            navigate('/dashboard', { replace: true });
-          } else {
-            // Explicitly clear expired session data
-            sessionStorage.removeItem('token');
-            navigate('/login', { replace: true });
+      // 3. Wait for your real AuthContext to finish validating the token
+      const authValidation = new Promise<boolean>((resolve) => {
+        const interval = setInterval(() => {
+          if (!loading) {
+            clearInterval(interval);
+            resolve(isAuthenticated);
           }
-        } catch (error) {
-          console.error('Authentication validation failed:', error);
-          sessionStorage.removeItem('token');
-          navigate('/login', { replace: true });
-        }
-      };
+        }, 100);
+      });
 
-      // Run both in parallel to prevent delaying the user longer than necessary
-      await Promise.all([authCheck(), minimumDelay]);
+      // Update status text mid-way through checking
+      setTimeout(() => {
+        if (active && token) {
+          setStatusText('Authenticating secure session');
+        }
+      }, 1000);
+
+      // Wait for both conditions (minimum transition time + real auth response)
+      const [resolvedAuth] = await Promise.all([authValidation, minimumDelay]);
+
+      if (!active) return;
+
+      if (resolvedAuth) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        // Clear expired or invalidated session token cleanly
+        sessionStorage.removeItem('token');
+        navigate('/login', { replace: true });
+      }
     };
 
-    initializeApp();
-  }, [navigate]);
+    handleAuthTransition();
+
+    return () => {
+      active = false;
+    };
+  }, [loading, isAuthenticated, navigate]);
 
   return (
-    <div className="relative flex flex-col items-center justify-between min-h-screen w-full bg-blue-600 text-white overflow-hidden select-none px-6 py-12">
-      {/* Tailwind performance injection:
-        This styled block contains hardware-accelerated keyframe animations
-        to keep animations completely smooth (60 FPS) on mobile chips.
+    <div className="relative flex flex-col items-center justify-between min-h-screen w-full bg-sky-600 text-white overflow-hidden select-none px-6 py-12">
+      {/* 
+        Tailwind performance injection:
+        This contains custom hardware-accelerated keyframe animations
+        to keep animations completely smooth (60 FPS) on mobile devices.
       */}
       <style>{`
         @keyframes fadeInScale {
@@ -94,18 +109,28 @@ export const SplashScreen: React.FC = () => {
         }
       `}</style>
 
-      {/* Spacer to push content down cleanly */}
+      {/* Top spacer to balance the layout vertically */}
       <div className="h-10" />
 
       {/* Main Brand Assembly */}
       <div className="flex flex-col items-center justify-center flex-1 animate-fade-in-scale">
-        {/* White circular logo container to prevent blue-on-blue clashes */}
-        <div className="w-28 h-28 flex items-center justify-center bg-white rounded-full shadow-xl shadow-blue-900/30 mb-6 p-4">
+        {/* Clean white circular container with shadow to ensure high visibility against the brand background */}
+        <div className="w-28 h-28 flex items-center justify-center bg-white rounded-full shadow-xl shadow-sky-900/30 mb-6 p-4">
           <img 
             src={logo} 
             alt="BlueSea Mobile Logo" 
             className="w-full h-full object-contain pointer-events-none"
+            onError={(e) => {
+              // Fallback placeholder in case there are asset pipeline matching issues
+              e.currentTarget.style.display = 'none';
+              const fallback = document.getElementById('logo-fallback');
+              if (fallback) fallback.classList.remove('hidden');
+            }}
           />
+          {/* SVG Fallback markup so your builds never look broken */}
+          <div id="logo-fallback" className="hidden flex flex-col items-center justify-center text-sky-600 font-black text-2xl">
+            BS
+          </div>
         </div>
 
         {/* Brand Typography */}
@@ -117,9 +142,9 @@ export const SplashScreen: React.FC = () => {
         </p>
       </div>
 
-      {/* Footer Loader (River flow dots) */}
+      {/* Bottom Loading Progress Container */}
       <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-1.5 text-white/80 font-medium text-xs tracking-wider uppercase">
+        <div className="flex items-center gap-1.5 text-white/85 font-medium text-xs tracking-wider uppercase">
           <span>{statusText}</span>
           <span className="inline-flex gap-1">
             <span className="w-1.5 h-1.5 bg-white rounded-full animate-dot-1" />
