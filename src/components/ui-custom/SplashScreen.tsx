@@ -24,7 +24,7 @@ export const SplashScreen: React.FC = () => {
       }
 
       // 2. Guarantee a premium 2.5-second minimum display time for splash animations
-      const minimumDelay = new Promise((resolve) => setTimeout(resolve, 2500));
+      const minimumDelay = new Promise((resolve) => setTimeout(resolve, 3000));
 
       // 3. Wait for your real AuthContext to finish validating the token
       const authValidation = new Promise<boolean>((resolve) => {
@@ -41,7 +41,7 @@ export const SplashScreen: React.FC = () => {
         if (active && token) {
           setStatusText('Authenticating secure session');
         }
-      }, 1000);
+      }, 3000);
 
       // Wait for both conditions (minimum transition time + real auth response)
       const [resolvedAuth] = await Promise.all([authValidation, minimumDelay]);
