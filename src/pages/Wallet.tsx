@@ -21,7 +21,10 @@ import {
   AlertCircle,
   Zap,
   Globe, 
-  Wallet as WalletIcon
+  Wallet as WalletIcon,
+  LayoutDashboard,
+  Settings,
+  History
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PinModal, Toast, TransactionModal, } from '@/components/ui-custom';
@@ -366,7 +369,7 @@ export function Wallet() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col">
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex">
       <style dangerouslySetInnerHTML={{ __html: `
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -374,263 +377,290 @@ export function Wallet() {
         .snap-center { scroll-snap-align: center; }
       ` }} />
 
-      {/* MATCHED CART HEADER */}
-      <header className="sticky top-0 z-40 bg-white dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 px-4 py-4">
-        <div className="max-w-3xl mx-auto flex items-center gap-4">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-90"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">Wallet</h1>
-            <p className="text-[10px] uppercase tracking-[0.1em] font-bold text-slate-400 dark:text-slate-500">Manage your BlueSea funds</p>
+      {/* PERSISTENT SIDEBAR PANEL */}
+      <aside className="hidden md:flex flex-col w-64 border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-8 sticky top-0 h-screen shrink-0">
+        <div className="flex items-center gap-3 px-2">
+          <div className="p-2 bg-sky-500 rounded-xl text-white">
+            <Zap className="w-5 h-5 fill-white" />
           </div>
+          <span className="font-black text-lg tracking-tight text-slate-900 dark:text-white">BlueSea</span>
         </div>
-      </header>
+        
+        <nav className="flex-1 space-y-1.5">
+          <button onClick={() => navigate('/dashboard')} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-all">
+            <LayoutDashboard className="w-4 h-4" />
+            <span>Overview</span>
+          </button>
+          <button onClick={() => navigate('/wallet')} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-black text-sky-500 bg-sky-500/10 rounded-2xl transition-all">
+            <WalletIcon className="w-4 h-4" />
+            <span>Wallet</span>
+          </button>
+          <button onClick={() => navigate('/settings')} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-all">
+            <Settings className="w-4 h-4" />
+            <span>Settings</span>
+          </button>
+        </nav>
+      </aside>
 
-      <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
-        <div className="max-w-3xl mx-auto space-y-6">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-            {/* CARD 1: FUNDING DETAILS */}
-            <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all hover:shadow-md">
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Funding Details</h3>
-                  <div className="p-1.5 bg-sky-500/10 rounded-lg">
-                    <Landmark className="h-3.5 w-3.5 text-sky-500" />
+      {/* CORE CONTENT LAYOUT */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        {/* MATCHED FRAMEWORK HEADER */}
+        <header className="sticky top-0 z-40 bg-white dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 px-6 py-4">
+          <div className="max-w-4xl mx-auto flex items-center gap-4">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-90"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Wallet</h1>
+              <p className="text-[10px] uppercase tracking-[0.1em] font-bold text-slate-400 dark:text-slate-500">Manage your BlueSea funds</p>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
+          <div className="max-w-4xl mx-auto space-y-6">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+              {/* CARD 1: FUNDING DETAILS */}
+              <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all hover:shadow-md">
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Funding Details</h3>
+                    <div className="p-1.5 bg-sky-500/10 rounded-lg">
+                      <Landmark className="h-3.5 w-3.5 text-sky-500" />
+                    </div>
+                  </div>
+                  
+                  {accountRequested ? (
+                    <div className="text-center p-6 bg-sky-500/5 border border-sky-500/10 rounded-2xl animate-pulse">
+                      <p className="text-sky-500 font-bold text-sm">Account Coming Soon</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">Processing Request</p>
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-4">
+                      <div className="w-12 h-12 bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                        <Landmark className="h-6 w-6 text-sky-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Virtual Account</h4>
+                        <p className="text-[11px] text-slate-500 mt-1 px-4 leading-relaxed">Generate a dedicated account for instant automated wallet funding.</p>
+                      </div>
+                      <Button 
+                        onClick={handleRequestAccount}
+                        disabled={accountLoading}
+                        className="w-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-11 text-xs font-bold border border-slate-200 dark:border-white/10 shadow-sm transition-all active:scale-[0.98]"
+                      >
+                       {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Account'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* CARD 2: REUSED BALANCE CARD COMPONENT */}
+              <div className="lg:col-span-3 relative group">
+                <div className="absolute top-6 right-12 md:right-10 flex gap-2 z-20 pointer-events-auto">
+                  <button 
+                    onClick={() => setCardModalOpen(true)}
+                    className="flex items-center gap-1.5 px-6 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full text-[10px] font-bold text-white shadow-lg hover:bg-white/20 transition-all active:scale-90"
+                  >
+                    <CreditCard className="w-3 h-3" />
+                    <span>Card</span>
+                  </button>
+                </div>
+                <BalanceCard
+                  showActions={true}
+                  onDeposit={handleDeposit}
+                  onWithdraw={() => setShowWithdrawModal(true)}
+                  className="h-full border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden"
+                />
+              </div>
+            </div>
+
+            {/* BlueSea Connect Section */}
+            <section className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] overflow-hidden shadow-sm transition-all duration-300">
+              <div className="p-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-sky-500 rounded-xl shadow-lg shadow-sky-500/20">
+                    <Zap className="w-4 h-4 text-white fill-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">BlueSea Connect</h3>
+                    <p className="text-slate-500 text-[10px] font-medium">Instant partner platform payments</p>
                   </div>
                 </div>
-                
-                {accountRequested ? (
-                  <div className="text-center p-6 bg-sky-500/5 border border-sky-500/10 rounded-2xl animate-pulse">
-                    <p className="text-sky-500 font-bold text-sm">Account Coming Soon</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">Processing Request</p>
+                <button 
+                  onClick={() => setIsSeeAllOpen(true)}
+                  className="text-[10px] font-bold text-sky-500 bg-sky-500/10 hover:bg-sky-500 hover:text-white rounded-lg px-3 py-1.5 transition-all active:scale-95"
+                >
+                  See all
+                </button>
+              </div>
+
+              {/* Featured Partners */}
+              <div className="px-6 pb-6">
+                {partnersLoading ? (
+                  <div className="flex justify-center p-6">
+                    <LoadingSpinner size="sm" text="Loading Partners..." />
                   </div>
                 ) : (
-                  <div className="text-center space-y-4">
-                    <div className="w-12 h-12 bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
-                      <Landmark className="h-6 w-6 text-sky-500" />
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1">
+                    {partners.slice(0, 3).map((partner) => (
+                      <button
+                        key={partner.id}
+                        onClick={() => setSelectedPartner(partner)}
+                        className={`flex-shrink-0 flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-300 ${
+                          selectedPartner?.id === partner.id 
+                          ? 'bg-white dark:bg-slate-800 border-sky-500 shadow-xl shadow-sky-500/10 scale-105 z-10' 
+                          : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
+                        } min-w-[130px]`}
+                      >
+                        <div className="relative">
+                          <div 
+                            className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center shadow-inner"
+                          >
+                            <img 
+                              src={partner.logo} 
+                              alt={partner.name}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${partner.name}&background=random`;
+                              }}
+                            />
+                          </div>
+                          {selectedPartner?.id === partner.id && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-left">
+                          <p className="text-xs font-black text-slate-800 dark:text-slate-200 leading-none">{partner.name}</p>
+                          <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{partner.helper}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Inline Expandable Panel - Progressive Disclosure */}
+                {selectedPartner && showConnectForm && (
+                  <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/10 space-y-5 animate-in slide-in-from-top-4 fade-in duration-500 ease-out">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">
+                          {selectedPartner.label || selectedPartner.verification_type}
+                        </Label>
+                        <div className="relative group">
+                          <Input
+                            value={connectIdentifier}
+                            onChange={(e) => setConnectIdentifier(e.target.value)}
+                            placeholder={selectedPartner.placeholder || `Enter ${selectedPartner.verification_type}`}
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-xs font-bold focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
+                          />
+                          {connectIdentifier.length > 2 && !verifiedPartnerUser && !isVerifyingPartner && (
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-red-400 uppercase tracking-tighter">Not Found</span>
+                          )}
+                          {isVerifyingPartner && (
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                              <LoadingSpinner size="sm" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Amount (₦)</Label>
+                        <div className="relative group">
+                          <Input
+                            type="number"
+                            value={connectAmount}
+                            onChange={(e) => setConnectAmount(e.target.value)}
+                            placeholder="0.00"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-sm font-black focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
+                          />
+                          <WalletIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Virtual Account</h4>
-                      <p className="text-[11px] text-slate-500 mt-1 px-4 leading-relaxed">Generate a dedicated account for instant automated wallet funding.</p>
+
+                    {verifiedPartnerUser && (
+                      <div className="p-4 bg-sky-500/5 border border-sky-500/20 rounded-2xl flex items-center justify-between animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm border border-sky-500/20">
+                            <User className="w-5 h-5 text-sky-500" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-black text-slate-800 dark:text-slate-200">{verifiedPartnerUser.name}</p>
+                              <CheckCircle2 className="w-3 h-3 text-sky-500" />
+                            </div>
+                            <p className="text-[10px] font-bold text-slate-400">{verifiedPartnerUser.identifier}</p>
+                          </div>
+                        </div>
+                        <div className="hidden md:block">
+                          <div className="px-2 py-1 bg-sky-500 text-white rounded text-[8px] font-black uppercase tracking-widest">Verified Recipient</div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-3 pt-2">
+                      <Button
+                        onClick={() => setSelectedPartner(null)}
+                        className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-500 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => setIsConnectConfirmOpen(true)}
+                        disabled={!verifiedPartnerUser || !connectAmount}
+                        className="flex-[2] bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-12 text-xs font-black shadow-lg shadow-sky-500/20 transition-all active:scale-95 disabled:opacity-50"
+                      >
+                        Continue
+                      </Button>
                     </div>
-                    <Button 
-                      onClick={handleRequestAccount}
-                      disabled={accountLoading}
-                      className="w-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-11 text-xs font-bold border border-slate-200 dark:border-white/10 shadow-sm transition-all active:scale-[0.98]"
-                    >
-                     {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Account'}
-                    </Button>
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* CARD 2: REUSED BALANCE CARD COMPONENT */}
-            <div className="lg:col-span-3 relative group">
-              {/* BALANCE CARD ENHANCEMENT: PREMIUM UTILITY CHIPS */}
-              <div className="absolute top-6 right-12 md:right-10 flex gap-2 z-20 pointer-events-auto">
-                <button 
-                  onClick={() => setCardModalOpen(true)}
-                  className="flex items-center gap-1.5 px-6 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full text-[10px] font-bold text-white shadow-lg hover:bg-white/20 transition-all active:scale-90"
-                >
-                  <CreditCard className="w-3 h-3" />
-                  <span>Card</span>
-                </button>
+            </section>
+            
+            {/* Internal Transfer Button */}
+            <button 
+              onClick={() => setTransferModalOpen(true)}
+              className="group w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] p-6 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm hover:shadow-md"
+            >
+              <div className="flex items-center gap-5">
+                <div className="p-4 bg-white dark:bg-slate-800 text-sky-500 rounded-2xl shadow-sm group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 group-hover:rotate-12">
+                  <Send className="h-5 w-5" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">Internal Transfer</h3>
+                  <p className="text-slate-500 text-[10px] font-medium uppercase tracking-wider">Instant send to BlueSea users</p>
+                </div>
               </div>
-              <BalanceCard
-                showActions={true}
-                onDeposit={handleDeposit}
-                onWithdraw={() => setShowWithdrawModal(true)}
-                className="h-full border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden"
-              />
+              <div className="p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+                <ChevronRight className="h-4 w-4 text-sky-500" />
+              </div>
+            </button>
+
+            {/* RESPONSIVE TRANSACTION PANEL (HIDDEN ON MOBILE, VISIBLE ON DESKTOP) */}
+            <div className="hidden md:block space-y-4">
+              <div className="flex items-center justify-between px-2">
+                 <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Recent Activity</h3>
+                 <Globe className="w-3.5 h-3.5 text-slate-300" />
+              </div>
+              <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-2 shadow-sm">
+                <TransactionList />
+              </div>
             </div>
           </div>
+        </main>
+      </div>
 
-          {/* BlueSea Connect Section */}
-          <section className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] overflow-hidden shadow-sm transition-all duration-300">
-            <div className="p-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-sky-500 rounded-xl shadow-lg shadow-sky-500/20">
-                  <Zap className="w-4 h-4 text-white fill-white" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">BlueSea Connect</h3>
-                  <p className="text-slate-500 text-[10px] font-medium">Instant partner platform payments</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setIsSeeAllOpen(true)}
-                className="text-[10px] font-bold text-sky-500 bg-sky-500/10 hover:bg-sky-500 hover:text-white rounded-lg px-3 py-1.5 transition-all active:scale-95"
-              >
-                See all
-              </button>
-            </div>
-
-            {/* Featured Partners */}
-            <div className="px-6 pb-6">
-              {partnersLoading ? (
-                <div className="flex justify-center p-6">
-                  <LoadingSpinner size="sm" text="Loading Partners..." />
-                </div>
-              ) : (
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1">
-                  {partners.slice(0, 3).map((partner) => (
-                    <button
-                      key={partner.id}
-                      onClick={() => setSelectedPartner(partner)}
-                      className={`flex-shrink-0 flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-300 ${
-                        selectedPartner?.id === partner.id 
-                        ? 'bg-white dark:bg-slate-800 border-sky-500 shadow-xl shadow-sky-500/10 scale-105 z-10' 
-                        : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
-                      } min-w-[130px]`}
-                    >
-                      <div className="relative">
-                        <div 
-                          className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center shadow-inner"
-                        >
-                          <img 
-                            src={partner.logo} 
-                            alt={partner.name}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${partner.name}&background=random`;
-                            }}
-                          />
-                        </div>
-                        {selectedPartner?.id === partner.id && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
-                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-left">
-                        <p className="text-xs font-black text-slate-800 dark:text-slate-200 leading-none">{partner.name}</p>
-                        <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{partner.helper}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Inline Expandable Panel - Progressive Disclosure */}
-              {selectedPartner && showConnectForm && (
-                <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/10 space-y-5 animate-in slide-in-from-top-4 fade-in duration-500 ease-out">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">
-                        {selectedPartner.label || selectedPartner.verification_type}
-                      </Label>
-                      <div className="relative group">
-                        <Input
-                          value={connectIdentifier}
-                          onChange={(e) => setConnectIdentifier(e.target.value)}
-                          placeholder={selectedPartner.placeholder || `Enter ${selectedPartner.verification_type}`}
-                          className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-xs font-bold focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
-                        />
-                        {connectIdentifier.length > 2 && !verifiedPartnerUser && !isVerifyingPartner && (
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-red-400 uppercase tracking-tighter">Not Found</span>
-                        )}
-                        {isVerifyingPartner && (
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                            <LoadingSpinner size="sm" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Amount (₦)</Label>
-                      <div className="relative group">
-                        <Input
-                          type="number"
-                          value={connectAmount}
-                          onChange={(e) => setConnectAmount(e.target.value)}
-                          placeholder="0.00"
-                          className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-sm font-black focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
-                        />
-                        <WalletIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {verifiedPartnerUser && (
-                    <div className="p-4 bg-sky-500/5 border border-sky-500/20 rounded-2xl flex items-center justify-between animate-in zoom-in-95 duration-300">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm border border-sky-500/20">
-                          <User className="w-5 h-5 text-sky-500" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-xs font-black text-slate-800 dark:text-slate-200">{verifiedPartnerUser.name}</p>
-                            <CheckCircle2 className="w-3 h-3 text-sky-500" />
-                          </div>
-                          <p className="text-[10px] font-bold text-slate-400">{verifiedPartnerUser.identifier}</p>
-                        </div>
-                      </div>
-                      <div className="hidden md:block">
-                        <div className="px-2 py-1 bg-sky-500 text-white rounded text-[8px] font-black uppercase tracking-widest">Verified Recipient</div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex gap-3 pt-2">
-                    <Button
-                      onClick={() => setSelectedPartner(null)}
-                      className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-500 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => setIsConnectConfirmOpen(true)}
-                      disabled={!verifiedPartnerUser || !connectAmount}
-                      className="flex-[2] bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-12 text-xs font-black shadow-lg shadow-sky-500/20 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                      Continue
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-          
-          {/* Internal Transfer Button */}
-          <button 
-            onClick={() => setTransferModalOpen(true)}
-            className="group w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] p-6 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm hover:shadow-md"
-          >
-            <div className="flex items-center gap-5">
-              <div className="p-4 bg-white dark:bg-slate-800 text-sky-500 rounded-2xl shadow-sm group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 group-hover:rotate-12">
-                <Send className="h-5 w-5" />
-              </div>
-              <div className="text-left">
-                <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">Internal Transfer</h3>
-                <p className="text-slate-500 text-[10px] font-medium uppercase tracking-wider">Instant send to BlueSea users</p>
-              </div>
-            </div>
-            <div className="p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-              <ChevronRight className="h-4 w-4 text-sky-500" />
-            </div>
-          </button>
-
-          {/* History Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between px-2">
-               <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Recent Activity</h3>
-               <Globe className="w-3.5 h-3.5 text-slate-300" />
-            </div>
-            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-2 shadow-sm">
-              <TransactionList />
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* --- PREMIUM CAROUSEL MODAL (SEE ALL) --- */}
+      {/* --- CAROUSEL MODAL (SEE ALL) --- */}
       {isSeeAllOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-xl bg-slate-950/40 transition-all duration-500">
           <div 
@@ -728,8 +758,6 @@ export function Wallet() {
           </div>
         </div>
       )}
-
-      
 
       {/* BlueSea Connect Confirmation Modal */}
       {isConnectConfirmOpen && (

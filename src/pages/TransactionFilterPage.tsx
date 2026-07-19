@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar, Toast } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ import { parseTransactionInfo, type ParsedTransaction } from '@/utils/transactio
 
 type DateFilter = 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'last_year' | 'custom' | 'all';
 
-// Universal parser that normalizes any incoming database format into the exact slug the API requires
 const getBillerSlug = (provider: string = '') => {
   const p = provider.toLowerCase();
   if (p.includes('ikeja') || p.includes('ikedc')) return 'ikeja-electric';
@@ -30,7 +29,7 @@ const getBillerSlug = (provider: string = '') => {
   if (p.includes('benin') || p.includes('bedc')) return 'benin-electric';
   if (p.includes('aba')) return 'aba-electric';
   if (p.includes('yola') || p.includes('yedc')) return 'yola-electric';
-  return provider; // Fallback directly to string if it's already a slug
+  return provider;
 };
 
 export const TransactionFilterPage: React.FC = () => {
@@ -42,7 +41,6 @@ export const TransactionFilterPage: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   
-  // Live Endpoint Verification States
   const [liveMeterData, setLiveMeterData] = useState<any>(null);
   const [loadingMeterData, setLoadingMeterData] = useState(false);
   
@@ -52,7 +50,8 @@ export const TransactionFilterPage: React.FC = () => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
-  // Initial Transaction Fetch
+  const bodyDivRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -73,15 +72,12 @@ export const TransactionFilterPage: React.FC = () => {
     fetchTransactions();
   }, [showToast]);
 
-  // RELENTLESS LIVE API DATA FETCH BLOCK
   useEffect(() => {
     const fetchLiveDetails = async () => {
       if (!selectedTransaction) return;
 
       const category = selectedTransaction.parsed?.category || '';
       const desc = (selectedTransaction.description || '').toUpperCase();
-      
-      // Target transaction fallback identifiers to confirm it is an electricity transaction
       const isElectricity = category === 'ELECTRICITY' || desc.includes('LIGHT') || desc.includes('ELECTRIC') || desc.includes('METER');
       
       if (!isElectricity) {
@@ -90,8 +86,6 @@ export const TransactionFilterPage: React.FC = () => {
       }
 
       const txAny = selectedTransaction as any;
-      
-      // Highly robust multi-tier lookup sequence
       const meterNum = txAny.billerCode || 
                        txAny.metadata?.meter_number || 
                        txAny.metadata?.billerCode || 
@@ -113,7 +107,6 @@ export const TransactionFilterPage: React.FC = () => {
       const meterTypeFormatted = String(rawType).toLowerCase().includes('post') ? 'postpaid' : 'prepaid';
       
       if (!meterNum || !billerSlug) {
-        console.warn("BlueSea Platform: Data points insufficient for background query", { meterNum, billerSlug });
         return;
       }
 
@@ -138,6 +131,15 @@ export const TransactionFilterPage: React.FC = () => {
 
     fetchLiveDetails();
   }, [selectedTransaction]);
+
+  // Opacity masking alignment when a modal is active
+  useEffect(() => {
+    if (selectedTransaction || shareModalOpen) {
+      if (bodyDivRef.current) bodyDivRef.current.style.opacity = '0.5';
+    } else {
+      if (bodyDivRef.current) bodyDivRef.current.style.opacity = '1';
+    }
+  }, [selectedTransaction, shareModalOpen]);
 
   const filteredTransactions = useMemo(() => {
     const start = new Date();
@@ -218,143 +220,150 @@ export const TransactionFilterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] flex font-sans">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 bg-white/80 dark:bg-[#0B1120]/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-4 py-5 flex items-center gap-4 transition-colors">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 transition-all"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Transaction History</h1>
-            <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wider mt-0.5">
-              BlueSea Financial Data
-            </p>
-          </div>
-        </header>
+    <div className="relative">
+      <div className="h-screen bg-slate-50 dark:bg-slate-900 flex font-sans overflow-hidden" ref={bodyDivRef}>
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        
+        {/* Main Viewport Content Context Area */}
+        <div className="flex-1 flex flex-col h-full min-w-0 relative">
+          
+          {/* FIXED APP HEADER LAYER */}
+          <header className="sticky top-0 z-30 bg-slate-50 dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800/60 px-4 py-5 flex items-center gap-4 shrink-0 transition-colors">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="p-2 rounded-full hover:bg-slate-200/60 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 transition-all"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Transaction History</h1>
+              <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wider mt-0.5">
+                BlueSea Financial Data
+              </p>
+            </div>
+          </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full max-w-5xl mx-auto space-y-6">
-          {/* CONTROL CENTER */}
-          <div className="bg-white dark:bg-slate-900/50 rounded-3xl p-5 border border-slate-200/50 dark:border-slate-800 shadow-sm dark:shadow-none">
-            <div className="flex flex-col md:flex-row gap-4 items-end">
-              <div className="w-full md:flex-1">
-                <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">
-                  Timeframe
-                </Label>
-                <div className="relative">
-                  <select
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value as DateFilter)}
-                    className="w-full pl-4 pr-10 py-3.5 bg-slate-50 dark:bg-[#0B1120] border border-slate-200 dark:border-slate-800 rounded-2xl appearance-none cursor-pointer text-sm font-medium focus:ring-2 focus:ring-blue-500/20 dark:text-slate-200 transition-all"
-                  >
-                    <option value="this_month">This Month</option>
-                    <option value="last_month">Last Month</option>
-                    <option value="last_3_months">Last 3 Months</option>
-                    <option value="last_6_months">Last 6 Months</option>
-                    <option value="last_year">Last Year</option>
-                    <option value="custom">Custom Range</option>
-                    <option value="all">All Time</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          {/* ISOLATED SCROLLABLE CONTENT AREA */}
+          <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10 w-full max-w-5xl mx-auto space-y-6">
+            
+            {/* CONTROL CENTER */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/50 dark:border-slate-800 shadow-sm">
+              <div className="flex flex-col md:flex-row gap-4 items-end">
+                <div className="w-full md:flex-1">
+                  <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">
+                    Timeframe
+                  </Label>
+                  <div className="relative">
+                    <select
+                      value={dateFilter}
+                      onChange={(e) => setDateFilter(e.target.value as DateFilter)}
+                      className="w-full pl-4 pr-10 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl appearance-none cursor-pointer text-sm font-medium focus:ring-2 focus:ring-blue-500/20 dark:text-slate-200 transition-all"
+                    >
+                      <option value="this_month">This Month</option>
+                      <option value="last_month">Last Month</option>
+                      <option value="last_3_months">Last 3 Months</option>
+                      <option value="last_6_months">Last 6 Months</option>
+                      <option value="last_year">Last Year</option>
+                      <option value="custom">Custom Range</option>
+                      <option value="all">All Time</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
+
+                {dateFilter === 'custom' && (
+                  <div className="w-full md:flex-1 flex gap-3">
+                    <div className="flex-1">
+                      <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Start</Label>
+                      <Input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} className="bg-slate-50 dark:bg-slate-800 rounded-2xl py-3.5 border-slate-200 dark:border-slate-700" />
+                    </div>
+                    <div className="flex-1">
+                      <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">End</Label>
+                      <Input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} className="bg-slate-50 dark:bg-slate-800 rounded-2xl py-3.5 border-slate-200 dark:border-slate-700" />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {dateFilter === 'custom' && (
-                <div className="w-full md:flex-1 flex gap-3">
-                  <div className="flex-1">
-                    <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">Start</Label>
-                    <Input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} className="bg-slate-50 dark:bg-[#0B1120] rounded-2xl py-3.5 border-slate-200 dark:border-slate-800" />
-                  </div>
-                  <div className="flex-1">
-                    <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block">End</Label>
-                    <Input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} className="bg-slate-50 dark:bg-[#0B1120] rounded-2xl py-3.5 border-slate-200 dark:border-slate-800" />
-                  </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-5 pt-5 border-t border-slate-100 dark:border-slate-800">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl flex flex-col justify-center hidden md:flex">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Volume</span>
+                  <span className="text-xl font-bold text-slate-900 dark:text-white mt-1">{filteredTransactions.length} <span className="text-sm font-medium text-slate-400">Txns</span></span>
+                </div>
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-500/5 rounded-2xl border border-emerald-100 dark:border-emerald-500/10">
+                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1"><ArrowDownLeft className="w-3 h-3"/> Inflow</span>
+                  <span className="text-lg md:text-xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">₦{totals.credits.toLocaleString()}</span>
+                </div>
+                <div className="p-4 bg-rose-50 dark:bg-rose-500/5 rounded-2xl border border-rose-100 dark:border-rose-500/10">
+                  <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1"><ArrowUpRight className="w-3 h-3"/> Outflow</span>
+                  <span className="text-lg md:text-xl font-bold text-rose-700 dark:text-rose-400 mt-1">₦{totals.debits.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* TRANSACTION LIST */}
+            <div className="space-y-3">
+              {loading ? (
+                 <div className="p-10 text-center text-slate-400 animate-pulse font-medium">Loading ledger...</div>
+              ) : filteredTransactions.length === 0 ? (
+                 <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 border-dashed">
+                   <p className="text-slate-500 dark:text-slate-400 font-medium">No transactions found for this period.</p>
+                 </div>
+              ) : (
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/50 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800">
+                  {filteredTransactions.map((tx) => {
+                    const category = tx.parsed?.category || '';
+                    const descUpper = (tx.description || '').toUpperCase();
+                    const isElectricity = category === 'ELECTRICITY' || descUpper.includes('LIGHT') || descUpper.includes('ELECTRIC') || descUpper.includes('METER');
+                    
+                    const Icon = isElectricity ? Zap : tx.parsed.icon;
+                    const isCredit = tx.transaction_type === 'CREDIT';
+                    
+                    return (
+                      <div
+                        key={tx.id}
+                        onClick={() => setSelectedTransaction(tx)}
+                        className="group flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all active:scale-[0.99]"
+                      >
+                        <div className="flex items-center gap-4 overflow-hidden min-w-0">
+                          <div className={cn(
+                            "w-12 h-12 shrink-0 aspect-square rounded-full flex items-center justify-center transition-colors transform-gpu",
+                            isCredit ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+                                     : isElectricity ? "bg-amber-500/10 text-amber-500 dark:text-amber-400"
+                                                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                          )}>
+                            <Icon className={cn("w-5 h-5 shrink-0 aspect-square object-contain", isElectricity && "fill-current")} strokeWidth={2.5} />
+                          </div>
+
+                          <div className="flex flex-col truncate min-w-0">
+                            <span className="font-semibold text-slate-900 dark:text-slate-100 truncate text-sm md:text-base tracking-tight">
+                              {isElectricity ? 'Light Bill Purchase' : tx.parsed.title}
+                            </span>
+                            <span className="text-xs md:text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                              {tx.receiver_name || tx.sender_name || tx.parsed.recipientNumber || tx.parsed.recipientName || tx.description}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end shrink-0 ml-4">
+                          <span className={cn(
+                            "font-bold text-sm md:text-base tracking-tight",
+                            isCredit ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                          )}>
+                            {isCredit ? '+' : '-'}₦{Number(tx.amount).toLocaleString()}
+                          </span>
+                          <span className="text-[10px] md:text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
+                            {new Date(tx.created_at).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-5 pt-5 border-t border-slate-100 dark:border-slate-800/50">
-              <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl flex flex-col justify-center hidden md:flex">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Volume</span>
-                <span className="text-xl font-bold text-slate-900 dark:text-white mt-1">{filteredTransactions.length} <span className="text-sm font-medium text-slate-400">Txns</span></span>
-              </div>
-              <div className="p-4 bg-emerald-50 dark:bg-emerald-500/5 rounded-2xl border border-emerald-100 dark:border-emerald-500/10">
-                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1"><ArrowDownLeft className="w-3 h-3"/> Inflow</span>
-                <span className="text-lg md:text-xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">₦{totals.credits.toLocaleString()}</span>
-              </div>
-              <div className="p-4 bg-rose-50 dark:bg-rose-500/5 rounded-2xl border border-rose-100 dark:border-rose-500/10">
-                <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1"><ArrowUpRight className="w-3 h-3"/> Outflow</span>
-                <span className="text-lg md:text-xl font-bold text-rose-700 dark:text-rose-400 mt-1">₦{totals.debits.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* TRANSACTION LIST */}
-          <div className="space-y-3">
-            {loading ? (
-               <div className="p-10 text-center text-slate-400 animate-pulse font-medium">Loading ledger...</div>
-            ) : filteredTransactions.length === 0 ? (
-               <div className="p-12 text-center bg-white dark:bg-slate-900/30 rounded-3xl border border-slate-200/50 dark:border-slate-800 border-dashed">
-                 <p className="text-slate-500 dark:text-slate-400 font-medium">No transactions found for this period.</p>
-               </div>
-            ) : (
-              <div className="bg-white dark:bg-slate-900/30 rounded-3xl border border-slate-200/50 dark:border-slate-800 overflow-hidden shadow-sm dark:shadow-none divide-y divide-slate-100 dark:divide-slate-800/50">
-                {filteredTransactions.map((tx) => {
-                  const category = tx.parsed?.category || '';
-                  const descUpper = (tx.description || '').toUpperCase();
-                  const isElectricity = category === 'ELECTRICITY' || descUpper.includes('LIGHT') || descUpper.includes('ELECTRIC') || descUpper.includes('METER');
-                  
-                  const Icon = isElectricity ? Zap : tx.parsed.icon;
-                  const isCredit = tx.transaction_type === 'CREDIT';
-                  
-                  return (
-                    <div
-                      key={tx.id}
-                      onClick={() => setSelectedTransaction(tx)}
-                      className="group flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all active:scale-[0.99]"
-                    >
-                      <div className="flex items-center gap-4 overflow-hidden min-w-0">
-                        <div className={cn(
-                          "w-12 h-12 shrink-0 aspect-square rounded-full flex items-center justify-center transition-colors transform-gpu",
-                          isCredit ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
-                                   : isElectricity ? "bg-amber-500/10 text-amber-500 dark:text-amber-400"
-                                                   : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 group-hover:text-blue-600 dark:group-hover:text-blue-400"
-                        )}>
-                          <Icon className={cn("w-5 h-5 shrink-0 aspect-square object-contain", isElectricity && "fill-current")} strokeWidth={2.5} />
-                        </div>
-
-                        <div className="flex flex-col truncate min-w-0">
-                          <span className="font-semibold text-slate-900 dark:text-slate-100 truncate text-sm md:text-base tracking-tight">
-                            {isElectricity ? 'Light Bill Purchase' : tx.parsed.title}
-                          </span>
-                          <span className="text-xs md:text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                            {tx.receiver_name || tx.sender_name || tx.parsed.recipientNumber || tx.parsed.recipientName || tx.description}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end shrink-0 ml-4">
-                        <span className={cn(
-                          "font-bold text-sm md:text-base tracking-tight",
-                          isCredit ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-                        )}>
-                          {isCredit ? '+' : '-'}₦{Number(tx.amount).toLocaleString()}
-                        </span>
-                        <span className="text-[10px] md:text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
-                          {new Date(tx.created_at).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
 
       {/* RECEIPT MODAL */}
@@ -364,17 +373,16 @@ export const TransactionFilterPage: React.FC = () => {
         const descUpper = (dynamicTx.description || '').toUpperCase();
         const isElectricity = category === 'ELECTRICITY' || descUpper.includes('LIGHT') || descUpper.includes('ELECTRIC') || descUpper.includes('METER');
         
- // Dynamic variable access resolution paths
         const matchedMeterNumber = dynamicTx.billerCode || dynamicTx.metadata?.meter_number || dynamicTx.metadata?.billerCode || dynamicTx.parsed?.meterNumber || dynamicTx.recipient_number || '-';
         const matchedToken = dynamicTx.metadata?.token || dynamicTx.parsed?.token || dynamicTx.token;
 
         return (
           <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center sm:p-4 print:hidden">
-            <div className="absolute inset-0 bg-slate-900/60 dark:bg-[#050810]/80 backdrop-blur-sm" onClick={() => setSelectedTransaction(null)} />
+            <div className="absolute inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm" onClick={() => setSelectedTransaction(null)} />
             
             <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-t-[2rem] md:rounded-[2rem] shadow-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200 border border-slate-200/50 dark:border-slate-800">
               
-              <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
+              <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-all shrink-0 aspect-square",
@@ -402,7 +410,6 @@ export const TransactionFilterPage: React.FC = () => {
                     {dynamicTx.transaction_type === 'CREDIT' ? '+' : '-'}₦{Number(dynamicTx.amount).toLocaleString()}
                   </div>
                   
-                  {/* LUXURY SECURED BADGES FLOW (Uses ShieldCheck) */}
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
                     <div className={cn("inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700")}>
                       <div className={cn("w-2 h-2 rounded-full", dynamicTx.status?.toLowerCase() === 'successful' || dynamicTx.status?.toLowerCase() === 'completed' ? "bg-emerald-500" : "bg-amber-500")} />
@@ -415,7 +422,6 @@ export const TransactionFilterPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* LIGHT BILL CORE DESIGNATED INTERFACE */}
                 {isElectricity && (
                   <div className="mb-6 space-y-6 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl relative overflow-hidden">
                     <Zap className="absolute -right-6 -bottom-6 w-32 h-32 text-amber-500/[0.04] dark:text-amber-400/[0.03] pointer-events-none transform rotate-12 shrink-0 aspect-square" />
@@ -447,7 +453,6 @@ export const TransactionFilterPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* ONLY 4 FIELDS PRESERVED HERE AS MANDATED (Uses User icon premium badge) */}
                     <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-xs pt-1 relative z-10">
                       <div className="flex gap-2">
                         <User className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
@@ -492,7 +497,6 @@ export const TransactionFilterPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Standard Structural Ledger Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 relative z-10">
                   <div className="space-y-5">
                     <div>
@@ -538,7 +542,7 @@ export const TransactionFilterPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-3">
+              <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-3">
                 <Button 
                   variant="outline" 
                   onClick={() => setShareModalOpen(true)}
@@ -558,7 +562,7 @@ export const TransactionFilterPage: React.FC = () => {
         );
       })()}
 
-      {/* SHARE RECENT sheet */}
+      {/* SHARE SHEET */}
       {shareModalOpen && selectedTransaction && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-md bg-slate-950/40 p-4">
           <div className="absolute inset-0" onClick={() => setShareModalOpen(false)} />
