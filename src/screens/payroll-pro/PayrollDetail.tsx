@@ -14,7 +14,8 @@ export default function PayrollDetail() {
   const payroll = payrollRecords.find(p => p.id === payrollId);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex overflow-hidden transition-colors duration-300">
+      
       {/* Universal Design System Theme & Variable Mapping Layer */}
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
@@ -38,16 +39,20 @@ export default function PayrollDetail() {
       {/* Global Sidebar component integration */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />  
 
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 transition-colors duration-300">  
-        {/* Unified Application Header handling platform navigation and identity */}
-        <Header  
-          title={payroll ? payroll.name : "Payroll Detail"} 
-          subtitle="Payroll Processing & Verification"  
-          onMenuClick={() => setSidebarOpen(true)}  
-        />  
+      {/* Main Viewport Content Context Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">   
+        
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+          <Header  
+            title={payroll ? payroll.name : "Payroll Detail"} 
+            subtitle="Payroll Processing & Verification"  
+            onMenuClick={() => setSidebarOpen(true)}  
+          />  
+        </div>
 
         {/* Unified spacing content viewport wrapper */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">  
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">  
           <div className="max-w-4xl mx-auto space-y-5">  
 
             {/* Handle missing data gracefully within global layout context */}
@@ -63,7 +68,7 @@ export default function PayrollDetail() {
             ) : (
               <>
                 {/* Visual Demarcation Header Action Row */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100 dark:border-white/5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
                   <button 
                     onClick={() => navigate(-1)} 
                     className="flex items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -72,7 +77,7 @@ export default function PayrollDetail() {
                     Back to Payroll
                   </button>
                   
-                  <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl px-3 py-1.5 shadow-sm self-start sm:self-auto">
+                  <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 shadow-sm self-start sm:self-auto">
                     <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center flex-shrink-0">
                       <Wallet className="w-3.5 h-3.5 text-white" />
                     </div>
@@ -84,14 +89,14 @@ export default function PayrollDetail() {
                 </div>
 
                 {/* Summary Financial Metric Card */}
-                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5 shadow-sm animate-slide-up">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm animate-slide-up">
                   <div className="text-center mb-5">
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Net Payout</p>
                     <p className="text-3xl font-black text-slate-900 dark:text-white mt-1.5">
                       &#8358;{payroll.status === 'draft' ? '0' : payroll.totalNetSalary.toLocaleString()}
                     </p>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-200 dark:border-white/5">
+                  <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/60">
                     <div className="text-center">
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Gross</p>
                       <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">&#8358;{payroll.totalGrossSalary.toLocaleString()}</p>
@@ -108,30 +113,30 @@ export default function PayrollDetail() {
                 </div>
 
                 {/* Core Parameters Specification Card */}
-                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5 space-y-4 shadow-sm animate-slide-up">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm animate-slide-up">
                   <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Payroll Details</h3>
                   <div className="space-y-3 text-sm">
-                    <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                       <span className="text-slate-600 dark:text-slate-400">Pay Period</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100">{new Date(payroll.payPeriodStart).toLocaleDateString()} - {new Date(payroll.payPeriodEnd).toLocaleDateString()}</span>
                     </div>
-                    <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                       <span className="text-slate-600 dark:text-slate-400">Pay Date</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100">{new Date(payroll.payDate).toLocaleDateString()}</span>
                     </div>
-                    <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                       <span className="text-slate-600 dark:text-slate-400">Total Employees</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                         <Users className="w-4 h-4 text-slate-400" />
                         {payroll.totalEmployees}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-white/5">
+                    <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                       <span className="text-slate-600 dark:text-slate-400">Type</span>
                       <span className="font-bold text-slate-900 dark:text-slate-100 capitalize">{payroll.type}</span>
                     </div>
                     {payroll.processedBy && (
-                      <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-white/5">
+                      <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
                         <span className="text-slate-600 dark:text-slate-400">Processed By</span>
                         <span className="font-bold text-slate-900 dark:text-slate-100">{payroll.processedBy}</span>
                       </div>
@@ -146,7 +151,7 @@ export default function PayrollDetail() {
                 </div>
 
                 {/* Progress Status Timeline Tracking Card */}
-                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-5 shadow-sm animate-slide-up">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm animate-slide-up">
                   <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 mb-4">Processing Status</h3>
                   <div className="space-y-4">
                     {[
@@ -162,7 +167,7 @@ export default function PayrollDetail() {
                         }`}>
                           {step.done ? <Check className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
                         </div>
-                        <div className="flex-1 min-w-0 border-b border-slate-100 dark:border-white/5 pb-2 last:border-0 last:pb-0">
+                        <div className="flex-1 min-w-0 border-b border-slate-100 dark:border-slate-800/60 pb-2 last:border-0 last:pb-0">
                           <p className={`text-sm font-bold transition-colors ${step.done ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}>{step.label}</p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{step.time}</p>
                         </div>

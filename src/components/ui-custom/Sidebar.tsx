@@ -19,6 +19,7 @@ import {
   Grid3X3,
  // PlaneTakeoff,
   QrCode,
+  Briefcase,
   //Orbit,
   //ShieldCheck
 } from 'lucide-react';
@@ -41,6 +42,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Grid3X3,
  // PlaneTakeoff,
   QrCode,
+  Briefcase,
   //Orbit,
  // ShieldCheck
 };

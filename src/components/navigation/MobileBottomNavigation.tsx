@@ -2,7 +2,7 @@
 
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Home, Gift, Compass, Store, Settings } from 'lucide-react';
+import { Home, Gift, Briefcase, Store, Settings } from 'lucide-react';
 import { navStyles } from './MobileBottomNavigation.styles';
 
 interface NavigationItem {
@@ -20,7 +20,7 @@ export function MobileBottomNavigation() {
     { id: 'home', label: 'Home', path: '/dashboard', icon: Home },
     { id: 'rewards', label: 'Rewards', path: '/rewards', icon: Gift },
     { id: 'marketplace', label: 'MarketPlace', path: '/marketplace', icon: Store },
-    { id: 'explore', label: 'Explore', path: '/services', icon: Compass },
+    { id: 'payroll-pro', label: 'Payroll', path: '/payroll-pro', icon: Briefcase },
     { id: 'settings', label: 'Settings', path: '/settings', icon: Settings },
   ];
 

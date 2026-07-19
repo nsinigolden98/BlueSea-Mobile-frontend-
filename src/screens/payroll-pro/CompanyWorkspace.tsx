@@ -25,7 +25,7 @@ export default function CompanyWorkspace() {
 
   if (!company) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
         <div className="text-center max-w-sm">
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Company registry node could not be resolved.</p>
           <button 
@@ -56,16 +56,16 @@ export default function CompanyWorkspace() {
   );
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex overflow-hidden transition-colors duration-300">
       
-      {/* Compatibility Injection Layer for Backwards Compatibility with Internal Cards */}
+      {/* Universal Design System Theme & Variable Mapping Layer */}
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
           --tm-bg: #ffffff;
-          --tm-text-main: #0f172a;
-          --tm-text-muted: #475569;
-          --tm-border: #e2e8f0;
-          --tm-border-light: #f1f5f9;
+          --tm-text-main: #0f172a; /* slate-900 */
+          --tm-text-muted: #475569; /* slate-600 */
+          --tm-border: #e2e8f0; /* slate-200 */
+          --tm-border-light: #f1f5f9; /* slate-100 */
           --tm-sky-main: #0ea5e9;
           --tm-sky-dark: #0284c7;
           --tm-sky-light: #e0f2fe;
@@ -78,10 +78,10 @@ export default function CompanyWorkspace() {
           --tm-danger: #dc2626;
         }
         .dark {
-          --tm-bg: #020617;
-          --tm-text-main: #f1f5f9;
-          --tm-text-muted: #94a3b8;
-          --tm-border: rgba(255, 255, 255, 0.08);
+          --tm-bg: #0f172a; /* slate-900 */
+          --tm-text-main: #f1f5f9; /* slate-100 */
+          --tm-text-muted: #94a3b8; /* slate-400 */
+          --tm-border: rgba(255, 255, 255, 0.08); /* white/8 */
           --tm-border-light: rgba(255, 255, 255, 0.04);
           --tm-sky-light: rgba(14, 165, 233, 0.15);
           --tm-success-light: rgba(22, 163, 74, 0.15);
@@ -92,33 +92,39 @@ export default function CompanyWorkspace() {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       ` }} />
 
+      {/* Global Sidebar component integration */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 transition-colors duration-300">
-        <Header 
-          title={company.name} 
-          subtitle="Corporate Infrastructure Workspace" 
-          onMenuClick={() => setSidebarOpen(true)} 
-        />
+      {/* Main Viewport Content Context Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+        
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+          <Header 
+            title={company.name} 
+            subtitle="Corporate Infrastructure Workspace" 
+            onMenuClick={() => setSidebarOpen(true)} 
+          />
+        </div>
 
         {/* Structural Navigation Context Anchor Row */}
-        <div className="bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-200 dark:border-white/5 px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-slate-100/50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center flex-shrink-0 shadow-sm shadow-sky-500/10">
               <Building2 className="w-4 h-4 text-white" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{company.name}</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{company.name}</span>
                 <StatusBadge status={company.verification.status} size="sm" />
               </div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{company.address}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{company.address}</p>
             </div>
           </div>
           
           <button 
             onClick={() => navigate('/payroll-pro')} 
-            className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl shadow-sm"
+            className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Hub Root
@@ -126,7 +132,7 @@ export default function CompanyWorkspace() {
         </div>
 
         {/* Horizontal Sticky Sub-Tab Nav Bar */}
-        <div className="sticky top-0 z-20 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-white/5 px-4 md:px-6">
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 shrink-0">
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide py-2">
             {tabs.map(tab => {
               const TabIcon = tab.icon;
@@ -138,7 +144,7 @@ export default function CompanyWorkspace() {
                   className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all ${
                     isActive 
                       ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/10' 
-                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-800 dark:hover:text-slate-200'
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
                   <TabIcon className="w-3.5 h-3.5" />
@@ -149,8 +155,8 @@ export default function CompanyWorkspace() {
           </div>
         </div>
 
-        {/* Primary Workspace Tab Panel Viewport */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide max-w-4xl w-full mx-auto pb-24">
+        {/* Primary Workspace Tab Panel Viewport Content Frame */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide max-w-4xl w-full mx-auto pb-24 z-10">
           
           {/* ─── OVERVIEW TAB ─── */}
           {activeTab === 'overview' && (
@@ -167,9 +173,9 @@ export default function CompanyWorkspace() {
 
               {/* Fast-Track Actions Hub */}
               <div>
-                <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Workspace Controls</h3>
+                <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] mb-3">Workspace Controls</h3>
                 <div className="grid grid-cols-2 gap-3.5">
-                  <button onClick={() => setActiveTab('branches')} className="flex flex-col items-start text-left p-4 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-purple-500/30 transition-all hover:shadow-md group">
+                  <button onClick={() => setActiveTab('branches')} className="flex flex-col items-start text-left p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all hover:shadow-sm group">
                     <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-3 border border-purple-100 dark:border-transparent">
                       <MapPin className="w-4 h-4" />
                     </div>
@@ -177,7 +183,7 @@ export default function CompanyWorkspace() {
                     <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Map new operating facility nodes.</span>
                   </button>
 
-                  <button onClick={() => setActiveTab('employees')} className="flex flex-col items-start text-left p-4 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-sky-500/30 transition-all hover:shadow-md group">
+                  <button onClick={() => setActiveTab('employees')} className="flex flex-col items-start text-left p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all hover:shadow-sm group">
                     <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-3 border border-sky-100 dark:border-transparent">
                       <Users className="w-4 h-4" />
                     </div>
@@ -185,7 +191,7 @@ export default function CompanyWorkspace() {
                     <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Register new staff resources.</span>
                   </button>
 
-                  <button onClick={() => setActiveTab('payroll')} className="flex flex-col items-start text-left p-4 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-emerald-500/30 transition-all hover:shadow-md group">
+                  <button onClick={() => setActiveTab('payroll')} className="flex flex-col items-start text-left p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all hover:shadow-sm group">
                     <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 border border-emerald-100 dark:border-transparent">
                       <Wallet className="w-4 h-4" />
                     </div>
@@ -193,7 +199,7 @@ export default function CompanyWorkspace() {
                     <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Compile monthly salary workflows.</span>
                   </button>
 
-                  <button onClick={() => setActiveTab('approvals')} className="flex flex-col items-start text-left p-4 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 hover:border-amber-500/30 transition-all hover:shadow-md group">
+                  <button onClick={() => setActiveTab('approvals')} className="flex flex-col items-start text-left p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all hover:shadow-sm group">
                     <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 border border-amber-100 dark:border-transparent">
                       <ClipboardCheck className="w-4 h-4" />
                     </div>
@@ -205,8 +211,8 @@ export default function CompanyWorkspace() {
 
               {/* Historic Security Audit & Activity Logs */}
               <div>
-                <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Recent Ledger Activity</h3>
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-4 space-y-3.5 shadow-sm">
+                <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] mb-3">Recent Ledger Activity</h3>
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3.5 shadow-sm">
                   {[
                     { action: 'Payroll Processed', detail: 'June 2026 payroll completed for 42 employees', time: '2 days ago', color: 'sky' },
                     { action: 'Employee Added', detail: 'Chioma Eze joined as Admin Intern', time: '5 days ago', color: 'success' },
@@ -214,7 +220,7 @@ export default function CompanyWorkspace() {
                     { action: 'Bonus Added', detail: 'Chinedu Okafor received performance bonus', time: '15 days ago', color: 'success' },
                     { action: 'Warning Issued', detail: 'System flag - internal operational rule audit notice', time: '20 days ago', color: 'danger' },
                   ].map((activity, i) => (
-                    <div key={i} className="flex items-start gap-3.5 pb-3.5 border-b border-slate-100 dark:border-white/5 last:border-0 last:pb-0">
+                    <div key={i} className="flex items-start gap-3.5 pb-3.5 border-b border-slate-100 dark:border-slate-800/60 last:border-0 last:pb-0">
                       <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
                         activity.color === 'sky' ? 'bg-sky-500' :
                         activity.color === 'success' ? 'bg-emerald-500' :
@@ -239,7 +245,7 @@ export default function CompanyWorkspace() {
               {branches.length > 0 ? (
                 <>
                   <div className="flex items-center justify-between px-1">
-                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{branches.length} Registered Node{branches.length !== 1 ? 's' : ''}</p>
+                    <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em]">{branches.length} Registered Node{branches.length !== 1 ? 's' : ''}</p>
                   </div>
                   <div className="space-y-3">
                     {branches.map(branch => (
@@ -272,7 +278,7 @@ export default function CompanyWorkspace() {
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
                 <input 
                   type="text" 
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-sky-500 transition-all shadow-sm" 
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-sky-500 transition-all shadow-sm" 
                   placeholder="Filter personnel roster logs..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
@@ -281,7 +287,7 @@ export default function CompanyWorkspace() {
 
               {filteredEmployees.length > 0 ? (
                 <div className="space-y-3">
-                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">{filteredEmployees.length} Matching Personnel Record{filteredEmployees.length !== 1 ? 's' : ''}</p>
+                  <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] px-1">{filteredEmployees.length} Matching Personnel Record{filteredEmployees.length !== 1 ? 's' : ''}</p>
                   {filteredEmployees.map(emp => (
                     <EmployeeCard key={emp.id} employee={emp} />
                   ))}
@@ -303,7 +309,7 @@ export default function CompanyWorkspace() {
             </div>
           )}
 
-   {/* ─── PAYROLL TAB ─── */}
+          {/* ─── PAYROLL TAB ─── */}
           {activeTab === 'payroll' && (
             <div className="space-y-4 animate-slide-up">
               {payrolls.length > 0 ? (
@@ -311,7 +317,7 @@ export default function CompanyWorkspace() {
                   {payrolls.map(payroll => (
                     <div 
                       key={payroll.id} 
-                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-4 cursor-pointer hover:border-sky-500/30 hover:shadow-md transition-all" 
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 cursor-pointer hover:border-sky-500/30 hover:shadow-sm transition-all" 
                       onClick={() => navigate(`/payroll-pro/payroll/${payroll.id}`)}
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -324,7 +330,7 @@ export default function CompanyWorkspace() {
                         <StatusBadge status={payroll.status} size="sm" />
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-white/5">
+                      <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60">
                         <div>
                           <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Staff</p>
                           <p className="text-xs font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{payroll.totalEmployees}</p>
@@ -356,7 +362,7 @@ export default function CompanyWorkspace() {
             <div className="space-y-4 animate-slide-up">
               {pendingApprovals.length > 0 ? (
                 <div className="space-y-3">
-                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+                  <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] px-1">
                     {pendingApprovals.length} Pipeline Item{pendingApprovals.length !== 1 ? 's' : ''} Pending Action
                   </p>
                   {pendingApprovals.map(approval => (
@@ -384,7 +390,7 @@ export default function CompanyWorkspace() {
                   { title: 'Employee Growth', icon: Users, color: 'purple', desc: 'Organizational headcount' },
                   { title: 'Leave Reports', icon: ClipboardCheck, color: 'warning', desc: 'Utilization balance history' },
                 ].map((report, i) => (
-                  <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-4 text-center hover:border-sky-500/30 hover:shadow-md transition-all cursor-pointer group">
+                  <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center hover:border-sky-500/30 hover:shadow-sm transition-all cursor-pointer group">
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-3 ${
                       report.color === 'sky' ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600' :
                       report.color === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600' :
@@ -404,7 +410,7 @@ export default function CompanyWorkspace() {
           {/* ─── SETTINGS TAB ─── */}
           {activeTab === 'settings' && (
             <div className="space-y-4 animate-slide-up">
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl divide-y divide-slate-100 dark:divide-white/5 overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800/60 overflow-hidden shadow-sm">
                 {[
                   { label: 'Company Settings', desc: 'Core name profiles, addresses, and tax identifiers' },
                   { label: 'Payroll Settings', desc: 'Recurrent distribution targets, currencies, and integrations' },
@@ -413,7 +419,7 @@ export default function CompanyWorkspace() {
                   { label: 'Branch Settings', desc: 'Establish structural operational defaults for branches' },
                   { label: 'Employee Rules', desc: 'Configure time-off matrices, accrual policies, and filters' },
                 ].map((setting, i) => (
-                  <button key={i} className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-950/50 transition-colors group">
+                  <button key={i} className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group">
                     <div className="pr-4">
                       <p className="text-xs font-extrabold text-slate-900 dark:text-slate-100 group-hover:text-sky-500 transition-colors">{setting.label}</p>
                       <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{setting.desc}</p>

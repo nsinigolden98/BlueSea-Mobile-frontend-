@@ -12,7 +12,8 @@ export default function PayrollProHome() {
   const { ownedCompanies, employments, isNewUser, isOwner, isEmployee } = usePayrollPro();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex overflow-hidden transition-colors duration-300">
+      
       {/* Design System Compatibility Layer & Layout Fixes */}
       <style dangerouslySetInnerHTML={{ __html: `
         :root {
@@ -38,22 +39,26 @@ export default function PayrollProHome() {
       {/* Global Sidebar Integration */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />  
 
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 transition-colors duration-300">  
-        {/* Unified Application Header */}
-        <Header  
-          title="Payroll Pro"  
-          subtitle="Workforce Management"  
-          onMenuClick={() => setSidebarOpen(true)}  
-        />  
+      {/* Main Viewport Content Context Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">   
+        
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+          <Header  
+            title="Payroll Pro"  
+            subtitle="Workforce Management"  
+            onMenuClick={() => setSidebarOpen(true)}  
+          />  
+        </div>
 
         {/* Scrollable Layout Container matching core platform experience */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">  
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">  
           <div className="max-w-4xl mx-auto space-y-6">  
             
             {/* ─── SCENARIO A: NEW USER ─── */}
             {isNewUser && (
               <div className="animate-slide-up">
-                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-6 text-center shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center shadow-sm">
                   <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-700 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-sky-500/20">
                     <Sparkles className="w-10 h-10 text-white" />
                   </div>
@@ -88,7 +93,7 @@ export default function PayrollProHome() {
                   ].map((feature, i) => (
                     <div 
                       key={i} 
-                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl p-4 text-center animate-slide-up shadow-sm" 
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-center animate-slide-up shadow-sm" 
                       style={{ animationDelay: `${0.1 * (i + 1)}s` }}
                     >
                       <feature.icon className="w-6 h-6 text-sky-500 dark:text-sky-400 mx-auto mb-2" />
@@ -113,12 +118,11 @@ export default function PayrollProHome() {
                     Add Company
                   </button>
                 </div>
-                {/* Visual Demarcation: Optimized space-y-4 container for distinct items */}
                 <div className="space-y-4">
                   {ownedCompanies.map(company => (
                     <div 
                       key={company.id} 
-                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl p-1 shadow-sm hover:border-sky-500/20 dark:hover:border-sky-400/20 transition-all duration-200"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 shadow-sm hover:border-sky-500/20 dark:hover:border-sky-400/20 transition-all duration-200"
                     >
                       <CompanyCard company={company} role="owner" />
                     </div>
@@ -136,7 +140,7 @@ export default function PayrollProHome() {
                     <div 
                       key={employment.id}
                       onClick={() => navigate(`/payroll-pro/portal/${employment.companyId}`)}
-                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl p-4 hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer playbook-card active:scale-[0.99] shadow-sm animate-slide-up"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer active:scale-[0.99] shadow-sm animate-slide-up"
                     >
                       <div className="flex items-start gap-3">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center flex-shrink-0">
@@ -151,7 +155,7 @@ export default function PayrollProHome() {
                             {employment.role.replace('_', ' ')} · {employment.department.replace('_', ' ')}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">{employment.branchName}</p>
-                          <div className="mt-2 pt-2 border-t border-slate-200 dark:border-white/5 flex items-center justify-between">
+                          <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
                             <span className="text-xs text-slate-500 dark:text-slate-400">Since {new Date(employment.employmentDate).toLocaleDateString()}</span>
                             <span className="text-sm font-bold text-sky-600 dark:text-sky-400">
                               &#8358;{employment.salary.toLocaleString()}
@@ -169,7 +173,7 @@ export default function PayrollProHome() {
 
             {/* ─── SCENARIO D: OWNER + EMPLOYEE ─── */}
             {isOwner && isEmployee && (
-              <div className="mt-6 p-4 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-500/20 animate-slide-up">
+              <div className="mt-6 p-4 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-500/20 dark:border-sky-400/20 animate-slide-up">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-sky-500 dark:bg-sky-600 flex items-center justify-center flex-shrink-0">
                     <Shield className="w-5 h-5 text-white" />

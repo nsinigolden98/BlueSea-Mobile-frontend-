@@ -62,7 +62,7 @@ import { AuthLoader } from '@/components/ui-custom';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
-/*import PayrollProHome from './screens/payroll-pro/PayrollProHome';
+import PayrollProHome from './screens/payroll-pro/PayrollProHome';
 import CreateCompany from './screens/payroll-pro/CreateCompany';
 import CompanyWorkspace from './screens/payroll-pro/CompanyWorkspace';
 import BranchDetails from './screens/payroll-pro/BranchDetails';
@@ -70,7 +70,7 @@ import EmployeeProfile from './screens/payroll-pro/EmployeeProfile';
 import EmployeePortal from './screens/payroll-pro/EmployeePortal';
 import AddEmployee from './screens/payroll-pro/AddEmployee';
 import CreateBranch from './screens/payroll-pro/CreateBranch';
-import PayrollDetail from './screens/payroll-pro/PayrollDetail';*/
+import PayrollDetail from './screens/payroll-pro/PayrollDetail';
 
 /**
  * Global Layout Wrapper
@@ -165,6 +165,33 @@ function AppRoutes() {
         <Route path="/betting" element={<Betting />} />
         
         <Route path="/identity-center" element={<IdentityCenter />} />
+
+
+
+
+        {/* Redirect root to payroll home or login if needed */}
+        <Route path="/" element={<Navigate to="/payroll-pro" replace />} />
+
+        {/* Core Payroll Routes */}
+        <Route path="/payroll" element={<PayrollProHome />} />
+        <Route path="/payroll/create-company" element={<CreateCompany />} />
+        
+        {/* Company Workspace Routes */}
+        <Route path="/payroll/workspace/:companyId" element={<CompanyWorkspace />} />
+        <Route path="/payroll/workspace/:companyId/create-branch" element={<CreateBranch />} />
+        
+        {/* Branch Routes */}
+        <Route path="/payroll/workspace/:companyId/branch/:branchId" element={<BranchDetails />} />
+        <Route path="/payroll/workspace/:companyId/branch/:branchId/add-employee" element={<AddEmployee />} />
+        
+        {/* Employee & Payroll Profiles */}
+        <Route path="/payroll/workspace/:companyId/employee/:employeeId" element={<EmployeeProfile />} />
+        <Route path="/payroll/workspace/:companyId/payroll/:payrollId" element={<PayrollDetail />} />
+
+        {/* Independent Self-Service Portal for Employees */}
+        <Route path="/employee-portal" element={<EmployeePortal />} />
+
+
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
