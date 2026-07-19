@@ -70,7 +70,7 @@ export function Support() {
         priority,
       });
 
-      if (response && response.success) {
+    if (response && response.success) {
         showToast('Ticket created successfully');
         setShowNewTicket(false);
         setSubject('');
@@ -162,18 +162,28 @@ export function Support() {
     });
   };
 
+  // --- DETAIL VIEW PANEL STATE ---
   if (selectedTicket) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+      <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
+        {/* Sidebar Panel Overlay */}
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div className="flex-1 flex flex-col min-w-0">
-          <Header
-            title="Support Ticket"
-            subtitle={`#${selectedTicket.id} - ${selectedTicket.subject}`}
-            showBackButton={true}
-            onMenuClick={() => setSidebarOpen(true)}
-          />
-          <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        
+        {/* Main Viewport Content Context Area */}
+        <div className="flex-1 flex flex-col h-full min-w-0 relative">
+          
+          {/* FIXED APP HEADER LAYER */}
+          <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+            <Header
+              title="Support Ticket"
+              subtitle={`#${selectedTicket.id} - ${selectedTicket.subject}`}
+              showBackButton={true}
+              onMenuClick={() => setSidebarOpen(true)}
+            />
+          </div>
+
+          {/* ISOLATED SCROLLABLE CONTENT AREA */}
+          <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
             <div className="max-w-3xl mx-auto">
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 mb-4">
                 <div className="flex items-center justify-between mb-4">
@@ -217,12 +227,12 @@ export function Support() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type your message..."
-                    className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                    className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                     onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                   />
                   <button
                     onClick={sendMessage}
-                    className="px-4 py-2 bg-sky-500 text-white rounded-xl hover:bg-sky-600"
+                    className="px-4 py-2 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-colors"
                   >
                     <Send className="w-5 h-5" />
                   </button>
@@ -237,20 +247,30 @@ export function Support() {
     );
   }
 
+  // --- TICKETS LIST/OVERVIEW PANEL STATE ---
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
+      {/* Sidebar Panel Overlay */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header
-          title="Support"
-          subtitle="Get help with your account"
-          onMenuClick={() => setSidebarOpen(true)}
-        />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+      
+      {/* Main Viewport Content Context Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+        
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+          <Header
+            title="Support"
+            subtitle="Get help with your account"
+            onMenuClick={() => setSidebarOpen(true)}
+          />
+        </div>
+
+        {/* ISOLATED SCROLLABLE CONTENT AREA */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-3xl mx-auto">
             <button
               onClick={() => setShowNewTicket(!showNewTicket)}
-              className="w-full py-4 bg-sky-500 text-white rounded-xl font-medium hover:bg-sky-600 mb-6"
+              className="w-full py-4 bg-sky-500 text-white rounded-xl font-medium hover:bg-sky-600 mb-6 transition-colors shadow-sm"
             >
               {showNewTicket ? 'Cancel' : 'Create New Ticket'}
             </button>
@@ -266,7 +286,7 @@ export function Support() {
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                       placeholder="Describe your issue"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                     />
                   </div>
                   <div>
@@ -274,7 +294,7 @@ export function Support() {
                     <select
                       value={priority}
                       onChange={(e) => setPriority(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                     >
                       <option value="low">Low</option>
                       <option value="medium">Medium</option>
@@ -289,12 +309,12 @@ export function Support() {
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Please describe your issue in detail..."
                       rows={4}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 resize-none"
                     />
                   </div>
                   <button
                     onClick={createTicket}
-                    className="w-full py-3 bg-sky-500 text-white rounded-xl font-medium hover:bg-sky-600"
+                    className="w-full py-3 bg-sky-500 text-white rounded-xl font-medium hover:bg-sky-600 transition-colors shadow-sm"
                   >
                     Submit Ticket
                   </button>
@@ -319,7 +339,7 @@ export function Support() {
                   <button
                     key={ticket.id}
                     onClick={() => fetchTicketDetail(ticket.id)}
-                    className="w-full text-left p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-600 transition-colors"
+                    className="w-full text-left p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-600 transition-all duration-200"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
@@ -327,12 +347,12 @@ export function Support() {
                         <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">{ticket.description}</p>
                         <p className="text-xs text-slate-400 mt-2">{formatDate(ticket.created_at)}</p>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
+                      <div className="flex flex-col items-end gap-1 shrink-0">
                         <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getStatusColor(ticket.status))}>
-                          {ticket.status.replace('_', ' ')}
+                          {ticket.status.replace('_', ' ').toUpperCase()}
                         </span>
                         <span className={cn('text-xs font-medium', getPriorityColor(ticket.priority))}>
-                          {ticket.priority}
+                          {ticket.priority.toUpperCase()}
                         </span>
                       </div>
                     </div>
