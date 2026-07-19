@@ -4,7 +4,7 @@ interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   text?: string;
-}
+} 
 
 export function LoadingSpinner({ size = 'md', className, text = 'Loading...' }: LoadingSpinnerProps) {
   const sizeClasses = {
