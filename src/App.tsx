@@ -169,27 +169,15 @@ function AppRoutes() {
 
 
 
-        {/* Redirect root to payroll home or login if needed */}
-        <Route path="/" element={<Navigate to="/payroll-pro" replace />} />
-
-        {/* Core Payroll Routes */}
-        <Route path="/payroll" element={<PayrollProHome />} />
-        <Route path="/payroll/create-company" element={<CreateCompany />} />
-        
-        {/* Company Workspace Routes */}
-        <Route path="/payroll/workspace/:companyId" element={<CompanyWorkspace />} />
-        <Route path="/payroll/workspace/:companyId/create-branch" element={<CreateBranch />} />
-        
-        {/* Branch Routes */}
-        <Route path="/payroll/workspace/:companyId/branch/:branchId" element={<BranchDetails />} />
-        <Route path="/payroll/workspace/:companyId/branch/:branchId/add-employee" element={<AddEmployee />} />
-        
-        {/* Employee & Payroll Profiles */}
-        <Route path="/payroll/workspace/:companyId/employee/:employeeId" element={<EmployeeProfile />} />
-        <Route path="/payroll/workspace/:companyId/payroll/:payrollId" element={<PayrollDetail />} />
-
-        {/* Independent Self-Service Portal for Employees */}
-        <Route path="/employee-portal" element={<EmployeePortal />} />
+      <Route path="/payroll-pro" element={<PayrollProHome />} />
+      <Route path="/payroll-pro/create-company" element={<CreateCompany />} />
+      <Route path="/payroll-pro/company/:companyId" element={<CompanyWorkspace />} />
+      <Route path="/payroll-pro/company/:companyId/add-employee" element={<AddEmployee />} />
+      <Route path="/payroll-pro/company/:companyId/create-branch" element={<CreateBranch />} />
+      <Route path="/payroll-pro/branch/:branchId" element={<BranchDetails />} />
+      <Route path="/payroll-pro/employee/:employeeId" element={<EmployeeProfile />} />
+      <Route path="/payroll-pro/portal/:companyId" element={<EmployeePortal />} />
+      <Route path="/payroll-pro/payroll/:payrollId" element={<PayrollDetail />} />
 
 
 
