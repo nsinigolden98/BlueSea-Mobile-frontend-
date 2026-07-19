@@ -24,7 +24,7 @@ import {
   Wallet as WalletIcon,
   LayoutDashboard,
   Settings,
-  History
+  //History
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { PinModal, Toast, TransactionModal, } from '@/components/ui-custom';
