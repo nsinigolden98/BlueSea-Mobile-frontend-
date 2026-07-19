@@ -1,24 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { 
-  Building2, 
-  Users, 
-  Briefcase, 
-  Plus, 
-  ArrowRight, 
-  Sparkles, 
-  Shield, 
-  LayoutDashboard, 
-  Landmark 
-} from 'lucide-react';
+import { Building2, Users, Briefcase, Plus, ArrowRight, Sparkles, Shield } from 'lucide-react';
 import { Sidebar, Header } from '@/components/ui-custom';
+import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { usePayrollPro } from '@/hooks/usePayrollPro';
 import CompanyCard from '@/components/payroll-pro/CompanyCard';
 import StatusBadge from '@/components/payroll-pro/StatusBadge';
 
 export default function PayrollProHome() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'companies' | 'employments'>('dashboard');
   const navigate = useNavigate();
   const { ownedCompanies, employments, isNewUser, isOwner, isEmployee } = usePayrollPro();
 
@@ -62,12 +52,12 @@ export default function PayrollProHome() {
           />  
         </div>
 
-        {/* ISOLATED SCROLLABLE CONTENT AREA[cite: 3] */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">  
+        {/* Scrollable Layout Container matching core platform experience */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10 pb-24 md:pb-6">  
           <div className="max-w-4xl mx-auto space-y-6">  
             
             {/* ─── SCENARIO A: NEW USER ─── */}
-            {isNewUser && activeTab === 'dashboard' && (
+            {isNewUser && (
               <div className="animate-slide-up">
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center shadow-sm">
                   <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-700 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-sky-500/20">
@@ -117,7 +107,7 @@ export default function PayrollProHome() {
             )}
 
             {/* ─── SCENARIO C & D: OWNER (COMPANIES) ─── */}
-            {isOwner && (activeTab === 'dashboard' || activeTab === 'companies') && (
+            {isOwner && (
               <div className="animate-slide-up space-y-3">
                 <div className="flex items-center justify-between px-1">
                   <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">My Companies</h2>
@@ -143,7 +133,7 @@ export default function PayrollProHome() {
             )}
 
             {/* ─── SCENARIO B & D: EMPLOYEE (EMPLOYMENTS) ─── */}
-            {isEmployee && (activeTab === 'dashboard' || activeTab === 'employments') && (
+            {isEmployee && (
               <div className="animate-slide-up space-y-3">
                 <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">My Employments</h2>
                 <div className="space-y-4">
@@ -182,8 +172,8 @@ export default function PayrollProHome() {
               </div>
             )}
 
-            {/* ─── SCENARIO D: OWNER + EMPLOYEE MULTI-ROLE NOTICE ─── */}
-            {isOwner && isEmployee && activeTab === 'dashboard' && (
+            {/* ─── SCENARIO D: OWNER + EMPLOYEE ─── */}
+            {isOwner && isEmployee && (
               <div className="mt-6 p-4 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-500/20 dark:border-sky-400/20 animate-slide-up">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-sky-500 dark:bg-sky-600 flex items-center justify-center flex-shrink-0">
@@ -201,49 +191,10 @@ export default function PayrollProHome() {
           </div>
         </main>  
 
-        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER (Hidden on Desktop viewports)[cite: 3] */}
-        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 py-2 flex items-center justify-around shadow-lg">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 transition-all ${
-              activeTab === 'dashboard' 
-                ? 'text-sky-500 font-extrabold scale-105' 
-                : 'text-slate-400 dark:text-slate-500 font-medium'
-            }`}
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            <span className="text-[10px] tracking-wide">Overview</span>
-          </button>
-
-          {isOwner && (
-            <button
-              onClick={() => setActiveTab('companies')}
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 transition-all ${
-                activeTab === 'companies' 
-                  ? 'text-sky-500 font-extrabold scale-105' 
-                  : 'text-slate-400 dark:text-slate-500 font-medium'
-              }`}
-            >
-              <Building2 className="w-5 h-5" />
-              <span className="text-[10px] tracking-wide">Companies</span>
-            </button>
-          )}
-
-          {isEmployee && (
-            <button
-              onClick={() => setActiveTab('employments')}
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 transition-all ${
-                activeTab === 'employments' 
-                  ? 'text-sky-500 font-extrabold scale-105' 
-                  : 'text-slate-400 dark:text-slate-500 font-medium'
-              }`}
-            >
-              <Landmark className="w-5 h-5" />
-              <span className="text-[10px] tracking-wide">Portals</span>
-            </button>
-          )}
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER (Hidden on Desktop viewports) */}
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
+          <MobileBottomNavigation />
         </div>
-
       </div>
     </div>
   );
