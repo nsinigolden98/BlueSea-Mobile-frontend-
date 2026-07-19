@@ -9,7 +9,7 @@ import {
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank, 
   CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheckIcon, FileText, 
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat, 
-  ArrowLeftRight, Search, Clock, Star, ChevronRight
+  Grid3X3, ArrowLeftRight, Search, Clock, Star, QrCode, Headphones, ChevronRight
 } from 'lucide-react';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
@@ -32,7 +32,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank,
   CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheckIcon, FileText,
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat,
-  ArrowLeftRight,
+  Grid3X3, ArrowLeftRight, QrCode, Headphones
 };
 
 const Badge = ({ type }: { type: Service['badge'] }) => {

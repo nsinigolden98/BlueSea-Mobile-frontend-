@@ -63,6 +63,8 @@ export const services: Service[] = [
 
   // Advanced Services
   { id: 'as-1', name: 'Airtime Buyback', description: 'Convert airtime to cash', icon: 'ArrowLeftRight', route: '/airtime-buyback', category: 'Advanced Services' },
+  { id: 'as-2', name: 'Scanner Assignments', description: 'Manage scanner assignments', icon: 'QrCode', route: '/scanner-assignments', category: 'Advanced Services' },
+  { id: 'as-3', name: 'Support', description: 'Get help with your account', icon: 'Headphones', route: '/support', category: 'Advanced Services' },
 ];
 
 export const featuredServiceIds = ['ep-1', 'wr-1', 'fi-1', 'ce-2'];
