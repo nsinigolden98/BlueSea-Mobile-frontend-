@@ -165,18 +165,25 @@ export function Airtime() {
   }, [message]);
 
   return (
-    <div>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex" ref={bodyDivRef}>
+    <div className="relative">
+      <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden" ref={bodyDivRef}>
+        {/* Sidebar Panel Overlay */}
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <div className="flex-1 flex flex-col min-w-0">
-          <Header
-            title="Airtime"
-            subtitle="Buy Smarter & Cheaper"
-            onMenuClick={() => setSidebarOpen(true)}
-          />
+        {/* Main Viewport Content Context Area */}
+        <div className="flex-1 flex flex-col h-full min-w-0 relative">
+          
+          {/* FIXED APP HEADER LAYER */}
+          <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+            <Header
+              title="Airtime"
+              subtitle="Buy Smarter & Cheaper"
+              onMenuClick={() => setSidebarOpen(true)}
+            />
+          </div>
 
-          <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+          {/* ISOLATED SCROLLABLE CONTENT AREA */}
+          <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
             <div className="max-w-2xl mx-auto">
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
                 
@@ -411,6 +418,7 @@ export function Airtime() {
         </div>
       </div>
 
+      {/* Floating Action Trigger Link */}
       <button 
         onClick={() => navigate('/data')}
         className="fixed right-4 top-24 z-50 bg-sky-500 text-white rounded-full px-6 py-2 shadow-lg hover:bg-sky-600 transition-all duration-200 active:scale-95 flex items-center gap-2 animate-in fade-in slide-in-from-right-4"
@@ -419,6 +427,7 @@ export function Airtime() {
         <span>→</span>
       </button>
 
+      {/* Overlays & Modals */}
       <PinComponent type={isGroupPayment ? "group-airtime" : "airtime"} value={payload} />
       <ToastComponent />
       {isOpen && (
