@@ -49,16 +49,18 @@ export function Wallet() {
   // --- Layout State ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // --- States for the layout ---
+  // --- Account State ---
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountRequested, setAccountRequested] = useState(false);
 
+  // --- Deposit State ---
   const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositError, setDepositError] = useState('');
   const [depositing, setDepositing] = useState(false);
   const [processing, setProcessing] = useState(false);
 
+  // --- Internal Transfer State ---
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferStep, setTransferStep] = useState(1);
   const [transferData, setTransferData] = useState({
@@ -66,7 +68,12 @@ export function Wallet() {
     amount: '',
     pin: ''
   });
+  const [foundUser, setFoundUser] = useState<FoundUser | null>(null);
+  const [transferError, setTransferError] = useState('');
+  const [transferProcessing, setTransferProcessing] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
 
+  // --- Withdraw State ---
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [selectedBank, setSelectedBank] = useState('');
   const [bankSearch, setBankSearch] = useState('');
@@ -77,6 +84,7 @@ export function Wallet() {
   const [accountVerified, setAccountVerified] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   
+  // Custom Modals & Hooks
   const { showPinModal, PinComponent, message } = PinModal();
   const { ToastComponent, showToast } = Toast();
 
@@ -84,7 +92,7 @@ export function Wallet() {
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // --- BlueSea Connect States (Backend Driven) ---
+  // --- BlueSea Connect States ---
   const [partners, setPartners] = useState<Partner[]>([]);
   const [partnersLoading, setPartnersLoading] = useState(true);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
@@ -101,18 +109,13 @@ export function Wallet() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
 
-  // --- Card Support States ---
+  // --- Saved Card States ---
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [savedCard, setSavedCard] = useState<{ name: string; number: string; expiry: string } | null>(null);
   const [newCard, setNewCard] = useState({ name: '', number: '', expiry: '', cvv: '' });
 
   // --- Staged Flow Visibility ---
   const [showConnectForm, setShowConnectForm] = useState(false);
-
-  const [foundUser, setFoundUser] = useState<FoundUser | null>(null);
-  const [transferError, setTransferError] = useState('');
-  const [transferProcessing, setTransferProcessing] = useState(false);
-  const [lookingUp, setLookingUp] = useState(false);
 
   // Safe balance parsing
   const rawBalance = user?.balance;
@@ -122,17 +125,28 @@ export function Wallet() {
     ? rawBalance
     : 0;
 
+  const resetWithdrawState = () => {
+    setShowWithdrawModal(false);
+    setSelectedBank('');
+    setBankSearch('');
+    setAccountNumber('');
+    setAccountName('');
+    setWithdrawAmount('');
+    setAccountVerified(false);
+    setVerifyingAccount(false);
+    setWithdrawing(false);
+  };
+
   useEffect(() => {
     if (message) {
       setIsOpen(true);
       if (message?.success) {
-        showToast(message?.message || '');
-        setToastMessage(message?.message || '');
+        showToast(message?.message || 'Transaction successful');
+        setToastMessage(message?.message || 'Transaction successful');
         setTxStatus(true);
-        setWithdrawing(false);
-        setShowWithdrawModal(false);
+        resetWithdrawState();
       } else {
-        setToastMessage(message?.message || '');
+        setToastMessage(message?.message || 'Transaction failed');
         setWithdrawing(false);
         setTxStatus(false);
       }
@@ -177,7 +191,7 @@ export function Wallet() {
     return () => clearTimeout(timer);
   }, [transferData.recipient, user?.email]);
 
-  // --- Connect Integration (Backend Flow) ---
+  // --- Connect Integration ---
   useEffect(() => {
     const loadPartners = async () => {
       try {
@@ -290,8 +304,8 @@ export function Wallet() {
         setTransferModalOpen(false);
         setTransferStep(1);
         setTransferData({ recipient: '', amount: '', pin: '' });
-        // SAFELY USE NAVIGATE HERE
-        navigate(0); 
+        setFoundUser(null);
+        showToast(response.message || 'Transfer successful!');
       } else {
         setTransferError(response.error || 'Transfer failed. Check PIN.');
       }
@@ -368,7 +382,6 @@ export function Wallet() {
     setConnectStatus('idle');
     setShowConnectForm(false);
     setTransactionMessage('');
-    navigate('/wallet');
   };
 
   const handleCarouselScroll = () => {
@@ -968,7 +981,7 @@ export function Wallet() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Withdraw</h3>
-              <button onClick={() => setShowWithdrawModal(false)} className="p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all active:scale-90">
+              <button onClick={resetWithdrawState} className="p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all active:scale-90">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1062,19 +1075,6 @@ export function Wallet() {
               </Button>
             </div>
           </div>
-          { isOpen && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-              <TransactionModal isSuccess={txStatus} onClose={()=> setIsOpen(false)} toastMessage={toastMessage} />
-            </div>
-          )}
-          <ToastComponent />
-          <PinComponent type="withdrawal" value={{
-            account_name: accountName,
-            account_number: accountNumber,
-            bank_code: selectedBank,
-            bank_name: NIGERIAN_BANKS.find(b => b.code === selectedBank)?.name || '',
-            amount: withdrawAmount,
-          }} />
         </div>
       )}
 
@@ -1232,6 +1232,24 @@ export function Wallet() {
           </div>
         </div>
       )}
+
+      {/* --- GLOBAL OVERLAYS & FEEDBACK PROVIDERS --- */}
+      {isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
+          <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
+        </div>
+      )}
+      <ToastComponent />
+      <PinComponent 
+        type="withdrawal" 
+        value={{
+          account_name: accountName,
+          account_number: accountNumber,
+          bank_code: selectedBank,
+          bank_name: NIGERIAN_BANKS.find(b => b.code === selectedBank)?.name || '',
+          amount: withdrawAmount,
+        }} 
+      />
     </div>
   );
 }
