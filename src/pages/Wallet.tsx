@@ -44,7 +44,7 @@ interface FoundUser {
 
 export function Wallet() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
 
   // --- Layout State ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
