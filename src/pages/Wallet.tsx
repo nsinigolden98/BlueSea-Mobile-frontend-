@@ -114,7 +114,7 @@ export function Wallet() {
   const [transferProcessing, setTransferProcessing] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
 
-  // Safe calculation of balance to avoid crashes if user or user.balance is undefined
+  // Safe balance parsing
   const rawBalance = user?.balance;
   const balance = typeof rawBalance === 'string'
     ? Number(rawBalance.replace(/[^0-9.-]+/g, '')) || 0
@@ -290,7 +290,8 @@ export function Wallet() {
         setTransferModalOpen(false);
         setTransferStep(1);
         setTransferData({ recipient: '', amount: '', pin: '' });
-        window.location.reload();
+        // SAFELY USE NAVIGATE HERE
+        navigate(0); 
       } else {
         setTransferError(response.error || 'Transfer failed. Check PIN.');
       }
@@ -367,6 +368,7 @@ export function Wallet() {
     setConnectStatus('idle');
     setShowConnectForm(false);
     setTransactionMessage('');
+    navigate('/wallet');
   };
 
   const handleCarouselScroll = () => {
@@ -386,13 +388,13 @@ export function Wallet() {
         .snap-center { scroll-snap-align: center; }
       ` }} />
 
-      {/* REUSED SIDEBAR OVERLAY COMPONENT (CONSISTENT WITH REWARDS PAGE) */}
+      {/* REUSED SIDEBAR OVERLAY COMPONENT */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* CORE VIEWPORT CONTENT AREA */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         
-        {/* FIXED APP HEADER LAYER (CONSISTENT WITH REWARDS PAGE) */}
+        {/* FIXED APP HEADER LAYER */}
         <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
           <Header 
             title="Wallet" 
@@ -641,7 +643,7 @@ export function Wallet() {
           </div>
         </main>
 
-        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER (CONSISTENT WITH REWARDS PAGE) */}
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER */}
         <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <MobileBottomNavigation />
         </div>
