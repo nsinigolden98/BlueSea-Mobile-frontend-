@@ -1,11 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { TransactionList, LoadingSpinner, BalanceCard } from '@/components/ui-custom';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Sidebar, 
+  Header, 
+  Toast, 
+  TransactionList, 
+  LoadingSpinner, 
+  BalanceCard, 
+  PinModal, 
+  TransactionModal 
+} from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
 import { connectApi } from '@/services/connectApi';
 import type { Partner, VerifiedUser } from '@/services/connectApi';
+import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
+import { useAuth } from '@/context/AuthContext';
+import { NIGERIAN_BANKS } from '@/data';
 
 import { 
   Landmark, 
@@ -15,26 +28,26 @@ import {
   User, 
   ShieldCheck, 
   Search, 
-  ChevronLeft, 
   CreditCard, 
   CheckCircle2, 
   AlertCircle,
   Zap,
   Globe, 
   Wallet as WalletIcon,
-  LayoutDashboard,
-  Settings,
-  //History
 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import { PinModal, Toast, TransactionModal, } from '@/components/ui-custom';
 
-import { NIGERIAN_BANKS } from '@/data';
-import { useNavigate } from 'react-router-dom';
+interface FoundUser {
+  email: string;
+  name: string;
+  image: string;
+}
 
 export function Wallet() {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // --- Layout State ---
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // --- States for the layout ---
   const [accountLoading, setAccountLoading] = useState(false);
@@ -96,6 +109,19 @@ export function Wallet() {
   // --- Staged Flow Visibility ---
   const [showConnectForm, setShowConnectForm] = useState(false);
 
+  const [foundUser, setFoundUser] = useState<FoundUser | null>(null);
+  const [transferError, setTransferError] = useState('');
+  const [transferProcessing, setTransferProcessing] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
+
+  // Safe calculation of balance to avoid crashes if user or user.balance is undefined
+  const rawBalance = user?.balance;
+  const balance = typeof rawBalance === 'string'
+    ? Number(rawBalance.replace(/[^0-9.-]+/g, '')) || 0
+    : typeof rawBalance === 'number'
+    ? rawBalance
+    : 0;
+
   useEffect(() => {
     if (message) {
       setIsOpen(true);
@@ -113,18 +139,95 @@ export function Wallet() {
     }
   }, [message, showToast]);
 
-  interface FoundUser {
-    email: string;
-    name: string;
-    image: string;
-  }
+  // --- Internal Transfer Lookup ---
+  useEffect(() => {
+    const lookupUser = async () => {
+      if (!transferData.recipient || transferData.recipient.length < 5) {
+        setFoundUser(null);
+        return;
+      }
+      if (transferData.recipient.trim() === user?.email?.trim()) {
+        setFoundUser(null);
+        setTransferError('Cannot transfer to self');
+        return;
+      }
+      setLookingUp(true);
+      setTransferError('');
+      try {
+        const response = await postRequest(ENDPOINTS.user_lookup, { email: transferData.recipient });
+        if (response?.found) {
+          setFoundUser({
+            email: response.email,
+            name: response.name,
+            image: response.image
+          });
+        } else {
+          setFoundUser(null);
+        }
+      } catch (error) {
+        console.log(error);
+        setFoundUser(null);
+      } finally {
+        setLookingUp(false);
+      }
+    };
+    const timer = setTimeout(() => {
+      lookupUser();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [transferData.recipient, user?.email]);
 
-  const [foundUser, setFoundUser] = useState<FoundUser | null>(null);
-  const [transferError, setTransferError] = useState('');
-  const [transferProcessing, setTransferProcessing] = useState(false);
-  const [lookingUp, setLookingUp] = useState(false);
+  // --- Connect Integration (Backend Flow) ---
+  useEffect(() => {
+    const loadPartners = async () => {
+      try {
+        const data = await connectApi.fetchPartners();
+        setPartners(data || []);
+      } catch (err) {
+        showToast('Failed to load partners. Please try again.');
+      } finally {
+        setPartnersLoading(false);
+      }
+    };
+    loadPartners();
+  }, [showToast]);
 
-  // --- Logic ---
+  // Debounced Provider User Verification
+  useEffect(() => {
+    if (!selectedPartner || connectIdentifier.length < 3) {
+      setVerifiedPartnerUser(null);
+      return;
+    }
+    
+    const verifyUser = async () => {
+      setIsVerifyingPartner(true);
+      try {
+        const userRes = await connectApi.verifyUser(selectedPartner.id, connectIdentifier);
+        setVerifiedPartnerUser(userRes);
+      } catch (err) {
+        setVerifiedPartnerUser(null);
+      } finally {
+        setIsVerifyingPartner(false);
+      }
+    };
+    
+    const delayVerify = setTimeout(() => {
+      verifyUser();
+    }, 800);
+    
+    return () => clearTimeout(delayVerify);
+  }, [selectedPartner, connectIdentifier]);
+
+  // Progressive Disclosure for Connect Flow
+  useEffect(() => {
+    if (selectedPartner) {
+      setTimeout(() => setShowConnectForm(true), 50);
+    } else {
+      setShowConnectForm(false);
+    }
+  }, [selectedPartner]);
+
+  // Logic handlers
   const handleRequestAccount = () => {
     setAccountLoading(true);
     setTimeout(() => {
@@ -173,45 +276,6 @@ export function Wallet() {
     setDepositing(false);
     setProcessing(false);
   };
-
-  const balance = Number(user?.balance.slice(1).replaceAll(',', '')) || 0;
-
-  useEffect(() => {
-    const lookupUser = async () => {
-      if (!transferData.recipient || transferData.recipient.length < 5) {
-        setFoundUser(null);
-        return;
-      }
-      if (transferData.recipient.trim() === user?.email?.trim()) {
-        setFoundUser(null);
-        setTransferError('Cannot transfer to self');
-        return;
-      }
-      setLookingUp(true);
-      setTransferError('');
-      try {
-        const response = await postRequest(ENDPOINTS.user_lookup, { email: transferData.recipient });
-        if (response?.found) {
-          setFoundUser({
-            email: response.email,
-            name: response.name,
-            image: response.image
-          });
-        } else {
-          setFoundUser(null);
-        }
-      } catch (error) {
-        console.log(error);
-        setFoundUser(null);
-      } finally {
-        setLookingUp(false);
-      }
-    };
-    const timer = setTimeout(() => {
-      lookupUser();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [transferData.recipient, user?.email]);
 
   const handleTransferSubmit = async () => {
     setTransferProcessing(true);
@@ -271,62 +335,8 @@ export function Wallet() {
     showPinModal();
   };
 
-  // --- Connect Integration (Backend Flow) ---
-  
-  // Fetch Partners on mount
-  useEffect(() => {
-    const loadPartners = async () => {
-      try {
-        const data = await connectApi.fetchPartners();
-        setPartners(data);
-      } catch (err) {
-        showToast('Failed to load partners. Please try again.');
-      } finally {
-        setPartnersLoading(false);
-      }
-    };
-    loadPartners();
-  }, [showToast]);
-
-  // Debounced Provider User Verification
-  useEffect(() => {
-    if (!selectedPartner || connectIdentifier.length < 3) {
-      setVerifiedPartnerUser(null);
-      return;
-    }
-    
-    const verifyUser = async () => {
-      setIsVerifyingPartner(true);
-      try {
-        const user = await connectApi.verifyUser(selectedPartner.id, connectIdentifier);
-        setVerifiedPartnerUser(user);
-      } catch (err) {
-        setVerifiedPartnerUser(null);
-      } finally {
-        setIsVerifyingPartner(false);
-      }
-    };
-    
-    const delayVerify = setTimeout(() => {
-      verifyUser();
-    }, 800);
-    
-    return () => clearTimeout(delayVerify);
-  }, [selectedPartner, connectIdentifier]);
-
-  // Progressive Disclosure for Connect Flow
-  useEffect(() => {
-    if (selectedPartner) {
-      setTimeout(() => setShowConnectForm(true), 50);
-    } else {
-      setShowConnectForm(false);
-    }
-  }, [selectedPartner]);
-
-  // API Driven Connect Payment
   const handleConnectPayment = async () => {
     setConnectStatus('loading');
-    
     try {
       const response = await connectApi.pay({
         partner: selectedPartner!.id,
@@ -359,7 +369,6 @@ export function Wallet() {
     setTransactionMessage('');
   };
 
-  // Carousel Scroll Listener
   const handleCarouselScroll = () => {
     if (!scrollRef.current) return;
     const scrollLeft = scrollRef.current.scrollLeft;
@@ -369,7 +378,7 @@ export function Wallet() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 flex">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
       <style dangerouslySetInnerHTML={{ __html: `
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -377,55 +386,28 @@ export function Wallet() {
         .snap-center { scroll-snap-align: center; }
       ` }} />
 
-      {/* PERSISTENT SIDEBAR PANEL */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-8 sticky top-0 h-screen shrink-0">
-        <div className="flex items-center gap-3 px-2">
-          <div className="p-2 bg-sky-500 rounded-xl text-white">
-            <Zap className="w-5 h-5 fill-white" />
-          </div>
-          <span className="font-black text-lg tracking-tight text-slate-900 dark:text-white">BlueSea</span>
-        </div>
+      {/* REUSED SIDEBAR OVERLAY COMPONENT (CONSISTENT WITH REWARDS PAGE) */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      {/* CORE VIEWPORT CONTENT AREA */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
         
-        <nav className="flex-1 space-y-1.5">
-          <button onClick={() => navigate('/dashboard')} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-all">
-            <LayoutDashboard className="w-4 h-4" />
-            <span>Overview</span>
-          </button>
-          <button onClick={() => navigate('/wallet')} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-black text-sky-500 bg-sky-500/10 rounded-2xl transition-all">
-            <WalletIcon className="w-4 h-4" />
-            <span>Wallet</span>
-          </button>
-          <button onClick={() => navigate('/settings')} className="flex items-center gap-3 w-full px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-all">
-            <Settings className="w-4 h-4" />
-            <span>Settings</span>
-          </button>
-        </nav>
-      </aside>
+        {/* FIXED APP HEADER LAYER (CONSISTENT WITH REWARDS PAGE) */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+          <Header 
+            title="Wallet" 
+            subtitle="Manage your BlueSea funds"
+            onMenuClick={() => setSidebarOpen(true)} 
+          />
+        </div>
 
-      {/* CORE CONTENT LAYOUT */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* MATCHED FRAMEWORK HEADER */}
-        <header className="sticky top-0 z-40 bg-white dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 px-6 py-4">
-          <div className="max-w-4xl mx-auto flex items-center gap-4">
-            <button 
-              onClick={() => navigate(-1)} 
-              className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-90"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Wallet</h1>
-              <p className="text-[10px] uppercase tracking-[0.1em] font-bold text-slate-400 dark:text-slate-500">Manage your BlueSea funds</p>
-            </div>
-          </div>
-        </header>
-
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
+        {/* SCROLLABLE MAIN CONTENT AREA */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-4xl mx-auto space-y-6">
             
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
               {/* CARD 1: FUNDING DETAILS */}
-              <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all hover:shadow-md">
+              <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all hover:shadow-md">
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Funding Details</h3>
@@ -460,7 +442,7 @@ export function Wallet() {
                 </div>
               </div>
 
-              {/* CARD 2: REUSED BALANCE CARD COMPONENT */}
+              {/* CARD 2: BALANCE CARD COMPONENT */}
               <div className="lg:col-span-3 relative group">
                 <div className="absolute top-6 right-12 md:right-10 flex gap-2 z-20 pointer-events-auto">
                   <button 
@@ -481,7 +463,7 @@ export function Wallet() {
             </div>
 
             {/* BlueSea Connect Section */}
-            <section className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] overflow-hidden shadow-sm transition-all duration-300">
+            <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] overflow-hidden shadow-sm transition-all duration-300">
               <div className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-sky-500 rounded-xl shadow-lg shadow-sky-500/20">
@@ -515,7 +497,7 @@ export function Wallet() {
                         className={`flex-shrink-0 flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-300 ${
                           selectedPartner?.id === partner.id 
                           ? 'bg-white dark:bg-slate-800 border-sky-500 shadow-xl shadow-sky-500/10 scale-105 z-10' 
-                          : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
+                          : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
                         } min-w-[130px]`}
                       >
                         <div className="relative">
@@ -546,7 +528,7 @@ export function Wallet() {
                   </div>
                 )}
 
-                {/* Inline Expandable Panel - Progressive Disclosure */}
+                {/* Inline Expandable Panel */}
                 {selectedPartner && showConnectForm && (
                   <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/10 space-y-5 animate-in slide-in-from-top-4 fade-in duration-500 ease-out">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -559,7 +541,7 @@ export function Wallet() {
                             value={connectIdentifier}
                             onChange={(e) => setConnectIdentifier(e.target.value)}
                             placeholder={selectedPartner.placeholder || `Enter ${selectedPartner.verification_type}`}
-                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-xs font-bold focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
+                            className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-xs font-bold focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
                           />
                           {connectIdentifier.length > 2 && !verifiedPartnerUser && !isVerifyingPartner && (
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-red-400 uppercase tracking-tighter">Not Found</span>
@@ -580,7 +562,7 @@ export function Wallet() {
                             value={connectAmount}
                             onChange={(e) => setConnectAmount(e.target.value)}
                             placeholder="0.00"
-                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-sm font-black focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
+                            className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-sm font-black focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
                           />
                           <WalletIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
                         </div>
@@ -630,10 +612,10 @@ export function Wallet() {
             {/* Internal Transfer Button */}
             <button 
               onClick={() => setTransferModalOpen(true)}
-              className="group w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] p-6 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm hover:shadow-md"
+              className="group w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] p-6 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm hover:shadow-md"
             >
               <div className="flex items-center gap-5">
-                <div className="p-4 bg-white dark:bg-slate-800 text-sky-500 rounded-2xl shadow-sm group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 group-hover:rotate-12">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 text-sky-500 rounded-2xl shadow-sm group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 group-hover:rotate-12">
                   <Send className="h-5 w-5" />
                 </div>
                 <div className="text-left">
@@ -641,13 +623,13 @@ export function Wallet() {
                   <p className="text-slate-500 text-[10px] font-medium uppercase tracking-wider">Instant send to BlueSea users</p>
                 </div>
               </div>
-              <div className="p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+              <div className="p-2 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
                 <ChevronRight className="h-4 w-4 text-sky-500" />
               </div>
             </button>
 
-            {/* RESPONSIVE TRANSACTION PANEL (HIDDEN ON MOBILE, VISIBLE ON DESKTOP) */}
-            <div className="hidden md:block space-y-4">
+            {/* TRANSACTION PANEL */}
+            <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
                  <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Recent Activity</h3>
                  <Globe className="w-3.5 h-3.5 text-slate-300" />
@@ -658,9 +640,16 @@ export function Wallet() {
             </div>
           </div>
         </main>
+
+        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER (CONSISTENT WITH REWARDS PAGE) */}
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+          <MobileBottomNavigation />
+        </div>
       </div>
 
-      {/* --- CAROUSEL MODAL (SEE ALL) --- */}
+      {/* --- MODALS & DIALOGS --- */}
+
+      {/* CAROUSEL MODAL (SEE ALL) */}
       {isSeeAllOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-xl bg-slate-950/40 transition-all duration-500">
           <div 
