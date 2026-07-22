@@ -1,4 +1,4 @@
 import { createContext } from 'react';
-import { RefreshContextType } from './types';
+import type { RefreshContextType } from './types';
 
 export const RefreshContext = createContext<RefreshContextType | null>(null);

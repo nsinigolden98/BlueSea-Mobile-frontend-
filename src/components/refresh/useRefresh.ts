@@ -1,6 +1,6 @@
 import { useContext, useEffect, useId, useRef } from 'react';
 import { RefreshContext } from './RefreshContext';
-import { RefreshCallback } from './types';
+import type { RefreshCallback } from './types';
 
 /**
  * Hook to register page-level refresh callbacks or trigger programmatic refresh.

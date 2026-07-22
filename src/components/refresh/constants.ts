@@ -1,4 +1,4 @@
-import { RefreshConfig } from './types';
+import type { RefreshConfig } from './types';
 
 export const DEFAULT_REFRESH_CONFIG: RefreshConfig = {
   refreshThreshold: 80,

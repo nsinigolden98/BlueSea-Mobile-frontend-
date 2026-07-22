@@ -4,12 +4,17 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from 'react';
 import { RefreshContext } from './RefreshContext';
-import { RefreshCallback, RefreshConfig, RefreshState } from './types';
+import type {
+  RefreshCallback,
+  RefreshConfig,
+  RefreshState,
+  RefreshContextType,
+} from './types';
 import { DEFAULT_REFRESH_CONFIG } from './constants';
-import { Loader } from '../Loader'; // Importing existing BlueSea Loader module
+import {Loader} from '../../components/ui-custom'
 
 interface RefreshProviderProps {
   children: ReactNode;
@@ -107,7 +112,6 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
       const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
 
       if (deltaY > 0 && scrollTop <= 0) {
-        // Prevent default native pulling when gesture starts at top
         if (e.cancelable) {
           e.preventDefault();
         }
