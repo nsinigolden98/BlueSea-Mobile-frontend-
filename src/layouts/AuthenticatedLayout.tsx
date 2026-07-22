@@ -1,5 +1,5 @@
 // src/layouts/AuthenticatedLayout.tsx
-import React from 'react';
+{/*import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { RefreshProvider, PullToRefresh } from '../components/refresh';
 import { Header } from '../components/ui-custom/Header';
@@ -19,13 +19,14 @@ export const AuthenticatedLayout: React.FC = () => {
       <Header />
       <PullToRefresh>
         <main className="main-content">
-          {/* <Outlet /> automatically displays your current page here! */}
+          {/* <Outlet /> automatically displays your current page here! 
           <Outlet />
         </main>
       </PullToRefresh>
 
-      {/* Renders Footer on all pages EXCEPT those listed in HIDE_FOOTER_ROUTES */}
-      {showFooter && <Footer />}
+      {/* Renders Footer on all pages EXCEPT those listed in HIDE_FOOTER_ROUTES 
+      {showFooter && <Footer />
     </RefreshProvider>
   );
 };
+*/}
