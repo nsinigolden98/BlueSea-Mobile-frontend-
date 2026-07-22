@@ -4,17 +4,11 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
-  type ReactNode,
+  ReactNode,
 } from 'react';
 import { RefreshContext } from './RefreshContext';
-import type {
-  RefreshCallback,
-  RefreshConfig,
-  RefreshState,
-  RefreshContextType,
-} from './types';
+import { RefreshCallback, RefreshConfig, RefreshState } from './types';
 import { DEFAULT_REFRESH_CONFIG } from './constants';
-import {Loader} from '../../components/ui-custom'
 
 interface RefreshProviderProps {
   children: ReactNode;
@@ -30,8 +24,6 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
     [customConfig]
   );
 
-  const { showLoader, hideLoader, LoaderComponent } = Loader();
-
   const [state, setState] = useState<RefreshState>({
     isRefreshing: false,
     isPulling: false,
@@ -44,7 +36,6 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
   const touchStartYRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Register & Unregister Page Callbacks
   const registerCallback = useCallback((id: string, callback: RefreshCallback) => {
     callbacksRef.current.set(id, callback);
   }, []);
@@ -53,7 +44,6 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
     callbacksRef.current.delete(id);
   }, []);
 
-  // Execute Refresh
   const triggerRefresh = useCallback(async () => {
     if (isRefreshingRef.current) return;
 
@@ -66,8 +56,6 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
       canRefresh: false,
     }));
 
-    showLoader();
-
     try {
       const activeCallbacks = Array.from(callbacksRef.current.values());
       if (activeCallbacks.length > 0) {
@@ -76,7 +64,6 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
     } catch (error) {
       console.error('[BlueSea RefreshProvider] Error during refresh:', error);
     } finally {
-      hideLoader();
       isRefreshingRef.current = false;
       setState((prev) => ({
         ...prev,
@@ -84,9 +71,8 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
         pullDistance: 0,
       }));
     }
-  }, [showLoader, hideLoader]);
+  }, []);
 
-  // Touch Gesture Listeners
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -95,7 +81,6 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
 
     const handleTouchStart = (e: TouchEvent) => {
       if (isRefreshingRef.current) return;
-
       const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
       if (scrollTop <= 0 && e.touches.length === 1) {
         touchStartYRef.current = e.touches[0].clientY;
@@ -108,13 +93,10 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
 
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - touchStartYRef.current;
-
       const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
 
       if (deltaY > 0 && scrollTop <= 0) {
-        if (e.cancelable) {
-          e.preventDefault();
-        }
+        if (e.cancelable) e.preventDefault();
 
         const calculatedDistance = Math.min(
           deltaY / mergedConfig.gestureResistance,
@@ -165,7 +147,7 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
     };
   }, [mergedConfig, triggerRefresh]);
 
-  const contextValue = useMemo<RefreshContextType>(
+  const contextValue = useMemo(
     () => ({
       state,
       registerCallback,
@@ -177,9 +159,8 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
 
   return (
     <RefreshContext.Provider value={contextValue}>
-      <div ref={containerRef} className="bluesea-refresh-wrapper">
+      <div ref={containerRef} className="w-full min-h-screen">
         {children}
-        <LoaderComponent />
       </div>
     </RefreshContext.Provider>
   );
