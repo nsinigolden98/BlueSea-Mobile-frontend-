@@ -1,6 +1,6 @@
 import React, { useContext, type ReactNode } from 'react';
 import { RefreshContext } from './RefreshContext';
-import Loader from '@/components/ui-custom/Loader';
+import {Loader} from '@/components/ui-custom/Loader';
 
 interface PullToRefreshProps {
   children: ReactNode;
