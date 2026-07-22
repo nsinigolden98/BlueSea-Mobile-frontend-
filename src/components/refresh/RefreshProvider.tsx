@@ -4,10 +4,10 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
-  ReactNode,
+type  ReactNode,
 } from 'react';
 import { RefreshContext } from './RefreshContext';
-import { RefreshCallback, RefreshConfig, RefreshState } from './types';
+import type { RefreshCallback, RefreshConfig, RefreshState } from './types';
 import { DEFAULT_REFRESH_CONFIG } from './constants';
 
 interface RefreshProviderProps {
