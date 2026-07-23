@@ -4,21 +4,44 @@ import React, {
   useCallback,
   useMemo,
   useEffect,
-type  ReactNode,
+  type ReactNode,
 } from 'react';
 import { RefreshContext } from './RefreshContext';
 import type { RefreshCallback, RefreshConfig, RefreshState } from './types';
 import { DEFAULT_REFRESH_CONFIG } from './constants';
+import { Loader } from '@/components/ui-custom/Loader';
+import { queryClient } from '@/lib/queryClient';
 
 interface RefreshProviderProps {
   children: ReactNode;
   config?: Partial<RefreshConfig>;
 }
 
+/**
+ * Checks scroll position across window and any active nested scroll containers.
+ */
+const getScrollTop = (target?: EventTarget | null): number => {
+  const winScroll =
+    window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  if (winScroll > 0) return winScroll;
+
+  let node = target as HTMLElement | null;
+  while (node && node !== document.body && node !== document.documentElement) {
+    if (node.scrollTop > 0) {
+      return node.scrollTop;
+    }
+    node = node.parentElement;
+  }
+  return 0;
+};
+
 export const RefreshProvider: React.FC<RefreshProviderProps> = ({
   children,
   config: customConfig,
 }) => {
+  // Re-use global universal Loader hook
+  const { showLoader, hideLoader, LoaderComponent } = Loader();
+
   const mergedConfig = useMemo(
     () => ({ ...DEFAULT_REFRESH_CONFIG, ...customConfig }),
     [customConfig]
@@ -48,6 +71,8 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
     if (isRefreshingRef.current) return;
 
     isRefreshingRef.current = true;
+    showLoader();
+
     setState((prev) => ({
       ...prev,
       isRefreshing: true,
@@ -58,12 +83,20 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
 
     try {
       const activeCallbacks = Array.from(callbacksRef.current.values());
-      if (activeCallbacks.length > 0) {
-        await Promise.all(activeCallbacks.map((cb) => Promise.resolve(cb())));
-      }
+      const callbackPromises = activeCallbacks.map((cb) => Promise.resolve(cb()));
+
+      // Re-trigger data fetching for all active queries on the current screen
+      const queryPromise = queryClient
+        .refetchQueries({ type: 'active' })
+        .catch((err) => {
+          console.error('[BlueSea RefreshProvider] Query refetch error:', err);
+        });
+
+      await Promise.all([...callbackPromises, queryPromise]);
     } catch (error) {
       console.error('[BlueSea RefreshProvider] Error during refresh:', error);
     } finally {
+      hideLoader();
       isRefreshingRef.current = false;
       setState((prev) => ({
         ...prev,
@@ -71,50 +104,57 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
         pullDistance: 0,
       }));
     }
-  }, []);
+  }, [showLoader, hideLoader]);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
     let isTracking = false;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (isRefreshingRef.current) return;
-      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+      const scrollTop = getScrollTop(e.target);
+      
+      // ONLY start gesture tracking if user is at the absolute top edge
       if (scrollTop <= 0 && e.touches.length === 1) {
         touchStartYRef.current = e.touches[0].clientY;
         isTracking = true;
+      } else {
+        isTracking = false;
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isTracking || isRefreshingRef.current) return;
 
+      const scrollTop = getScrollTop(e.target);
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - touchStartYRef.current;
-      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
 
-      if (deltaY > 0 && scrollTop <= 0) {
-        if (e.cancelable) e.preventDefault();
-
-        const calculatedDistance = Math.min(
-          deltaY / mergedConfig.gestureResistance,
-          mergedConfig.maxPullDistance
-        );
-
-        const canRefresh = calculatedDistance >= mergedConfig.refreshThreshold;
-
-        setState({
-          isRefreshing: false,
-          isPulling: true,
-          pullDistance: calculatedDistance,
-          canRefresh,
-        });
-      } else {
+      // Abort gesture if user is scrolled down or swiping upward
+      if (scrollTop > 0 || deltaY <= 0) {
         isTracking = false;
-        setState((prev) => ({ ...prev, isPulling: false, pullDistance: 0 }));
+        setState((prev) =>
+          prev.isPulling ? { ...prev, isPulling: false, pullDistance: 0 } : prev
+        );
+        return;
       }
+
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+
+      const calculatedDistance = Math.min(
+        deltaY / mergedConfig.gestureResistance,
+        mergedConfig.maxPullDistance
+      );
+
+      const canRefresh = calculatedDistance >= mergedConfig.refreshThreshold;
+
+      setState({
+        isRefreshing: false,
+        isPulling: true,
+        pullDistance: calculatedDistance,
+        canRefresh,
+      });
     };
 
     const handleTouchEnd = () => {
@@ -134,16 +174,16 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
       });
     };
 
-    el.addEventListener('touchstart', handleTouchStart, { passive: true });
-    el.addEventListener('touchmove', handleTouchMove, { passive: false });
-    el.addEventListener('touchend', handleTouchEnd, { passive: true });
-    el.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handleTouchEnd, { passive: true });
 
     return () => {
-      el.removeEventListener('touchstart', handleTouchStart);
-      el.removeEventListener('touchmove', handleTouchMove);
-      el.removeEventListener('touchend', handleTouchEnd);
-      el.removeEventListener('touchcancel', handleTouchEnd);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
     };
   }, [mergedConfig, triggerRefresh]);
 
@@ -159,6 +199,7 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
 
   return (
     <RefreshContext.Provider value={contextValue}>
+      <LoaderComponent />
       <div ref={containerRef} className="w-full min-h-screen">
         {children}
       </div>
