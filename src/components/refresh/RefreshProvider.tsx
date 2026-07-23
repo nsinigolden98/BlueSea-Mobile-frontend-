@@ -39,7 +39,6 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
   children,
   config: customConfig,
 }) => {
-  // Re-use global universal Loader hook
   const { showLoader, hideLoader, LoaderComponent } = Loader();
 
   const mergedConfig = useMemo(
@@ -54,10 +53,12 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
     canRefresh: false,
   });
 
+  // Global key to force re-mounting of the active route's components on refresh
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+
   const callbacksRef = useRef<Map<string, RefreshCallback>>(new Map());
   const isRefreshingRef = useRef<boolean>(false);
   const touchStartYRef = useRef<number>(0);
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const registerCallback = useCallback((id: string, callback: RefreshCallback) => {
     callbacksRef.current.set(id, callback);
@@ -82,17 +83,27 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
     }));
 
     try {
+      // 1. Run any explicitly registered callbacks
       const activeCallbacks = Array.from(callbacksRef.current.values());
       const callbackPromises = activeCallbacks.map((cb) => Promise.resolve(cb()));
 
-      // Re-trigger data fetching for all active queries on the current screen
+      // 2. Refetch active React Query subscriptions
       const queryPromise = queryClient
         .refetchQueries({ type: 'active' })
         .catch((err) => {
           console.error('[BlueSea RefreshProvider] Query refetch error:', err);
         });
 
+      // 3. Dispatch global custom event for legacy/custom listeners
+      window.dispatchEvent(new CustomEvent('app:refresh'));
+
       await Promise.all([...callbackPromises, queryPromise]);
+
+      // 4. Increment key to force remount of active route (re-runs all page useEffects)
+      setRefreshKey((prev) => prev + 1);
+
+      // Brief delay to allow initial fetch promises to initialize
+      await new Promise((resolve) => setTimeout(resolve, 400));
     } catch (error) {
       console.error('[BlueSea RefreshProvider] Error during refresh:', error);
     } finally {
@@ -112,8 +123,7 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
     const handleTouchStart = (e: TouchEvent) => {
       if (isRefreshingRef.current) return;
       const scrollTop = getScrollTop(e.target);
-      
-      // ONLY start gesture tracking if user is at the absolute top edge
+
       if (scrollTop <= 0 && e.touches.length === 1) {
         touchStartYRef.current = e.touches[0].clientY;
         isTracking = true;
@@ -129,7 +139,6 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - touchStartYRef.current;
 
-      // Abort gesture if user is scrolled down or swiping upward
       if (scrollTop > 0 || deltaY <= 0) {
         isTracking = false;
         setState((prev) =>
@@ -200,7 +209,7 @@ export const RefreshProvider: React.FC<RefreshProviderProps> = ({
   return (
     <RefreshContext.Provider value={contextValue}>
       <LoaderComponent />
-      <div ref={containerRef} className="w-full min-h-screen">
+      <div key={refreshKey} className="w-full min-h-screen">
         {children}
       </div>
     </RefreshContext.Provider>
