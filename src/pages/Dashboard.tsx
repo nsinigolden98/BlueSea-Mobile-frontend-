@@ -3,7 +3,8 @@ import {
   Sidebar,
   BalanceCard,
   QuickActions,
-  TransactionList
+  TransactionList,
+  BlueConnectPreview
 } from '@/components/ui-custom';
 import { DashboardHeader } from '@/components/ui-custom/DashboardHeader';
 import { TransactionsData } from '@/data';
@@ -16,82 +17,10 @@ import {
   Plane,
   Ticket,
   Briefcase,
-  Network,
   LayoutGrid,
-  Award,
-  Zap
+  Award
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-interface BlueConnectPartner {
-  id: string;
-  name: string;
-  category: string;
-  logoBg: string;
-  logoText: string;
-}
-
-const BLUECONNECT_PLACEHOLDERS: BlueConnectPartner[] = [
-  { id: '1', name: 'Netflix', category: 'Subscription', logoBg: 'bg-red-500/10 text-red-500 dark:bg-red-500/20', logoText: 'N' },
-  { id: '2', name: 'DSTV', category: 'Entertainment', logoBg: 'bg-blue-500/10 text-blue-500 dark:bg-blue-500/20', logoText: 'D' },
-  { id: '3', name: 'BlueSea Premium', category: 'Membership', logoBg: 'bg-sky-500/10 text-sky-500 dark:bg-sky-500/20', logoText: 'BS' },
-  { id: '4', name: 'Spotify', category: 'Music Streaming', logoBg: 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20', logoText: 'S' },
-  { id: '5', name: 'Uber Technologies', category: 'Logistics & Ride', logoBg: 'bg-slate-800/10 text-slate-800 dark:bg-slate-200/10 dark:text-slate-200', logoText: 'U' },
-  { id: '6', name: 'Starlink', category: 'Satellite Internet', logoBg: 'bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/20', logoText: 'SL' }
-];
-
-export function BlueConnectPreview() {
-  // Duplicated array ensures an infinite seamless scrolling loop
-  const carouselItems = [...BLUECONNECT_PLACEHOLDERS, ...BLUECONNECT_PLACEHOLDERS];
-
-  return (
-    <section className="space-y-3 pt-1">
-      <div className="flex items-center justify-between px-1">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              BlueConnect
-            </h3>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
-              <Zap className="w-2.5 h-2.5 fill-current" />
-              Gateway
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Pay trusted businesses securely through BlueConnect
-          </p>
-        </div>
-      </div>
-
-      <div className="relative overflow-hidden w-full rounded-2xl bg-slate-100/60 dark:bg-slate-900/40 border border-slate-200/70 dark:border-white/5 py-3.5">
-        {/* Soft edge gradients for continuous horizontal fade */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-100 dark:from-slate-900 to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-100 dark:from-slate-900 to-transparent z-10" />
-
-        <div className="animate-marquee hover:[animation-play-state:paused] active:[animation-play-state:paused] flex gap-3 px-3">
-          {carouselItems.map((item, index) => (
-            <div
-              key={`${item.id}-${index}`}
-              className="w-48 shrink-0 p-3 bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-white/5 rounded-xl shadow-xs hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-default flex items-center gap-3 select-none"
-            >
-              <div className={`w-9 h-9 shrink-0 rounded-lg flex items-center justify-center font-black text-xs border border-slate-100 dark:border-white/5 ${item.logoBg}`}>
-                {item.logoText}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">
-                  {item.name}
-                </p>
-                <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                  {item.category}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 export function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -139,11 +68,6 @@ export function Dashboard() {
 
   const premiumServices = [
     {
-      label: 'BlueSea Connect',
-      icon: Network,
-      path: '/connect'
-    },
-    {
       label: 'Payroll Pro',
       icon: Briefcase,
       path: '/payroll-pro'
@@ -162,65 +86,56 @@ export function Dashboard() {
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex overflow-hidden transition-colors duration-300">
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          display: flex;
-          width: max-content;
-          animation: marquee 25s linear infinite;
-        }
-        .animate-marquee:hover,
-        .animate-marquee:active {
-          animation-play-state: paused;
-        }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      ` }} />
-
       {/* Sidebar Panel Overlay */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Viewport Content Context Area */}
       <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative">
         
-        {/* PREMIUM FIXED HEADER */}
+        {/* DASHBOARD HEADER */}
         <DashboardHeader />
 
         {/* ISOLATED SCROLLABLE PAGE CONTENT CONTAINER */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-none z-10">
           <div className="max-w-4xl mx-auto space-y-5">
             
-            {/* BALANCE CARD & INTEGRATED FLOATING SUMMARY */}
+            {/* BALANCE CARD & INTEGRATED FLOATING SUMMARY + WALLET BUTTON */}
             <div className="flex flex-col relative group">
               <BalanceCard showBalance={showBalance} onToggleBalance={setShowBalance} />
-              
-              <button
-                onClick={() => navigate('/wallet')}
-                aria-label="Go to Wallet"
-                className="absolute top-4 right-4 w-9 h-9 bg-white/10 dark:bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-md active:scale-95 z-20 cursor-pointer"
-              >
-                <Wallet className="w-4 h-4" />
-              </button>
 
-              {/* Natural floating extension attached directly underneath */}
-              <button
-                onClick={redirect}
-                className="mx-3 -mt-1.5 bg-white dark:bg-slate-900 border-x border-b border-slate-200/80 dark:border-white/5 rounded-b-xl px-4 py-3 flex items-center justify-between shadow-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors z-0 text-left cursor-pointer group/spent"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
-                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                    {showBalance ? `₦${weeklyStats.amount.toLocaleString()}` : '••••••'}{" "}
-                    <span className="text-slate-500 dark:text-slate-400 font-normal ml-1">
-                      spent • {weeklyStats.count} transactions
-                    </span>
-                  </p>
+              {/* FLOATING ACTION STRIP BENEATH BALANCE CARD */}
+              <div className="mx-3 -mt-1.5 flex items-center justify-between gap-2.5">
+                <button
+                  onClick={redirect}
+                  className="flex-1 bg-white dark:bg-slate-900 border-x border-b border-slate-200/80 dark:border-white/5 rounded-b-xl px-4 py-3 flex items-center justify-between shadow-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors z-0 text-left cursor-pointer group/spent"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      {showBalance ? `₦${weeklyStats.amount.toLocaleString()}` : '••••••'}{" "}
+                      <span className="text-slate-500 dark:text-slate-400 font-normal ml-1">
+                        spent • {weeklyStats.count} transactions
+                      </span>
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover/spent:translate-x-0.5 transition-transform" />
+                </button>
+
+                {/* RESTORED FLOATING WALLET BUTTON WITH DESKTOP & MOBILE TOOLTIP */}
+                <div className="relative group/wallet shrink-0">
+                  <button
+                    onClick={() => navigate('/wallet')}
+                    aria-label="Open Wallet"
+                    className="w-10 h-10 bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-500 text-white rounded-xl flex items-center justify-center transition-all shadow-sm hover:shadow-md active:scale-95 cursor-pointer border border-sky-400/30"
+                  >
+                    <Wallet className="w-4 h-4" />
+                  </button>
+                  <div className="absolute bottom-full right-0 mb-2 hidden group-hover/wallet:flex group-focus-within/wallet:flex items-center justify-center px-2.5 py-1 text-[10px] font-semibold text-white bg-slate-900 dark:bg-slate-800 rounded-md shadow-lg whitespace-nowrap pointer-events-none transition-opacity duration-200 z-30">
+                    Open Wallet
+                    <div className="absolute top-full right-3 -mt-1 border-4 border-transparent border-t-slate-900 dark:border-t-slate-800" />
+                  </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400 group-hover/spent:translate-x-0.5 transition-transform" />
-              </button>
+              </div>
             </div>
 
             {/* QUICK ACTIONS */}
@@ -228,14 +143,14 @@ export function Dashboard() {
               <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
                 Quick Actions
               </h3>
-              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+              <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
                 <div className="flex gap-4 pb-2 w-max pr-10">
                   <QuickActions />
                 </div>
               </div>
             </section>
 
-            {/* BLUESEA CONNECT SECTION (IMMEDIATELY BELOW QUICK ACTIONS) */}
+            {/* BLUESEA CONNECT PREVIEW SECTION */}
             <BlueConnectPreview />
 
             {/* BLUESEA EXCLUSIVES */}
@@ -243,7 +158,7 @@ export function Dashboard() {
               <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
                 BlueSea Exclusives
               </h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 {premiumServices.map((service) => (
                   <div
                     key={service.label}
@@ -305,7 +220,7 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* RESPONSIVE TRANSACTION LIST CONTAINER */}
+            {/* RECENT TRANSACTIONS */}
             <section className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
