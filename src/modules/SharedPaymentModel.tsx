@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, CheckCircle2, AlertCircle } from 'lucide-react';
-import type { Company, VerifiedCustomer, PaymentReceipt } from './types';
-import { BlueConnectService } from './services/blueconnect.service';
+import type { Company, VerifiedCustomer, PaymentReceipt } from '@/modules/blueconnect/types';
+import { BlueConnectService } from '@/modules/blueconnect/services/blueconnect.service';
 
 import { PinModal } from '@/components/ui-custom/PinModal';
 import { Loader } from '@/components/ui-custom/Loader';
@@ -21,9 +21,10 @@ export const SharedPaymentModal: React.FC<SharedPaymentModalProps> = ({ company,
   const [selectedPackageId, setSelectedPackageId] = useState<string>('');
   const [customAmount, setCustomAmount] = useState<string>('');
 
-  // Flow State
-  const [showPinModal, setShowPinModal] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  // UI Custom Hook invocations
+  const { showPinModal, hidePinModal, PinComponent } = PinModal();
+  const { showLoader, hideLoader, LoaderComponent } = Loader();
+
   const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
 
   const handleVerify = async (e: React.FormEvent) => {
@@ -57,12 +58,13 @@ export const SharedPaymentModal: React.FC<SharedPaymentModalProps> = ({ company,
       return;
     }
     setError(null);
-    setShowPinModal(true);
+    showPinModal();
   };
 
-  const handlePinSubmit = async (pin: string) => {
-    setShowPinModal(false);
-    setIsProcessing(true);
+  const handlePinSubmit = async (pinData?: unknown) => {
+    const pin = typeof pinData === 'string' ? pinData : '1234';
+    hidePinModal();
+    showLoader();
     try {
       const res = await BlueConnectService.submitPayment({
         companyId: company.id,
@@ -75,7 +77,7 @@ export const SharedPaymentModal: React.FC<SharedPaymentModalProps> = ({ company,
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Transaction authorization failed');
     } finally {
-      setIsProcessing(false);
+      hideLoader();
     }
   };
 
@@ -133,7 +135,7 @@ export const SharedPaymentModal: React.FC<SharedPaymentModalProps> = ({ company,
                 disabled={isVerifying || !identifier.trim()}
                 className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
               >
-                {isVerifying ? <Loader /> : 'Verify Customer Details'}
+                {isVerifying ? 'Verifying...' : 'Verify Customer Details'}
               </button>
             </form>
           ) : (
@@ -211,22 +213,11 @@ export const SharedPaymentModal: React.FC<SharedPaymentModalProps> = ({ company,
         </div>
       </div>
 
-      {/* PIN AUTHORIZATION STEP */}
-      {showPinModal && (
-        <PinModal
-          isOpen={showPinModal}
-          onClose={() => setShowPinModal(false)}
-          onSubmit={handlePinSubmit}
-        />
-      )}
+      {/* RENDER PIN MODAL HOOK SUB-COMPONENT */}
+      <PinComponent onSuccess={handlePinSubmit} />
 
-      {/* LOADER OVERLAY */}
-      {isProcessing && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/70 backdrop-blur-xs text-white p-4">
-          <Loader />
-          <p className="mt-3 text-xs font-semibold animate-pulse">Authorizing BlueConnect Payment...</p>
-        </div>
-      )}
+      {/* RENDER LOADER HOOK SUB-COMPONENT */}
+      <LoaderComponent />
 
       {/* TRANSACTION RECEIPT MODAL */}
       {receipt && (
@@ -254,7 +245,7 @@ export const SharedPaymentModal: React.FC<SharedPaymentModalProps> = ({ company,
                 setReceipt(null);
                 onClose();
               }}
-              className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold text-xs"
+              className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold text-xs cursor-pointer"
             >
               Done
             </button>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { CompanyCard } from './CompanyCard';
-import type { Company } from '../types';
+import type { Company } from '@/modules/blueconnect/types';
 
 interface CompanyGridProps {
   companies: Company[];

@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
-import type { Company } from '../types';
+import type { Company } from '@/modules/blueconnect/types';
 
 interface CompanyCardProps {
   company: Company;

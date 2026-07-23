@@ -1,5 +1,5 @@
 import React from 'react';
-import { BLUECONNECT_CATEGORIES } from '../constants';
+import { BLUECONNECT_CATEGORIES } from '@/modules/blueconnect/constants';
 
 interface CategoryTabsProps {
   activeCategory: string;
@@ -9,7 +9,7 @@ interface CategoryTabsProps {
 export const CategoryTabs: React.FC<CategoryTabsProps> = ({ activeCategory, onSelectCategory }) => {
   return (
     <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-      {BLUECONNECT_CATEGORIES.map((category) => {
+      {BLUECONNECT_CATEGORIES.map((category: string) => {
         const isActive = activeCategory === category;
         return (
           <button

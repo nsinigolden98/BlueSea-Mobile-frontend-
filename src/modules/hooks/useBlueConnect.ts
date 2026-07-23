@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Company, VerifiedCustomer } from '../types';
-import { BlueConnectService } from '../services/blueconnect.service';
+import type { Company, VerifiedCustomer } from '@/modules/blueconnect/types';
+import { BlueConnectService } from '@/modules/blueconnect/services/blueconnect.service';
 
 export function useBlueConnect() {
   const [companies, setCompanies] = useState<Company[]>([]);
