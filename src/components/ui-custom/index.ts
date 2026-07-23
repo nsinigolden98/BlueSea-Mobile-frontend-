@@ -12,3 +12,4 @@ export {PinModal} from './PinModal'
 export { ConfirmDialog, useConfirm } from './ConfirmDialog'
 export {EventDashboard} from './EventDashboard'
 //export { GlobalGoogleAd } from './GlobalGoogleAd'
+export { BlueConnectPreview } from '@/modules/blueconnect/BlueConnectPreview';

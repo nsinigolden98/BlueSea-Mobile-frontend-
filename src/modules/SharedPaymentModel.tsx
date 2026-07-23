@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { X, CheckCircle2, AlertCircle } from 'lucide-react';
-import { Company, VerifiedCustomer } from './types';
+import type { Company, VerifiedCustomer, PaymentReceipt } from './types';
 import { BlueConnectService } from './services/blueconnect.service';
 
-// Reuse existing UI Custom elements
 import { PinModal } from '@/components/ui-custom/PinModal';
 import { Loader } from '@/components/ui-custom/Loader';
-import { TransactionModal } from '@/components/ui-custom/Toast';
 
 interface SharedPaymentModalProps {
   company: Company;
@@ -23,10 +21,10 @@ export const SharedPaymentModal: React.FC<SharedPaymentModalProps> = ({ company,
   const [selectedPackageId, setSelectedPackageId] = useState<string>('');
   const [customAmount, setCustomAmount] = useState<string>('');
 
-  // Flows
+  // Flow State
   const [showPinModal, setShowPinModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [receipt, setReceipt] = useState<unknown | null>(null);
+  const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +133,7 @@ export const SharedPaymentModal: React.FC<SharedPaymentModalProps> = ({ company,
                 disabled={isVerifying || !identifier.trim()}
                 className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
               >
-                {isVerifying ? <Loader size="sm" /> : 'Verify Customer Details'}
+                {isVerifying ? <Loader /> : 'Verify Customer Details'}
               </button>
             </form>
           ) : (
@@ -154,7 +152,7 @@ export const SharedPaymentModal: React.FC<SharedPaymentModalProps> = ({ company,
                 </span>
               </div>
 
-              {/* DYNAMIC PAYMENT SELECTION */}
+              {/* DYNAMIC PACKAGE SELECTION */}
               {company.config.packages && company.config.packages.length > 0 && (
                 <div className="space-y-2">
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
@@ -223,18 +221,45 @@ export const SharedPaymentModal: React.FC<SharedPaymentModalProps> = ({ company,
       )}
 
       {/* LOADER OVERLAY */}
-      {isProcessing && <Loader fullScreen message="Authorizing BlueConnect Payment..." />}
+      {isProcessing && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/70 backdrop-blur-xs text-white p-4">
+          <Loader />
+          <p className="mt-3 text-xs font-semibold animate-pulse">Authorizing BlueConnect Payment...</p>
+        </div>
+      )}
 
-      {/* TRANSACTION RECEIPT / TOAST */}
+      {/* TRANSACTION RECEIPT MODAL */}
       {receipt && (
-        <TransactionModal
-          isOpen={!!receipt}
-          onClose={() => {
-            setReceipt(null);
-            onClose();
-          }}
-          data={receipt}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 mx-auto flex items-center justify-center">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Payment Successful</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{receipt.companyName}</p>
+            </div>
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-left space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Tx Ref</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{receipt.transactionId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Amount Paid</span>
+                <span className="font-bold text-sky-600 dark:text-sky-400">₦{receipt.amount.toLocaleString()}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setReceipt(null);
+                onClose();
+              }}
+              className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold text-xs"
+            >
+              Done
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

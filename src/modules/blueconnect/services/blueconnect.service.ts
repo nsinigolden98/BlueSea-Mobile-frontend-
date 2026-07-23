@@ -1,5 +1,5 @@
 import { PLACEHOLDER_COMPANIES } from '../constants';
-import { Company, VerifiedCustomer, PaymentPayload, PaymentReceipt } from '../types';
+import type { Company, VerifiedCustomer, PaymentPayload, PaymentReceipt } from '../types';
 
 export class BlueConnectService {
   /**
@@ -7,7 +7,7 @@ export class BlueConnectService {
    * // TODO: Connect to REST API endpoint: GET /api/v1/blueconnect/companies
    */
   static async getCompanies(category?: string, query?: string): Promise<Company[]> {
-    await new Promise((resolve) => setTimeout(resolve, 300)); // Simulate network latency
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     return PLACEHOLDER_COMPANIES.filter((company) => {
       const matchesCategory =
@@ -39,8 +39,7 @@ export class BlueConnectService {
     }
 
     const company = PLACEHOLDER_COMPANIES.find((c) => c.id === companyId);
-    
-    // Mock customer verification profiles
+
     return {
       identifier,
       fullName: 'Adebayo Oluwaseun',

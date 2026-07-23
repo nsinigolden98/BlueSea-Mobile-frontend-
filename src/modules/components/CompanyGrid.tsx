@@ -1,6 +1,6 @@
 import React from 'react';
 import { CompanyCard } from './CompanyCard';
-import { Company } from '../types';
+import type { Company } from '../types';
 
 interface CompanyGridProps {
   companies: Company[];

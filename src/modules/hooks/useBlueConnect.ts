@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Company, VerifiedCustomer } from '../types';
+import type { Company, VerifiedCustomer } from '../types';
 import { BlueConnectService } from '../services/blueconnect.service';
 
 export function useBlueConnect() {

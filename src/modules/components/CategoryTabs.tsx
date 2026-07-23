@@ -1,6 +1,5 @@
 import React from 'react';
-//import { BLuECONNECT_CATEGORIES } from '../constants';
-import type { BLUECONNECT_CATEGORIES } from '../blueconnect/constants';
+import { BLUECONNECT_CATEGORIES } from '../constants';
 
 interface CategoryTabsProps {
   activeCategory: string;
