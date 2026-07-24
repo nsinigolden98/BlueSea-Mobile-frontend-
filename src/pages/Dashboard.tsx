@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Sidebar,
   BalanceCard,
@@ -20,7 +21,6 @@ import {
   LayoutGrid,
   Award
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 export function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,26 +43,26 @@ export function Dashboard() {
         const data = await TransactionsData();
         setTransactions(data);
       } catch (error) {
-        console.error("Sync failed:", error);
+        console.error('Sync failed:', error);
       }
     };
     loadData();
   }, []);
 
-  const redirect = () => (window.location.href = '/transaction-history');
-
   const weeklyStats = useMemo(() => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const weeklyTransactions = transactions.filter(tx => new Date(tx.created_at) >= oneWeekAgo);
+    const weeklyTransactions = transactions.filter(
+      (tx) => new Date(tx.created_at) >= oneWeekAgo
+    );
     const totalSpent = weeklyTransactions
-      .filter(tx => tx.transaction_type === 'DEBIT')
+      .filter((tx) => tx.transaction_type === 'DEBIT')
       .reduce((sum, tx) => sum + Number(tx.amount), 0);
 
     return {
       amount: totalSpent,
-      count: weeklyTransactions.length
+      count: weeklyTransactions.length,
     };
   }, [transactions]);
 
@@ -70,18 +70,18 @@ export function Dashboard() {
     {
       label: 'Payroll Pro',
       icon: Briefcase,
-      path: '/payroll-pro'
+      path: '/payroll-pro',
     },
     {
       label: 'Travel',
       icon: Plane,
-      path: '/flights'
+      path: '/flights',
     },
     {
       label: 'Events',
       icon: Ticket,
-      path: '/marketplace'
-    }
+      path: '/marketplace',
+    },
   ];
 
   return (
@@ -91,28 +91,39 @@ export function Dashboard() {
 
       {/* Main Viewport Content Context Area */}
       <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative">
-        
         {/* DASHBOARD HEADER */}
         <DashboardHeader />
 
         {/* ISOLATED SCROLLABLE PAGE CONTENT CONTAINER */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-none z-10">
           <div className="max-w-4xl mx-auto space-y-5">
-            
-            {/* BALANCE CARD & INTEGRATED FLOATING SUMMARY + WALLET BUTTON */}
+            {/* BALANCE CARD WITH INTEGRATED BOTTOM-RIGHT WALLET BUTTON */}
             <div className="flex flex-col relative group">
-              <BalanceCard showBalance={showBalance} onToggleBalance={setShowBalance} />
+              <div className="relative rounded-3xl overflow-hidden">
+                <BalanceCard showBalance={showBalance} onToggleBalance={setShowBalance} />
 
-              {/* FLOATING ACTION STRIP BENEATH BALANCE CARD */}
+                {/* INTEGRATED WALLET BUTTON AT BOTTOM RIGHT OF BALANCE CARD */}
+                <div className="absolute bottom-3 right-3 z-20">
+                  <button
+                    onClick={() => navigate('/wallet')}
+                    aria-label="Open Wallet"
+                    className="w-10 h-10 bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-500 text-white rounded-2xl flex items-center justify-center transition-all shadow-lg hover:shadow-xl active:scale-90 cursor-pointer border border-white/20 dark:border-white/10 group/wallet"
+                  >
+                    <Wallet className="w-4.5 h-4.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* SPENT SUMMARY ACTION STRIP BENEATH BALANCE CARD */}
               <div className="mx-3 -mt-1.5 flex items-center justify-between gap-2.5">
                 <button
-                  onClick={redirect}
-                  className="flex-1 bg-white dark:bg-slate-900 border-x border-b border-slate-200/80 dark:border-white/5 rounded-b-xl px-4 py-3 flex items-center justify-between shadow-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors z-0 text-left cursor-pointer group/spent"
+                  onClick={() => navigate('/transaction-history')}
+                  className="flex-1 bg-white dark:bg-slate-900 border-x border-b border-slate-200/80 dark:border-white/5 rounded-b-2xl px-4 py-3 flex items-center justify-between shadow-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors z-0 text-left cursor-pointer group/spent"
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
                     <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                      {showBalance ? `₦${weeklyStats.amount.toLocaleString()}` : '••••••'}{" "}
+                      {showBalance ? `₦${weeklyStats.amount.toLocaleString()}` : '••••••'}{' '}
                       <span className="text-slate-500 dark:text-slate-400 font-normal ml-1">
                         spent • {weeklyStats.count} transactions
                       </span>
@@ -120,21 +131,6 @@ export function Dashboard() {
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-400 group-hover/spent:translate-x-0.5 transition-transform" />
                 </button>
-
-                {/* RESTORED FLOATING WALLET BUTTON WITH DESKTOP & MOBILE TOOLTIP */}
-                <div className="relative group/wallet shrink-0">
-                  <button
-                    onClick={() => navigate('/wallet')}
-                    aria-label="Open Wallet"
-                    className="w-10 h-10 bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-500 text-white rounded-xl flex items-center justify-center transition-all shadow-sm hover:shadow-md active:scale-95 cursor-pointer border border-sky-400/30"
-                  >
-                    <Wallet className="w-4 h-4" />
-                  </button>
-                  <div className="absolute bottom-full right-0 mb-2 hidden group-hover/wallet:flex group-focus-within/wallet:flex items-center justify-center px-2.5 py-1 text-[10px] font-semibold text-white bg-slate-900 dark:bg-slate-800 rounded-md shadow-lg whitespace-nowrap pointer-events-none transition-opacity duration-200 z-30">
-                    Open Wallet
-                    <div className="absolute top-full right-3 -mt-1 border-4 border-transparent border-t-slate-900 dark:border-t-slate-800" />
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -151,7 +147,12 @@ export function Dashboard() {
             </section>
 
             {/* BLUESEA CONNECT PREVIEW SECTION */}
-            <BlueConnectPreview />
+            <div
+              onClick={() => navigate('/blueconnect')}
+              className="cursor-pointer transition-transform active:scale-[0.99]"
+            >
+              <BlueConnectPreview />
+            </div>
 
             {/* BLUESEA EXCLUSIVES */}
             <section className="space-y-3 pt-1">
@@ -211,7 +212,9 @@ export function Dashboard() {
                   </div>
                   <div>
                     <h3 className="font-bold text-sm">BluePoints Reward</h3>
-                    <p className="text-[11px] text-sky-100 opacity-90">Check your loyalty progress</p>
+                    <p className="text-[11px] text-sky-100 opacity-90">
+                      Check your loyalty progress
+                    </p>
                   </div>
                 </div>
                 <div className="bg-white/10 p-1.5 rounded-full border border-white/20">
@@ -220,14 +223,14 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* RECENT TRANSACTIONS */}
-            <section className="space-y-3">
+            {/* RECENT TRANSACTIONS (HIDDEN ON MOBILE, VISIBLE ON DESKTOP) */}
+            <section className="hidden md:block space-y-3">
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
                   Recent Transactions
                 </h3>
                 <button
-                  onClick={redirect}
+                  onClick={() => navigate('/transaction-history')}
                   className="text-xs font-bold text-sky-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
                 >
                   View History
@@ -244,7 +247,6 @@ export function Dashboard() {
         <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-white/5">
           <MobileBottomNavigation />
         </div>
-
       </div>
     </div>
   );

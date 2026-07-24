@@ -50,12 +50,11 @@ import {
   SpinVault,
   Betting,
   BlueSphere,
-  
-/* // FinanceHub, SavingsVault, BlueSeaCards, BspCrypto, Pension, Insurance,
-  BusinessHub, Properties, Appointments,
-  Storefronts, Freelance, Affiliate, Contracts,
-   Streams,Subscriptions, */
 } from '@/pages';
+
+// IMPORT BLUECONNECT PAGE
+import { BlueConnectPage } from '@/components/blueconnect';
+
 import IdentityCenter from '@/pages/IdentityCenter';
 import HistoryPage from '@/pages/History';
 import Flights from '@/pages/Flights';  
@@ -141,6 +140,7 @@ function AppRoutes() {
            ========================================= */}
         <Route element={<AuthenticatedLayout />}>
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/blueconnect" element={<ProtectedRoute><BlueConnectPage /></ProtectedRoute>} />
           <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
           <Route path="/airtime" element={<ProtectedRoute><Airtime /></ProtectedRoute>} />
           <Route path="/data" element={<ProtectedRoute><Data /></ProtectedRoute>} />
