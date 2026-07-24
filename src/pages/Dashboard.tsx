@@ -85,22 +85,22 @@ export function Dashboard() {
   ];
 
   return (
-    <div className="h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex overflow-hidden transition-colors duration-300">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex overflow-hidden transition-colors duration-300">
       {/* Sidebar Panel Overlay */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Viewport Content Context Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative overflow-x-hidden">
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-900 transition-colors duration-300 relative overflow-x-hidden">
         {/* DASHBOARD HEADER */}
         <DashboardHeader />
 
-        {/* ISOLATED SCROLLABLE PAGE CONTENT CONTAINER (NO VISIBLE SCROLLBARS) */}
-        <main className="flex-1 p-3 md:p-6 overflow-y-auto z-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {/* ISOLATED SCROLLABLE PAGE CONTENT CONTAINER (STRICTLY NO VISIBLE SCROLLBARS) */}
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto z-10 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="max-w-4xl mx-auto space-y-3 md:space-y-5">
             
             {/* BALANCE CARD WITH INTEGRATED BOTTOM-RIGHT WALLET BUTTON */}
             <div className="flex flex-col relative group">
-              <div className="relative rounded-3xl overflow-hidden">
+              <div className="relative rounded-3xl overflow-hidden shadow-xs">
                 <BalanceCard showBalance={showBalance} onToggleBalance={setShowBalance} />
 
                 {/* INTEGRATED WALLET BUTTON AT BOTTOM RIGHT OF BALANCE CARD */}
@@ -119,7 +119,7 @@ export function Dashboard() {
               <div className="mx-2 md:mx-3 -mt-1.5 flex items-center justify-between gap-2.5">
                 <button
                   onClick={() => navigate('/transaction-history')}
-                  className="flex-1 bg-white dark:bg-slate-900 border-x border-b border-slate-200/80 dark:border-white/5 rounded-b-2xl px-3.5 py-2.5 md:py-3 flex items-center justify-between shadow-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors z-0 text-left cursor-pointer group/spent"
+                  className="flex-1 bg-white dark:bg-slate-900 border-x border-b border-slate-100 dark:border-slate-800 rounded-b-2xl px-3.5 py-2.5 md:py-3 flex items-center justify-between shadow-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors z-0 text-left cursor-pointer group/spent"
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
@@ -140,19 +140,21 @@ export function Dashboard() {
               <h3 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
                 Quick Actions
               </h3>
-              <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <div className="flex gap-3 md:gap-4 pb-1 md:pb-2 w-max pr-6 md:pr-0">
                   <QuickActions />
                 </div>
               </div>
             </section>
 
-            {/* BLUESEA CONNECT PREVIEW SECTION (STRICT MOBILE FIT) */}
+            {/* BLUESEA CONNECT PREVIEW SECTION (COMPACT & PROPORTIONED FIT) */}
             <div
               onClick={() => navigate('/blueconnect')}
-              className="cursor-pointer transition-transform active:scale-[0.99] w-full max-w-full overflow-hidden"
+              className="cursor-pointer transition-transform active:scale-[0.98] w-full max-w-full overflow-hidden"
             >
-              <BlueConnectPreview />
+              <div className="scale-[0.99] md:scale-100 origin-center">
+                <BlueConnectPreview />
+              </div>
             </div>
 
             {/* BLUESEA EXCLUSIVES */}
@@ -165,9 +167,9 @@ export function Dashboard() {
                   <div
                     key={service.label}
                     onClick={() => navigate(service.path)}
-                    className="flex items-center gap-2 p-2 md:p-2.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-xs h-11 md:h-12 min-w-0"
+                    className="flex items-center gap-2 p-2 md:p-2.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-xs h-11 md:h-12 min-w-0"
                   >
-                    <div className="w-6 h-6 md:w-7 md:h-7 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">
+                    <div className="w-6 h-6 md:w-7 md:h-7 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50 group-hover:bg-sky-500/10 transition-colors">
                       <service.icon className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
                     </div>
                     <span className="text-[11px] md:text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
@@ -181,10 +183,10 @@ export function Dashboard() {
             {/* EXPLORE ALL SERVICES NAV CARD */}
             <div
               onClick={() => navigate('/services')}
-              className="flex items-center justify-between p-2.5 md:p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-[0.99] shadow-xs"
+              className="flex items-center justify-between p-2.5 md:p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-[0.99] shadow-xs"
             >
               <div className="flex items-center gap-2.5 md:gap-3">
-                <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50 group-hover:bg-sky-500/10 transition-colors">
                   <LayoutGrid className="w-4 h-4 md:w-5 md:h-5 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
                 </div>
                 <div>
@@ -237,7 +239,7 @@ export function Dashboard() {
                   View History
                 </button>
               </div>
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-white/5 p-1 shadow-xs">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-1 shadow-xs">
                 <TransactionList />
               </div>
             </section>
@@ -245,7 +247,7 @@ export function Dashboard() {
         </main>
 
         {/* FIXED MOBILE BOTTOM NAVIGATION LAYER */}
-        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-white/5">
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <MobileBottomNavigation />
         </div>
       </div>
