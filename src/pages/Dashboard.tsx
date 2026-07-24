@@ -90,13 +90,14 @@ export function Dashboard() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Viewport Content Context Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative">
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative overflow-x-hidden">
         {/* DASHBOARD HEADER */}
         <DashboardHeader />
 
-        {/* ISOLATED SCROLLABLE PAGE CONTENT CONTAINER */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-none z-10">
-          <div className="max-w-4xl mx-auto space-y-5">
+        {/* ISOLATED SCROLLABLE PAGE CONTENT CONTAINER (NO VISIBLE SCROLLBARS) */}
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto z-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="max-w-4xl mx-auto space-y-3 md:space-y-5">
+            
             {/* BALANCE CARD WITH INTEGRATED BOTTOM-RIGHT WALLET BUTTON */}
             <div className="flex flex-col relative group">
               <div className="relative rounded-3xl overflow-hidden">
@@ -115,61 +116,61 @@ export function Dashboard() {
               </div>
 
               {/* SPENT SUMMARY ACTION STRIP BENEATH BALANCE CARD */}
-              <div className="mx-3 -mt-1.5 flex items-center justify-between gap-2.5">
+              <div className="mx-2 md:mx-3 -mt-1.5 flex items-center justify-between gap-2.5">
                 <button
                   onClick={() => navigate('/transaction-history')}
-                  className="flex-1 bg-white dark:bg-slate-900 border-x border-b border-slate-200/80 dark:border-white/5 rounded-b-2xl px-4 py-3 flex items-center justify-between shadow-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors z-0 text-left cursor-pointer group/spent"
+                  className="flex-1 bg-white dark:bg-slate-900 border-x border-b border-slate-200/80 dark:border-white/5 rounded-b-2xl px-3.5 py-2.5 md:py-3 flex items-center justify-between shadow-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors z-0 text-left cursor-pointer group/spent"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
-                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    <p className="text-[11px] md:text-xs font-semibold text-slate-800 dark:text-slate-200">
                       {showBalance ? `₦${weeklyStats.amount.toLocaleString()}` : '••••••'}{' '}
                       <span className="text-slate-500 dark:text-slate-400 font-normal ml-1">
-                        spent • {weeklyStats.count} transactions
+                        spent • {weeklyStats.count} txns
                       </span>
                     </p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover/spent:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400 group-hover/spent:translate-x-0.5 transition-transform" />
                 </button>
               </div>
             </div>
 
-            {/* QUICK ACTIONS */}
-            <section className="space-y-3 pt-1">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
+            {/* QUICK ACTIONS (HORIZONTAL SWIPEABLE WITHOUT VISIBLE SCROLLBAR LINE) */}
+            <section className="space-y-2 md:space-y-3 pt-0.5">
+              <h3 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
                 Quick Actions
               </h3>
-              <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
-                <div className="flex gap-4 pb-2 w-max pr-10">
+              <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="flex gap-3 md:gap-4 pb-1 md:pb-2 w-max pr-6 md:pr-0">
                   <QuickActions />
                 </div>
               </div>
             </section>
 
-            {/* BLUESEA CONNECT PREVIEW SECTION */}
+            {/* BLUESEA CONNECT PREVIEW SECTION (STRICT MOBILE FIT) */}
             <div
               onClick={() => navigate('/blueconnect')}
-              className="cursor-pointer transition-transform active:scale-[0.99]"
+              className="cursor-pointer transition-transform active:scale-[0.99] w-full max-w-full overflow-hidden"
             >
               <BlueConnectPreview />
             </div>
 
             {/* BLUESEA EXCLUSIVES */}
-            <section className="space-y-3 pt-1">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
+            <section className="space-y-2 md:space-y-3 pt-0.5">
+              <h3 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
                 BlueSea Exclusives
               </h3>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-2 md:gap-3">
                 {premiumServices.map((service) => (
                   <div
                     key={service.label}
                     onClick={() => navigate(service.path)}
-                    className="flex items-center gap-2.5 p-2.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-xs h-12 min-w-0"
+                    className="flex items-center gap-2 p-2 md:p-2.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-xs h-11 md:h-12 min-w-0"
                   >
-                    <div className="w-7 h-7 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">
-                      <service.icon className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
+                    <div className="w-6 h-6 md:w-7 md:h-7 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">
+                      <service.icon className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
                     </div>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                    <span className="text-[11px] md:text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
                       {service.label}
                     </span>
                   </div>
@@ -180,11 +181,11 @@ export function Dashboard() {
             {/* EXPLORE ALL SERVICES NAV CARD */}
             <div
               onClick={() => navigate('/services')}
-              className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-[0.99] shadow-xs"
+              className="flex items-center justify-between p-2.5 md:p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-[0.99] shadow-xs"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">
-                  <LayoutGrid className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
+              <div className="flex items-center gap-2.5 md:gap-3">
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">
+                  <LayoutGrid className="w-4 h-4 md:w-5 md:h-5 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
                 </div>
                 <div>
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
@@ -203,16 +204,16 @@ export function Dashboard() {
             {/* REWARDS */}
             <div
               onClick={() => navigate('/rewards')}
-              className="bg-gradient-to-r from-sky-500 to-sky-700 rounded-2xl p-4 text-white cursor-pointer hover:shadow-lg hover:shadow-sky-500/20 transition-all active:scale-[0.98] shadow-xs relative overflow-hidden"
+              className="bg-gradient-to-r from-sky-500 to-sky-700 rounded-2xl p-3.5 md:p-4 text-white cursor-pointer hover:shadow-lg hover:shadow-sky-500/20 transition-all active:scale-[0.98] shadow-xs relative overflow-hidden"
             >
               <div className="flex items-center justify-between relative z-10">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white border border-white/20">
-                    <Award className="w-5 h-5 text-amber-300" />
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white/20 flex items-center justify-center text-white border border-white/20">
+                    <Award className="w-4 h-4 md:w-5 md:h-5 text-amber-300" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm">BluePoints Reward</h3>
-                    <p className="text-[11px] text-sky-100 opacity-90">
+                    <h3 className="font-bold text-xs md:text-sm">BluePoints Reward</h3>
+                    <p className="text-[10px] md:text-[11px] text-sky-100 opacity-90">
                       Check your loyalty progress
                     </p>
                   </div>
@@ -223,7 +224,7 @@ export function Dashboard() {
               </div>
             </div>
 
-            {/* RECENT TRANSACTIONS (HIDDEN ON MOBILE, VISIBLE ON DESKTOP) */}
+            {/* RECENT TRANSACTIONS (DESKTOP ONLY) */}
             <section className="hidden md:block space-y-3">
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
