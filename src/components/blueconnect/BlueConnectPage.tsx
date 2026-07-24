@@ -9,10 +9,7 @@ import { CategoryTabs } from './CategoryTabs';
 import { CompanyGrid } from './CompanyGrid';
 import { SharedPaymentModal } from './SharedPaymentModal';
 import { useBlueConnect } from '@/hooks/useBlueConnect';
-//import type { Company } from '@/types/blueconnect';
-import { Zap, Code2, 
-    //PlusCircle,
-     Globe } from 'lucide-react';
+import { Zap, Code2, PlusCircle, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const BlueConnectPage: React.FC = () => {
@@ -75,16 +72,16 @@ export const BlueConnectPage: React.FC = () => {
                 </div>
 
                 {/* Apply for BlueConnect API Button */}
-                <div className="shrink-0">
+                <div className="shrink-0 flex items-center gap-2">
                   <Button
                     onClick={() => {
-                      // TODO: Implement developer onboarding modal & API documentation portal link
                       alert('BlueConnect Developer Portal & API onboarding coming soon.');
                     }}
                     className="bg-white hover:bg-slate-100 text-sky-600 rounded-2xl h-12 px-5 text-xs font-black uppercase tracking-wider shadow-lg transition-all active:scale-95 flex items-center gap-2 cursor-pointer border border-white/20"
                   >
                     <Code2 className="w-4 h-4" />
-                    <span>Apply for BlueConnect API</span>
+                    <span>Apply for API</span>
+                    <PlusCircle className="w-4 h-4 text-sky-500" />
                   </Button>
                 </div>
               </div>

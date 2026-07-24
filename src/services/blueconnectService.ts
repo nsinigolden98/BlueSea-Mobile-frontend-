@@ -38,6 +38,11 @@ export const blueConnectApi = {
   async getCompanyConfiguration(companyId: string): Promise<CompanyConfiguration> {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
+        if (!companyId) {
+          reject(new Error('Invalid company ID provided.'));
+          return;
+        }
+
         const config = MOCK_COMPANY_CONFIGURATIONS[companyId];
         if (config) {
           resolve(config);
@@ -95,6 +100,11 @@ export const blueConnectApi = {
   async submitPayment(payload: ConnectPaymentPayload): Promise<ConnectPaymentResponse> {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
+        if (!payload.companyId) {
+          reject(new Error('Missing target merchant identifier.'));
+          return;
+        }
+
         if (!payload.pin || payload.pin.length !== 4) {
           resolve({
             success: false,

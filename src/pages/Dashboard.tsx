@@ -4,8 +4,8 @@ import {
   BalanceCard,
   QuickActions,
   TransactionList,
-  BlueConnectPreview
 } from '@/components/ui-custom';
+import { BlueConnectPreview } from '@/components/blueconnect';
 import { DashboardHeader } from '@/components/ui-custom/DashboardHeader';
 import { TransactionsData } from '@/data';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
