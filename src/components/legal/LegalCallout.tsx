@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { LegalCalloutType } from '@/types/legal';
+import { ReactNode } from 'react';
+import type { LegalCalloutType } from '@/types/legal';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, AlertCircle, ShieldCheck, Info, CheckCircle2, Lightbulb } from 'lucide-react';
 

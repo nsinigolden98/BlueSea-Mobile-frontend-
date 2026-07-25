@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LegalSectionData } from '@/types/legal';
+import type { LegalSectionData } from '@/types/legal';
 import { LegalTableOfContents } from './LegalTableOfContents';
 import { Button } from '@/components/ui/button';
 import { List, X } from 'lucide-react';

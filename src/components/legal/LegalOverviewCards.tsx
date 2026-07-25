@@ -1,5 +1,5 @@
-import { LegalMetadata } from '@/types/legal';
-import { BookOpen, Clock, Globe, Shield, Scale } from 'lucide-react';
+import type { LegalMetadata } from '@/types/legal';
+import { BookOpen, Clock, Globe, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LegalOverviewCardsProps {
@@ -28,7 +28,7 @@ export function LegalOverviewCards({ metadata, totalSectionsCount }: LegalOvervi
       colorBg: 'bg-purple-100 dark:bg-purple-900/30',
     },
     {
-      icon: <Scale className="w-5 h-5 text-amber-500" />,
+      icon: <Shield className="w-5 h-5 text-amber-500" />,
       label: 'Governance Framework',
       value: 'CBN & PCI-DSS',
       colorBg: 'bg-amber-100 dark:bg-amber-900/30',

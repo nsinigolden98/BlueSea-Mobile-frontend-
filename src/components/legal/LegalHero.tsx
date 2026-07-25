@@ -1,4 +1,4 @@
-import { LegalMetadata } from '@/types/legal';
+import type { LegalMetadata } from '@/types/legal';
 import { LegalStatusBadge } from './LegalStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, FileText, Download, ShieldCheck, Share2 } from 'lucide-react';
@@ -19,7 +19,8 @@ export function LegalHero({ metadata, onDownloadPdf, onShare }: LegalHeroProps) 
       <div className="relative z-10 max-w-3xl space-y-6">
         <div className="flex flex-wrap items-center gap-3">
           <LegalStatusBadge status={metadata.status} />
-          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30 flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-sky-400" />
             v{metadata.version}
           </span>
           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-slate-300 backdrop-blur-md">

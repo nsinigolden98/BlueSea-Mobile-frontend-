@@ -1,4 +1,4 @@
-import { LegalSectionData } from '@/types/legal';
+import type { LegalSectionData } from '@/types/legal';
 import { LegalCallout } from './LegalCallout';
 
 interface LegalSectionProps {

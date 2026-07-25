@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar, Header } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
-import { LegalDocumentConfig } from '@/types/legal';
+import type { LegalDocumentConfig } from '@/types/legal';
 
 // Import Legal Subcomponents
 import { LegalHero } from './LegalHero';

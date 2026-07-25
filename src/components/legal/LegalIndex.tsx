@@ -62,7 +62,8 @@ export function LegalIndex() {
             {/* Hub Banner */}
             <div className="bg-gradient-to-br from-sky-400 via-sky-500 to-sky-600 rounded-3xl p-6 md:p-10 text-white shadow-lg shadow-sky-500/25">
               <div className="max-w-2xl space-y-3">
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white uppercase tracking-wider">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white uppercase tracking-wider inline-flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-sky-200" />
                   Governance & Compliance Framework
                 </span>
                 <h1 className="text-3xl md:text-4xl font-extrabold">

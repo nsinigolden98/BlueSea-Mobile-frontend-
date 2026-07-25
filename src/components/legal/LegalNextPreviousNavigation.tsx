@@ -1,4 +1,4 @@
-import { LegalNavigationLink } from '@/types/legal';
+import type { LegalNavigationLink } from '@/types/legal';
 import { ArrowLeft, ArrowRight, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -22,6 +22,7 @@ export function LegalNextPreviousNavigation({
         >
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
             <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
+            <BookOpen className="w-3 h-3 text-sky-500 ml-1" />
             Previous Legal Doc
           </p>
           <p className="font-bold text-slate-800 dark:text-white text-sm mt-1 group-hover:text-sky-500 transition-colors">
@@ -39,6 +40,7 @@ export function LegalNextPreviousNavigation({
         >
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-end gap-1">
             Next Legal Doc
+            <BookOpen className="w-3 h-3 text-sky-500 mr-1" />
             <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
           </p>
           <p className="font-bold text-slate-800 dark:text-white text-sm mt-1 group-hover:text-sky-500 transition-colors">

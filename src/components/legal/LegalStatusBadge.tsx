@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { LegalStatus } from '@/types/legal';
+import type { LegalStatus } from '@/types/legal';
 
 interface LegalStatusBadgeProps {
   status: LegalStatus;

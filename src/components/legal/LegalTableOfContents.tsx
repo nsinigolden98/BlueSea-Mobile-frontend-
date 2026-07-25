@@ -1,4 +1,4 @@
-import { LegalSectionData } from '@/types/legal';
+import type { LegalSectionData } from '@/types/legal';
 import { cn } from '@/lib/utils';
 import { ChevronRight } from 'lucide-react';
 

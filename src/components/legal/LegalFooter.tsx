@@ -1,5 +1,4 @@
-import { ShieldCheck, Lock, Globe, 
-    ExternalLink  } from 'lucide-react';
+import { ShieldCheck, Lock, Globe, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export function LegalFooter() {
@@ -35,9 +34,10 @@ export function LegalFooter() {
             <button
               key={link.path}
               onClick={() => navigate(link.path)}
-              className="text-slate-600 dark:text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
+              className="text-slate-600 dark:text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors inline-flex items-center gap-1 group"
             >
-              {link.name}
+              <span>{link.name}</span>
+              <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
             </button>
           ))}
         </div>
