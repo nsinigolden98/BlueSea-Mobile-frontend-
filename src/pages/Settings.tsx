@@ -30,7 +30,6 @@ import {
   Building2,
   Wallet,
   Sparkles,
- // HelpCircle,
   Shield,
   FileCheck,
   Scale,
@@ -97,7 +96,6 @@ export function Settings() {
     } else if (mode === 'dark' && theme === 'light') {
       toggleTheme();
     }
-    // If system is picked, toggle to current system preference match
     if (mode === 'system') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       if ((prefersDark && theme === 'light') || (!prefersDark && theme === 'dark')) {
@@ -106,19 +104,19 @@ export function Settings() {
     }
   };
 
-  // Legal Center Policy Routes configuration
+  // Exact Legal Center Policy Routes configuration
   const legalPolicies = [
-    { title: 'Terms & Conditions', path: '/terms-and-conditions', icon: FileText },
-    { title: 'Privacy Policy', path: '/privacy-policy', icon: Shield },
-    { title: 'KYC Policy', path: '/kyc-policy', icon: FileCheck },
-    { title: 'Refund Policy', path: '/refund-policy', icon: RefreshCw },
-    { title: 'Security Policy', path: '/security-policy', icon: ShieldAlert },
-    { title: 'Cookie Policy', path: '/cookie-policy', icon: FileText },
-    { title: 'Acceptable Use Policy', path: '/acceptable-use-policy', icon: Scale },
+    { title: 'Terms & Conditions', path: '/legal/terms', icon: FileText },
+    { title: 'Privacy Policy', path: '/legal/privacy', icon: Shield },
+    { title: 'KYC Policy', path: '/legal/kyc', icon: FileCheck },
+    { title: 'Refund Policy', path: '/legal/refund', icon: RefreshCw },
+    { title: 'Security Policy', path: '/legal/security', icon: ShieldAlert },
+    { title: 'Cookie Policy', path: '/legal/cookies', icon: FileText },
+    { title: 'Acceptable Use Policy', path: '/legal/acceptable-use', icon: Scale },
   ];
 
   return (
-    <div className="h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex overflow-hidden transition-colors duration-300">
+    <div className="h-screen bg-slate-50 dark:bg-slate-955 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
       
       {/* Structural Sidebar Drawer */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -127,7 +125,7 @@ export function Settings() {
       <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative">
         
         {/* Navigation Header */}
-        <div className="sticky top-0 z-30 shrink-0 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50">
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-955 border-b border-slate-100 dark:border-slate-800">
           <Header
             title="Settings"
             subtitle="Account Control Center"
@@ -141,7 +139,7 @@ export function Settings() {
           {/* ==================================================
               PROFILE HEADER CARD (Account Summary)
              ================================================== */}
-          <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
+          <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
             {/* Subtle background glow */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 dark:bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-600/5 dark:bg-blue-600/10 rounded-full blur-2xl pointer-events-none" />
@@ -159,7 +157,7 @@ export function Settings() {
                         className="w-full h-full rounded-full object-cover select-none"
                       />
                     ) : (
-                      <div className="w-full h-full rounded-full bg-sky-50 dark:bg-sky-950/60 flex items-center justify-center font-extrabold text-sky-600 dark:text-sky-400 text-xl tracking-wider select-none">
+                      <div className="w-full h-full rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center font-extrabold text-sky-600 dark:text-sky-400 text-xl tracking-wider select-none">
                         {getInitials()}
                       </div>
                     )}
@@ -172,18 +170,18 @@ export function Settings() {
               {/* User Bio Information */}
               <div className="flex-1 min-w-0 space-y-1.5">
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight truncate">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight truncate">
                     {getFullName()}
                   </h2>
 
                   {/* Verification Badge */}
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     Verified
                   </span>
 
                   {/* Membership Tier Badge */}
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/40">
                     <Award className="w-3.5 h-3.5" />
                     Tier 2 Member
                   </span>
@@ -209,7 +207,7 @@ export function Settings() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               Account
             </h3>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800/60">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
               
               {/* Profile */}
               <button
@@ -217,11 +215,11 @@ export function Settings() {
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <User className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
                       Profile Information
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -229,7 +227,7 @@ export function Settings() {
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
               {/* Identity Verification */}
@@ -238,11 +236,11 @@ export function Settings() {
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <ShieldCheck className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
                       Identity Verification
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -250,7 +248,7 @@ export function Settings() {
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
               {/* Transaction PIN */}
@@ -259,11 +257,11 @@ export function Settings() {
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <Lock className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
                       Transaction PIN
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -271,7 +269,7 @@ export function Settings() {
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
               {/* Notifications */}
@@ -280,11 +278,11 @@ export function Settings() {
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <Bell className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
                       Notifications & Alerts
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -292,7 +290,7 @@ export function Settings() {
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
               {/* Bank Accounts (Future Placeholder) */}
@@ -345,7 +343,7 @@ export function Settings() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               Security
             </h3>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800/60">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
               
               {/* Transactions History */}
               <button
@@ -353,11 +351,11 @@ export function Settings() {
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <CreditCard className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
                       Transaction History
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -365,7 +363,7 @@ export function Settings() {
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
               {/* Biometric Login (Future Placeholder) */}
@@ -438,11 +436,11 @@ export function Settings() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               Preferences
             </h3>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 shadow-sm space-y-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm space-y-4">
               
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-white">
                     Appearance & Theme
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -457,7 +455,7 @@ export function Settings() {
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200",
                       appearanceMode === 'system'
-                        ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-sm"
+                        ? "bg-white dark:bg-slate-900 text-sky-500 shadow-sm"
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     )}
                   >
@@ -470,7 +468,7 @@ export function Settings() {
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200",
                       appearanceMode === 'light'
-                        ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-sm"
+                        ? "bg-white dark:bg-slate-900 text-sky-500 shadow-sm"
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     )}
                   >
@@ -483,7 +481,7 @@ export function Settings() {
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200",
                       appearanceMode === 'dark'
-                        ? "bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-sm"
+                        ? "bg-white dark:bg-slate-900 text-sky-500 shadow-sm"
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     )}
                   >
@@ -503,7 +501,7 @@ export function Settings() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               Support & Community
             </h3>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800/60">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
               
               {/* Customer Support */}
               <button
@@ -511,11 +509,11 @@ export function Settings() {
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <Headset className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
                       Customer Support
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -523,21 +521,21 @@ export function Settings() {
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
               {/* Invite Friends & Earn Reward */}
               <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-80 hover:opacity-100 transition-opacity">
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-500 flex items-center justify-center shrink-0">
                     <Gift className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                      <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
                         Invite Friends & Earn
                       </p>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40">
                         <Sparkles className="w-3 h-3" />
                         ₦1,500 Reward
                       </span>
@@ -583,7 +581,7 @@ export function Settings() {
               Legal & Compliance
             </h3>
             
-            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm transition-all duration-300">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm transition-all duration-300">
               
               {/* Accordion Toggle Header Button */}
               <button
@@ -592,11 +590,11 @@ export function Settings() {
                 aria-expanded={legalExpanded}
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0">
                     <FileText className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
                       Legal Center
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -607,13 +605,13 @@ export function Settings() {
 
                 <div className={cn(
                   "p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 transition-transform duration-300",
-                  legalExpanded ? "rotate-180 bg-sky-50 dark:bg-sky-950 text-sky-600" : ""
+                  legalExpanded ? "rotate-180 bg-sky-100 dark:bg-sky-900/40 text-sky-500" : ""
                 )}>
                   <ChevronDown className="w-4 h-4" />
                 </div>
               </button>
 
-              {/* Accordion Body Content */}
+              {/* Accordion Body Content with Exact Route Paths */}
               {legalExpanded && (
                 <div className="bg-slate-50/60 dark:bg-slate-950/40 border-t border-slate-100 dark:border-slate-800/80 divide-y divide-slate-100 dark:divide-slate-800/50 animate-in fade-in slide-in-from-top-2 duration-200">
                   {legalPolicies.map((policy, idx) => {
@@ -626,7 +624,7 @@ export function Settings() {
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <IconComponent className="w-4 h-4 text-slate-400 group-hover:text-sky-500 transition-colors shrink-0" />
-                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors truncate">
+                          <span className="text-xs font-medium text-slate-700 dark:text-slate-300 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors truncate">
                             {policy.title}
                           </span>
                         </div>
@@ -647,7 +645,7 @@ export function Settings() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               About Application
             </h3>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800/60">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
               
               {/* App Version Info */}
               <div className="flex items-center justify-between p-4 sm:px-5">
@@ -656,7 +654,7 @@ export function Settings() {
                     <Info className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
                       BlueSea Mobile Core
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -690,11 +688,11 @@ export function Settings() {
               </div>
 
               {/* Developer Footer */}
-              <div className="p-4 sm:px-5 bg-slate-50/50 dark:bg-slate-950/30 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-2">
+              <div className="p-4 sm:px-5 bg-slate-50 dark:bg-slate-950/40 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-2">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   Engineered & Secured for Financial Growth
                 </span>
-                <span className="text-xs font-bold text-sky-600 dark:text-sky-400 tracking-wide">
+                <span className="text-xs font-bold text-sky-500 tracking-wide">
                   Developed by Lucid Core Technologies
                 </span>
               </div>
@@ -706,31 +704,31 @@ export function Settings() {
               DANGER ZONE
              ================================================== */}
           <section className="space-y-2 pt-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400 px-1">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-red-500 dark:text-red-400 px-1">
               Danger Zone
             </h3>
             
-            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-rose-200/60 dark:border-rose-900/30 overflow-hidden shadow-sm divide-y divide-rose-100/50 dark:divide-rose-950/30">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-red-100 dark:border-red-950/40 overflow-hidden shadow-sm divide-y divide-red-50 dark:divide-red-950/30">
               
               {/* Sign Out Action */}
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-rose-50/60 dark:hover:bg-rose-950/20 transition-colors text-left group"
+                className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-red-50/50 dark:hover:bg-red-950/20 transition-colors text-left group"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <LogOut className="w-5 h-5 stroke-[1.75]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-rose-600 dark:text-rose-400 truncate">
+                    <p className="text-sm font-bold text-red-500 truncate">
                       Sign Out
                     </p>
-                    <p className="text-xs text-rose-500/80 dark:text-rose-400/70 truncate">
+                    <p className="text-xs text-red-400/80 dark:text-red-400/70 truncate">
                       Securely log out of your current session
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-rose-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                <ChevronRight className="w-5 h-5 text-red-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
               {/* Deactivate Account (Placeholder) */}
@@ -779,7 +777,7 @@ export function Settings() {
         </main>
 
         {/* Fixed Mobile Bottom Navigation */}
-        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-800/50">
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <MobileBottomNavigation />
         </div>
 
