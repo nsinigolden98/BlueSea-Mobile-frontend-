@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-//import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Sidebar, 
   Header, 
@@ -10,12 +10,11 @@ import {
   PinModal, 
   TransactionModal 
 } from '@/components/ui-custom';
+import { BlueConnectPreview } from '@/components/blueconnect';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
-import { connectApi } from '@/services/connectApi';
-import type { Partner, VerifiedUser } from '@/services/connectApi';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { useAuth } from '@/context/AuthContext';
 import { NIGERIAN_BANKS } from '@/data';
@@ -30,10 +29,6 @@ import {
   Search, 
   CreditCard, 
   CheckCircle2, 
-  AlertCircle,
-  Zap,
-  Globe, 
-  Wallet as WalletIcon,
 } from 'lucide-react';
 
 interface FoundUser {
@@ -44,7 +39,7 @@ interface FoundUser {
 
 export function Wallet() {
   const { user } = useAuth();
-  //const navigate = useNavigate();
+  const navigate = useNavigate();
 
   // --- Layout State ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -92,30 +87,10 @@ export function Wallet() {
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // --- BlueSea Connect States ---
-  const [partners, setPartners] = useState<Partner[]>([]);
-  const [partnersLoading, setPartnersLoading] = useState(true);
-  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
-  const [isSeeAllOpen, setIsSeeAllOpen] = useState(false);
-  const [connectIdentifier, setConnectIdentifier] = useState('');
-  const [verifiedPartnerUser, setVerifiedPartnerUser] = useState<VerifiedUser | null>(null);
-  const [isVerifyingPartner, setIsVerifyingPartner] = useState(false);
-  const [connectAmount, setConnectAmount] = useState('');
-  const [isConnectConfirmOpen, setIsConnectConfirmOpen] = useState(false);
-  const [connectPin, setConnectPin] = useState('');
-  const [connectStatus, setConnectStatus] = useState<'idle' | 'loading' | 'success' | 'failure'>('idle');
-  const [transactionMessage, setTransactionMessage] = useState('');
-  
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [activeCarouselIndex, setActiveCarouselIndex] = useState(0);
-
   // --- Saved Card States ---
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [savedCard, setSavedCard] = useState<{ name: string; number: string; expiry: string } | null>(null);
   const [newCard, setNewCard] = useState({ name: '', number: '', expiry: '', cvv: '' });
-
-  // --- Staged Flow Visibility ---
-  const [showConnectForm, setShowConnectForm] = useState(false);
 
   // Safe balance parsing
   const rawBalance = user?.balance;
@@ -190,56 +165,6 @@ export function Wallet() {
     }, 500);
     return () => clearTimeout(timer);
   }, [transferData.recipient, user?.email]);
-
-  // --- Connect Integration ---
-  useEffect(() => {
-    const loadPartners = async () => {
-      try {
-        const data = await connectApi.fetchPartners();
-        setPartners(data || []);
-      } catch (err) {
-        showToast('Failed to load partners. Please try again.');
-      } finally {
-        setPartnersLoading(false);
-      }
-    };
-    loadPartners();
-  }, [showToast]);
-
-  // Debounced Provider User Verification
-  useEffect(() => {
-    if (!selectedPartner || connectIdentifier.length < 3) {
-      setVerifiedPartnerUser(null);
-      return;
-    }
-    
-    const verifyUser = async () => {
-      setIsVerifyingPartner(true);
-      try {
-        const userRes = await connectApi.verifyUser(selectedPartner.id, connectIdentifier);
-        setVerifiedPartnerUser(userRes);
-      } catch (err) {
-        setVerifiedPartnerUser(null);
-      } finally {
-        setIsVerifyingPartner(false);
-      }
-    };
-    
-    const delayVerify = setTimeout(() => {
-      verifyUser();
-    }, 800);
-    
-    return () => clearTimeout(delayVerify);
-  }, [selectedPartner, connectIdentifier]);
-
-  // Progressive Disclosure for Connect Flow
-  useEffect(() => {
-    if (selectedPartner) {
-      setTimeout(() => setShowConnectForm(true), 50);
-    } else {
-      setShowConnectForm(false);
-    }
-  }, [selectedPartner]);
 
   // Logic handlers
   const handleRequestAccount = () => {
@@ -350,55 +275,11 @@ export function Wallet() {
     showPinModal();
   };
 
-  const handleConnectPayment = async () => {
-    setConnectStatus('loading');
-    try {
-      const response = await connectApi.pay({
-        partner: selectedPartner!.id,
-        identifier: connectIdentifier,
-        amount: Number(connectAmount),
-        pin: connectPin
-      });
-      
-      if (response.success) {
-        setConnectStatus('success');
-        setTransactionMessage(response.message || 'Payment processed successfully.');
-      } else {
-        setConnectStatus('failure');
-        setTransactionMessage(response.message || 'Transaction failed.');
-      }
-    } catch (error: any) {
-      setConnectStatus('failure');
-      setTransactionMessage(error.message || 'Connection error. Please try again.');
-    }
-  };
-
-  const resetConnect = () => {
-    setSelectedPartner(null);
-    setConnectIdentifier('');
-    setConnectAmount('');
-    setConnectPin('');
-    setIsConnectConfirmOpen(false);
-    setConnectStatus('idle');
-    setShowConnectForm(false);
-    setTransactionMessage('');
-  };
-
-  const handleCarouselScroll = () => {
-    if (!scrollRef.current) return;
-    const scrollLeft = scrollRef.current.scrollLeft;
-    const itemWidth = 128 + 16;
-    const index = Math.round(scrollLeft / itemWidth);
-    setActiveCarouselIndex(index);
-  };
-
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
       <style dangerouslySetInnerHTML={{ __html: `
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .snap-x { scroll-snap-type: x mandatory; }
-        .snap-center { scroll-snap-align: center; }
       ` }} />
 
       {/* REUSED SIDEBAR OVERLAY COMPONENT */}
@@ -477,152 +358,15 @@ export function Wallet() {
               </div>
             </div>
 
-            {/* BlueSea Connect Section */}
-            <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] overflow-hidden shadow-sm transition-all duration-300">
-              <div className="p-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-sky-500 rounded-xl shadow-lg shadow-sky-500/20">
-                    <Zap className="w-4 h-4 text-white fill-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">BlueSea Connect</h3>
-                    <p className="text-slate-500 text-[10px] font-medium">Instant partner platform payments</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setIsSeeAllOpen(true)}
-                  className="text-[10px] font-bold text-sky-500 bg-sky-500/10 hover:bg-sky-500 hover:text-white rounded-lg px-3 py-1.5 transition-all active:scale-95"
-                >
-                  See all
-                </button>
+            {/* BLUESEA CONNECT PREVIEW SECTION */}
+            <div
+              onClick={() => navigate('/blueconnect')}
+              className="cursor-pointer transition-transform active:scale-[0.98] w-full max-w-full overflow-hidden"
+            >
+              <div className="scale-[0.99] md:scale-100 origin-center">
+                <BlueConnectPreview />
               </div>
-
-              {/* Featured Partners */}
-              <div className="px-6 pb-6">
-                {partnersLoading ? (
-                  <div className="flex justify-center p-6">
-                    <LoadingSpinner size="sm" text="Loading Partners..." />
-                  </div>
-                ) : (
-                  <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1">
-                    {partners.slice(0, 3).map((partner) => (
-                      <button
-                        key={partner.id}
-                        onClick={() => setSelectedPartner(partner)}
-                        className={`flex-shrink-0 flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-300 ${
-                          selectedPartner?.id === partner.id 
-                          ? 'bg-white dark:bg-slate-800 border-sky-500 shadow-xl shadow-sky-500/10 scale-105 z-10' 
-                          : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
-                        } min-w-[130px]`}
-                      >
-                        <div className="relative">
-                          <div 
-                            className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center shadow-inner"
-                          >
-                            <img 
-                              src={partner.logo} 
-                              alt={partner.name}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${partner.name}&background=random`;
-                              }}
-                            />
-                          </div>
-                          {selectedPartner?.id === partner.id && (
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
-                              <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-left">
-                          <p className="text-xs font-black text-slate-800 dark:text-slate-200 leading-none">{partner.name}</p>
-                          <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{partner.helper}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Inline Expandable Panel */}
-                {selectedPartner && showConnectForm && (
-                  <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/10 space-y-5 animate-in slide-in-from-top-4 fade-in duration-500 ease-out">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">
-                          {selectedPartner.label || selectedPartner.verification_type}
-                        </Label>
-                        <div className="relative group">
-                          <Input
-                            value={connectIdentifier}
-                            onChange={(e) => setConnectIdentifier(e.target.value)}
-                            placeholder={selectedPartner.placeholder || `Enter ${selectedPartner.verification_type}`}
-                            className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-xs font-bold focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
-                          />
-                          {connectIdentifier.length > 2 && !verifiedPartnerUser && !isVerifyingPartner && (
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-red-400 uppercase tracking-tighter">Not Found</span>
-                          )}
-                          {isVerifyingPartner && (
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                              <LoadingSpinner size="sm" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Amount (₦)</Label>
-                        <div className="relative group">
-                          <Input
-                            type="number"
-                            value={connectAmount}
-                            onChange={(e) => setConnectAmount(e.target.value)}
-                            placeholder="0.00"
-                            className="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-white/10 rounded-2xl h-12 text-sm font-black focus:ring-sky-500 transition-all group-hover:border-sky-500/50"
-                          />
-                          <WalletIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {verifiedPartnerUser && (
-                      <div className="p-4 bg-sky-500/5 border border-sky-500/20 rounded-2xl flex items-center justify-between animate-in zoom-in-95 duration-300">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm border border-sky-500/20">
-                            <User className="w-5 h-5 text-sky-500" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs font-black text-slate-800 dark:text-slate-200">{verifiedPartnerUser.name}</p>
-                              <CheckCircle2 className="w-3 h-3 text-sky-500" />
-                            </div>
-                            <p className="text-[10px] font-bold text-slate-400">{verifiedPartnerUser.identifier}</p>
-                          </div>
-                        </div>
-                        <div className="hidden md:block">
-                          <div className="px-2 py-1 bg-sky-500 text-white rounded text-[8px] font-black uppercase tracking-widest">Verified Recipient</div>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex gap-3 pt-2">
-                      <Button
-                        onClick={() => setSelectedPartner(null)}
-                        className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-500 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={() => setIsConnectConfirmOpen(true)}
-                        disabled={!verifiedPartnerUser || !connectAmount}
-                        className="flex-[2] bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-12 text-xs font-black shadow-lg shadow-sky-500/20 transition-all active:scale-95 disabled:opacity-50"
-                      >
-                        Continue
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
+            </div>
             
             {/* Internal Transfer Button */}
             <button 
@@ -643,16 +387,23 @@ export function Wallet() {
               </div>
             </button>
 
-            {/* TRANSACTION PANEL */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between px-2">
-                 <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Recent Activity</h3>
-                 <Globe className="w-3.5 h-3.5 text-slate-300" />
+            {/* RECENT TRANSACTIONS (DESKTOP ONLY) */}
+            <section className="hidden md:block space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
+                  Recent Transactions
+                </h3>
+                <button
+                  onClick={() => navigate('/transaction-history')}
+                  className="text-xs font-bold text-sky-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
+                >
+                  View History
+                </button>
               </div>
-              <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-white/5 p-2 shadow-sm">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-1 shadow-xs">
                 <TransactionList />
               </div>
-            </div>
+            </section>
           </div>
         </main>
 
@@ -663,214 +414,6 @@ export function Wallet() {
       </div>
 
       {/* --- MODALS & DIALOGS --- */}
-
-      {/* CAROUSEL MODAL (SEE ALL) */}
-      {isSeeAllOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-xl bg-slate-950/40 transition-all duration-500">
-          <div 
-            className="absolute inset-0 cursor-pointer" 
-            onClick={() => setIsSeeAllOpen(false)} 
-          />
-          <div className="relative bg-white dark:bg-slate-900 sm:rounded-[3rem] rounded-t-[3rem] p-8 w-full max-w-lg shadow-2xl animate-in slide-in-from-bottom-10 duration-500 border-t sm:border border-slate-200 dark:border-white/10">
-            <div className="flex items-center justify-between mb-10">
-              <div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Select Partner</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Direct Connection</p>
-              </div>
-              <button 
-                onClick={() => setIsSeeAllOpen(false)} 
-                className="p-3 bg-slate-50 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 rounded-2xl transition-all active:scale-90"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div 
-              ref={scrollRef}
-              onScroll={handleCarouselScroll}
-              className="flex gap-4 overflow-x-auto snap-x scrollbar-hide py-12 px-[35%] transition-all"
-            >
-              {partners.map((partner, index) => {
-                const isActive = activeCarouselIndex === index;
-                return (
-                  <button
-                    key={partner.id}
-                    onClick={() => {
-                      if (isActive) {
-                        setSelectedPartner(partner);
-                        setIsSeeAllOpen(false);
-                      } else {
-                        scrollRef.current?.scrollTo({
-                          left: index * (128 + 16),
-                          behavior: 'smooth'
-                        });
-                      }
-                    }}
-                    className={`flex-shrink-0 snap-center flex flex-col items-center gap-6 w-32 transition-all duration-500 ease-out ${
-                      isActive ? 'scale-125 opacity-100 translate-y-[-8px]' : 'scale-90 opacity-40 grayscale-[0.5]'
-                    }`}
-                  >
-                    <div className="relative group">
-                      <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center p-0.5 overflow-hidden transition-all duration-500 ${
-                        isActive 
-                        ? 'bg-sky-500 shadow-2xl shadow-sky-500/40 rotate-0' 
-                        : 'bg-slate-200 dark:bg-slate-800 rotate-[-10deg]'
-                      }`}>
-                        <img 
-                          src={partner.logo} 
-                          alt={partner.name}
-                          className="w-full h-full object-cover rounded-[1.8rem]"
-                        />
-                        {isActive && (
-                          <div className="absolute inset-0 bg-gradient-to-t from-sky-500/40 to-transparent" />
-                        )}
-                      </div>
-                      {isActive && (
-                         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-900 rounded-full p-1 shadow-lg border border-sky-100 dark:border-white/10">
-                            <CheckCircle2 className="w-4 h-4 text-sky-500 fill-sky-500/10" />
-                         </div>
-                      )}
-                    </div>
-                    <div className={`text-center transition-all duration-500 ${isActive ? 'translate-y-2' : ''}`}>
-                      <p className={`text-xs font-black tracking-tight ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
-                        {partner.name}
-                      </p>
-                      {isActive && (
-                        <p className="text-[9px] font-bold text-sky-500 uppercase tracking-tighter mt-1 animate-in fade-in slide-in-from-top-1">
-                          Tap to select
-                        </p>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-12 flex flex-col items-center gap-4">
-              <div className="flex gap-1.5">
-                {partners.map((_, i) => (
-                  <div 
-                    key={i} 
-                    className={`h-1 rounded-full transition-all duration-500 ${
-                      activeCarouselIndex === i ? 'w-6 bg-sky-500' : 'w-1.5 bg-slate-200 dark:bg-slate-800'
-                    }`} 
-                  />
-                ))}
-              </div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] animate-pulse">Swipe to explore</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* BlueSea Connect Confirmation Modal */}
-      {isConnectConfirmOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
-            {connectStatus === 'idle' ? (
-              <>
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-sky-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-sky-500/20">
-                    <ShieldCheck className="w-8 h-8 text-sky-500" />
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Confirm Payment</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Authorization Required</p>
-                </div>
-
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 space-y-4 mb-8 border border-slate-200 dark:border-white/5 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4 opacity-5">
-                    <img src={selectedPartner?.logo} alt="" className="w-20 h-20 object-contain" />
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Platform</span>
-                    <div className="flex items-center gap-2">
-                       <img src={selectedPartner?.logo} className="w-4 h-4 rounded-full object-cover" alt="" />
-                       <span className="text-slate-900 dark:text-white font-black text-xs">{selectedPartner?.name}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Recipient</span>
-                    <span className="text-slate-900 dark:text-white font-black text-xs">{verifiedPartnerUser?.name}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Reference</span>
-                    <span className="text-slate-900 dark:text-white font-bold text-xs">{verifiedPartnerUser?.identifier}</span>
-                  </div>
-                  <div className="pt-4 border-t border-slate-200 dark:border-white/10 flex justify-between items-center">
-                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">Total Amount</span>
-                    <span className="text-sky-500 font-black text-xl">₦{Number(connectAmount).toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="max-w-[240px] mx-auto">
-                    <input
-                      type="password"
-                      maxLength={4}
-                      placeholder="••••"
-                      className="w-full h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl text-center text-3xl tracking-[0.8em] font-black focus:ring-2 focus:ring-sky-500 outline-none border-none transition-all"
-                      value={connectPin}
-                      onChange={(e) => setConnectPin(e.target.value.replace(/\D/g, ''))}
-                    />
-                    <p className="text-[9px] text-center text-slate-400 font-black uppercase tracking-[0.2em] mt-3">Enter Transaction PIN</p>
-                  </div>
-                  <div className="flex gap-4">
-                    <Button 
-                      onClick={() => setIsConnectConfirmOpen(false)} 
-                      className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-500 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      disabled={connectPin.length < 4}
-                      onClick={handleConnectPayment}
-                      className="flex-[2] bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
-                    >
-                      Pay Now
-                    </Button>
-                  </div>
-                </div>
-              </>
-            ) : connectStatus === 'loading' ? (
-              <div className="py-16 flex flex-col items-center justify-center gap-6">
-                <div className="relative">
-                  <div className="w-20 h-20 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin" />
-                  <Zap className="absolute inset-0 m-auto w-8 h-8 text-sky-500 animate-pulse" />
-                </div>
-                <div className="text-center">
-                  <h4 className="text-lg font-black tracking-tight">Processing Payment</h4>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Please do not close this window</p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-10 animate-in zoom-in-95 duration-500">
-                <div className={`w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 ${
-                  connectStatus === 'success' ? 'bg-green-500 shadow-2xl shadow-green-500/20' : 'bg-red-500 shadow-2xl shadow-red-500/20'
-                }`}>
-                  {connectStatus === 'success' 
-                    ? <CheckCircle2 className="w-12 h-12 text-white" /> 
-                    : <AlertCircle className="w-12 h-12 text-white" />
-                  }
-                </div>
-                <h3 className="text-2xl font-black tracking-tight">
-                  {connectStatus === 'success' ? 'Payment Sent!' : 'Payment Failed'}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 px-8 leading-relaxed font-medium">
-                  {connectStatus === 'success' 
-                    ? transactionMessage || `Successfully processed ₦${Number(connectAmount).toLocaleString()} for ${verifiedPartnerUser?.name} on ${selectedPartner?.name}.`
-                    : transactionMessage || 'We encountered an error while processing your payment. Please check your balance or try again later.'}
-                </p>
-                <Button 
-                  onClick={resetConnect} 
-                  className="w-full mt-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 h-14 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
-                >
-                  Return to Wallet
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Card Support Modal */}
       {cardModalOpen && (
