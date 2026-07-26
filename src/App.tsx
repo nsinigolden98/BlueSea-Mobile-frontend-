@@ -75,6 +75,18 @@ import AddEmployee from './screens/payroll-pro/AddEmployee';
 import CreateBranch from './screens/payroll-pro/CreateBranch';
 import PayrollDetail from './screens/payroll-pro/PayrollDetail';
 
+
+//legal-center
+import {
+  TermsAndConditions,
+  PrivacyPolicy,
+  RefundPolicy,
+  SecurityPolicy,
+  CookiePolicy,
+  KYCPolicy,
+  AcceptableUsePolicy,
+} from '@/pages/legal-center';
+
 /**
  * Global Layout Wrapper
  * Handles the persistent Header
@@ -188,6 +200,22 @@ function AppRoutes() {
           <Route path="/betting" element={<Betting />} />
           
           <Route path="/identity-center" element={<IdentityCenter />} />
+
+
+          {/* Legal Center Routes */}
+          <Route path="/legal/terms" element={<TermsAndConditions />} />
+          <Route path="/legal/refund" element={<RefundPolicy />} />
+          <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+          <Route path="/legal/security" element={<SecurityPolicy />} />
+          <Route path="/legal/cookies" element={<CookiePolicy />} />
+          <Route path="/legal/kyc" element={<KYCPolicy />} />
+          <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
+
+
+
+
+
+
 
           {/* Payroll Pro Routes */}
           <Route path="/payroll-pro" element={<PayrollProHome />} />
