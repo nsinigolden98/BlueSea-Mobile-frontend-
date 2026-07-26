@@ -25,7 +25,6 @@ import {
   X, 
   ChevronRight, 
   User, 
-  ShieldCheck, 
   Search, 
   CreditCard, 
   CheckCircle2, 
@@ -57,15 +56,12 @@ export function Wallet() {
 
   // --- Internal Transfer State ---
   const [transferModalOpen, setTransferModalOpen] = useState(false);
-  const [transferStep, setTransferStep] = useState(1);
   const [transferData, setTransferData] = useState({
     recipient: '',
-    amount: '',
-    pin: ''
+    amount: ''
   });
   const [foundUser, setFoundUser] = useState<FoundUser | null>(null);
   const [transferError, setTransferError] = useState('');
-  const [transferProcessing, setTransferProcessing] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
 
   // --- Withdraw State ---
@@ -79,9 +75,12 @@ export function Wallet() {
   const [accountVerified, setAccountVerified] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   
-  // Custom Modals & Hooks
+  // Custom Modals & Hooks (Unified PIN Modal usage)
   const { showPinModal, PinComponent, message } = PinModal();
   const { ToastComponent, showToast } = Toast();
+
+  const [pinType, setPinType] = useState<'withdrawal' | 'internal_transfer'>('withdrawal');
+  const [pinValue, setPinValue] = useState<any>({});
 
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
@@ -112,6 +111,13 @@ export function Wallet() {
     setWithdrawing(false);
   };
 
+  const resetTransferState = () => {
+    setTransferModalOpen(false);
+    setTransferData({ recipient: '', amount: '' });
+    setFoundUser(null);
+    setTransferError('');
+  };
+
   useEffect(() => {
     if (message) {
       setIsOpen(true);
@@ -120,6 +126,7 @@ export function Wallet() {
         setToastMessage(message?.message || 'Transaction successful');
         setTxStatus(true);
         resetWithdrawState();
+        resetTransferState();
       } else {
         setToastMessage(message?.message || 'Transaction failed');
         setWithdrawing(false);
@@ -216,30 +223,17 @@ export function Wallet() {
     setProcessing(false);
   };
 
-  const handleTransferSubmit = async () => {
-    setTransferProcessing(true);
-    setTransferError('');
-    try {
-      const response = await postRequest(ENDPOINTS.internal_transfer, {
-        email: transferData.recipient,
-        amount: Number(transferData.amount),
-        transaction_pin: transferData.pin
-      });
-      if (response.success) {
-        setTransferModalOpen(false);
-        setTransferStep(1);
-        setTransferData({ recipient: '', amount: '', pin: '' });
-        setFoundUser(null);
-        showToast(response.message || 'Transfer successful!');
-      } else {
-        setTransferError(response.error || 'Transfer failed. Check PIN.');
-      }
-    } catch (error) {
-      console.log(error);
-      setTransferError('Connection error. Please try again.');
-    } finally {
-      setTransferProcessing(false);
-    }
+  const handleStartTransfer = () => {
+    if (!transferData.amount || !foundUser) return;
+    setPinType('internal_transfer');
+    setPinValue({
+      email: transferData.recipient,
+      recipient: transferData.recipient,
+      amount: Number(transferData.amount),
+      recipient_name: foundUser.name,
+    });
+    setTransferModalOpen(false);
+    showPinModal();
   };
 
   const handleVerifyAccount = async () => {
@@ -272,6 +266,14 @@ export function Wallet() {
       return;
     }
     setWithdrawing(true);
+    setPinType('withdrawal');
+    setPinValue({
+      account_name: accountName,
+      account_number: accountNumber,
+      bank_code: selectedBank,
+      bank_name: NIGERIAN_BANKS.find(b => b.code === selectedBank)?.name || '',
+      amount: withdrawAmount,
+    });
     showPinModal();
   };
 
@@ -675,101 +677,71 @@ export function Wallet() {
       {/* Internal Transfer Modal */}
       {transferModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl bg-slate-950/40">
-          <div className="absolute inset-0" onClick={() => !transferProcessing && setTransferModalOpen(false)} />
+          <div className="absolute inset-0" onClick={() => setTransferModalOpen(false)} />
           <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
             <header className="mb-10 text-center">
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                {transferStep === 2 ? 'Authorize' : 'Send Money'}
-              </h2>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Send Money</h2>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">BlueSea Instant Transfer</p>
             </header>
             <div className="space-y-8">
-              {transferStep === 1 && (
-                <div className="animate-in slide-in-from-bottom-8 duration-500 space-y-6">
-                  <div className="relative group">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 absolute left-8 top-4 z-10">Recipient Email</label>
-                    <input
-                      placeholder="e.g. name@bluesea.com"
-                      className="w-full pl-8 pr-14 pt-12 pb-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-slate-900 dark:text-white font-black text-lg shadow-inner"
-                      value={transferData.recipient}
-                      onChange={(e) => setTransferData({...transferData, recipient: e.target.value})}
-                    />
-                    <Search className="absolute right-8 bottom-8 h-5 w-5 text-slate-300 group-focus-within:text-sky-500 transition-colors" />
-                  </div>
-                  <div className="relative group">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 absolute left-8 top-4 z-10">Amount (₦)</label>
-                    <input
-                      type="number"
-                      placeholder="0.00"
-                      className="w-full pl-8 pr-8 pt-12 pb-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-slate-900 dark:text-white shadow-inner"
-                      value={transferData.amount}
-                      onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
-                    />
-                  </div>
-                  {foundUser && (
-                    <div className="p-5 bg-sky-500/5 border border-sky-500/20 rounded-[2rem] flex items-center gap-5 animate-in zoom-in-95">
-                      <div className="h-16 w-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-md overflow-hidden border border-sky-500/20">
-                        {foundUser.image ? (
-                          <img src={`${API_BASE}${foundUser.image}`} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                          <User className="w-7 h-7 text-sky-500" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                           <h4 className="font-black text-slate-800 dark:text-slate-200 truncate text-lg tracking-tight">{foundUser.name}</h4>
-                           <CheckCircle2 className="w-4 h-4 text-sky-500" />
-                        </div>
-                        <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{foundUser.email}</p>
-                      </div>
-                    </div>
-                  )}
-                  {lookingUp && (
-                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-[2rem] text-center">
-                       <LoadingSpinner size="sm" text="Verifying user address..." />
-                    </div>
-                  )}
+              <div className="animate-in slide-in-from-bottom-8 duration-500 space-y-6">
+                <div className="relative group">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 absolute left-8 top-4 z-10">Recipient Email</label>
+                  <input
+                    placeholder="e.g. name@bluesea.com"
+                    className="w-full pl-8 pr-14 pt-12 pb-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-slate-900 dark:text-white font-black text-lg shadow-inner"
+                    value={transferData.recipient}
+                    onChange={(e) => setTransferData({...transferData, recipient: e.target.value})}
+                  />
+                  <Search className="absolute right-8 bottom-8 h-5 w-5 text-slate-300 group-focus-within:text-sky-500 transition-colors" />
                 </div>
-              )}
-              {transferStep === 2 && (
-                <div className="animate-in slide-in-from-bottom-8 duration-500 text-center">
-                  <div className="mb-10">
-                    <div className="h-24 w-24 bg-sky-500/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-sky-500/20 shadow-inner">
-                      <ShieldCheck className="h-12 w-12 text-sky-500" />
-                    </div>
-                    <div className="px-8">
-                       <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Sending <span className="font-black text-slate-900 dark:text-white text-lg">₦{Number(transferData.amount).toLocaleString()}</span> to</p>
-                       <p className="text-sky-500 font-black text-xl tracking-tight mt-1">{foundUser?.name}</p>
-                    </div>
-                  </div>
-                  <div className="max-w-[260px] mx-auto">
-                    <input
-                      type="password"
-                      maxLength={4}
-                      placeholder="••••"
-                      inputMode="numeric"
-                      className="w-full px-6 py-8 rounded-3xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-sky-500 outline-none text-center text-5xl tracking-[1.2rem] font-black text-slate-900 dark:text-white shadow-inner"
-                      value={transferData.pin}
-                      onChange={(e) => setTransferData({...transferData, pin: e.target.value.replace(/\D/g, '')})}
-                    />
-                     <p className="mt-6 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em]">Security Pin Required</p>
-                  </div>
+                <div className="relative group">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 absolute left-8 top-4 z-10">Amount (₦)</label>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    className="w-full pl-8 pr-8 pt-12 pb-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-slate-900 dark:text-white shadow-inner"
+                    value={transferData.amount}
+                    onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
+                  />
                 </div>
-              )}
+                {foundUser && (
+                  <div className="p-5 bg-sky-500/5 border border-sky-500/20 rounded-[2rem] flex items-center gap-5 animate-in zoom-in-95">
+                    <div className="h-16 w-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-md overflow-hidden border border-sky-500/20">
+                      {foundUser.image ? (
+                        <img src={`${API_BASE}${foundUser.image}`} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-7 h-7 text-sky-500" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                         <h4 className="font-black text-slate-800 dark:text-slate-200 truncate text-lg tracking-tight">{foundUser.name}</h4>
+                         <CheckCircle2 className="w-4 h-4 text-sky-500" />
+                      </div>
+                      <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{foundUser.email}</p>
+                    </div>
+                  </div>
+                )}
+                {lookingUp && (
+                  <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-[2rem] text-center">
+                     <LoadingSpinner size="sm" text="Verifying user address..." />
+                  </div>
+                )}
+              </div>
+
               {transferError && <p className="text-red-500 text-[10px] font-black text-center px-8 uppercase tracking-widest animate-pulse">{transferError}</p>}
               <div className="flex flex-col gap-4 pt-6">
                 <Button 
                   className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-[1.5rem] h-16 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
-                  disabled={transferProcessing || (transferStep === 1 && (!transferData.amount || !foundUser))}
-                  onClick={() => transferStep === 1 ? setTransferStep(2) : handleTransferSubmit()}
+                  disabled={!transferData.amount || !foundUser}
+                  onClick={handleStartTransfer}
                 >
-                {transferProcessing ? <LoadingSpinner size="sm" /> : transferStep === 1 ? 'Verify Destination' : 'Confirm & Send'}
+                  Proceed to Transfer
                 </Button>
-                {!transferProcessing && (
-                  <button onClick={() => transferStep === 2 ? setTransferStep(1) : setTransferModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[10px] font-black uppercase tracking-[0.3em] py-3 transition-colors">
-                    {transferStep === 2 ? 'Return to Details' : 'Cancel Transfer'}
-                  </button>
-                )}
+                <button onClick={() => setTransferModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[10px] font-black uppercase tracking-[0.3em] py-3 transition-colors">
+                  Cancel Transfer
+                </button>
               </div>
             </div>
           </div>
@@ -783,15 +755,11 @@ export function Wallet() {
         </div>
       )}
       <ToastComponent />
+      
+      {/* Single imported PinModal handling both withdrawals & internal transfers */}
       <PinComponent 
-        type="withdrawal" 
-        value={{
-          account_name: accountName,
-          account_number: accountNumber,
-          bank_code: selectedBank,
-          bank_name: NIGERIAN_BANKS.find(b => b.code === selectedBank)?.name || '',
-          amount: withdrawAmount,
-        }} 
+        type={pinType} 
+        value={pinValue} 
       />
     </div>
   );
