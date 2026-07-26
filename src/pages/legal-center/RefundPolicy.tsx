@@ -1,45 +1,5 @@
 import type { LegalDocumentConfig, LegalSectionData } from '@/types/legal';
 import { LegalDocumentTemplate } from '@/components/legal/LegalDocumentTemplate';
-import {
-  RefreshCw,
-  ShieldCheck,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Wallet,
-  Smartphone,
-  Zap,
-  Tv,
-  Wifi,
-  GraduationCap,
-  Briefcase,
-  Ticket,
-  Coins,
-  Store,
-  HelpCircle,
-  PhoneCall,
-  FileText,
-  Lock,
-  Scale,
-  Building2,
-  Search,
-  Mail,
-  Share2,
-  History,
-  Sparkles,
-  Server,
-  AlertTriangle,
-  Database,
-  Users,
-  CreditCard,
-  Send,
-  Slash,
-  Eye,
-  HardDrive,
-  FileCheck,
-  Bell
-} from 'lucide-react';
-
 const refundPolicySections: LegalSectionData[] = [
   {
     id: 'sec-01-introduction',
@@ -813,98 +773,12 @@ const refundPolicyConfig: LegalDocumentConfig = {
   sections: refundPolicySections
 };
 
-function RefundHeaderBadges() {
-  const badges = [
-    { icon: <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />, label: 'Automated 15-Min Reversals' },
-    { icon: <ShieldCheck className="w-3.5 h-3.5 text-sky-500" />, label: '100% Guaranteed Unfulfilled Refunds' },
-    { icon: <AlertCircle className="w-3.5 h-3.5 text-amber-500" />, label: 'Transparent Resolution SLAs' },
-    { icon: <CheckCircle2 className="w-3.5 h-3.5 text-purple-500" />, label: 'CBN & FCCPC Aligned' },
-    { icon: <Clock className="w-3.5 h-3.5 text-blue-400" />, label: 'Real-Time Reversal Tracking' }
-  ];
 
-  return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
-      {badges.map((badge, idx) => (
-        <span
-          key={idx}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm"
-        >
-          {badge.icon}
-          <span>{badge.label}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function RefundFeatureGrid() {
-  const features = [
-    { icon: <RefreshCw className="w-4 h-4 text-emerald-500" />, label: 'Auto-Recredit Engine' },
-    { icon: <ShieldCheck className="w-4 h-4 text-sky-500" />, label: 'Protected Balances' },
-    { icon: <AlertCircle className="w-4 h-4 text-amber-500" />, label: 'Pending Hold Limits' },
-    { icon: <CheckCircle2 className="w-4 h-4 text-purple-500" />, label: 'Delivered Value Rules' },
-    { icon: <Clock className="w-4 h-4 text-blue-500" />, label: 'SLA Timeframe Controls' },
-    { icon: <Wallet className="w-4 h-4 text-emerald-600" />, label: 'Wallet Refund Direct' },
-    { icon: <Smartphone className="w-4 h-4 text-sky-600" />, label: 'Telco Airtime Audits' },
-    { icon: <Zap className="w-4 h-4 text-yellow-500" />, label: 'DisCo Power Token Checks' },
-    { icon: <Tv className="w-4 h-4 text-indigo-500" />, label: 'Cable TV Smartcard Checks' },
-    { icon: <Wifi className="w-4 h-4 text-teal-500" />, label: 'ISP Broadband Refunds' },
-    { icon: <GraduationCap className="w-4 h-4 text-rose-500" />, label: 'Exam PIN Finality Rules' },
-    { icon: <Briefcase className="w-4 h-4 text-amber-600" />, label: 'Payroll Error Recalls' },
-    { icon: <Ticket className="w-4 h-4 text-purple-400" />, label: 'Event Ticket Returns' },
-    { icon: <Coins className="w-4 h-4 text-yellow-600" />, label: 'Crypto Ledger Finality' },
-    { icon: <Store className="w-4 h-4 text-blue-400" />, label: 'Merchant Escrow Claims' },
-    { icon: <HelpCircle className="w-4 h-4 text-emerald-400" />, label: 'In-App Dispute Tickets' },
-    { icon: <PhoneCall className="w-4 h-4 text-sky-400" />, label: 'Support Hotline Help' },
-    { icon: <FileText className="w-4 h-4 text-slate-500" />, label: 'RRN & Session ID Audit' },
-    { icon: <Lock className="w-4 h-4 text-teal-400" />, label: 'Fraud Shield Checks' },
-    { icon: <Scale className="w-4 h-4 text-purple-500" />, label: 'FCCPC Compliance' },
-    { icon: <Building2 className="w-4 h-4 text-slate-600" />, label: 'Interbank NIBSS Cleared' },
-    { icon: <Search className="w-4 h-4 text-sky-500" />, label: 'API Payload Verification' },
-    { icon: <Mail className="w-4 h-4 text-indigo-400" />, label: 'Refund Desk Emails' },
-    { icon: <Share2 className="w-4 h-4 text-rose-400" />, label: 'Payment Gateway Sync' },
-    { icon: <History className="w-4 h-4 text-amber-500" />, label: 'Versioned Reversal Logs' },
-    { icon: <Sparkles className="w-4 h-4 text-yellow-400" />, label: 'Instant Recredit System' },
-    { icon: <Server className="w-4 h-4 text-slate-400" />, label: 'Switch Uptime Protection' },
-    { icon: <AlertTriangle className="w-4 h-4 text-red-500" />, label: 'Chargeback Defense' },
-    { icon: <Database className="w-4 h-4 text-emerald-500" />, label: 'Ledger Rollback Rules' },
-    { icon: <Users className="w-4 h-4 text-blue-600" />, label: 'Blue Connect Link Disputes' },
-    { icon: <CreditCard className="w-4 h-4 text-purple-600" />, label: 'Card Gateway Arbitration' },
-    { icon: <Send className="w-4 h-4 text-teal-600" />, label: 'Outward Transfer Bounces' },
-    { icon: <Slash className="w-4 h-4 text-rose-600" />, label: 'No Duplicate Debits' },
-    { icon: <Eye className="w-4 h-4 text-sky-400" />, label: 'Real-Time Queue Audits' },
-    { icon: <HardDrive className="w-4 h-4 text-slate-500" />, label: 'Permanent Audit Trail' },
-    { icon: <FileCheck className="w-4 h-4 text-emerald-400" />, label: 'Proof of Delivery Check' },
-    { icon: <Bell className="w-4 h-4 text-amber-400" />, label: 'Reversal Push Alerts' }
-  ];
-
-  return (
-    <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 my-6">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
-        <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />
-        Core Refund, Reversal &amp; Payment Settlement Safeguards
-      </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-        {features.map((feat, i) => (
-          <div key={i} className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
-            {feat.icon}
-            <span className="truncate">{feat.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function RefundPolicy() {
   return (
     <div className="relative">
-      <div className="max-w-6xl mx-auto px-4 pt-4 -mb-4">
-        <RefundHeaderBadges />
-        <RefundFeatureGrid />
-      </div>
-
-      <LegalDocumentTemplate config={refundPolicyConfig} />
+            <LegalDocumentTemplate config={refundPolicyConfig} />
     </div>
   );
 }

@@ -1,12 +1,8 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar, Header } from '@/components/ui-custom';
-import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { LegalFooter } from '@/components/legal/LegalFooter';
 import { ShieldCheck, FileText, Lock, ArrowRight, BookOpen, CheckCircle } from 'lucide-react';
 
 export function LegalIndex() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   const legalDocuments = [
@@ -46,17 +42,7 @@ export function LegalIndex() {
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
-        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
-          <Header
-            title="Legal Center"
-            subtitle="Transparency, Trust & Security"
-            onMenuClick={() => setSidebarOpen(true)}
-          />
-        </div>
-
         <main className="flex-1 p-4 md:p-8 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-5xl mx-auto space-y-8">
             {/* Hub Banner */}
@@ -114,10 +100,6 @@ export function LegalIndex() {
             <LegalFooter />
           </div>
         </main>
-
-        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
-          <MobileBottomNavigation />
-        </div>
       </div>
     </div>
   );

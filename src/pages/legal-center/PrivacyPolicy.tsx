@@ -1,40 +1,5 @@
 import type { LegalDocumentConfig, LegalSectionData } from '@/types/legal';
 import { LegalDocumentTemplate } from '@/components/legal/LegalDocumentTemplate';
-import {
-  ShieldCheck,
-  Lock,
-  Eye,
-  FileText,
-  Globe,
-  CheckCircle2,
- // Server,
- // AlertTriangle,
-  Scale,
-  Database,
-  UserCheck,
-  Smartphone,
-  Key,
-  Cpu,
-  Layers,
-  Send,
-  Users,
-  Briefcase,
-  Zap,
-  CreditCard,
-  HelpCircle,
-  PhoneCall,
-  History,
-  Sparkles,
-  Share2,
-  Building2,
-  Bell,
-  FileCheck,
-  HardDrive,
-  Search,
-  Slash,
-  Mail
-} from 'lucide-react';
-
 const privacyPolicySections: LegalSectionData[] = [
   {
     id: 'sec-01-introduction',
@@ -859,86 +824,11 @@ const privacyPolicyConfig: LegalDocumentConfig = {
   sections: privacyPolicySections
 };
 
-function PrivacyHeaderBadges() {
-  const badges = [
-    { icon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />, label: 'NDPA 2023 Compliant' },
-    { icon: <Globe className="w-3.5 h-3.5 text-sky-500" />, label: 'NDPC Registered Data Controller' },
-    { icon: <Lock className="w-3.5 h-3.5 text-amber-500" />, label: 'AES-256 Bit Encryption' },
-    { icon: <Scale className="w-3.5 h-3.5 text-purple-500" />, label: 'CBN Consumer Protection' },
-    { icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />, label: 'Verified DSAR Protocol' }
-  ];
-
-  return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
-      {badges.map((badge, idx) => (
-        <span
-          key={idx}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm"
-        >
-          {badge.icon}
-          <span>{badge.label}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function PrivacyFeatureGrid() {
-  const features = [
-    { icon: <Eye className="w-4 h-4 text-sky-500" />, label: 'Transparent Data Logs' },
-    { icon: <UserCheck className="w-4 h-4 text-emerald-500" />, label: 'NIN & BVN Validation' },
-    { icon: <Database className="w-4 h-4 text-purple-500" />, label: '5-Year Statutory Retention' },
-    { icon: <Lock className="w-4 h-4 text-amber-500" />, label: 'Zero Plaintext PINs' },
-    { icon: <Key className="w-4 h-4 text-rose-500" />, label: 'Hardware Security Modules' },
-    { icon: <Smartphone className="w-4 h-4 text-blue-500" />, label: 'Device Telemetry Guard' },
-    { icon: <Cpu className="w-4 h-4 text-indigo-500" />, label: 'Machine Learning Anti-Fraud' },
-    { icon: <Layers className="w-4 h-4 text-teal-500" />, label: 'Tiered KYC Safeguards' },
-    { icon: <Send className="w-4 h-4 text-sky-600" />, label: 'NIBSS Clearing Protection' },
-    { icon: <Users className="w-4 h-4 text-indigo-400" />, label: 'Blue Connect Privacy' },
-    { icon: <Briefcase className="w-4 h-4 text-slate-500" />, label: 'Payroll Security' },
-    { icon: <Zap className="w-4 h-4 text-amber-600" />, label: 'Utility Data Privacy' },
-    { icon: <CreditCard className="w-4 h-4 text-rose-400" />, label: 'PCI-DSS Tokenization' },
-    { icon: <Share2 className="w-4 h-4 text-purple-400" />, label: 'Standard Contractual Clauses' },
-    { icon: <Building2 className="w-4 h-4 text-blue-400" />, label: 'Bank Partner Isolation' },
-    { icon: <Bell className="w-4 h-4 text-amber-400" />, label: 'Marketing Opt-Out Controls' },
-    { icon: <FileCheck className="w-4 h-4 text-emerald-500" />, label: 'DSAR Access Portal' },
-    { icon: <HardDrive className="w-4 h-4 text-slate-400" />, label: 'Encrypted Cloud Storage' },
-    { icon: <Search className="w-4 h-4 text-sky-400" />, label: 'Continuous SIEM Audits' },
-    { icon: <Slash className="w-4 h-4 text-red-500" />, label: 'No Third-Party Brokers' },
-    { icon: <HelpCircle className="w-4 h-4 text-emerald-500" />, label: 'DPO Escalation Channel' },
-    { icon: <PhoneCall className="w-4 h-4 text-blue-500" />, label: 'Support Audio Privacy' },
-    { icon: <History className="w-4 h-4 text-slate-400" />, label: 'Audit Trail Control' },
-    { icon: <Sparkles className="w-4 h-4 text-amber-500" />, label: 'Future VASP Privacy' },
-    { icon: <Mail className="w-4 h-4 text-sky-500" />, label: 'Formal DPO Desk' }
-  ];
-
-  return (
-    <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 my-6">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
-        <FileText className="w-3.5 h-3.5 text-sky-500" />
-        Core Data Protection & Privacy Infrastructure Features
-      </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-        {features.map((feat, i) => (
-          <div key={i} className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
-            {feat.icon}
-            <span className="truncate">{feat.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function PrivacyPolicy() {
   return (
     <div className="relative">
-      <div className="max-w-6xl mx-auto px-4 pt-4 -mb-4">
-        <PrivacyHeaderBadges />
-        <PrivacyFeatureGrid />
-      </div>
-
-      <LegalDocumentTemplate config={privacyPolicyConfig} />
+            <LegalDocumentTemplate config={privacyPolicyConfig} />
     </div>
   );
 }

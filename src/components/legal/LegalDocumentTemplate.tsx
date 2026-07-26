@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar, Header } from '@/components/ui-custom';
-import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import type { LegalDocumentConfig } from '@/types/legal';
 
 // Import Legal Subcomponents
@@ -22,7 +20,6 @@ interface LegalDocumentTemplateProps {
 }
 
 export function LegalDocumentTemplate({ config }: LegalDocumentTemplateProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<string>(
     config.sections[0]?.id || ''
   );
@@ -78,24 +75,8 @@ export function LegalDocumentTemplate({ config }: LegalDocumentTemplateProps) {
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
-      {/* Sidebar Overlay */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
       {/* Main Viewport */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
-        {/* Sticky App Header */}
-        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/50">
-          <Header
-            title="Legal & Compliance"
-            subtitle={config.metadata.title}
-            onMenuClick={() => setSidebarOpen(true)}
-          />
-          {/* Mobile Horizontal Reading Progress Indicator */}
-          <div className="md:hidden">
-            <LegalReadingProgress progress={readingProgress} variant="horizontal" />
-          </div>
-        </div>
-
         {/* Scrollable Document Workspace */}
         <main
           ref={scrollContainerRef}
@@ -164,11 +145,6 @@ export function LegalDocumentTemplate({ config }: LegalDocumentTemplateProps) {
             <LegalFooter />
           </div>
         </main>
-
-        {/* Mobile Sticky Navigation Bottom Bar */}
-        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
-          <MobileBottomNavigation />
-        </div>
       </div>
 
       {/* Mobile Drawer Trigger for TOC */}

@@ -1,38 +1,5 @@
 import type { LegalDocumentConfig, LegalSectionData } from '@/types/legal';
 import { LegalDocumentTemplate } from '@/components/legal/LegalDocumentTemplate';
-import {
-  ShieldCheck,
-  AlertTriangle,
-  FileText,
-  Lock,
-  Scale,
-  HelpCircle,
-  CheckCircle2,
-  Globe,
-  Building2,
-  Wallet,
-  CreditCard,
-  Smartphone,
-  Zap,
-  RefreshCw,
-  Users,
-  Bell,
-  Coins,
-  Receipt,
-  Eye,
-  Briefcase,
-  Layers,
-  FileCode2,
-  Ban,
-  Clock,
-  Send,
-  Sparkles,
-  Server,
-  HelpCircle as SupportIcon,
-  PhoneCall,
-  History,
-  FileCheck
-} from 'lucide-react';
 
 const termsAndConditionsSections: LegalSectionData[] = [
   {
@@ -986,86 +953,10 @@ const termsAndConditionsConfig: LegalDocumentConfig = {
   sections: termsAndConditionsSections
 };
 
-function TermsHeaderBadges() {
-  const badges = [
-    { icon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />, label: 'CBN & BOFIA Compliant' },
-    { icon: <Scale className="w-3.5 h-3.5 text-sky-500" />, label: 'Nigerian Jurisdiction' },
-    { icon: <Lock className="w-3.5 h-3.5 text-amber-500" />, label: '256-Bit SSL Encrypted' },
-    { icon: <Globe className="w-3.5 h-3.5 text-purple-500" />, label: 'NDPA Data Protection' },
-    { icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />, label: 'Legally Binding Contract' }
-  ];
-
-  return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
-      {badges.map((badge, idx) => (
-        <span
-          key={idx}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm"
-        >
-          {badge.icon}
-          <span>{badge.label}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function TermsServiceFeatureGrid() {
-  const features = [
-    { icon: <Smartphone className="w-4 h-4 text-sky-500" />, label: 'Airtime & Data' },
-    { icon: <Zap className="w-4 h-4 text-amber-500" />, label: 'Electricity Bills' },
-    { icon: <Receipt className="w-4 h-4 text-purple-500" />, label: 'Cable TV & Education' },
-    { icon: <Wallet className="w-4 h-4 text-emerald-500" />, label: 'Wallet Services' },
-    { icon: <Send className="w-4 h-4 text-blue-500" />, label: 'Internal Transfers' },
-    { icon: <Users className="w-4 h-4 text-indigo-500" />, label: 'Blue Connect P2P' },
-    { icon: <Briefcase className="w-4 h-4 text-slate-500" />, label: 'Payroll Services' },
-    { icon: <Coins className="w-4 h-4 text-emerald-600" />, label: 'Event Ticketing' },
-    { icon: <Sparkles className="w-4 h-4 text-amber-600" />, label: 'Future Digital Assets' },
-    { icon: <Building2 className="w-4 h-4 text-sky-600" />, label: 'Corporate Banking' },
-    { icon: <CreditCard className="w-4 h-4 text-rose-500" />, label: 'Virtual Funding' },
-    { icon: <RefreshCw className="w-4 h-4 text-teal-500" />, label: 'Instant Reversals' },
-    { icon: <Eye className="w-4 h-4 text-indigo-400" />, label: 'Tiered KYC' },
-    { icon: <Layers className="w-4 h-4 text-purple-400" />, label: 'Multi-Channel USSD' },
-    { icon: <FileCode2 className="w-4 h-4 text-slate-400" />, label: 'API Integrations' },
-    { icon: <Ban className="w-4 h-4 text-red-500" />, label: 'Anti-Fraud Rules' },
-    { icon: <Clock className="w-4 h-4 text-amber-500" />, label: '24/7 Monitoring' },
-    { icon: <Server className="w-4 h-4 text-sky-400" />, label: 'NIBSS Clearing' },
-    { icon: <SupportIcon className="w-4 h-4 text-emerald-500" />, label: 'CBN Complaints Escalation' },
-    { icon: <PhoneCall className="w-4 h-4 text-blue-400" />, label: '24/7 Phone Support' },
-    { icon: <History className="w-4 h-4 text-slate-400" />, label: '5-Yr Data Retention' },
-    { icon: <FileCheck className="w-4 h-4 text-emerald-500" />, label: 'Version Audit Log' },
-    { icon: <Bell className="w-4 h-4 text-amber-400" />, label: 'Instant SMS Alerts' },
-    { icon: <AlertTriangle className="w-4 h-4 text-red-400" />, label: 'Suspicion Reporting' },
-    { icon: <FileText className="w-4 h-4 text-sky-500" />, label: 'Formal Legal Contract' }
-  ];
-
-  return (
-    <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 my-6">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
-        <HelpCircle className="w-3.5 h-3.5 text-sky-500" />
-        Covered Platform Services & Governance Features
-      </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-        {features.map((feat, i) => (
-          <div key={i} className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
-            {feat.icon}
-            <span className="truncate">{feat.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function TermsAndConditions() {
   return (
     <div className="relative">
-      <div className="max-w-6xl mx-auto px-4 pt-4 -mb-4">
-        <TermsHeaderBadges />
-        <TermsServiceFeatureGrid />
-      </div>
-
-      <LegalDocumentTemplate config={termsAndConditionsConfig} />
+        <LegalDocumentTemplate config={termsAndConditionsConfig} />
     </div>
   );
 }

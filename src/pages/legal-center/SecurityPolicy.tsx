@@ -1,44 +1,6 @@
 import type { LegalDocumentConfig, LegalSectionData } from '@/types/legal';
 import { LegalDocumentTemplate } from '@/components/legal/LegalDocumentTemplate';
-import {
-  Shield,
-  Lock,
-  Fingerprint,
-  ShieldCheck,
-  AlertTriangle,
-  KeyRound,
-  Smartphone,
-  Eye,
-  Server,
-  Cpu,
-  FileText,
-  CheckCircle2,
-  Database,
-  Users,
-  Bell,
-  Globe,
-  RefreshCw,
-  AlertCircle,
-  PhoneCall,
-  Mail,
-  Building2,
-  Scale,
-  Search,
-  Briefcase,
-  Wallet,
-  Share2,
-  History,
-  Sparkles,
-  Network,
-  HardDrive,
-  FileCheck,
-  CreditCard,
-  Send,
-  Terminal,
-  UserCheck,
-  Radio,
-  Zap
-} from 'lucide-react';
+
 
 const securityPolicySections: LegalSectionData[] = [
   {
@@ -829,97 +791,12 @@ const securityPolicyConfig: LegalDocumentConfig = {
   sections: securityPolicySections
 };
 
-function SecurityHeaderBadges() {
-  const badges = [
-    { icon: <Shield className="w-3.5 h-3.5 text-emerald-500" />, label: 'AES-256 Data Encryption' },
-    { icon: <Lock className="w-3.5 h-3.5 text-sky-500" />, label: 'PCI-DSS Level 1 Compliant' },
-    { icon: <Fingerprint className="w-3.5 h-3.5 text-purple-500" />, label: 'Biometric 3D Liveness Check' },
-    { icon: <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />, label: 'CBN Security Framework' },
-    { icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />, label: '24/7 Real-Time Fraud Engine' }
-  ];
 
-  return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
-      {badges.map((badge, idx) => (
-        <span
-          key={idx}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm"
-        >
-          {badge.icon}
-          <span>{badge.label}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function SecurityFeatureGrid() {
-  const features = [
-    { icon: <Shield className="w-4 h-4 text-emerald-500" />, label: 'AES-256 Storage' },
-    { icon: <Lock className="w-4 h-4 text-sky-500" />, label: 'TLS 1.3 Transmission' },
-    { icon: <Fingerprint className="w-4 h-4 text-purple-500" />, label: 'Hardware Biometrics' },
-    { icon: <ShieldCheck className="w-4 h-4 text-blue-500" />, label: 'Zero-Trust Architecture' },
-    { icon: <KeyRound className="w-4 h-4 text-amber-500" />, label: 'Hardware PIN Enclave' },
-    { icon: <Smartphone className="w-4 h-4 text-teal-500" />, label: 'Device Fingerprinting' },
-    { icon: <Eye className="w-4 h-4 text-indigo-500" />, label: '3D Facial Liveness' },
-    { icon: <Server className="w-4 h-4 text-slate-500" />, label: 'Isolated VPC Clouds' },
-    { icon: <Cpu className="w-4 h-4 text-emerald-600" />, label: 'AI Risk Engine' },
-    { icon: <FileText className="w-4 h-4 text-blue-600" />, label: 'Audit Log Verification' },
-    { icon: <CheckCircle2 className="w-4 h-4 text-green-500" />, label: 'NIBSS BVN Matched' },
-    { icon: <Database className="w-4 h-4 text-rose-500" />, label: 'WORM Backup Vaults' },
-    { icon: <Users className="w-4 h-4 text-purple-600" />, label: 'Role-Based Access' },
-    { icon: <Bell className="w-4 h-4 text-amber-500" />, label: 'Instant Login Alerts' },
-    { icon: <Globe className="w-4 h-4 text-sky-500" />, label: 'DDoS WAF Protection' },
-    { icon: <RefreshCw className="w-4 h-4 text-emerald-500" />, label: 'Auto Token Rotation' },
-    { icon: <AlertCircle className="w-4 h-4 text-red-500" />, label: 'Fraud Auto-Freeze' },
-    { icon: <PhoneCall className="w-4 h-4 text-indigo-400" />, label: 'SIM-Swap Protection' },
-    { icon: <Mail className="w-4 h-4 text-blue-400" />, label: 'DMARC & SPF Signed' },
-    { icon: <Building2 className="w-4 h-4 text-slate-600" />, label: 'Segregated Pool Custody' },
-    { icon: <Scale className="w-4 h-4 text-purple-500" />, label: 'NDPA 2023 Compliant' },
-    { icon: <Search className="w-4 h-4 text-teal-500" />, label: 'Bi-Annual Pen-Tests' },
-    { icon: <Briefcase className="w-4 h-4 text-amber-600" />, label: 'Maker-Checker Payroll' },
-    { icon: <Wallet className="w-4 h-4 text-emerald-500" />, label: 'Ring-Fenced Wallet' },
-    { icon: <Share2 className="w-4 h-4 text-rose-400" />, label: 'Dynamic Link Expiry' },
-    { icon: <History className="w-4 h-4 text-amber-500" />, label: 'SIEM Log Ingestion' },
-    { icon: <Sparkles className="w-4 h-4 text-yellow-400" />, label: 'Step-Up Verification' },
-    { icon: <Network className="w-4 h-4 text-cyan-500" />, label: 'SSL Cert Pinning' },
-    { icon: <HardDrive className="w-4 h-4 text-slate-400" />, label: 'HSM Master Keys' },
-    { icon: <FileCheck className="w-4 h-4 text-green-600" />, label: 'Sanctions Screening' },
-    { icon: <CreditCard className="w-4 h-4 text-blue-500" />, label: 'PCI Tokenization' },
-    { icon: <Send className="w-4 h-4 text-teal-500" />, label: 'Outward P2P Encrypted' },
-    { icon: <Terminal className="w-4 h-4 text-slate-700 dark:text-slate-300" />, label: 'SAST/DAST Code Scan' },
-    { icon: <UserCheck className="w-4 h-4 text-emerald-600" />, label: 'Employee Vetting' },
-    { icon: <Radio className="w-4 h-4 text-purple-400" />, label: '24/7 SOC Telemetry' },
-    { icon: <Zap className="w-4 h-4 text-yellow-500" />, label: 'Sub-MS API Inspection' }
-  ];
-
-  return (
-    <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 my-6">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
-        <Shield className="w-3.5 h-3.5 text-emerald-500" />
-        Core Cyber Defense &amp; Information Security Infrastructure
-      </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-        {features.map((feat, i) => (
-          <div key={i} className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
-            {feat.icon}
-            <span className="truncate">{feat.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function SecurityPolicy() {
   return (
     <div className="relative">
-      <div className="max-w-6xl mx-auto px-4 pt-4 -mb-4">
-        <SecurityHeaderBadges />
-        <SecurityFeatureGrid />
-      </div>
-
-      <LegalDocumentTemplate config={securityPolicyConfig} />
+            <LegalDocumentTemplate config={securityPolicyConfig} />
     </div>
   );
 }

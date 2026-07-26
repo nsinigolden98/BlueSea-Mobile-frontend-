@@ -1,36 +1,5 @@
 import type { LegalDocumentConfig, LegalSectionData } from '@/types/legal';
 import { LegalDocumentTemplate } from '@/components/legal/LegalDocumentTemplate';
-import {
-  Shield,
-  //User,
-  Wallet,
-  Share2,
-  //CheckCircle2,
-  AlertTriangle,
-  Lock,
-  Scale,
-  FileText,
-  //XCircle,
-  //AlertCircle,
-  Ban,
-  UserX,
-  Terminal,
- // Cpu,
-  Bug,
-  Send,
-  Zap,
-  Building2,
-  CreditCard,
-  Ticket,
-  Coins,
-  Eye,
-  Gavel,
-  Slash,
-  UserCheck,
- // RefreshCw,
- // Mail,
- // PhoneCall
-} from 'lucide-react';
 
 const acceptableUsePolicySections: LegalSectionData[] = [
   {
@@ -821,80 +790,12 @@ const acceptableUsePolicyConfig: LegalDocumentConfig = {
   sections: acceptableUsePolicySections
 };
 
-function AcceptableUseHeaderBadges() {
-  const badges = [
-    { icon: <Shield className="w-3.5 h-3.5 text-emerald-500" />, label: 'Platform Protection' },
-    { icon: <Scale className="w-3.5 h-3.5 text-blue-500" />, label: 'Enforceable Standards' },
-    { icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />, label: 'Zero-Tolerance Fraud Rules' },
-    { icon: <Lock className="w-3.5 h-3.5 text-sky-500" />, label: 'Legal & Regulatory Compliant' },
-    { icon: <Gavel className="w-3.5 h-3.5 text-purple-500" />, label: 'Strict Enforcement' }
-  ];
 
-  return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
-      {badges.map((badge, idx) => (
-        <span
-          key={idx}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm"
-        >
-          {badge.icon}
-          <span>{badge.label}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function AcceptableUseSummaryGrid() {
-  const principles = [
-    { icon: <UserCheck className="w-4 h-4 text-emerald-500" />, label: 'Lawful Usage', desc: 'All operations must strictly comply with Nigerian financial law' },
-    { icon: <Wallet className="w-4 h-4 text-sky-500" />, label: 'Wallet Integrity', desc: 'Personal digital wallets must be held by verified account owners' },
-    { icon: <Share2 className="w-4 h-4 text-purple-500" />, label: 'Blue Connect Rules', desc: 'Handles and transfer links must remain truthful and respectful' },
-    { icon: <Building2 className="w-4 h-4 text-blue-500" />, label: 'Payroll Controls', desc: 'Corporate payroll dispatches require maker-checker approvals' },
-    { icon: <Zap className="w-4 h-4 text-amber-500" />, label: 'Genuine Utility', desc: 'Bill & airtime payments must serve legitimate consumption' },
-    { icon: <Ticket className="w-4 h-4 text-teal-500" />, label: 'Fair Ticketing', desc: 'Bot ticketing and predatory scalping are strictly prohibited' },
-    { icon: <Coins className="w-4 h-4 text-indigo-500" />, label: 'Crypto Safety', desc: 'Future digital asset trading requires verified origin paths' },
-    { icon: <Ban className="w-4 h-4 text-red-500" />, label: 'Prohibited Acts', desc: 'Zero tolerance for fraud, identity theft, or synthetic accounts' },
-    { icon: <Slash className="w-4 h-4 text-rose-500" />, label: 'Anti-Money Laundering', desc: 'Structuring and layering of illicit funds are instantly blocked' },
-    { icon: <Terminal className="w-4 h-4 text-slate-500" />, label: 'Security Integrity', desc: 'API rate flooding, bot scrapers, and malware trigger perm-bans' },
-    { icon: <Bug className="w-4 h-4 text-amber-600" />, label: 'Exploit Prohibition', desc: 'Exploiting rounding bugs or reverse engineering is illegal' },
-    { icon: <CreditCard className="w-4 h-4 text-blue-600" />, label: 'Card Protection', desc: 'Stolen card instruments trigger immediate police referral' },
-    { icon: <Send className="w-4 h-4 text-teal-600" />, label: 'No Messaging Spam', desc: 'Phishing URLs or harassment in memos are banned' },
-    { icon: <FileText className="w-4 h-4 text-emerald-600" />, label: 'Document Truth', desc: 'Altered utility bills or forged IDs lead to blacklisting' },
-    { icon: <Eye className="w-4 h-4 text-cyan-500" />, label: '24/7 Risk Telemetry', desc: 'AI models continuously inspect requests for anomaly spikes' },
-    { icon: <UserX className="w-4 h-4 text-rose-600" />, label: 'Immediate Freeze', desc: 'Suspicious accounts are isolated pending formal compliance review' }
-  ];
-
-  return (
-    <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 my-6">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
-        <Gavel className="w-3.5 h-3.5 text-purple-500" />
-        Core Pillars of Acceptable Use &amp; Platform Protection
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-        {principles.map((item, i) => (
-          <div key={i} className="flex flex-col gap-1 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800">
-            <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-100">
-              {item.icon}
-              <span className="truncate">{item.label}</span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">{item.desc}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function AcceptableUsePolicy() {
   return (
     <div className="relative">
-      <div className="max-w-6xl mx-auto px-4 pt-4 -mb-4">
-        <AcceptableUseHeaderBadges />
-        <AcceptableUseSummaryGrid />
-      </div>
-
-      <LegalDocumentTemplate config={acceptableUsePolicyConfig} />
+            <LegalDocumentTemplate config={acceptableUsePolicyConfig} />
     </div>
   );
 }

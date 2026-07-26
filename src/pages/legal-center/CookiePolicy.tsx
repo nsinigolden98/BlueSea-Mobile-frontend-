@@ -1,23 +1,5 @@
 import type { LegalDocumentConfig, LegalSectionData } from '@/types/legal';
 import { LegalDocumentTemplate } from '@/components/legal/LegalDocumentTemplate';
-import {
-  Cookie,
-  Globe,
-  Shield,
-  Lock,
-  Settings,
-  BarChart3,
-  Smartphone,
-  Database,
-  //Eye, CheckCircle2, AlertCircle, Sliders,
-  UserCheck,
-  //HardDrive, Sparkles, RefreshCw,
-  SlidersHorizontal,
-  Activity,
-  KeyRound,
-  ShieldCheck,
-  //AlertTriangle, FileText, PhoneCall, Mail, Building2, Scale
-} from 'lucide-react';
 
 const cookiePolicySections: LegalSectionData[] = [
   {
@@ -620,74 +602,12 @@ const cookiePolicyConfig: LegalDocumentConfig = {
   sections: cookiePolicySections
 };
 
-function CookieHeaderBadges() {
-  const badges = [
-    { icon: <Cookie className="w-3.5 h-3.5 text-amber-500" />, label: 'Cookie Governance' },
-    { icon: <Shield className="w-3.5 h-3.5 text-emerald-500" />, label: 'NDPA 2023 Compliant' },
-    { icon: <Lock className="w-3.5 h-3.5 text-sky-500" />, label: 'HttpOnly & Secure Flags' },
-    { icon: <BarChart3 className="w-3.5 h-3.5 text-purple-500" />, label: 'Privacy Analytics' },
-    { icon: <Settings className="w-3.5 h-3.5 text-blue-500" />, label: 'Full User Control' }
-  ];
 
-  return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
-      {badges.map((badge, idx) => (
-        <span
-          key={idx}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm"
-        >
-          {badge.icon}
-          <span>{badge.label}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function CookieCategorySummaryGrid() {
-  const categories = [
-    { icon: <Lock className="w-4 h-4 text-emerald-500" />, label: 'Essential', desc: 'Strictly required for basic app navigation & wallet execution' },
-    { icon: <KeyRound className="w-4 h-4 text-sky-500" />, label: 'Authentication', desc: 'Preserves secure encrypted user session state' },
-    { icon: <ShieldCheck className="w-4 h-4 text-blue-500" />, label: 'Security & Anti-Fraud', desc: 'Detects suspicious bot attempts & safeguards accounts' },
-    { icon: <SlidersHorizontal className="w-4 h-4 text-purple-500" />, label: 'Preferences', desc: 'Remembers dark mode, language, and quick billing codes' },
-    { icon: <Activity className="w-4 h-4 text-teal-500" />, label: 'Performance', desc: 'Monitors API request speed & system response latency' },
-    { icon: <BarChart3 className="w-4 h-4 text-indigo-500" />, label: 'Analytics', desc: 'Provides anonymized statistics on platform feature usage' },
-    { icon: <Database className="w-4 h-4 text-amber-500" />, label: 'Web Storage', desc: 'Caches offline receipts & non-sensitive UI elements' },
-    { icon: <Smartphone className="w-4 h-4 text-rose-500" />, label: 'Mobile SDKs', desc: 'Enables native mobile push alerts & crash reporting' },
-    { icon: <UserCheck className="w-4 h-4 text-slate-500" />, label: 'Functional', desc: 'Powers interactive support chat and bill calculators' },
-    { icon: <Globe className="w-4 h-4 text-cyan-500" />, label: 'Third-Party Switches', desc: 'Facilitates 3D-Secure card verification via gateways' }
-  ];
-
-  return (
-    <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 my-6">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
-        <Cookie className="w-3.5 h-3.5 text-amber-500" />
-        Overview of Deployed Tracking &amp; Storage Categories
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-        {categories.map((cat, i) => (
-          <div key={i} className="flex flex-col gap-1 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800">
-            <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-100">
-              {cat.icon}
-              <span className="truncate">{cat.label}</span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">{cat.desc}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function CookiePolicy() {
   return (
     <div className="relative">
-      <div className="max-w-6xl mx-auto px-4 pt-4 -mb-4">
-        <CookieHeaderBadges />
-        <CookieCategorySummaryGrid />
-      </div>
-
-      <LegalDocumentTemplate config={cookiePolicyConfig} />
+            <LegalDocumentTemplate config={cookiePolicyConfig} />
     </div>
   );
 }

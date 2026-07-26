@@ -1,40 +1,5 @@
 import type { LegalDocumentConfig, LegalSectionData } from '@/types/legal';
 import { LegalDocumentTemplate } from '@/components/legal/LegalDocumentTemplate';
-import {
-  ShieldCheck,
-  Lock,
-  UserCheck,
-  FileText,
-  Globe,
-  CheckCircle2,
-  Server,
-  AlertTriangle,
-  Scale,
-  Database,
-  Smartphone,
-  Key,
-  Cpu,
-  Layers,
-  Send,
-  Users,
-  Briefcase,
-  Zap,
-  CreditCard,
-  HelpCircle,
-  PhoneCall,
-  History,
-  Sparkles,
-  Share2,
-  Building2,
-  Bell,
-  FileCheck,
-  HardDrive,
-  Search,
-  Slash,
-  Mail,
-  Eye
-} from 'lucide-react';
-
 const kycPolicySections: LegalSectionData[] = [
   {
     id: 'sec-01-introduction',
@@ -791,91 +756,11 @@ const kycPolicyConfig: LegalDocumentConfig = {
   sections: kycPolicySections
 };
 
-function KYCHeaderBadges() {
-  const badges = [
-    { icon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />, label: 'CBN Tiered KYC Compliant' },
-    { icon: <Scale className="w-3.5 h-3.5 text-purple-500" />, label: 'NFIU & Money Laundering Act 2022' },
-    { icon: <UserCheck className="w-3.5 h-3.5 text-sky-500" />, label: 'Real-Time NIN & BVN Validation' },
-    { icon: <Building2 className="w-3.5 h-3.5 text-amber-500" />, label: 'Corporate CAC Onboarding' },
-    { icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />, label: 'NDPA 2023 Protection' }
-  ];
-
-  return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
-      {badges.map((badge, idx) => (
-        <span
-          key={idx}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm"
-        >
-          {badge.icon}
-          <span>{badge.label}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function KYCFeatureGrid() {
-  const features = [
-    { icon: <UserCheck className="w-4 h-4 text-emerald-500" />, label: 'NIN & BVN Validation' },
-    { icon: <ShieldCheck className="w-4 h-4 text-sky-500" />, label: 'CBN Tiered Framework' },
-    { icon: <Eye className="w-4 h-4 text-purple-500" />, label: 'Facial Liveness Check' },
-    { icon: <FileText className="w-4 h-4 text-amber-500" />, label: 'Proof of Address Audit' },
-    { icon: <Building2 className="w-4 h-4 text-blue-500" />, label: 'Corporate CAC Onboarding' },
-    { icon: <Key className="w-4 h-4 text-rose-500" />, label: 'Encrypted Tokens' },
-    { icon: <Lock className="w-4 h-4 text-teal-500" />, label: 'Sanctions Screening' },
-    { icon: <Cpu className="w-4 h-4 text-indigo-500" />, label: 'Automated Risk Engine' },
-    { icon: <Database className="w-4 h-4 text-slate-500" />, label: '5-Year Retention' },
-    { icon: <Smartphone className="w-4 h-4 text-sky-600" />, label: 'Mobile Device Binding' },
-    { icon: <CreditCard className="w-4 h-4 text-rose-400" />, label: 'Payment Card Audit' },
-    { icon: <Send className="w-4 h-4 text-emerald-600" />, label: 'NIBSS Clearing Verification' },
-    { icon: <Users className="w-4 h-4 text-indigo-400" />, label: 'Blue Connect Handles' },
-    { icon: <Briefcase className="w-4 h-4 text-amber-600" />, label: 'Payroll Corporate KYC' },
-    { icon: <Zap className="w-4 h-4 text-yellow-500" />, label: 'Instant Tier Upgrades' },
-    { icon: <Globe className="w-4 h-4 text-blue-400" />, label: 'PEP & Watchlist Search' },
-    { icon: <Layers className="w-4 h-4 text-teal-400" />, label: 'Multi-Tier Balance Caps' },
-    { icon: <AlertTriangle className="w-4 h-4 text-amber-500" />, label: 'Suspicious Activity Filings' },
-    { icon: <Server className="w-4 h-4 text-slate-400" />, label: 'Secure Identity Vault' },
-    { icon: <FileCheck className="w-4 h-4 text-emerald-500" />, label: 'Periodic KYC Refresh' },
-    { icon: <HardDrive className="w-4 h-4 text-slate-500" />, label: 'Audit Trail Control' },
-    { icon: <Search className="w-4 h-4 text-sky-400" />, label: 'Continuous Risk Profiling' },
-    { icon: <Slash className="w-4 h-4 text-red-500" />, label: 'Zero Anonymous Accounts' },
-    { icon: <Share2 className="w-4 h-4 text-purple-400" />, label: 'Regulatory Disclosures' },
-    { icon: <Sparkles className="w-4 h-4 text-amber-400" />, label: 'Crypto AML Readiness' },
-    { icon: <Bell className="w-4 h-4 text-sky-500" />, label: 'Verification Alerts' },
-    { icon: <HelpCircle className="w-4 h-4 text-emerald-400" />, label: 'Compliance Desk' },
-    { icon: <PhoneCall className="w-4 h-4 text-blue-400" />, label: 'Support Verification Calls' },
-    { icon: <History className="w-4 h-4 text-slate-400" />, label: 'Versioned Audit Logs' },
-    { icon: <Mail className="w-4 h-4 text-indigo-500" />, label: 'Formal KYC Email Support' }
-  ];
-
-  return (
-    <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 my-6">
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
-        <FileText className="w-3.5 h-3.5 text-sky-500" />
-        Core Identity Verification &amp; AML Security Controls
-      </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-        {features.map((feat, i) => (
-          <div key={i} className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
-            {feat.icon}
-            <span className="truncate">{feat.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function KYCPolicy() {
   return (
     <div className="relative">
-      <div className="max-w-6xl mx-auto px-4 pt-4 -mb-4">
-        <KYCHeaderBadges />
-        <KYCFeatureGrid />
-      </div>
-
-      <LegalDocumentTemplate config={kycPolicyConfig} />
+            <LegalDocumentTemplate config={kycPolicyConfig} />
     </div>
   );
 }
