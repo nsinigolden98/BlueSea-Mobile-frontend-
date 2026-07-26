@@ -802,7 +802,7 @@ const acceptableUsePolicyConfig: LegalDocumentConfig = {
     id: 'legal-acceptable-use-policy',
     title: 'Platform Acceptable Use Policy',
     shortDescription: 'Comprehensive rules defining acceptable and prohibited conduct on BlueSea Mobile, protecting digital wallets, transfers, payroll, bill payments, and infrastructure against fraud and cyber abuse.',
-    category: 'Legal Governance & Compliance',
+    category: 'User Agreements',
     version: '3.0.0',
     lastUpdated: 'July 25, 2026',
     effectiveDate: 'January 1, 2026',
