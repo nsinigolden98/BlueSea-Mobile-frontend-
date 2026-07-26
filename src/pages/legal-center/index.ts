@@ -1,4 +1,4 @@
-export { default as TermsAndConditions } from './TermsAndConditions';
+export { default as TermsAndConditions } from './TermAndConditions';
 export { default as PrivacyPolicy } from './PrivacyPolicy';
 export { default as RefundPolicy } from './RefundPolicy';
 export { default as SecurityPolicy } from './SecurityPolicy';
