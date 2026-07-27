@@ -39,16 +39,15 @@ export { EventPublic } from './EventPublic';
 // 🛒 Cart Page Export
 //export {CartPage } from './CartPage';
 
-export { MarketplaceMessaging } from './MarketplaceMessaging';
+
 
 // 🔵 BlueSphere (Engagement) Page Export
 export { default as BlueSphere } from './Bluesphere'; 
 // src/pages/index.ts
-export { default as SellerProductManager } from './SellerProductManager';
+
 export { default } from './History';
 export { default as GiftCards } from './GiftCards';
 // Add this line to your existing exports
-export * from './Checkout';
 export * from './Flights';
 export { SpinVault } from './SpinVault';
 export { Betting } from './Betting';
