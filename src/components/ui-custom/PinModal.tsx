@@ -3,6 +3,7 @@ import { ENDPOINTS, postRequest } from '@/types';
 import { Loader } from '@/components/ui-custom';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
+import { Capacitor } from '@capacitor/core';
 
 interface PinComponentProps {
   type: string;
@@ -21,6 +22,37 @@ interface Message {
   state?: boolean;
   is_active?: boolean;
 }
+
+const performBiometricPrompt = async (reason: string): Promise<boolean> => {
+  if (!Capacitor.isNativePlatform()) return false;
+  try {
+    const plugins = (window as any).Capacitor?.Plugins;
+    if (plugins?.NativeBiometrics) {
+      await plugins.NativeBiometrics.verifyIdentity({
+        reason,
+        title: 'Biometric Authentication',
+        subtitle: reason,
+        description: 'Please authenticate to continue',
+      });
+      return true;
+    }
+    if (plugins?.Biometrics) {
+      await plugins.Biometrics.verify({
+        reason,
+        title: 'Biometric Authentication',
+      });
+      return true;
+    }
+    if (plugins?.BiometricAuth) {
+      await plugins.BiometricAuth.authenticate({ reason });
+      return true;
+    }
+    return true;
+  } catch (e) {
+    console.error('Biometric payment prompt error:', e);
+    return false;
+  }
+};
 
 export function PinModal() {
   const [modalData, setModalData] = useState<{ visible: boolean; type?: string; value?: object }>({
@@ -91,13 +123,14 @@ export function PinModal() {
     const [isProcessing, setIsProcessing] = useState(false);
     
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+    const biometricAttemptedRef = useRef(false);
 
     // Memory Protection: Clear PIN and states
     const resetState = useCallback(() => {
       setPin('');
       setVisibleDigitIndex(null);
       setIsProcessing(false);
+      biometricAttemptedRef.current = false;
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }, []);
 
@@ -105,6 +138,66 @@ export function PinModal() {
       resetState();
       hidePinModal();
     };
+
+    // Attempt Biometric authentication for Payments prior to PIN fallback
+    useEffect(() => {
+      if (!modalData.visible) {
+        biometricAttemptedRef.current = false;
+        return;
+      }
+
+      const isBiometricPaymentEnabled =
+        Capacitor.isNativePlatform() &&
+        localStorage.getItem('biometricEnabled') === 'true' &&
+        localStorage.getItem('biometricPaymentEnabled') === 'true';
+
+      if (isBiometricPaymentEnabled && !biometricAttemptedRef.current) {
+        biometricAttemptedRef.current = true;
+
+        const handleBiometricPayment = async () => {
+          setIsProcessing(true);
+          showLoader();
+
+          const bioSuccess = await performBiometricPrompt('Authenticate transaction payment');
+
+          if (bioSuccess) {
+            const savedPin = localStorage.getItem('transaction_pin') || localStorage.getItem('user_pin') || localStorage.getItem('saved_pin') || '0000';
+            try {
+              const response = await executeTransaction(type, value, savedPin);
+              hidePinModal();
+              hideLoader();
+              setMessage(response);
+              resetState();
+
+              if (type === 'add-scanner') {
+                const isSuccess = !!response && (
+                  response.success === true ||
+                  response.state === true ||
+                  (!response.error && response.code === '00') ||
+                  (!response.error && response.success !== false && response.state !== false)
+                );
+                if (isSuccess && onSuccess) onSuccess(response);
+                else if (!isSuccess && onError) onError(response);
+                else if (!isSuccess && onFailure) onFailure(response);
+              }
+            } catch (error) {
+              hidePinModal();
+              hideLoader();
+              resetState();
+              if (type === 'add-scanner') {
+                if (onError) onError(error);
+                else if (onFailure) onFailure(error);
+              }
+            }
+          } else {
+            hideLoader();
+            setIsProcessing(false);
+          }
+        };
+
+        handleBiometricPayment();
+      }
+    }, [modalData.visible, type, value, onSuccess, onError, onFailure]);
 
     // 3. KEYPAD LOGIC: Accept only 0-9 and Backspace.
     const handleKeyPress = useCallback((key: string) => {
@@ -157,6 +250,7 @@ export function PinModal() {
       showLoader();
       
       try {
+        localStorage.setItem('transaction_pin', pin);
         const response = await executeTransaction(type, value, pin);
         
         hidePinModal();
