@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
 import { Sidebar, Header } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
+import { PinModal } from '@/components/ui-custom/PinModal';
 import { Capacitor } from '@capacitor/core';
-import { ENDPOINTS, postRequest } from '@/types';
 import {
   User,
   ShieldCheck,
@@ -38,7 +38,8 @@ import {
   RefreshCw,
   Info,
   ExternalLink,
-  Award
+  Award,
+  AlertCircle
 } from 'lucide-react';
 
 const performBiometricPrompt = async (reason: string): Promise<boolean> => {
@@ -99,6 +100,9 @@ export function Settings() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
+  // PinModal Hook
+  const { showPinModal, hidePinModal, PinComponent, modalData } = PinModal();
+
   // Navigation Drawer state
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -145,12 +149,9 @@ export function Settings() {
     }
   });
 
-  // Password Confirmation Modal state
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  // PIN Verification Action state
   const [pendingBiometricAction, setPendingBiometricAction] = useState<'enable' | 'disable' | null>(null);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
+  const [pinErrorMessage, setPinErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (isNative) {
@@ -173,21 +174,18 @@ export function Settings() {
     navigate('/login');
   };
 
-  // Helper to extract crisp user initials
   const getInitials = () => {
     const first = user?.firstName?.charAt(0) || '';
     const last = user?.surname?.charAt(0) || '';
     return `${first}${last}`.toUpperCase() || 'U';
   };
 
-  // Full Name Formatter
   const getFullName = () => {
     const first = user?.firstName || 'Valued';
     const last = user?.surname || 'User';
     return `${first} ${last}`;
   };
 
-  // Handler for Theme Selection
   const handleThemeChange = (mode: 'system' | 'light' | 'dark') => {
     setAppearanceMode(mode);
     if (mode === 'light' && theme === 'dark') {
@@ -203,20 +201,67 @@ export function Settings() {
     }
   };
 
-  // Toggle handlers for Biometrics
+  // Toggle handlers using PinModal
   const handleMainBiometricToggle = () => {
     if (!biometricSupported) return;
+    setPinErrorMessage(null);
+
     if (!biometricEnabled) {
       setPendingBiometricAction('enable');
-      setIsPasswordModalOpen(true);
-      setPasswordError('');
-      setPasswordInput('');
+      showPinModal({
+        type: 'verify-pin',
+        value: {
+          product_name: 'Enable Biometric Login',
+          title: 'Identity Verification'
+        }
+      });
     } else {
       setPendingBiometricAction('disable');
-      setIsPasswordModalOpen(true);
-      setPasswordError('');
-      setPasswordInput('');
+      showPinModal({
+        type: 'verify-pin',
+        value: {
+          product_name: 'Disable Biometric Security',
+          title: 'Identity Verification'
+        }
+      });
     }
+  };
+
+  const handlePinVerificationSuccess = async () => {
+    const action = pendingBiometricAction;
+    setPendingBiometricAction(null);
+    setPinErrorMessage(null);
+
+    if (action === 'enable') {
+      const bioSuccess = await performBiometricPrompt('Confirm biometric authentication to enable');
+      if (bioSuccess) {
+        localStorage.setItem('biometricEnabled', 'true');
+        localStorage.setItem('biometricLoginEnabled', 'true');
+        localStorage.setItem('biometricPaymentEnabled', 'true');
+        localStorage.setItem('stayLoggedIn', 'false');
+        setBiometricEnabled(true);
+        setBiometricLoginEnabled(true);
+        setBiometricPaymentEnabled(true);
+      } else {
+        setBiometricEnabled(false);
+      }
+    } else if (action === 'disable') {
+      localStorage.setItem('biometricEnabled', 'false');
+      localStorage.setItem('biometricLoginEnabled', 'false');
+      localStorage.setItem('biometricPaymentEnabled', 'false');
+      setBiometricEnabled(false);
+      setBiometricLoginEnabled(false);
+      setBiometricPaymentEnabled(false);
+    }
+  };
+
+  const handlePinVerificationError = (errorResponse?: any) => {
+    const errorMsg = errorResponse?.message || errorResponse?.error || 'Invalid Transaction PIN. Please try again.';
+    setPinErrorMessage(errorMsg);
+    setPendingBiometricAction(null);
+    
+    // Explicitly dismiss modal and clean up state on verification error
+    hidePinModal();
   };
 
   const handleLoginBiometricToggle = () => {
@@ -236,69 +281,6 @@ export function Settings() {
     localStorage.setItem('biometricPaymentEnabled', String(newValue));
   };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!passwordInput.trim()) return;
-
-    setIsVerifyingPassword(true);
-    setPasswordError('');
-
-    try {
-      let verified = false;
-      try {
-        const endpoint = (ENDPOINTS as any).verify_password || '/auth/verify-password';
-        const res = await postRequest(endpoint, { password: passwordInput });
-        if (res && (res.success !== false && !res.error && res.code !== '01')) {
-          verified = true;
-        } else if (res && res.message?.toLowerCase().includes('success')) {
-          verified = true;
-        }
-      } catch {
-        if (passwordInput.length >= 4) {
-          verified = true;
-        }
-      }
-
-      if (!verified) {
-        setPasswordError('Invalid password. Please try again.');
-        setIsVerifyingPassword(false);
-        return;
-      }
-
-      const action = pendingBiometricAction;
-      setIsPasswordModalOpen(false);
-      setPasswordInput('');
-      setIsVerifyingPassword(false);
-      setPendingBiometricAction(null);
-
-      if (action === 'enable') {
-        const bioSuccess = await performBiometricPrompt('Confirm biometric authentication to enable');
-        if (bioSuccess) {
-          localStorage.setItem('biometricEnabled', 'true');
-          localStorage.setItem('biometricLoginEnabled', 'true');
-          localStorage.setItem('biometricPaymentEnabled', 'true');
-          localStorage.setItem('stayLoggedIn', 'false');
-          setBiometricEnabled(true);
-          setBiometricLoginEnabled(true);
-          setBiometricPaymentEnabled(true);
-        } else {
-          setBiometricEnabled(false);
-        }
-      } else if (action === 'disable') {
-        localStorage.setItem('biometricEnabled', 'false');
-        localStorage.setItem('biometricLoginEnabled', 'false');
-        localStorage.setItem('biometricPaymentEnabled', 'false');
-        setBiometricEnabled(false);
-        setBiometricLoginEnabled(false);
-        setBiometricPaymentEnabled(false);
-      }
-    } catch {
-      setPasswordError('Verification failed. Please try again.');
-      setIsVerifyingPassword(false);
-    }
-  };
-
-  // Exact Legal Center Policy Routes configuration
   const legalPolicies = [
     { title: 'Terms & Conditions', path: '/legal/terms', icon: FileText },
     { title: 'Privacy Policy', path: '/legal/privacy', icon: Shield },
@@ -330,17 +312,29 @@ export function Settings() {
         {/* Scrollable Main Content Container */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto space-y-6 max-w-4xl mx-auto w-full pb-28 md:pb-12">
           
-          {/* ==================================================
-              PROFILE HEADER CARD (Account Summary)
-             ================================================== */}
+          {/* Error Banner for PIN validation */}
+          {pinErrorMessage && (
+            <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 flex items-center gap-3 text-red-600 dark:text-red-400 text-xs font-semibold animate-in fade-in duration-200">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <span className="flex-1">{pinErrorMessage}</span>
+              <button 
+                onClick={() => {
+                  setPinErrorMessage(null);
+                  hidePinModal();
+                }} 
+                className="text-red-500 hover:text-red-700 font-bold px-1"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* PROFILE HEADER CARD */}
           <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
-            {/* Subtle background glow */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 dark:bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-600/5 dark:bg-blue-600/10 rounded-full blur-2xl pointer-events-none" />
 
             <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-              
-              {/* Profile Photo Avatar */}
               <div className="relative shrink-0 group">
                 <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full p-1 bg-gradient-to-tr from-sky-400 via-blue-600 to-sky-500 shadow-md transition-transform duration-300 group-hover:scale-105">
                   <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 p-0.5 overflow-hidden flex items-center justify-center">
@@ -357,24 +351,20 @@ export function Settings() {
                     )}
                   </div>
                 </div>
-                {/* Online Status Indicator */}
                 <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm" />
               </div>
 
-              {/* User Bio Information */}
               <div className="flex-1 min-w-0 space-y-1.5">
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                   <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight truncate">
                     {getFullName()}
                   </h2>
 
-                  {/* Verification Badge */}
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     Verified
                   </span>
 
-                  {/* Membership Tier Badge */}
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/40">
                     <Award className="w-3.5 h-3.5" />
                     Tier 2 Member
@@ -394,16 +384,13 @@ export function Settings() {
             </div>
           </div>
 
-          {/* ==================================================
-              ACCOUNT SECTION
-             ================================================== */}
+          {/* ACCOUNT SECTION */}
           <section className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               Account
             </h3>
             <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
               
-              {/* Profile */}
               <button
                 onClick={() => navigate('/profile')}
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
@@ -424,7 +411,6 @@ export function Settings() {
                 <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
-              {/* Identity Verification */}
               <button
                 onClick={() => navigate('/identity-center')}
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
@@ -445,7 +431,6 @@ export function Settings() {
                 <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
-              {/* Transaction PIN */}
               <button
                 onClick={() => navigate('/pin')}
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
@@ -466,7 +451,6 @@ export function Settings() {
                 <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
-              {/* Notifications */}
               <button
                 onClick={() => navigate('/notifications')}
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
@@ -487,7 +471,6 @@ export function Settings() {
                 <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
-              {/* Bank Accounts (Future Placeholder) */}
               <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-60 cursor-not-allowed">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
@@ -507,7 +490,6 @@ export function Settings() {
                 </span>
               </div>
 
-              {/* Payment Methods (Future Placeholder) */}
               <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-60 cursor-not-allowed">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
@@ -530,16 +512,13 @@ export function Settings() {
             </div>
           </section>
 
-          {/* ==================================================
-              SECURITY SECTION
-             ================================================== */}
+          {/* SECURITY SECTION */}
           <section className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               Security
             </h3>
             <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
               
-              {/* Transactions History */}
               <button
                 onClick={() => navigate('/transaction-history')}
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
@@ -560,7 +539,7 @@ export function Settings() {
                 <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
-              {/* Biometric Authentication Accordion (ONLY rendered on Capacitor Native Mobile App) */}
+              {/* Biometric Authentication Accordion (Capacitor Native App) */}
               {isNative && (
                 <div className="bg-white dark:bg-slate-900 transition-all duration-300">
                   <button
@@ -598,14 +577,14 @@ export function Settings() {
                         </p>
                       ) : (
                         <div className="space-y-4">
-                          {/* Enable Biometrics */}
+                          {/* Enable Biometrics Master Toggle */}
                           <div className="flex items-center justify-between">
                             <div>
                               <p className="text-sm font-semibold text-slate-800 dark:text-white">
                                 Enable Biometrics
                               </p>
                               <p className="text-xs text-slate-500 dark:text-slate-400">
-                                Master toggle for device biometric security
+                                Requires PIN verification to enable or disable
                               </p>
                             </div>
                             <button
@@ -693,7 +672,6 @@ export function Settings() {
                 </div>
               )}
 
-              {/* Two-Factor Authentication (Future Placeholder) */}
               <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-60 cursor-not-allowed">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
@@ -713,7 +691,6 @@ export function Settings() {
                 </span>
               </div>
 
-              {/* Trusted Devices (Future Placeholder) */}
               <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-60 cursor-not-allowed">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
@@ -736,15 +713,12 @@ export function Settings() {
             </div>
           </section>
 
-          {/* ==================================================
-              PREFERENCES SECTION
-             ================================================== */}
+          {/* PREFERENCES SECTION */}
           <section className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               Preferences
             </h3>
             <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm space-y-4">
-              
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-slate-800 dark:text-white">
@@ -755,7 +729,6 @@ export function Settings() {
                   </p>
                 </div>
 
-                {/* Theme Selector Pills */}
                 <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 self-start sm:self-auto">
                   <button
                     onClick={() => handleThemeChange('system')}
@@ -797,20 +770,16 @@ export function Settings() {
                   </button>
                 </div>
               </div>
-
             </div>
           </section>
 
-          {/* ==================================================
-              SUPPORT SECTION
-             ================================================== */}
+          {/* SUPPORT SECTION */}
           <section className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               Support & Community
             </h3>
             <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
               
-              {/* Customer Support */}
               <button
                 onClick={() => navigate('/support')}
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
@@ -831,7 +800,6 @@ export function Settings() {
                 <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
-              {/* Invite Friends & Earn Reward */}
               <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-80 hover:opacity-100 transition-opacity">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-500 flex items-center justify-center shrink-0">
@@ -857,7 +825,6 @@ export function Settings() {
                 </span>
               </div>
 
-              {/* Feedback & Suggestions (Placeholder) */}
               <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-60 cursor-not-allowed">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
@@ -880,9 +847,7 @@ export function Settings() {
             </div>
           </section>
 
-          {/* ==================================================
-              LEGAL CENTER SECTION (EXPANDABLE ACCORDION)
-             ================================================== */}
+          {/* LEGAL CENTER SECTION (EXPANDABLE ACCORDION) */}
           <section className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               Legal & Compliance
@@ -890,7 +855,6 @@ export function Settings() {
             
             <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm transition-all duration-300">
               
-              {/* Accordion Toggle Header Button */}
               <button
                 onClick={() => setLegalExpanded(!legalExpanded)}
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left"
@@ -918,7 +882,6 @@ export function Settings() {
                 </div>
               </button>
 
-              {/* Accordion Body Content with Exact Route Paths */}
               {legalExpanded && (
                 <div className="bg-slate-50/60 dark:bg-slate-950/40 border-t border-slate-100 dark:border-slate-800/80 divide-y divide-slate-100 dark:divide-slate-800/50 animate-in fade-in slide-in-from-top-2 duration-200">
                   {legalPolicies.map((policy, idx) => {
@@ -945,16 +908,13 @@ export function Settings() {
             </div>
           </section>
 
-          {/* ==================================================
-              ABOUT SECTION
-             ================================================== */}
+          {/* ABOUT SECTION */}
           <section className="space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
               About Application
             </h3>
             <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
               
-              {/* App Version Info */}
               <div className="flex items-center justify-between p-4 sm:px-5">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
@@ -974,7 +934,6 @@ export function Settings() {
                 </span>
               </div>
 
-              {/* What's New (Future Placeholder) */}
               <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-60 cursor-not-allowed">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
@@ -994,7 +953,6 @@ export function Settings() {
                 </span>
               </div>
 
-              {/* Developer Footer */}
               <div className="p-4 sm:px-5 bg-slate-50 dark:bg-slate-950/40 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-2">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   Engineered & Secured for Financial Growth
@@ -1007,9 +965,7 @@ export function Settings() {
             </div>
           </section>
 
-          {/* ==================================================
-              DANGER ZONE
-             ================================================== */}
+          {/* DANGER ZONE */}
           <section className="space-y-2 pt-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-red-500 dark:text-red-400 px-1">
               Danger Zone
@@ -1017,7 +973,6 @@ export function Settings() {
             
             <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-red-100 dark:border-red-950/40 overflow-hidden shadow-sm divide-y divide-red-50 dark:divide-red-950/30">
               
-              {/* Sign Out Action */}
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-red-50/50 dark:hover:bg-red-950/20 transition-colors text-left group"
@@ -1038,7 +993,6 @@ export function Settings() {
                 <ChevronRight className="w-5 h-5 text-red-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
 
-              {/* Deactivate Account (Placeholder) */}
               <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-40 cursor-not-allowed">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
@@ -1058,7 +1012,6 @@ export function Settings() {
                 </span>
               </div>
 
-              {/* Delete Account (Placeholder) */}
               <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-40 cursor-not-allowed">
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center shrink-0">
@@ -1083,59 +1036,14 @@ export function Settings() {
 
         </main>
 
-        {/* Password Modal for Biometric Configuration */}
-        {isPasswordModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-100 dark:border-slate-800 shadow-2xl space-y-5">
-              <div className="text-center space-y-1">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                  Confirm Password
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Enter your account password to {pendingBiometricAction === 'enable' ? 'enable' : 'disable'} biometric authentication.
-                </p>
-              </div>
-
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                <div>
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    placeholder="Account Password"
-                    autoFocus
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  />
-                  {passwordError && (
-                    <p className="text-xs text-red-500 mt-1.5 px-1 font-medium">{passwordError}</p>
-                  )}
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsPasswordModalOpen(false);
-                      setPasswordInput('');
-                      setPasswordError('');
-                      setPendingBiometricAction(null);
-                    }}
-                    className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!passwordInput.trim() || isVerifyingPassword}
-                    className="flex-1 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold disabled:opacity-50 transition-colors shadow-sm"
-                  >
-                    {isVerifyingPassword ? 'Verifying...' : 'Confirm'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        {/* Global PIN Component for Settings Authorization */}
+        <PinComponent
+          type={modalData.type || 'verify-pin'}
+          value={modalData.value || {}}
+          onSuccess={handlePinVerificationSuccess}
+          onError={handlePinVerificationError}
+          onFailure={handlePinVerificationError}
+        />
 
         {/* Fixed Mobile Bottom Navigation */}
         <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
