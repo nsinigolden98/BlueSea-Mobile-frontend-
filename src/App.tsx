@@ -44,9 +44,6 @@ import {
   EventPublic,
   TransactionFilterPage,
   GiftCards,
-  MarketplaceMessaging,
-  SellerProductManager,
-  Checkout,
   SpinVault,
   Betting,
   BlueSphere,
@@ -186,13 +183,9 @@ function AppRoutes() {
           <Route path="/tv-subscription" element={<ProtectedRoute><TVSubscription /></ProtectedRoute>} />
           <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
           <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
-          <Route path="/checkout" element={<Checkout />} />
-          
-          <Route path="/messages" element={<MarketplaceMessaging />} />
-          <Route path="/messages/:conversationId" element={<MarketplaceMessaging />} />
+ 
           
           <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
-          <Route path="/products" element={<SellerProductManager />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/gift-cards" element={<GiftCards />} />
           <Route path="/flights" element={<Flights />} />
