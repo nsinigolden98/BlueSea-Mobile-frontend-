@@ -14,7 +14,6 @@ public class CustomWebViewClient extends BridgeWebViewClient {
     private final SharedPreferences prefs;
 
     public static final String KEY_LAST_URL = "LAST_SUCCESSFUL_URL";
-    // Updated path to point to the safe local asset outside public/
     public static final String OFFLINE_ASSET_URL = "file:///android_asset/offline.html";
     public static final String DEFAULT_FALLBACK_URL = "https://blueseamobile.com.ng/dashboard";
 
@@ -33,14 +32,21 @@ public class CustomWebViewClient extends BridgeWebViewClient {
     }
 
     @Override
-    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+    public void onReceivedError(final WebView view, WebResourceRequest request, WebResourceError error) {
         super.onReceivedError(view, request, error);
 
         // Intercept network failures for the main frame request
         if (request != null && request.isForMainFrame()) {
             String failingUrl = request.getUrl().toString();
+
             if (!failingUrl.startsWith("file:///")) {
-                view.loadUrl(OFFLINE_ASSET_URL);
+                // Post loadUrl asynchronously to prevent WebView cancellation race condition
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        view.loadUrl(OFFLINE_ASSET_URL);
+                    }
+                });
             }
         }
     }

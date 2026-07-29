@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 
@@ -13,11 +14,20 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        WebView webView = this.bridge.getWebView();
+
+        // Enable permissions required to render local asset HTML files
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
+
         // Attach Custom WebView Client to Capacitor Bridge
-        this.bridge.getWebView().setWebViewClient(new CustomWebViewClient(this.bridge));
+        webView.setWebViewClient(new CustomWebViewClient(this.bridge));
 
         // Inject Native JS Bridge for offline page interactions
-        this.bridge.getWebView().addJavascriptInterface(
+        webView.addJavascriptInterface(
             new WebAppInterface(this),
             "AndroidBridge"
         );
