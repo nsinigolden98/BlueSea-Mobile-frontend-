@@ -7,7 +7,17 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://blueseamobile.com.ng',
     cleartext: true,
-  }
+    allowNavigation: [
+      'blueseamobile.com.ng', 
+      '*.blueseamobile.com.ng'
+    ]
+  },
+      android: {
+        allowMixedContent: true,
+        captureInput: true,
+        backgroundColor: '#0284c7',
+      }
+    
 };
 
 export default config;
