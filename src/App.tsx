@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, Outlet } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
@@ -71,7 +72,6 @@ import EmployeePortal from './screens/payroll-pro/EmployeePortal';
 import AddEmployee from './screens/payroll-pro/AddEmployee';
 import CreateBranch from './screens/payroll-pro/CreateBranch';
 import PayrollDetail from './screens/payroll-pro/PayrollDetail';
-
 
 //legal-center
 import {
@@ -184,7 +184,6 @@ function AppRoutes() {
           <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
           <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
  
-          
           <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/gift-cards" element={<GiftCards />} />
@@ -194,7 +193,6 @@ function AppRoutes() {
           
           <Route path="/identity-center" element={<IdentityCenter />} />
 
-
           {/* Legal Center Routes */}
           <Route path="/legal/terms" element={<TermsAndConditions />} />
           <Route path="/legal/refund" element={<RefundPolicy />} />
@@ -203,12 +201,6 @@ function AppRoutes() {
           <Route path="/legal/cookies" element={<CookiePolicy />} />
           <Route path="/legal/kyc" element={<KYCPolicy />} />
           <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
-
-
-
-
-
-
 
           {/* Payroll Pro Routes */}
           <Route path="/payroll-pro" element={<PayrollProHome />} />
@@ -230,6 +222,24 @@ function AppRoutes() {
 }
 
 function App() {
+  // Global Network Monitor to trigger offline page redirection mid-session
+  useEffect(() => {
+    const handleOffline = () => {
+      window.location.href = 'file:///android_asset/offline.html';
+    };
+
+    // Check on initial load
+    if (!navigator.onLine) {
+      handleOffline();
+    }
+
+    // Listen for live connection drop events
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>
