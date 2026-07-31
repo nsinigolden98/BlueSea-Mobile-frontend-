@@ -225,7 +225,7 @@ function App() {
   // Global Network Monitor to trigger offline page redirection mid-session
   useEffect(() => {
     const handleOffline = () => {
-      window.location.href = 'file:///android_asset/offline.html';
+      window.location.href = 'file:////android/app/src/main/assets/offline.html';
     };
 
     // Check on initial load
