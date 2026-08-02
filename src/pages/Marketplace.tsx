@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Sidebar, Header, PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { Input } from '@/components/ui/input';
@@ -104,7 +104,8 @@ function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(handler);
+    return () => fontHandler(handler);
+    function fontHandler(h: NodeJS.Timeout) { clearTimeout(h); }
   }, [value, delay]);
   return debouncedValue;
 }
@@ -114,6 +115,9 @@ export function Marketplace() {
   const [searchParams] = useSearchParams();
   const { PinComponent, showPinModal, message } = PinModal();
   const { showToast, ToastComponent } = Toast();
+
+  // Reference for Main Viewport to reset scroll position
+  const mainViewportRef = useRef<HTMLDivElement>(null);
 
   // --- GLOBAL UI STATE ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -134,7 +138,7 @@ export function Marketplace() {
   const [copiedType, setCopiedType] = useState<string | null>(null);
 
   // ==========================================
-  // EVENT SYSTEM (PRESERVED & EXTENDED)
+  // EVENT SYSTEM
   // ==========================================
   const [events, setEvents] = useState<ExtendedEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -142,6 +146,13 @@ export function Marketplace() {
   const [selectedTicketType, setSelectedTicketType] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [selectedAttendanceMode, setSelectedAttendanceMode] = useState<'online' | 'physical'>('physical');
+
+  // AUTO SCROLL TO TOP WHEN AN EVENT IS SELECTED OR DESELECTED
+  useEffect(() => {
+    if (mainViewportRef.current) {
+      mainViewportRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [selectedEvent]);
 
   useEffect(() => {
     if (!selectedEvent) {
@@ -213,7 +224,6 @@ export function Marketplace() {
   const filteredEvents = useMemo(() => {
     return activeEvents.filter(event => {
       const query = debouncedSearch.toLowerCase().trim();
-      
       const matchesCategory = activeCategory === 'All' || event.category.toLowerCase() === activeCategory.toLowerCase();
 
       if (!query) return matchesCategory;
@@ -401,9 +411,9 @@ export function Marketplace() {
     );
   };
 
-  // Categories Chips
+  // Categories Chips (Safely removes mobile scrollbars)
   const renderCategories = () => (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+    <div className="flex items-center gap-2 overflow-x-auto pb-1 max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden">
       <button
         onClick={() => setActiveCategory('All')}
         className={cn(
@@ -510,7 +520,7 @@ export function Marketplace() {
     </div>
   );
 
-  // Horizontal Carousel Section Renderer
+  // Horizontal Carousel Section Renderer (Safely removes mobile scrollbars)
   const renderEventCollection = (title: string, items: ExtendedEvent[]) => {
     if (!items || items.length === 0) return null;
 
@@ -534,7 +544,7 @@ export function Marketplace() {
             </div>
           </div>
         ) : (
-          <div className="flex items-stretch gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="flex items-stretch gap-4 overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden snap-x snap-mandatory scroll-smooth pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
             {items.map((event) => (
               <div 
                 key={event.id} 
@@ -552,7 +562,7 @@ export function Marketplace() {
   const renderEvents = () => {
     if (loading) {
       return (
-        <div className="flex items-stretch gap-4 overflow-x-auto scrollbar-hide pb-3">
+        <div className="flex items-stretch gap-4 overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden pb-3">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="shrink-0 w-[84vw] sm:w-[320px] animate-pulse bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 space-y-3">
               <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800 rounded-xl" />
@@ -564,56 +574,61 @@ export function Marketplace() {
       );
     }
 
-    if (filteredEvents.length === 0 && (debouncedSearch || activeCategory !== 'All')) {
-      return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-            <CalendarDays className="w-8 h-8 text-slate-400" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">No Events Found</h3>
-          <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">
-            Try broadening your search criteria or selecting a different category.
-          </p>
-        </div>
-      );
-    }
+    const isFilteredState = debouncedSearch !== '' || activeCategory !== 'All';
 
-    // Search or Category Filter Active View
-    if (debouncedSearch || activeCategory !== 'All') {
-      return (
-        <div className="space-y-4">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Showing {filteredEvents.length} result{filteredEvents.length > 1 ? 's' : ''}
-          </p>
-          <div className="flex items-stretch gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
-            {filteredEvents.map((event) => (
-              <div 
-                key={event.id} 
-                className="snap-start shrink-0 w-[84vw] sm:w-[320px] md:w-[340px] flex flex-col"
-              >
-                {renderEventCard(event)}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    // Standard Landing Page Collections View
     return (
-      <div className="space-y-8">
-        {renderHeroSection()}
+      <div className="space-y-6">
+        {/* Render Hero on default view */}
+        {!isFilteredState && renderHeroSection()}
+
+        {/* Categories Bar is ALWAYS accessible */}
         {renderCategories()}
-        {renderEventCollection('Trending Events', collections.trending)}
-        {renderEventCollection('Upcoming Events', collections.upcoming)}
-        {renderEventCollection('Near You', collections.nearYou)}
-        {renderEventCollection('Online Events', collections.online)}
-        {renderEventCollection('Physical Events', collections.physical)}
-        {renderEventCollection('Hybrid Events', collections.hybrid)}
-        {renderEventCollection('Free Events', collections.free)}
-        {renderEventCollection('Recently Added', collections.recentlyAdded)}
-        {renderEventCollection('Ending Soon', collections.endingSoon)}
-        {renderEventCollection('Past Events', collections.past)}
+
+        {/* Dynamic Content View */}
+        {isFilteredState ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Showing {filteredEvents.length} result{filteredEvents.length !== 1 ? 's' : ''} {activeCategory !== 'All' ? `in "${activeCategory}"` : ''}
+              </p>
+              <button 
+                onClick={() => { setActiveCategory('All'); setSearchQuery(''); }}
+                className="text-xs font-bold text-sky-500 hover:underline"
+              >
+                Clear Filters
+              </button>
+            </div>
+
+            {filteredEvents.length === 0 ? (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <CalendarDays className="w-8 h-8 text-slate-400" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">No Events Found</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">
+                  Try broadening your search criteria or selecting a different category.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredEvents.map((event) => renderEventCard(event))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {renderEventCollection('Trending Events', collections.trending)}
+            {renderEventCollection('Upcoming Events', collections.upcoming)}
+            {renderEventCollection('Near You', collections.nearYou)}
+            {renderEventCollection('Online Events', collections.online)}
+            {renderEventCollection('Physical Events', collections.physical)}
+            {renderEventCollection('Hybrid Events', collections.hybrid)}
+            {renderEventCollection('Free Events', collections.free)}
+            {renderEventCollection('Recently Added', collections.recentlyAdded)}
+            {renderEventCollection('Ending Soon', collections.endingSoon)}
+            {renderEventCollection('Past Events', collections.past)}
+          </div>
+        )}
       </div>
     );
   };
@@ -1040,8 +1055,11 @@ export function Marketplace() {
           />
         </div>
 
-        {/* MAIN VIEWPORT */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
+        {/* MAIN VIEWPORT (Safely removes mobile scrollbar) */}
+        <main 
+          ref={mainViewportRef} 
+          className="flex-1 p-4 md:p-6 overflow-y-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden z-10"
+        >
           <div className="max-w-6xl mx-auto space-y-6">
             {/* Search Input Bar */}
             <div className="relative">
@@ -1078,7 +1096,7 @@ export function Marketplace() {
               </button>
             </div>
 
-            <div className="flex gap-2 border-b border-slate-100 dark:border-slate-800 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-2 border-b border-slate-100 dark:border-slate-800 overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden pb-2">
               {[
                 { id: 'link', label: 'Share Link', icon: Share2 },
                 { id: 'poster', label: 'Poster', icon: Download },
