@@ -36,6 +36,9 @@ export function Wallet() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Type assertion for optional backend user properties
+  const userData = user as (Record<string, any> & typeof user) | null;
+
   // --- Layout State ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -265,19 +268,19 @@ export function Wallet() {
                   <p className="text-sky-500 font-bold text-xs">Account Coming Soon</p>
                   <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-wider">Processing Request</p>
                 </div>
-              ) : (user?.account_number || user?.bank_name) ? (
+              ) : (userData?.account_number || userData?.bank_name) ? (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-white/5">
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Bank Name</p>
-                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{user?.bank_name || 'Wema Bank'}</p>
+                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{userData?.bank_name || 'Wema Bank'}</p>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
-                    <p className="text-xs font-black text-sky-500 tracking-wider mt-0.5 truncate">{user?.account_number || '—'}</p>
+                    <p className="text-xs font-black text-sky-500 tracking-wider mt-0.5 truncate">{userData?.account_number || '—'}</p>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Name</p>
-                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{user?.account_name || user?.name || '—'}</p>
+                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{userData?.account_name || userData?.name || '—'}</p>
                   </div>
                 </div>
               ) : (

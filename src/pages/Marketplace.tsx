@@ -37,6 +37,9 @@ import { getRequest, ENDPOINTS, API_BASE } from '@/types';
 import type { MarketplaceEvent } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
+// Cast Header to accept custom header props without throwing TS2322
+const HeaderComponent = Header as React.ComponentType<any>;
+
 // --- CATEGORIES CONSTANT ---
 const EVENT_CATEGORIES = [
   'Music', 'Comedy', 'Conference', 'Technology', 'Business', 
@@ -1029,7 +1032,7 @@ export function Marketplace() {
         
         {/* FIXED APP HEADER LAYER */}
         <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
-          <Header 
+          <HeaderComponent 
             title="BlueTickets" 
             subtitle="Discover experiences worth attending"
             onMenuClick={() => setSidebarOpen(true)}
