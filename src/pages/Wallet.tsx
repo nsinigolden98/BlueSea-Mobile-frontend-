@@ -1,3 +1,5 @@
+// src/pages/Wallet.tsx
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -11,10 +13,11 @@ import {
   TransactionModal 
 } from '@/components/ui-custom';
 import { BlueConnectPreview } from '@/components/blueconnect';
+import { InternalTransferModal } from '@/components/wallet/InternalTransferModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { postRequest, ENDPOINTS, API_BASE } from '@/types';
+import { postRequest, ENDPOINTS } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { useAuth } from '@/context/AuthContext';
 import { NIGERIAN_BANKS } from '@/data';
@@ -24,17 +27,10 @@ import {
   Send, 
   X, 
   ChevronRight, 
-  User, 
   Search, 
   CreditCard, 
   CheckCircle2, 
 } from 'lucide-react';
-
-interface FoundUser {
-  email: string;
-  name: string;
-  image: string;
-}
 
 export function Wallet() {
   const { user } = useAuth();
@@ -54,15 +50,8 @@ export function Wallet() {
   const [depositing, setDepositing] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  // --- Internal Transfer State ---
-  const [transferModalOpen, setTransferModalOpen] = useState(false);
-  const [transferData, setTransferData] = useState({
-    recipient: '',
-    amount: ''
-  });
-  const [foundUser, setFoundUser] = useState<FoundUser | null>(null);
-  const [transferError, setTransferError] = useState('');
-  const [lookingUp, setLookingUp] = useState(false);
+  // --- Internal Transfer Modal Toggle ---
+  const [transferOpen, setTransferOpen] = useState(false);
 
   // --- Withdraw State ---
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -75,13 +64,11 @@ export function Wallet() {
   const [accountVerified, setAccountVerified] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   
-  // Custom Modals & Hooks (Unified PIN Modal usage)
+  // Withdrawal PIN Modal & Toast Hooks
   const { showPinModal, PinComponent, message } = PinModal();
   const { ToastComponent, showToast } = Toast();
 
-  const [pinType, setPinType] = useState<'withdrawal' | 'internal_transfer'>('withdrawal');
   const [pinValue, setPinValue] = useState<any>({});
-
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [toastMessage, setToastMessage] = useState('');
@@ -111,13 +98,6 @@ export function Wallet() {
     setWithdrawing(false);
   };
 
-  const resetTransferState = () => {
-    setTransferModalOpen(false);
-    setTransferData({ recipient: '', amount: '' });
-    setFoundUser(null);
-    setTransferError('');
-  };
-
   useEffect(() => {
     if (message) {
       setIsOpen(true);
@@ -126,7 +106,6 @@ export function Wallet() {
         setToastMessage(message?.message || 'Transaction successful');
         setTxStatus(true);
         resetWithdrawState();
-        resetTransferState();
       } else {
         setToastMessage(message?.message || 'Transaction failed');
         setWithdrawing(false);
@@ -135,45 +114,6 @@ export function Wallet() {
     }
   }, [message, showToast]);
 
-  // --- Internal Transfer Lookup ---
-  useEffect(() => {
-    const lookupUser = async () => {
-      if (!transferData.recipient || transferData.recipient.length < 5) {
-        setFoundUser(null);
-        return;
-      }
-      if (transferData.recipient.trim() === user?.email?.trim()) {
-        setFoundUser(null);
-        setTransferError('Cannot transfer to self');
-        return;
-      }
-      setLookingUp(true);
-      setTransferError('');
-      try {
-        const response = await postRequest(ENDPOINTS.user_lookup, { email: transferData.recipient });
-        if (response?.found) {
-          setFoundUser({
-            email: response.email,
-            name: response.name,
-            image: response.image
-          });
-        } else {
-          setFoundUser(null);
-        }
-      } catch (error) {
-        console.log(error);
-        setFoundUser(null);
-      } finally {
-        setLookingUp(false);
-      }
-    };
-    const timer = setTimeout(() => {
-      lookupUser();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [transferData.recipient, user?.email]);
-
-  // Logic handlers
   const handleRequestAccount = () => {
     setAccountLoading(true);
     setTimeout(() => {
@@ -223,19 +163,6 @@ export function Wallet() {
     setProcessing(false);
   };
 
-  const handleStartTransfer = () => {
-    if (!transferData.amount || !foundUser) return;
-    setPinType('internal_transfer');
-    setPinValue({
-      email: transferData.recipient,
-      recipient: transferData.recipient,
-      amount: Number(transferData.amount),
-      recipient_name: foundUser.name,
-    });
-    setTransferModalOpen(false);
-    showPinModal();
-  };
-
   const handleVerifyAccount = async () => {
     if (!selectedBank || !accountNumber || accountNumber.length !== 10) return;
     setVerifyingAccount(true);
@@ -266,7 +193,6 @@ export function Wallet() {
       return;
     }
     setWithdrawing(true);
-    setPinType('withdrawal');
     setPinValue({
       account_name: accountName,
       account_number: accountNumber,
@@ -284,13 +210,13 @@ export function Wallet() {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       ` }} />
 
-      {/* REUSED SIDEBAR OVERLAY COMPONENT */}
+      {/* SIDEBAR */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* CORE VIEWPORT CONTENT AREA */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         
-        {/* FIXED APP HEADER LAYER */}
+        {/* APP HEADER LAYER */}
         <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
           <Header 
             title="Wallet" 
@@ -303,64 +229,75 @@ export function Wallet() {
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-4xl mx-auto space-y-6">
             
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-              {/* CARD 1: FUNDING DETAILS */}
-              <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 flex flex-col justify-between shadow-sm transition-all hover:shadow-md">
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Funding Details</h3>
-                    <div className="p-1.5 bg-sky-500/10 rounded-lg">
-                      <Landmark className="h-3.5 w-3.5 text-sky-500" />
-                    </div>
-                  </div>
-                  
-                  {accountRequested ? (
-                    <div className="text-center p-6 bg-sky-500/5 border border-sky-500/10 rounded-2xl animate-pulse">
-                      <p className="text-sky-500 font-bold text-sm">Account Coming Soon</p>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">Processing Request</p>
-                    </div>
-                  ) : (
-                    <div className="text-center space-y-4">
-                      <div className="w-12 h-12 bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
-                        <Landmark className="h-6 w-6 text-sky-500" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Virtual Account</h4>
-                        <p className="text-[11px] text-slate-500 mt-1 px-4 leading-relaxed">Generate a dedicated account for instant automated wallet funding.</p>
-                      </div>
-                      <Button 
-                        onClick={handleRequestAccount}
-                        disabled={accountLoading}
-                        className="w-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-11 text-xs font-bold border border-slate-200 dark:border-white/10 shadow-sm transition-all active:scale-[0.98]"
-                      >
-                       {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Account'}
-                      </Button>
-                    </div>
-                  )}
-                </div>
+            {/* 1. BALANCE CARD */}
+            <div className="relative group">
+              <div className="absolute top-6 right-12 md:right-10 flex gap-2 z-20 pointer-events-auto">
+                <button 
+                  onClick={() => setCardModalOpen(true)}
+                  className="flex items-center gap-1.5 px-6 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full text-[10px] font-bold text-white shadow-lg hover:bg-white/20 transition-all active:scale-90 cursor-pointer"
+                >
+                  <CreditCard className="w-3 h-3" />
+                  <span>Card</span>
+                </button>
               </div>
-
-              {/* CARD 2: BALANCE CARD COMPONENT */}
-              <div className="lg:col-span-3 relative group">
-                <div className="absolute top-6 right-12 md:right-10 flex gap-2 z-20 pointer-events-auto">
-                  <button 
-                    onClick={() => setCardModalOpen(true)}
-                    className="flex items-center gap-1.5 px-6 py-1.5 bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-full text-[10px] font-bold text-white shadow-lg hover:bg-white/20 transition-all active:scale-90"
-                  >
-                    <CreditCard className="w-3 h-3" />
-                    <span>Card</span>
-                  </button>
-                </div>
-                <BalanceCard
-                  showActions={true}
-                  onDeposit={handleDeposit}
-                  onWithdraw={() => setShowWithdrawModal(true)}
-                  className="h-full border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden"
-                />
-              </div>
+              <BalanceCard
+                showActions={true}
+                onDeposit={handleDeposit}
+                onWithdraw={() => setShowWithdrawModal(true)}
+                className="h-full border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden"
+              />
             </div>
 
-            {/* BLUESEA CONNECT PREVIEW SECTION */}
+            {/* 2. DEDICATED ACCOUNT CARD (COMPRESSED & ELEGANT) */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-4 shadow-sm transition-all hover:shadow-md">
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-sky-500/10 rounded-lg">
+                    <Landmark className="h-4 w-4 text-sky-500" />
+                  </div>
+                  <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">Dedicated Funding Account</h3>
+                </div>
+                <span className="text-[10px] font-bold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-full">Automated</span>
+              </div>
+              
+              {accountRequested ? (
+                <div className="text-center p-3 bg-sky-500/5 border border-sky-500/10 rounded-xl animate-pulse">
+                  <p className="text-sky-500 font-bold text-xs">Account Coming Soon</p>
+                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-wider">Processing Request</p>
+                </div>
+              ) : (user?.account_number || user?.bank_name) ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-white/5">
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Bank Name</p>
+                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{user?.bank_name || 'Wema Bank'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
+                    <p className="text-xs font-black text-sky-500 tracking-wider mt-0.5 truncate">{user?.account_number || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Name</p>
+                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{user?.account_name || user?.name || '—'}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-white/5">
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Virtual Account</h4>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Generate dedicated account details for instant automated funding</p>
+                  </div>
+                  <Button 
+                    onClick={handleRequestAccount}
+                    disabled={accountLoading}
+                    className="shrink-0 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-9 px-4 text-[11px] font-bold border border-slate-200 dark:border-white/10 shadow-xs transition-all active:scale-[0.98]"
+                  >
+                   {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Account'}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* 3. BLUESEA CONNECT PREVIEW SECTION */}
             <div
               onClick={() => navigate('/blueconnect')}
               className="cursor-pointer transition-transform active:scale-[0.98] w-full max-w-full overflow-hidden"
@@ -370,10 +307,10 @@ export function Wallet() {
               </div>
             </div>
             
-            {/* Internal Transfer Button */}
+            {/* 4. INTERNAL TRANSFER CARD */}
             <button 
-              onClick={() => setTransferModalOpen(true)}
-              className="group w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] p-6 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm hover:shadow-md"
+              onClick={() => setTransferOpen(true)}
+              className="group w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2rem] p-6 flex items-center justify-between hover:border-sky-500/30 transition-all active:scale-[0.99] shadow-sm hover:shadow-md cursor-pointer"
             >
               <div className="flex items-center gap-5">
                 <div className="p-4 bg-slate-50 dark:bg-slate-800 text-sky-500 rounded-2xl shadow-sm group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 group-hover:rotate-12">
@@ -389,7 +326,7 @@ export function Wallet() {
               </div>
             </button>
 
-            {/* RECENT TRANSACTIONS (DESKTOP ONLY) */}
+            {/* 5. RECENT TRANSACTIONS (DESKTOP ONLY) */}
             <section className="hidden md:block space-y-3">
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
@@ -409,13 +346,17 @@ export function Wallet() {
           </div>
         </main>
 
-        {/* FIXED MOBILE BOTTOM NAVIGATION LAYER */}
+        {/* MOBILE BOTTOM NAVIGATION */}
         <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <MobileBottomNavigation />
         </div>
       </div>
 
-      {/* --- MODALS & DIALOGS --- */}
+      {/* --- REUSABLE INTERNAL TRANSFER MODAL --- */}
+      <InternalTransferModal 
+        isOpen={transferOpen} 
+        onClose={() => setTransferOpen(false)} 
+      />
 
       {/* Card Support Modal */}
       {cardModalOpen && (
@@ -674,81 +615,7 @@ export function Wallet() {
         </div>
       )}
 
-      {/* Internal Transfer Modal */}
-      {transferModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl bg-slate-950/40">
-          <div className="absolute inset-0" onClick={() => setTransferModalOpen(false)} />
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
-            <header className="mb-10 text-center">
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Send Money</h2>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">BlueSea Instant Transfer</p>
-            </header>
-            <div className="space-y-8">
-              <div className="animate-in slide-in-from-bottom-8 duration-500 space-y-6">
-                <div className="relative group">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 absolute left-8 top-4 z-10">Recipient Email</label>
-                  <input
-                    placeholder="e.g. name@bluesea.com"
-                    className="w-full pl-8 pr-14 pt-12 pb-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-slate-900 dark:text-white font-black text-lg shadow-inner"
-                    value={transferData.recipient}
-                    onChange={(e) => setTransferData({...transferData, recipient: e.target.value})}
-                  />
-                  <Search className="absolute right-8 bottom-8 h-5 w-5 text-slate-300 group-focus-within:text-sky-500 transition-colors" />
-                </div>
-                <div className="relative group">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 absolute left-8 top-4 z-10">Amount (₦)</label>
-                  <input
-                    type="number"
-                    placeholder="0.00"
-                    className="w-full pl-8 pr-8 pt-12 pb-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-slate-900 dark:text-white shadow-inner"
-                    value={transferData.amount}
-                    onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
-                  />
-                </div>
-                {foundUser && (
-                  <div className="p-5 bg-sky-500/5 border border-sky-500/20 rounded-[2rem] flex items-center gap-5 animate-in zoom-in-95">
-                    <div className="h-16 w-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-md overflow-hidden border border-sky-500/20">
-                      {foundUser.image ? (
-                        <img src={`${API_BASE}${foundUser.image}`} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        <User className="w-7 h-7 text-sky-500" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                         <h4 className="font-black text-slate-800 dark:text-slate-200 truncate text-lg tracking-tight">{foundUser.name}</h4>
-                         <CheckCircle2 className="w-4 h-4 text-sky-500" />
-                      </div>
-                      <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{foundUser.email}</p>
-                    </div>
-                  </div>
-                )}
-                {lookingUp && (
-                  <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-[2rem] text-center">
-                     <LoadingSpinner size="sm" text="Verifying user address..." />
-                  </div>
-                )}
-              </div>
-
-              {transferError && <p className="text-red-500 text-[10px] font-black text-center px-8 uppercase tracking-widest animate-pulse">{transferError}</p>}
-              <div className="flex flex-col gap-4 pt-6">
-                <Button 
-                  className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-[1.5rem] h-16 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
-                  disabled={!transferData.amount || !foundUser}
-                  onClick={handleStartTransfer}
-                >
-                  Proceed to Transfer
-                </Button>
-                <button onClick={() => setTransferModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[10px] font-black uppercase tracking-[0.3em] py-3 transition-colors">
-                  Cancel Transfer
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- GLOBAL OVERLAYS & FEEDBACK PROVIDERS --- */}
+      {/* FEEDBACK OVERLAYS */}
       {isOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
           <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
@@ -756,9 +623,9 @@ export function Wallet() {
       )}
       <ToastComponent />
       
-      {/* Single imported PinModal handling both withdrawals & internal transfers */}
+      {/* Withdrawal PIN Verification Modal */}
       <PinComponent 
-        type={pinType} 
+        type="withdrawal" 
         value={pinValue} 
       />
     </div>

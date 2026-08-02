@@ -1,24 +1,20 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Sidebar, PinModal, Toast, TransactionModal } from '@/components/ui-custom';
+import { Sidebar, Header, PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { Input } from '@/components/ui/input';
 import { 
   Search, 
   Calendar, 
   MapPin, 
   Ticket, 
-  Loader2, 
   ChevronRight, 
   MoreHorizontal, 
   QrCode, 
   Shield, 
   Plus, 
-  User, 
   CheckCircle2, 
   ChevronLeft, 
   History, 
-  Coins, 
   Heart, 
   Share2, 
   Globe, 
@@ -28,12 +24,9 @@ import {
   Code, 
   Sparkles, 
   Clock, 
-  //Users, 
   Check, 
- // ExternalLink, 
   X, 
   Video, 
-  Gamepad2, 
   AlertCircle, 
   CalendarDays,
   Tag,
@@ -123,7 +116,6 @@ export function Marketplace() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
-  const [activeTab, setActiveTab] = useState<'Events' | 'Gaming'>('Events');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [showMenu, setShowMenu] = useState(false);
   const [vendorStatus, setVendorStatus] = useState<boolean>(false);
@@ -138,10 +130,8 @@ export function Marketplace() {
   const [activeShareTab, setActiveShareTab] = useState<'link' | 'poster' | 'banner' | 'embed' | 'affiliate'>('link');
   const [copiedType, setCopiedType] = useState<string | null>(null);
 
-  const mainTabs = ['Events', 'Gaming'] as const;
-
   // ==========================================
-  // 1. EVENT SYSTEM (PRESERVED & EXTENDED)
+  // EVENT SYSTEM (PRESERVED & EXTENDED)
   // ==========================================
   const [events, setEvents] = useState<ExtendedEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,7 +145,6 @@ export function Marketplace() {
       setSelectedTicketType('');
       setQuantity(1);
     } else {
-      // Default attendance mode based on event config
       const mode = selectedEvent.attendance_mode || 'physical';
       if (mode === 'online') setSelectedAttendanceMode('online');
       else setSelectedAttendanceMode('physical');
@@ -206,9 +195,20 @@ export function Marketplace() {
     showPinModal();
   };
 
+  // --- PAST VS ACTIVE EVENTS LOGIC ---
+  const now = useMemo(() => new Date(), []);
+
+  const activeEvents = useMemo(() => {
+    return events.filter(e => new Date(e.event_date) >= now);
+  }, [events, now]);
+
+  const pastEvents = useMemo(() => {
+    return events.filter(e => new Date(e.event_date) < now);
+  }, [events, now]);
+
   // --- EXTENDED SEARCH FILTERING ---
   const filteredEvents = useMemo(() => {
-    return events.filter(event => {
+    return activeEvents.filter(event => {
       const query = debouncedSearch.toLowerCase().trim();
       
       const matchesCategory = activeCategory === 'All' || event.category.toLowerCase() === activeCategory.toLowerCase();
@@ -226,7 +226,7 @@ export function Marketplace() {
 
       return matchesCategory && (titleMatch || catMatch || organizerMatch || locationMatch || venueMatch || cityMatch || tagsMatch || modeMatch);
     });
-  }, [events, debouncedSearch, activeCategory]);
+  }, [activeEvents, debouncedSearch, activeCategory]);
 
   const getImageUrl = (path: string | undefined) => {
     if (!path) return '';
@@ -275,38 +275,6 @@ export function Marketplace() {
   };
 
   // ==========================================
-  // 2. GAMING SYSTEM (REPLACES POINTS)
-  // ==========================================
-  const [selectedPointProvider, setSelectedPointProvider] = useState<any | null>(null);
-  const [pointPlayerId, setPointPlayerId] = useState('');
-  const [selectedPointPackage, setSelectedPointPackage] = useState<number | null>(null);
-  const [isPointLoading, setIsPointLoading] = useState(false);
-  const [pointError, setPointError] = useState('');
-
-  const { data: pointsRes, isLoading: pointsLoading } = useQuery({
-    queryKey: ['points', 'providers'],
-    queryFn: () => getRequest('/api/points/providers/'),
-    enabled: activeTab === 'Gaming'
-  });
-  
-  const pointsProviders = (pointsRes as any)?.data || [];
-  const filteredPoints = pointsProviders.filter((p: any) => 
-    p.name.toLowerCase().includes(debouncedSearch.toLowerCase())
-  );
-
-  const handlePointPurchase = async () => {
-    if (!pointPlayerId.trim()) {
-      setPointError('Player ID is required');
-      return;
-    }
-    setPointError('');
-    setIsPointLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsPointLoading(false);
-    showPinModal();
-  };
-
-  // ==========================================
   // TRANSACTION HANDLING
   // ==========================================
   useEffect(() => {
@@ -318,7 +286,6 @@ export function Marketplace() {
         setTxMessage(msgState?.response_description || 'Transaction successful!');
         setTxStatus(true);
         setSelectedEvent(null);
-        setSelectedPointProvider(null);
       } else {
         showToast(msgState?.error || msgState?.response_description || 'Transaction failed');
         setTxMessage(msgState?.error || msgState?.response_description || 'Transaction failed');
@@ -329,33 +296,33 @@ export function Marketplace() {
   }, [message]);
 
   // ==========================================
-  // NEW FEATURED & COLLECTIONS HEURISTICS
+  // FEATURED & COLLECTIONS HEURISTICS
   // ==========================================
-  const featuredEvent = useMemo(() => events[0] || null, [events]);
+  const featuredEvent = useMemo(() => activeEvents[0] || events[0] || null, [activeEvents, events]);
 
   const collections = useMemo(() => {
-    const now = new Date();
     return {
-      trending: events.filter(e => e.tickets_sold > 0),
-      nearYou: events.filter(e => e.event_location || e.venue_name),
-      upcoming: [...events].sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()),
-      online: events.filter(e => e.attendance_mode === 'online' || e.attendance_mode === 'hybrid'),
-      physical: events.filter(e => e.attendance_mode === 'physical' || !e.attendance_mode || e.attendance_mode === 'hybrid'),
-      hybrid: events.filter(e => e.attendance_mode === 'hybrid'),
-      free: events.filter(e => e.is_free || e.ticket_types?.some(t => Number(t.price) === 0)),
-      recentlyAdded: [...events].reverse(),
-      endingSoon: events.filter(e => {
+      trending: activeEvents.filter(e => e.tickets_sold > 0),
+      nearYou: activeEvents.filter(e => e.event_location || e.venue_name),
+      upcoming: [...activeEvents].sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()),
+      online: activeEvents.filter(e => e.attendance_mode === 'online' || e.attendance_mode === 'hybrid'),
+      physical: activeEvents.filter(e => e.attendance_mode === 'physical' || !e.attendance_mode || e.attendance_mode === 'hybrid'),
+      hybrid: activeEvents.filter(e => e.attendance_mode === 'hybrid'),
+      free: activeEvents.filter(e => e.is_free || e.ticket_types?.some(t => Number(t.price) === 0)),
+      recentlyAdded: [...activeEvents].reverse(),
+      endingSoon: activeEvents.filter(e => {
         const diffDays = (new Date(e.event_date).getTime() - now.getTime()) / (1000 * 3600 * 24);
         return diffDays >= 0 && diffDays <= 7;
-      })
+      }),
+      past: pastEvents
     };
-  }, [events]);
+  }, [activeEvents, pastEvents, now]);
 
   // ==========================================
   // RENDERERS
   // ==========================================
 
-  // // Hero Section
+  // Hero Section
   const renderHeroSection = () => {
     if (!featuredEvent) return null;
     return (
@@ -431,13 +398,13 @@ export function Marketplace() {
     );
   };
 
-  // // Categories Chips
+  // Categories Chips
   const renderCategories = () => (
     <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
       <button
         onClick={() => setActiveCategory('All')}
         className={cn(
-          "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
+          "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0",
           activeCategory === 'All' 
             ? "bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-md" 
             : "bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800 hover:bg-slate-50"
@@ -450,7 +417,7 @@ export function Marketplace() {
           key={cat}
           onClick={() => setActiveCategory(cat)}
           className={cn(
-            "px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all",
+            "px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all shrink-0",
             activeCategory === cat 
               ? "bg-sky-500 text-white font-bold shadow-md shadow-sky-500/20" 
               : "bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800 hover:bg-slate-50"
@@ -462,14 +429,14 @@ export function Marketplace() {
     </div>
   );
 
-  // // Event Card Component
+  // Event Card Component
   const renderEventCard = (event: ExtendedEvent) => (
     <div 
       key={event.id} 
       onClick={() => setSelectedEvent(event)} 
-      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col h-full"
+      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col h-full w-full"
     >
-      <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800 relative overflow-hidden">
+      <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800 relative overflow-hidden shrink-0">
         <img 
           src={getEventImage(event)} 
           alt={event.event_title} 
@@ -540,12 +507,15 @@ export function Marketplace() {
     </div>
   );
 
-  // // Section Carousel / Grid Component
+  // Horizontal Carousel Section Renderer
   const renderEventCollection = (title: string, items: ExtendedEvent[]) => {
     if (!items || items.length === 0) return null;
+
+    const isSingle = items.length === 1;
+
     return (
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-1">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
             <span>{title}</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-normal">
@@ -553,9 +523,25 @@ export function Marketplace() {
             </span>
           </h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.slice(0, 3).map(renderEventCard)}
-        </div>
+
+        {isSingle ? (
+          <div className="flex justify-center max-w-md mx-auto w-full">
+            <div className="w-full">
+              {renderEventCard(items[0])}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-stretch gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
+            {items.map((event) => (
+              <div 
+                key={event.id} 
+                className="snap-start shrink-0 w-[84vw] sm:w-[320px] md:w-[340px] flex flex-col"
+              >
+                {renderEventCard(event)}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -563,9 +549,9 @@ export function Marketplace() {
   const renderEvents = () => {
     if (loading) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="animate-pulse bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 space-y-3">
+        <div className="flex items-stretch gap-4 overflow-x-auto scrollbar-hide pb-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="shrink-0 w-[84vw] sm:w-[320px] animate-pulse bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 space-y-3">
               <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800 rounded-xl" />
               <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
               <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
@@ -575,7 +561,7 @@ export function Marketplace() {
       );
     }
 
-    if (filteredEvents.length === 0) {
+    if (filteredEvents.length === 0 && (debouncedSearch || activeCategory !== 'All')) {
       return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -583,23 +569,28 @@ export function Marketplace() {
           </div>
           <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">No Events Found</h3>
           <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">
-            {debouncedSearch || activeCategory !== 'All' 
-              ? 'Try broadening your search criteria or selecting a different category.' 
-              : 'Check back soon for upcoming events!'}
+            Try broadening your search criteria or selecting a different category.
           </p>
         </div>
       );
     }
 
-    // Filter view mode when active search query or category is applied
+    // Search or Category Filter Active View
     if (debouncedSearch || activeCategory !== 'All') {
       return (
         <div className="space-y-4">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Showing {filteredEvents.length} result{filteredEvents.length > 1 ? 's' : ''}
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredEvents.map(renderEventCard)}
+          <div className="flex items-stretch gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
+            {filteredEvents.map((event) => (
+              <div 
+                key={event.id} 
+                className="snap-start shrink-0 w-[84vw] sm:w-[320px] md:w-[340px] flex flex-col"
+              >
+                {renderEventCard(event)}
+              </div>
+            ))}
           </div>
         </div>
       );
@@ -610,21 +601,21 @@ export function Marketplace() {
       <div className="space-y-8">
         {renderHeroSection()}
         {renderCategories()}
-        {renderEventCollection('Featured Events', collections.trending)}
         {renderEventCollection('Trending Events', collections.trending)}
-        {renderEventCollection('Near You', collections.nearYou)}
         {renderEventCollection('Upcoming Events', collections.upcoming)}
+        {renderEventCollection('Near You', collections.nearYou)}
         {renderEventCollection('Online Events', collections.online)}
         {renderEventCollection('Physical Events', collections.physical)}
         {renderEventCollection('Hybrid Events', collections.hybrid)}
         {renderEventCollection('Free Events', collections.free)}
         {renderEventCollection('Recently Added', collections.recentlyAdded)}
         {renderEventCollection('Ending Soon', collections.endingSoon)}
+        {renderEventCollection('Past Events', collections.past)}
       </div>
     );
   };
 
-  // // Expanded Event Details Renderer
+  // Expanded Event Details Renderer
   const renderEventDetails = () => {
     if (!selectedEvent) return null;
 
@@ -698,7 +689,6 @@ export function Marketplace() {
             </div>
 
             {/* Organizer Card */}
-            {/* Organizer Card */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-sky-500/10 text-sky-500 font-bold flex items-center justify-center text-lg border border-sky-500/20">
@@ -768,7 +758,6 @@ export function Marketplace() {
             </div>
 
             {/* Map Placeholder */}
-            {/* Map Placeholder */}
             <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 h-36 relative flex items-center justify-center">
               <div className="absolute inset-0 opacity-30 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]" />
               <div className="z-10 text-center space-y-2">
@@ -782,7 +771,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Attendance Mode */}
             {/* Attendance Mode */}
             <div className="space-y-4">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">Attendance Mode</h3>
@@ -843,7 +831,6 @@ export function Marketplace() {
             </div>
 
             {/* Description */}
-            {/* Description */}
             <div className="space-y-2">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">About Event</h3>
               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -851,7 +838,6 @@ export function Marketplace() {
               </p>
             </div>
 
-            {/* Gallery Placeholder */}
             {/* Gallery Placeholder */}
             <div className="space-y-3">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">Gallery</h3>
@@ -869,7 +855,6 @@ export function Marketplace() {
             </div>
 
             {/* Event Timeline */}
-            {/* Event Timeline */}
             <div className="space-y-3">
               <h3 className="font-bold text-slate-800 dark:text-white text-base flex items-center gap-2">
                 <Clock className="w-4 h-4 text-sky-500" /> Event Timeline
@@ -881,7 +866,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Ticket Types */}
             {/* Ticket Types */}
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">Select Ticket Type</h3>
@@ -922,7 +906,6 @@ export function Marketplace() {
             </div>
 
             {/* Bulk Purchase */}
-            {/* Bulk Purchase */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-bold text-slate-800 dark:text-white">Buying for a group?</h4>
@@ -945,7 +928,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Affiliate Promotion Section */}
             {/* Affiliate Section */}
             <div className="p-4 rounded-2xl bg-sky-500/5 border border-sky-500/20 space-y-2">
               <div className="flex items-center justify-between">
@@ -976,16 +958,13 @@ export function Marketplace() {
               )}
             </div>
 
-            {/* Related Events */}
-            {/* Related Events */}
+            {/* Related Events Carousel */}
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">You Might Also Like</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {events
-                  .filter(e => e.id !== selectedEvent.id && e.category === selectedEvent.category)
-                  .slice(0, 2)
-                  .map(renderEventCard)}
-              </div>
+              {renderEventCollection(
+                'Related Events', 
+                events.filter(e => e.id !== selectedEvent.id && e.category === selectedEvent.category)
+              )}
             </div>
 
             {/* Bottom Checkout Sticky Bar */}
@@ -1011,122 +990,36 @@ export function Marketplace() {
     );
   };
 
-  // // Gaming / Points Renderer
-  const renderGaming = () => {
-    if (pointsLoading) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+  // --- RIGHT ACTION MENU ---
+  const renderActionMenu = () => (
+    <div className="relative">
+      <button 
+        onClick={() => setShowMenu(!showMenu)} 
+        className="p-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+      >
+        <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+      </button>
+      
+      {showMenu && (
+        <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+          {!vendorStatus ? (
+            <>
+              <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Shield className="w-4 h-4 text-sky-500" /> Become Verified Organizer</button>
+              <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Ticket className="w-4 h-4 text-sky-500" /> My Tickets</button>
+              <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><History className="w-4 h-4 text-sky-500" /> History</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Plus className="w-4 h-4 text-sky-500" /> Create Event</button>
+              <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Ticket className="w-4 h-4 text-sky-500" /> My Tickets</button>
+              <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><QrCode className="w-4 h-4 text-sky-500" /> Scanner</button>
+              <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><History className="w-4 h-4 text-sky-500" /> History</button>
+            </>
+          )}
         </div>
-      );
-    }
-
-    if (filteredPoints.length === 0) {
-      return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
-          <Gamepad2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">No Gaming Top-ups Available</h3>
-          <p className="text-slate-500 text-sm">Check back later for updated gaming gift cards & points packages.</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredPoints.map((provider: any) => (
-          <div 
-            key={provider.id} 
-            onClick={() => { setSelectedPointProvider(provider); setSelectedPointPackage(null); setPointPlayerId(''); setPointError(''); }} 
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-all cursor-pointer group"
-          >
-            <div className={cn("aspect-video relative overflow-hidden flex items-center justify-center", provider.color || "bg-slate-800")}>
-               <img src={provider.image} alt={provider.name} className="w-20 h-20 rounded-2xl shadow-xl object-cover border-2 border-white/20 transform group-hover:scale-110 transition-transform duration-500" />
-               <div className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 backdrop-blur-md text-white uppercase">
-                 Gaming
-               </div>
-            </div>
-            <div className="p-4 space-y-2">
-              <h3 className="font-bold text-slate-800 dark:text-white text-base line-clamp-1">{provider.name}</h3>
-              <p className="text-xs text-slate-500">Instant Automated Delivery</p>
-              <button className="w-full py-2.5 rounded-xl bg-sky-500 text-white text-xs font-bold hover:bg-sky-600 transition-colors">
-                Top Up Gaming Wallet
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderGamingDetails = () => {
-    if (!selectedPointProvider) return null;
-    return (
-      <div className="space-y-4">
-        <button onClick={() => setSelectedPointProvider(null)} className="flex items-center gap-2 text-sky-500 font-bold text-sm">
-          <ChevronLeft className="w-4 h-4" /> Back to Gaming
-        </button>
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-xl p-6 md:p-8 space-y-6">
-          <div className="flex items-center gap-4">
-            <img src={selectedPointProvider.image} alt={selectedPointProvider.name} className="w-16 h-16 rounded-2xl border-2 border-slate-200 dark:border-slate-700 object-cover" />
-            <div>
-              <h2 className="text-2xl font-black text-slate-800 dark:text-white">{selectedPointProvider.name}</h2>
-              <p className="text-xs text-slate-500">Select a package and enter your Player ID to proceed.</p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="font-bold text-slate-800 dark:text-white text-sm">Select Package</h3>
-            <div className="grid grid-cols-1 gap-3">
-              {selectedPointProvider.packages?.map((pkg: any) => (
-                <div 
-                  key={pkg.id} 
-                  onClick={() => setSelectedPointPackage(pkg.id)} 
-                  className={cn(
-                    'p-4 rounded-2xl border-2 cursor-pointer transition-all flex justify-between items-center', 
-                    selectedPointPackage === pkg.id ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-900/20' : 'border-slate-200 dark:border-slate-800'
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={cn("w-3 h-3 rounded-full", selectedPointPackage === pkg.id ? "bg-sky-500" : "bg-slate-300")} />
-                    <h4 className="font-bold text-slate-800 dark:text-white text-sm">{pkg.name}</h4>
-                  </div>
-                  <span className="font-black text-sky-500 text-base">₦{pkg.price.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-              <User className="w-4 h-4 text-sky-500" /> Player / User ID
-            </label>
-            <Input 
-              placeholder="e.g. 518293041" 
-              value={pointPlayerId} 
-              onChange={(e) => setPointPlayerId(e.target.value)} 
-              className={cn(pointError ? "border-red-500" : "")} 
-            />
-            {pointError && <p className="text-xs text-red-500">{pointError}</p>}
-          </div>
-
-          <button 
-            onClick={handlePointPurchase} 
-            disabled={!selectedPointPackage || !pointPlayerId || isPointLoading} 
-            className="w-full py-4 rounded-2xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {isPointLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirm Top-Up'}
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderContent = () => {
-    if (activeTab === 'Gaming') {
-      return selectedPointProvider ? renderGamingDetails() : renderGaming();
-    }
-    return selectedEvent ? renderEventDetails() : renderEvents();
-  };
+      )}
+    </div>
+  );
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden font-sans">
@@ -1134,51 +1027,15 @@ export function Marketplace() {
 
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         
-        {/* APP HEADER LAYER */}
-        <header className="flex items-center justify-between px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-30 shrink-0">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-              <svg className="w-5 h-5 text-slate-700 dark:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-            </button>
-            <div>
-              <h1 className="text-xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
-                <Ticket className="w-6 h-6 text-sky-500" />
-                BlueTickets
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Discover experiences worth attending.</p>
-            </div>
-          </div>
-  
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <button 
-                onClick={() => setShowMenu(!showMenu)} 
-                className="p-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
-              >
-                <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              </button>
-              
-              {showMenu && (
-                <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  {!vendorStatus ? (
-                    <>
-                      <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Shield className="w-4 h-4 text-sky-500" /> Become Verified Organizer</button>
-                      <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Ticket className="w-4 h-4 text-sky-500" /> My Tickets</button>
-                      <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><History className="w-4 h-4 text-sky-500" /> History</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Plus className="w-4 h-4 text-sky-500" /> Create Event</button>
-                      <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Ticket className="w-4 h-4 text-sky-500" /> My Tickets</button>
-                      <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><QrCode className="w-4 h-4 text-sky-500" /> Scanner</button>
-                      <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><History className="w-4 h-4 text-sky-500" /> History</button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+          <Header 
+            title="BlueTickets" 
+            subtitle="Discover experiences worth attending"
+            onMenuClick={() => setSidebarOpen(true)}
+            rightElement={renderActionMenu()}
+          />
+        </div>
 
         {/* MAIN VIEWPORT */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
@@ -1188,38 +1045,14 @@ export function Marketplace() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input 
                 type="text" 
-                placeholder={`Search events by title, organizer, city, location...`} 
+                placeholder="Search events by title, organizer, city, location..." 
                 value={searchQuery} 
                 onChange={(e) => setSearchQuery(e.target.value)} 
                 className="pl-12 py-6 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 shadow-sm" 
               />
             </div>
 
-            {/* Navigation Bar Tabs */}
-            <div className="flex gap-2">
-              {mainTabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => {
-                    setActiveTab(tab);
-                    setSelectedEvent(null);
-                    setSelectedPointProvider(null);
-                  }}
-                  className={cn(
-                    'px-6 py-2.5 rounded-full text-xs font-black transition-all flex items-center gap-2', 
-                    activeTab === tab 
-                      ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' 
-                      : 'bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
-                  )}
-                >
-                  {tab === 'Events' && <Ticket className="w-4 h-4" />}
-                  {tab === 'Gaming' && <Coins className="w-4 h-4" />}
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            {renderContent()}
+            {selectedEvent ? renderEventDetails() : renderEvents()}
           </div>
         </main>
 
@@ -1230,7 +1063,6 @@ export function Marketplace() {
       </div>
 
       {/* SHARE MODAL BOTTOM SHEET */}
-      {/* Share Bottom Sheet */}
       {shareModalEvent && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-3xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-2xl p-6 space-y-6">
@@ -1288,7 +1120,6 @@ export function Marketplace() {
             )}
 
             {/* TAB 2: POSTER */}
-            {/* Download Poster */}
             {activeShareTab === 'poster' && (
               <div className="space-y-4 text-center">
                 <div className="aspect-[3/4] max-w-xs mx-auto rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-900">
@@ -1313,7 +1144,6 @@ export function Marketplace() {
             )}
 
             {/* TAB 3: BANNER */}
-            {/* Download Banner */}
             {activeShareTab === 'banner' && (
               <div className="space-y-4 text-center">
                 <div className="aspect-[21/9] w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-900">
@@ -1340,7 +1170,6 @@ export function Marketplace() {
             )}
 
             {/* TAB 4: EMBED CODE */}
-            {/* Embed Code */}
             {activeShareTab === 'embed' && (
               <div className="space-y-4">
                 <p className="text-xs text-slate-500">Paste this HTML snippet to embed this ticket widget into your website.</p>
@@ -1357,7 +1186,6 @@ export function Marketplace() {
             )}
 
             {/* TAB 5: AFFILIATE LINK */}
-            {/* Affiliate */}
             {activeShareTab === 'affiliate' && (
               <div className="space-y-4">
                 {shareModalEvent.affiliate_enabled !== false ? (
@@ -1391,10 +1219,9 @@ export function Marketplace() {
       <PinComponent 
         type="marketplace" 
         value={{ 
-          event_id: selectedEvent?.id || selectedPointProvider?.id, 
-          ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || selectedPointProvider?.packages?.find((p: any) => p.id === selectedPointPackage)?.name || 'Ticket Purchase', 
+          event_id: selectedEvent?.id, 
+          ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || 'Ticket Purchase', 
           quantity: quantity,
-          player_id: pointPlayerId,
           attendance_mode: selectedAttendanceMode
         }} 
       />
