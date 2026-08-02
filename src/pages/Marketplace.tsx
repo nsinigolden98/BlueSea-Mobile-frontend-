@@ -102,15 +102,14 @@ const VerifiedBadge = ({ className }: { className?: string }) => (
 // --- DEBOUNCE HOOK ---
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
   useEffect(() => {
-  const handler = setTimeout(() => setDebouncedValue(value), delay);
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
 
-  // Directly clear the timeout in the return cleanup
-  return () => clearTimeout(handler);
-}, [value, delay]);
-
-return debouncedValue;
-
+  return debouncedValue;
+}
 
 export function Marketplace() {
   const navigate = useNavigate();
@@ -413,7 +412,7 @@ export function Marketplace() {
     );
   };
 
-  // Categories Chips (Safely removes mobile scrollbars)
+  // Categories Chips
   const renderCategories = () => (
     <div className="flex items-center gap-2 overflow-x-auto pb-1 max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden">
       <button
@@ -522,7 +521,7 @@ export function Marketplace() {
     </div>
   );
 
-  // Horizontal Carousel Section Renderer (Safely removes mobile scrollbars)
+  // Horizontal Carousel Section Renderer
   const renderEventCollection = (title: string, items: ExtendedEvent[]) => {
     if (!items || items.length === 0) return null;
 
@@ -583,7 +582,7 @@ export function Marketplace() {
         {/* Render Hero on default view */}
         {!isFilteredState && renderHeroSection()}
 
-        {/* Categories Bar is ALWAYS accessible */}
+        {/* Categories Bar */}
         {renderCategories()}
 
         {/* Dynamic Content View */}
@@ -701,7 +700,7 @@ export function Marketplace() {
           </div>
 
           <div className="p-6 md:p-8 space-y-8">
-            {/* Title & Quick Info */}
+            {/* Title */}
             <div>
               <h1 className="text-2xl md:text-4xl font-black text-slate-800 dark:text-white leading-tight">
                 {selectedEvent.event_title}
@@ -831,7 +830,6 @@ export function Marketplace() {
                 </button>
               </div>
 
-              {/* Attendance Specific Details */}
               {isOnlineMode ? (
                 <div className="p-4 rounded-2xl bg-sky-50/50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50 space-y-2 text-xs">
                   <div className="flex justify-between"><span className="text-slate-500">Meeting Platform:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.meeting_platform || 'Zoom HD Live'}</span></div>
@@ -1057,7 +1055,7 @@ export function Marketplace() {
           />
         </div>
 
-        {/* MAIN VIEWPORT (Safely removes mobile scrollbar) */}
+        {/* MAIN VIEWPORT */}
         <main 
           ref={mainViewportRef} 
           className="flex-1 p-4 md:p-6 overflow-y-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden z-10"
@@ -1159,7 +1157,7 @@ export function Marketplace() {
                   download={`${shareModalEvent.event_title}-poster.jpg`}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-3 rounded-2xl bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2 inline-block"
+                  className="w-full py-3 rounded-2xl bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" /> Download Event Poster
                 </a>
@@ -1185,7 +1183,7 @@ export function Marketplace() {
                   download={`${shareModalEvent.event_title}-banner.jpg`}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-3 rounded-2xl bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2 inline-block"
+                  className="w-full py-3 rounded-2xl bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" /> Download Web Banner
                 </a>
@@ -1254,5 +1252,4 @@ export function Marketplace() {
       )}
     </div>
   );
-}
 }
