@@ -118,6 +118,8 @@ export function PinModal() {
       'group-lightbill': () => postRequest(ENDPOINTS.create_group, payload),
       'add-scanner': () => postRequest(ENDPOINTS.marketplace_add_scanner(value.event_id), { user_email: value.user_email }),
       'withdrawal': () => postRequest(ENDPOINTS.withdrawal, payload),
+      'internal_transfer': () =>
+    postRequest(ENDPOINTS.internal_transfer, payload),
       'event-withdraw': () => postRequest(ENDPOINTS.event_withdraw, payload),
     };
 
