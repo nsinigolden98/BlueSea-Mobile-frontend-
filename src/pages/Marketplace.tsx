@@ -103,12 +103,14 @@ const VerifiedBadge = ({ className }: { className?: string }) => (
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(value), delay);
-    return () => fontHandler(handler);
-    function fontHandler(h: NodeJS.Timeout) { clearTimeout(h); }
-  }, [value, delay]);
-  return debouncedValue;
-}
+  const handler = setTimeout(() => setDebouncedValue(value), delay);
+
+  // Directly clear the timeout in the return cleanup
+  return () => clearTimeout(handler);
+}, [value, delay]);
+
+return debouncedValue;
+
 
 export function Marketplace() {
   const navigate = useNavigate();
