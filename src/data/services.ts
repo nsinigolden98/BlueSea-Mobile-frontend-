@@ -36,7 +36,7 @@ export const services: Service[] = [
  // { id: 'wr-4', name: 'Blue Points', description: 'Redeem your loyalty points', icon: 'Coins', route: '/rewards', category: 'Wallet & Rewards' },
 
   // Marketplace & Commerce
-  { id: 'mc-1', name: 'Marketplace', description: 'Shop physical & digital goods', icon: 'Store', route: '/marketplace', category: 'Marketplace & Commerce' },
+  { id: 'mc-1', name: 'BlueTickets', description: 'Shop physical & digital goods', icon: 'Store', route: '/marketplace', category: 'BlueTickets & Commerce' },
   //{ id: 'mc-2', name: 'Storefronts', description: 'Manage your online store', icon: 'ShoppingBag', route: '/commerce/storefronts', category: 'Marketplace & Commerce', badge: 'New' },
   //{ id: 'mc-3', name: 'Freelance', description: 'Hire or work as a freelancer', icon: 'Briefcase', route: '/commerce/freelance', category: 'Marketplace & Commerce' },
   //{ id: 'mc-4', name: 'Affiliate', description: 'Earn commissions on sales', icon: 'Network', route: '/commerce/affiliate', category: 'Marketplace & Commerce' },

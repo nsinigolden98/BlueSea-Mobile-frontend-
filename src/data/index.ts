@@ -5,7 +5,7 @@ export const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'LayoutGrid', path: '/dashboard' },
   { id: 'airtime', label: 'Buy Airtime & Data', icon: 'Smartphone', path: '/airtime' },
 //  { id: 'data', label: 'Buy Data', icon: 'Wifi', path: '/data' },
-  { id: 'marketplace', label: 'Market Place', icon: 'Store', path: '/marketplace' },
+  { id: 'marketplace', label: 'Blue Tickets', icon: 'Store', path: '/marketplace' },
   { id: 'services', label: 'Services', icon: 'Globe', path: '/services' },
  //  { id: 'campaigns', label: 'Discover & Earn', icon: 'HandCoins', path: '/campaigns' },
   { id: 'rewards', label: 'Rewards', icon: 'Gift', path: '/rewards' },
@@ -222,7 +222,7 @@ export const moreServiceCategories: ServiceCategory[] = [
     services: [
       { id: 'f1', name: 'Wallet', icon: 'Wallet' },
       { id: 'f2', name: 'Group Payment', icon: 'Users' },
-      { id: 'f3', name: 'Market Place', icon: 'Store' },
+      { id: 'f3', name: 'Blue Tickets', icon: 'Store' },
     ],
   },
   {

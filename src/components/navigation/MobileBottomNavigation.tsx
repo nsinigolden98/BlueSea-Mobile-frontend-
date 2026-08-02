@@ -19,7 +19,7 @@ export function MobileBottomNavigation() {
   const bottomNavItems: NavigationItem[] = [
     { id: 'home', label: 'Home', path: '/dashboard', icon: Home },
     { id: 'rewards', label: 'Rewards', path: '/rewards', icon: Gift },
-    { id: 'marketplace', label: 'MarketPlace', path: '/marketplace', icon: Store },
+    { id: 'marketplace', label: 'BlueTickets', path: '/marketplace', icon: Store },
     { id: 'payroll-pro', label: 'Payroll', path: '/payroll-pro', icon: Briefcase },
     { id: 'settings', label: 'Settings', path: '/settings', icon: Settings },
   ];
