@@ -68,11 +68,11 @@ export function Profile() {
 
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
 
-  // Derive Dynamic User Identity Fields from Backend User Context
-  const fullName = `${user?.firstName || user?.first_name || ''} ${user?.surname || user?.last_name || ''}`.trim() || 'Valued Member';
+  // Safely derive Dynamic User Identity Fields using (user as any) to bypass strict TS check for fallbacks
+  const fullName = `${user?.firstName || (user as any)?.first_name || ''} ${user?.surname || (user as any)?.last_name || ''}`.trim() || 'Valued Member';
   const email = user?.email || 'Not Provided';
   
-  // Dynamic UID safely pulled from user's referral_code (matching Rewards page) with fallback
+  // Dynamic UID safely pulled from user's referral_code with fallback
   const rawUid = (user as any)?.referral_code || (user as any)?.referralCode || (user as any)?.uid || (user as any)?.id || (user as any)?.user_id;
   const uid = rawUid ? String(rawUid) : 'BSM24001000';
 
@@ -316,7 +316,7 @@ export function Profile() {
                       />
                     ) : (
                       <div className="w-28 h-28 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white text-3xl font-extrabold shadow-md border-4 border-white dark:border-slate-900">
-                        {user?.firstName?.[0]}{user?.surname?.[0]}
+                        {user?.firstName?.[0]}{(user as any)?.surname?.[0]}
                       </div>
                     )}
                     <button 
