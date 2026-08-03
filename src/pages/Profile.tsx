@@ -200,9 +200,7 @@ export function Profile() {
 
   // Phone Number Handlers (Strict Enforcement)
   const handlePhoneInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Strictly restrict to digits only (No letters, spaces, or symbols)
     const val = e.target.value.replace(/\D/g, '');
-    // Max length enforced at 10
     if (val.length <= 10) {
       setPhoneInput(val);
       setPhoneError('');
@@ -210,7 +208,6 @@ export function Profile() {
   };
 
   const handleSavePhone = async () => {
-    // Validation Rules: Must be exactly 10 digits
     if (phoneInput.length !== 10) {
       setPhoneError('Phone number must be exactly 10 digits (e.g. 8064709041)');
       return;
@@ -352,16 +349,19 @@ export function Profile() {
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
                     {fullName}
                   </h2>
-                  <p className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400 mt-1">
+                  <p className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-center gap-1">
+                    <Hash className="w-3 h-3 text-sky-500" />
                     UID: {uid}
                   </p>
 
                   {/* Badges */}
                   <div className="flex items-center gap-2 mt-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-800/50">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-800/50">
+                      <Sparkles className="w-3 h-3 text-sky-500" />
                       {tier}
                     </span>
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                      <Calendar className="w-3 h-3 text-slate-400" />
                       Member Since {memberSince}
                     </span>
                   </div>
@@ -435,7 +435,14 @@ export function Profile() {
                           </p>
                         </div>
                         <div className="flex items-center gap-1 text-sky-500 font-medium text-xs">
-                          <span>{isEditingNickname ? 'Cancel' : (nickname ? 'Edit' : 'Set')}</span>
+                          {isEditingNickname ? (
+                            <span>Cancel</span>
+                          ) : (
+                            <span className="flex items-center gap-1">
+                              <Edit3 className="w-3 h-3" />
+                              {nickname ? 'Edit' : 'Set'}
+                            </span>
+                          )}
                           {isEditingNickname ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                         </div>
                       </div>
@@ -457,6 +464,13 @@ export function Profile() {
                               <Save className="w-3.5 h-3.5" />
                               Save Nickname
                             </button>
+                            <button
+                              onClick={() => setIsEditingNickname(false)}
+                              className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              Cancel
+                            </button>
                           </div>
                         </div>
                       )}
@@ -474,7 +488,10 @@ export function Profile() {
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400 dark:text-slate-500">Date of Birth</p>
-                        <p className="font-medium text-slate-800 dark:text-slate-100 mt-0.5">{dateOfBirth}</p>
+                        <p className="font-medium text-slate-800 dark:text-slate-100 mt-0.5 flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          {dateOfBirth}
+                        </p>
                       </div>
                     </div>
 
@@ -505,6 +522,7 @@ export function Profile() {
                             onClick={() => setIsEditingPhone(!isEditingPhone)}
                             className="flex items-center gap-1 text-sky-500 font-medium text-xs hover:text-sky-600 transition-colors"
                           >
+                            <Edit3 className="w-3 h-3" />
                             <span>{isEditingPhone ? 'Cancel' : 'Edit'}</span>
                             {isEditingPhone ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </button>
@@ -551,6 +569,13 @@ export function Profile() {
                               <Save className="w-3.5 h-3.5" />
                               Save Phone Number
                             </button>
+                            <button
+                              onClick={() => setIsEditingPhone(false)}
+                              className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              Cancel
+                            </button>
                           </div>
                         </div>
                       )}
@@ -560,7 +585,10 @@ export function Profile() {
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400 dark:text-slate-500">Email Address</p>
-                        <p className="font-medium text-slate-800 dark:text-slate-100 mt-0.5">{email}</p>
+                        <p className="font-medium text-slate-800 dark:text-slate-100 mt-0.5 flex items-center gap-1.5">
+                          <Mail className="w-3.5 h-3.5 text-slate-400" />
+                          {email}
+                        </p>
                       </div>
                     </div>
 
@@ -579,6 +607,7 @@ export function Profile() {
                         onClick={() => setIsEditingAddress(true)}
                         className="flex items-center gap-1 text-sky-500 font-medium text-xs hover:text-sky-600 transition-colors"
                       >
+                        <Edit3 className="w-3 h-3" />
                         <span>Edit</span>
                         <ChevronRight className="w-4 h-4" />
                       </button>
@@ -716,8 +745,9 @@ export function Profile() {
                               });
                               setAddressErrors({});
                             }}
-                            className="px-4 h-11 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            className="px-4 h-11 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
                           >
+                            <X className="w-4 h-4" />
                             Cancel
                           </button>
                         </div>
