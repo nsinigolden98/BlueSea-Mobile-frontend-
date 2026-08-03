@@ -244,7 +244,7 @@ export const TransactionFilterPage: React.FC = () => {
           </header>
 
           {/* ISOLATED SCROLLABLE CONTENT AREA */}
-          <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10 w-full max-w-5xl mx-auto space-y-6">
+          <main className="flex-1 p-4 md:p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden z-10 w-full max-w-5xl mx-auto space-y-6">
             
             {/* CONTROL CENTER */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/50 dark:border-slate-800 shadow-sm">
@@ -400,7 +400,7 @@ export const TransactionFilterPage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto relative" id="printable-receipt">
+              <div className="p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden relative" id="printable-receipt">
                 <div className="text-center pb-6">
                   <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Total Cost</span>
                   <div className={cn(

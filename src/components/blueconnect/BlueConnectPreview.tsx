@@ -37,7 +37,7 @@ export const BlueConnectPreview: React.FC = () => {
   }, [isPaused]);
 
   return (
-    <section className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/5 rounded-[2rem] p-5 shadow-xs transition-all duration-300">
+    <section className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-[2rem] p-5 shadow-xs transition-all duration-300">
       {/* Header Bar */}
       <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-center gap-3">
@@ -96,17 +96,17 @@ export const BlueConnectPreview: React.FC = () => {
             setIsPaused(false);
           }, 1000);
         }}
-        className="flex gap-3 overflow-x-auto scrollbar-none py-1.5 cursor-grab active:cursor-grabbing select-none"
+        className="flex gap-3 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1.5 cursor-grab active:cursor-grabbing select-none"
       >
         {/* Double array duplicate for continuous seamless loop */}
         {[...previewCompanies, ...previewCompanies].map((company, index) => (
           <div
             key={`${company.id}-${index}`}
             onClick={() => navigate('/blueconnect')}
-            className="flex-shrink-0 w-36 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-white/5 hover:border-sky-500/40 rounded-2xl p-3.5 flex flex-col items-center text-center transition-all duration-300 hover:shadow-md cursor-pointer group active:scale-95"
+            className="flex-shrink-0 w-36 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 hover:border-sky-500/40 rounded-2xl p-3.5 flex flex-col items-center text-center transition-all duration-300 hover:shadow-md cursor-pointer group active:scale-95"
           >
             <div className="relative mb-2.5">
-              <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-white/10 p-1.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-1.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
                 <img
                   src={company.logo}
                   alt={company.name}

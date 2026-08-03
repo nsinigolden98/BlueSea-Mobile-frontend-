@@ -94,7 +94,7 @@ export function Rewards() {
       } catch (error) {
         console.log(error);
         if (isMounted) showToast('Failed to load rewards data');
-      } finally {
+      } flex finally {
         if (isMounted) {
           hideLoader();
           setLoading(false);
@@ -149,7 +149,7 @@ export function Rewards() {
         </div>
 
         {/* ISOLATED SCROLLABLE CONTENT AREA */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden z-10">
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Points Summary Card */}
             <div className="bg-gradient-to-br from-sky-400 via-sky-500 to-sky-600 rounded-2xl p-6 text-white shadow-lg shadow-sky-500/25">
@@ -199,7 +199,7 @@ export function Rewards() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {(['points', 'history', 'referral', 'tasks'] as const).map((tabId) => (
                 <button
                   key={tabId}
@@ -282,7 +282,7 @@ export function Rewards() {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                   {[
                     { id: 'X', Icon: Twitter, ph: 'X ID' },
                     { id: 'IG', Icon: Instagram, ph: 'IG Handle' },

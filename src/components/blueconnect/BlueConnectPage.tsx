@@ -32,7 +32,7 @@ export const BlueConnectPage: React.FC = () => {
   }, [searchQuery, selectedCategory, fetchCompanies]);
 
   return (
-    <div className="h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-300">
       
       {/* REUSED SIDEBAR OVERLAY COMPONENT */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -41,7 +41,7 @@ export const BlueConnectPage: React.FC = () => {
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         
         {/* FIXED APP HEADER LAYER */}
-        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-950 border-b border-slate-200/80 dark:border-white/5">
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
           <Header
             title="BlueConnect"
             subtitle="Private Payment Gateway"
@@ -49,8 +49,8 @@ export const BlueConnectPage: React.FC = () => {
           />
         </div>
 
-        {/* SCROLLABLE MAIN CONTENT AREA */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-none z-10">
+        {/* SCROLLABLE MAIN CONTENT AREA WITH HIDDEN SCROLLBAR */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden z-10">
           <div className="max-w-5xl mx-auto space-y-6">
             
             {/* HERO BANNER & API DEVELOPER CTA */}
@@ -118,7 +118,7 @@ export const BlueConnectPage: React.FC = () => {
         </main>
 
         {/* FIXED MOBILE BOTTOM NAVIGATION LAYER */}
-        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-white/5">
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <MobileBottomNavigation />
         </div>
       </div>
