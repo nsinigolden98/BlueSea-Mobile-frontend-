@@ -94,7 +94,7 @@ export function Rewards() {
       } catch (error) {
         console.log(error);
         if (isMounted) showToast('Failed to load rewards data');
-      } flex finally {
+      }  finally {
         if (isMounted) {
           hideLoader();
           setLoading(false);
