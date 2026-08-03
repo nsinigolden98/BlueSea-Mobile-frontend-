@@ -80,7 +80,7 @@ export function Airtime() {
   const handleBuyAirtime = async () => {
     const amount = selectedAmount || Number(customAmount);
     
-    // Betting-level validation
+    // Validation
     if (!phoneNumber || phoneNumber.length !== 11) {
       showToast('Please enter a valid 11-digit phone number');
       return;
@@ -140,7 +140,6 @@ export function Airtime() {
   useEffect(() => {
     if (message) {
       setIsLoading(true);
-      // Replicating betting delay for UX consistency
       setTimeout(() => {
         setIsLoading(false);
         setIsOpen(true);
@@ -182,8 +181,8 @@ export function Airtime() {
             />
           </div>
 
-          {/* ISOLATED SCROLLABLE CONTENT AREA */}
-          <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
+          {/* ISOLATED SCROLLABLE CONTENT AREA WITH HIDDEN SCROLLBAR */}
+          <main className="flex-1 p-4 md:p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden z-10">
             <div className="max-w-2xl mx-auto">
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
                 

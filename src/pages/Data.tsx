@@ -194,8 +194,8 @@ export function Data() {
             />
           </div>
 
-          {/* ISOLATED SCROLLABLE CONTENT AREA */}
-          <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
+          {/* ISOLATED SCROLLABLE CONTENT AREA WITH HIDDEN MAIN SCROLLBAR */}
+          <main className="flex-1 p-4 md:p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden z-10">
             <div className="max-w-2xl mx-auto">
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
                 
@@ -269,14 +269,11 @@ export function Data() {
                   <div className="relative group">
                     <div 
                       className={cn(
-                        "flex flex-nowrap gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide",
+                        "flex flex-nowrap gap-2 overflow-x-auto pb-2 px-1",
+                        "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
                         "[mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]"
                       )}
-                      style={{
-                        scrollbarWidth: 'none', 
-                        msOverflowStyle: 'none',
-                        WebkitOverflowScrolling: 'touch'
-                      }}
+                      style={{ WebkitOverflowScrolling: 'touch' }}
                     >
                       {availablePlanTypes.map((type) => (
                         <button
@@ -297,35 +294,54 @@ export function Data() {
                   </div>
                 </div>
 
-                {/* Plan Grid */}
-                <div className="grid grid-cols-3 gap-2 md:gap-3">
-                  {filteredPlans.map((plan) => (
-                    <button
-                      key={plan.id}
-                      onClick={() => setSelectedPlan(plan)}
-                      className={cn(
-                        'p-2 md:p-4 rounded-xl border-2 transition-all text-center active:scale-95 flex flex-col justify-between min-h-[120px]',
-                        selectedPlan?.id === plan.id
-                          ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-400'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-sky-300 shadow-sm'
-                      )}
-                    >
-                      <div>
-                        <p className="font-bold text-slate-800 dark:text-white text-xs md:text-base leading-tight">{plan.size}</p>
-                        <p className="text-[10px] text-slate-500 mb-2 line-clamp-2 leading-tight">
-                          ₦{plan.price} - {plan.validity}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-1 mt-auto">
-                        <span className="bg-sky-500 text-white text-[8px] md:text-xs py-0.5 rounded truncate px-1">
-                          ₦{plan.price}
-                        </span>
-                        <span className="bg-sky-600 text-white text-[8px] md:text-xs py-0.5 rounded truncate px-1">
-                          {plan.validity.toUpperCase()}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+                {/* COMPRESSED SCROLLABLE PLAN CONTAINER */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <Label className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                      Select Data Plan ({filteredPlans.length})
+                    </Label>
+                    <span className="text-[10px] text-sky-500 font-medium md:hidden animate-pulse">
+                      Scroll inside box ↓
+                    </span>
+                  </div>
+
+                  <div 
+                    className={cn(
+                      "max-h-72 sm:max-h-80 overflow-y-auto p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30",
+                      "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+                      "md:[scrollbar-width:thin] md:[-ms-overflow-style:auto] md:[&::-webkit-scrollbar]:block"
+                    )}
+                  >
+                    <div className="grid grid-cols-2 min-[380px]:grid-cols-4 gap-2 md:gap-3">
+                      {filteredPlans.map((plan) => (
+                        <button
+                          key={plan.id}
+                          onClick={() => setSelectedPlan(plan)}
+                          className={cn(
+                            'p-2 rounded-xl border-2 transition-all text-center active:scale-95 flex flex-col justify-between min-h-[105px] md:min-h-[115px]',
+                            selectedPlan?.id === plan.id
+                              ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-400'
+                              : 'border-slate-200 dark:border-slate-700 hover:border-sky-300 shadow-sm bg-white dark:bg-slate-800'
+                          )}
+                        >
+                          <div>
+                            <p className="font-bold text-slate-800 dark:text-white text-xs md:text-sm leading-tight">{plan.size}</p>
+                            <p className="text-[10px] text-slate-500 mb-1.5 line-clamp-2 leading-tight">
+                              ₦{plan.price} - {plan.validity}
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-1 mt-auto">
+                            <span className="bg-sky-500 text-white text-[8px] md:text-[10px] py-0.5 rounded truncate px-1 font-medium">
+                              ₦{plan.price}
+                            </span>
+                            <span className="bg-sky-600 text-white text-[8px] md:text-[10px] py-0.5 rounded truncate px-1 font-medium">
+                              {plan.validity.toUpperCase()}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Group Payment Toggle */}
