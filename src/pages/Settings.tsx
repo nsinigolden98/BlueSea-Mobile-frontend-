@@ -372,7 +372,7 @@ export function Settings() {
 
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/40">
                       <Award className="w-3.5 h-3.5" />
-                      Tier 2 Member
+                      Tier 1 Member
                     </span>
                   </div>
 
