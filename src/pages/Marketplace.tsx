@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sidebar, Header, PinModal, Toast, TransactionModal } from '@/components/ui-custom';
+import { Sidebar, PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { Input } from '@/components/ui/input';
 import { 
   Search, 
@@ -24,21 +24,19 @@ import {
   Code, 
   Sparkles, 
   Clock, 
+  Tag,
   Check, 
   X, 
   Video, 
   AlertCircle, 
   CalendarDays,
-  Tag,
-  Star
+  Star,
+  Menu
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRequest, ENDPOINTS, API_BASE } from '@/types';
 import type { MarketplaceEvent } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
-
-// Cast Header to accept custom header props without throwing TS2322
-const HeaderComponent = Header as React.ComponentType<any>;
 
 // --- CATEGORIES CONSTANT ---
 const EVENT_CATEGORIES = [
@@ -119,7 +117,7 @@ export function Marketplace() {
 
   // References
   const mainViewportRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null); // Reference for Header Action Menu Click Outside
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // --- GLOBAL UI STATE ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -167,7 +165,6 @@ export function Marketplace() {
   const [quantity, setQuantity] = useState(1);
   const [selectedAttendanceMode, setSelectedAttendanceMode] = useState<'online' | 'physical'>('physical');
 
-  // AUTO SCROLL TO TOP WHEN AN EVENT IS SELECTED OR DESELECTED
   useEffect(() => {
     if (mainViewportRef.current) {
       mainViewportRef.current.scrollTo({ top: 0, behavior: 'smooth' });
@@ -229,7 +226,6 @@ export function Marketplace() {
     showPinModal();
   };
 
-  // --- PAST VS ACTIVE EVENTS LOGIC ---
   const now = useMemo(() => new Date(), []);
 
   const activeEvents = useMemo(() => {
@@ -240,7 +236,6 @@ export function Marketplace() {
     return events.filter(e => new Date(e.event_date) < now);
   }, [events, now]);
 
-  // --- EXTENDED SEARCH FILTERING ---
   const filteredEvents = useMemo(() => {
     return activeEvents.filter(event => {
       const query = debouncedSearch.toLowerCase().trim();
@@ -307,9 +302,6 @@ export function Marketplace() {
     setTimeout(() => setCopiedType(null), 2000);
   };
 
-  // ==========================================
-  // TRANSACTION HANDLING
-  // ==========================================
   useEffect(() => {
     if (message) {
       setIsOpen(true);
@@ -328,9 +320,6 @@ export function Marketplace() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message]);
 
-  // ==========================================
-  // FEATURED & COLLECTIONS HEURISTICS
-  // ==========================================
   const featuredEvent = useMemo(() => activeEvents[0] || events[0] || null, [activeEvents, events]);
 
   const collections = useMemo(() => {
@@ -351,78 +340,72 @@ export function Marketplace() {
     };
   }, [activeEvents, pastEvents, now]);
 
-  // ==========================================
-  // RENDERERS
-  // ==========================================
-
-  // Hero Section
   const renderHeroSection = () => {
     if (!featuredEvent) return null;
     return (
-      <div className="relative rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-900 text-white shadow-xl">
-        <div className="aspect-[16/9] md:aspect-[21/9] relative w-full overflow-hidden">
+      <div className="relative rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-900 text-white shadow-lg">
+        <div className="h-48 sm:h-56 md:h-60 relative w-full overflow-hidden">
           <img 
             src={getEventImage(featuredEvent)} 
             alt={featuredEvent.event_title} 
             className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700" 
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-transparent" />
           
-          <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-sky-500/90 text-white backdrop-blur-md shadow-lg">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-sky-500/90 text-white backdrop-blur-md shadow-md">
                 Featured Event
               </span>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/20 text-white backdrop-blur-md">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-white/20 text-white backdrop-blur-md hidden sm:inline-block">
                 {featuredEvent.category}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <button 
                 onClick={(e) => toggleFavorite(featuredEvent.id, e)}
-                className="w-9 h-9 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
               >
-                <Heart className={cn("w-4 h-4", favorites[featuredEvent.id] && "fill-red-500 text-red-500")} />
+                <Heart className={cn("w-3.5 h-3.5", favorites[featuredEvent.id] && "fill-red-500 text-red-500")} />
               </button>
               <button 
                 onClick={() => setShareModalEvent(featuredEvent)}
-                className="w-9 h-9 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
               >
-                <Share2 className="w-4 h-4" />
+                <Share2 className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
-          <div className="absolute bottom-0 inset-x-0 p-5 md:p-8 space-y-3 z-10">
+          <div className="absolute bottom-0 inset-x-0 p-4 md:p-5 space-y-1.5 z-10">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-sky-400 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-semibold text-sky-400 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
                 {featuredEvent.organizer_name || 'BlueTickets Organizer'}
               </span>
               <VerifiedBadge />
             </div>
 
-            <h2 className="text-2xl md:text-4xl font-black text-white leading-tight tracking-tight line-clamp-2">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white leading-tight tracking-tight line-clamp-1">
               {featuredEvent.event_title}
             </h2>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm text-slate-300">
-              <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-sky-400" /> {formatDate(featuredEvent.event_date)}</span>
-              <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-sky-400" /> {featuredEvent.event_location}</span>
-              <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-sky-400" /> Starts {formatTime(featuredEvent.event_date)}</span>
+            <div className="flex flex-wrap items-center gap-3 text-[11px] sm:text-xs text-slate-300">
+              <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-sky-400" /> {formatDate(featuredEvent.event_date)}</span>
+              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-sky-400" /> {featuredEvent.event_location}</span>
             </div>
 
-            <div className="pt-2 flex items-center justify-between gap-4">
+            <div className="pt-1 flex items-center justify-between gap-4">
               <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Starting From</p>
-                <p className="text-xl md:text-2xl font-black text-sky-400">{getStartingPrice(featuredEvent)}</p>
+                <span className="text-[9px] text-slate-400 uppercase tracking-wider block">Starting From</span>
+                <span className="text-base sm:text-lg md:text-xl font-black text-sky-400">{getStartingPrice(featuredEvent)}</span>
               </div>
 
               <button 
                 onClick={() => setSelectedEvent(featuredEvent)}
-                className="px-6 py-3 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-sm transition-all shadow-lg shadow-sky-500/25 flex items-center gap-2"
+                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs transition-all shadow-md shadow-sky-500/25 flex items-center gap-1.5"
               >
-                Quick Buy <ChevronRight className="w-4 h-4" />
+                Quick Buy <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -431,7 +414,6 @@ export function Marketplace() {
     );
   };
 
-  // Categories Chips
   const renderCategories = () => (
     <div className="flex items-center gap-2 overflow-x-auto pb-1 max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden">
       <button
@@ -462,7 +444,6 @@ export function Marketplace() {
     </div>
   );
 
-  // Event Card Component
   const renderEventCard = (event: ExtendedEvent) => (
     <div 
       key={event.id} 
@@ -478,7 +459,8 @@ export function Marketplace() {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-80" />
         
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-          <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-900/80 backdrop-blur-md text-white border border-white/10 uppercase tracking-wider">
+          <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-900/80 backdrop-blur-md text-white border border-white/10 uppercase tracking-wider flex items-center gap-1">
+            <Tag className="w-3 h-3 text-sky-400" />
             {event.category}
           </span>
           <div className="flex items-center gap-1.5">
@@ -540,7 +522,6 @@ export function Marketplace() {
     </div>
   );
 
-  // Horizontal Carousel Section Renderer
   const renderEventCollection = (title: string, items: ExtendedEvent[]) => {
     if (!items || items.length === 0) return null;
 
@@ -598,13 +579,9 @@ export function Marketplace() {
 
     return (
       <div className="space-y-6">
-        {/* Render Hero on default view */}
         {!isFilteredState && renderHeroSection()}
-
-        {/* Categories Bar */}
         {renderCategories()}
 
-        {/* Dynamic Content View */}
         {isFilteredState ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
@@ -653,7 +630,6 @@ export function Marketplace() {
     );
   };
 
-  // Expanded Event Details Renderer
   const renderEventDetails = () => {
     if (!selectedEvent) return null;
 
@@ -684,7 +660,6 @@ export function Marketplace() {
         </button>
 
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-xl">
-          {/* Banner */}
           <div className="aspect-[16/9] md:aspect-[21/9] relative bg-slate-900">
             <img 
               src={getEventImage(selectedEvent)} 
@@ -719,14 +694,12 @@ export function Marketplace() {
           </div>
 
           <div className="p-6 md:p-8 space-y-8">
-            {/* Title */}
             <div>
               <h1 className="text-2xl md:text-4xl font-black text-slate-800 dark:text-white leading-tight">
                 {selectedEvent.event_title}
               </h1>
             </div>
 
-            {/* Organizer Card */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-sky-500/10 text-sky-500 font-bold flex items-center justify-center text-lg border border-sky-500/20">
@@ -766,10 +739,9 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Date, Time & Location Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
+                <Clock className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
                 <div>
                   <h5 className="text-xs font-bold text-slate-400 uppercase">Date & Time</h5>
                   <p className="text-sm font-bold text-slate-800 dark:text-white mt-0.5">
@@ -795,21 +767,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Map Placeholder */}
-            <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 h-36 relative flex items-center justify-center">
-              <div className="absolute inset-0 opacity-30 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]" />
-              <div className="z-10 text-center space-y-2">
-                <MapPin className="w-8 h-8 text-sky-500 mx-auto animate-bounce" />
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                  {selectedEvent.event_location}
-                </p>
-                <span className="text-[10px] text-slate-400 bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 inline-block">
-                  Interactive Map Directions
-                </span>
-              </div>
-            </div>
-
-            {/* Attendance Mode */}
             <div className="space-y-4">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">Attendance Mode</h3>
               
@@ -867,7 +824,6 @@ export function Marketplace() {
               )}
             </div>
 
-            {/* Description */}
             <div className="space-y-2">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">About Event</h3>
               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -875,35 +831,6 @@ export function Marketplace() {
               </p>
             </div>
 
-            {/* Gallery Placeholder */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-slate-800 dark:text-white text-base">Gallery</h3>
-              <div className="grid grid-cols-3 gap-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="aspect-video rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <img 
-                      src={getEventImage(selectedEvent)} 
-                      alt="Gallery preview" 
-                      className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" 
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Event Timeline */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-slate-800 dark:text-white text-base flex items-center gap-2">
-                <Clock className="w-4 h-4 text-sky-500" /> Event Timeline
-              </h3>
-              <div className="space-y-2 border-l-2 border-sky-500/30 pl-4 ml-2 text-xs">
-                <div><span className="font-bold text-slate-800 dark:text-white">Registration Opens:</span> <span className="text-slate-500">Available Now</span></div>
-                <div><span className="font-bold text-slate-800 dark:text-white">Check-in Opens:</span> <span className="text-slate-500">1 Hour before event</span></div>
-                <div><span className="font-bold text-slate-800 dark:text-white">Event Starts:</span> <span className="text-slate-500">{formatTime(selectedEvent.event_date)}</span></div>
-              </div>
-            </div>
-
-            {/* Ticket Types */}
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">Select Ticket Type</h3>
               <div className="space-y-3">
@@ -942,7 +869,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Bulk Purchase */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-bold text-slate-800 dark:text-white">Buying for a group?</h4>
@@ -965,46 +891,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Affiliate Section */}
-            <div className="p-4 rounded-2xl bg-sky-500/5 border border-sky-500/20 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-sky-500 uppercase flex items-center gap-1">
-                  <Tag className="w-3.5 h-3.5" /> Affiliate Rewards
-                </span>
-                <span className="text-[10px] bg-sky-500/10 text-sky-500 px-2 py-0.5 rounded-full font-bold">Earn Commission</span>
-              </div>
-              {selectedEvent.affiliate_enabled !== false ? (
-                <div className="flex items-center justify-between gap-3 pt-1">
-                  <p className="text-xs text-slate-600 dark:text-slate-300">
-                    Promote this event and earn up to {selectedEvent.affiliate_rate || '10%'} per ticket sale!
-                  </p>
-                  <button 
-                    onClick={() => {
-                      setShareModalEvent(selectedEvent);
-                      setActiveShareTab('affiliate');
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-sky-500 text-white text-xs font-bold shrink-0 hover:bg-sky-600 transition-colors"
-                  >
-                    Get Link
-                  </button>
-                </div>
-              ) : (
-                <p className="text-xs text-slate-500 italic">
-                  Affiliate promotion is unavailable for this event.
-                </p>
-              )}
-            </div>
-
-            {/* Related Events Carousel */}
-            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-              <h3 className="font-bold text-slate-800 dark:text-white text-base">You Might Also Like</h3>
-              {renderEventCollection(
-                'Related Events', 
-                events.filter(e => e.id !== selectedEvent.id && e.category === selectedEvent.category)
-              )}
-            </div>
-
-            {/* Bottom Checkout Sticky Bar */}
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
               <div>
                 <span className="text-xs text-slate-400 block">Total Amount</span>
@@ -1027,60 +913,120 @@ export function Marketplace() {
     );
   };
 
-  // --- RIGHT ACTION MENU WITH CLICK OUTSIDE REF ---
-  const renderActionMenu = () => (
-    <div className="relative" ref={menuRef}>
-      <button 
-        onClick={() => setShowMenu((prev) => !prev)} 
-        className="p-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
-      >
-        <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-      </button>
-      
-      {showMenu && (
-        <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-          {!vendorStatus ? (
-            <>
-              <button onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Shield className="w-4 h-4 text-sky-500" /> Become Verified Organizer</button>
-              <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Ticket className="w-4 h-4 text-sky-500" /> My Tickets</button>
-              <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><History className="w-4 h-4 text-sky-500" /> History</button>
-            </>
-          ) : (
-            <>
-              <button onClick={() => { navigate('/event-manager'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Plus className="w-4 h-4 text-sky-500" /> Create Event</button>
-              <button onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><Ticket className="w-4 h-4 text-sky-500" /> My Tickets</button>
-              <button onClick={() => { navigate('/scanner'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><QrCode className="w-4 h-4 text-sky-500" /> Scanner</button>
-              <button onClick={() => { navigate('/history'); setShowMenu(false); }} className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2.5"><History className="w-4 h-4 text-sky-500" /> History</button>
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden font-sans">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
-        
-        {/* FIXED APP HEADER LAYER */}
-        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
-          <HeaderComponent 
-            title="BlueTickets" 
-            subtitle="Discover experiences worth attending"
-            onMenuClick={() => setSidebarOpen(true)}
-            rightElement={renderActionMenu()}
-          />
-        </div>
+        <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-4 md:px-6 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 md:hidden hover:bg-slate-200"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-lg md:text-xl font-black text-slate-800 dark:text-white tracking-tight">BlueTickets</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Discover experiences worth attending</p>
+            </div>
+          </div>
 
-        {/* MAIN VIEWPORT */}
+          <div className="flex items-center gap-2">
+            {!vendorStatus ? (
+              <button 
+                onClick={() => navigate('/vendor-verification')}
+                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 text-xs font-bold transition-colors"
+              >
+                <Shield className="w-4 h-4" />
+                Become Verified Organizer
+              </button>
+            ) : (
+              <button 
+                onClick={() => navigate('/event-manager')}
+                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500 text-white hover:bg-sky-600 text-xs font-bold transition-colors shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Create Event
+              </button>
+            )}
+
+            <button 
+              onClick={() => navigate('/my-tickets')}
+              className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors"
+            >
+              <Ticket className="w-4 h-4 text-sky-500" />
+              My Tickets
+            </button>
+
+            <div className="relative" ref={menuRef}>
+              <button 
+                onClick={() => setShowMenu((prev) => !prev)} 
+                className="p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition-colors flex items-center gap-1 font-bold text-xs"
+                aria-label="Toggle Header Navigation Menu"
+              >
+                <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+              </button>
+              
+              {showMenu && (
+                <div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700/60 mb-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Navigation Menu</p>
+                  </div>
+
+                  {!vendorStatus ? (
+                    <button 
+                      onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} 
+                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
+                    >
+                      <Shield className="w-4 h-4 text-sky-500" /> 
+                      Become Verified Organizer
+                    </button>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={() => { navigate('/event-manager'); setShowMenu(false); }} 
+                        className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
+                      >
+                        <Plus className="w-4 h-4 text-sky-500" /> 
+                        Create Event
+                      </button>
+                      <button 
+                        onClick={() => { navigate('/scanner'); setShowMenu(false); }} 
+                        className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
+                      >
+                        <QrCode className="w-4 h-4 text-sky-500" /> 
+                        Ticket Scanner
+                      </button>
+                    </>
+                  )}
+
+                  <button 
+                    onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} 
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
+                  >
+                    <Ticket className="w-4 h-4 text-sky-500" /> 
+                    My Tickets
+                  </button>
+
+                  <button 
+                    onClick={() => { navigate('/history'); setShowMenu(false); }} 
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
+                  >
+                    <History className="w-4 h-4 text-sky-500" /> 
+                    Transaction History
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
         <main 
           ref={mainViewportRef} 
           className="flex-1 p-4 md:p-6 overflow-y-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden z-10"
         >
           <div className="max-w-6xl mx-auto space-y-6">
-            {/* Search Input Bar */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <Input 
@@ -1096,13 +1042,11 @@ export function Marketplace() {
           </div>
         </main>
 
-        {/* MOBILE NAVIGATION LAYER */}
         <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900">
           <MobileBottomNavigation />
         </div>
       </div>
 
-      {/* SHARE MODAL BOTTOM SHEET */}
       {shareModalEvent && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-3xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-2xl p-6 space-y-6">
@@ -1142,7 +1086,6 @@ export function Marketplace() {
               })}
             </div>
 
-            {/* TAB 1: SHARE LINK */}
             {activeShareTab === 'link' && (
               <div className="space-y-4">
                 <p className="text-xs text-slate-500">Copy link to share on social media or directly with friends.</p>
@@ -1159,7 +1102,6 @@ export function Marketplace() {
               </div>
             )}
 
-            {/* TAB 2: POSTER */}
             {activeShareTab === 'poster' && (
               <div className="space-y-4 text-center">
                 <div className="aspect-[3/4] max-w-xs mx-auto rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-900">
@@ -1183,7 +1125,6 @@ export function Marketplace() {
               </div>
             )}
 
-            {/* TAB 3: BANNER */}
             {activeShareTab === 'banner' && (
               <div className="space-y-4 text-center">
                 <div className="aspect-[21/9] w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-900">
@@ -1209,7 +1150,6 @@ export function Marketplace() {
               </div>
             )}
 
-            {/* TAB 4: EMBED CODE */}
             {activeShareTab === 'embed' && (
               <div className="space-y-4">
                 <p className="text-xs text-slate-500">Paste this HTML snippet to embed this ticket widget into your website.</p>
@@ -1225,7 +1165,6 @@ export function Marketplace() {
               </div>
             )}
 
-            {/* TAB 5: AFFILIATE LINK */}
             {activeShareTab === 'affiliate' && (
               <div className="space-y-4">
                 {shareModalEvent.affiliate_enabled !== false ? (
