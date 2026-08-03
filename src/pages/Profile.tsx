@@ -21,17 +21,14 @@ export function Profile() {
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState(user?.profilePicture || null);
 
-  // TODO:
-  // Local Storage placeholder.
-  // Replace with backend endpoint later.
+  // Local Storage placeholder for Nickname
   const [nickname, setNickname] = useState<string>(() => {
     return localStorage.getItem('profile_nickname') || '';
   });
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState(nickname);
 
-  // TODO:
-  // Replace Local Storage with backend flag when API becomes available.
+  // Phone Number Editing State
   const [isPhoneEdited, setIsPhoneEdited] = useState<boolean>(() => {
     return localStorage.getItem('profile_phone_edited') === 'true';
   });
@@ -43,9 +40,6 @@ export function Profile() {
   const [phoneError, setPhoneError] = useState('');
 
   // Address State
-  // TODO:
-  // Currently stored in Local Storage.
-  // Replace with backend endpoint when Address API becomes available.
   const [residentialAddress, setResidentialAddress] = useState(() => {
     const saved = localStorage.getItem('marketplace_delivery_location');
     return saved ? JSON.parse(saved) : null;
@@ -74,17 +68,26 @@ export function Profile() {
 
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
 
-  // Derive User Identity Fields
-  const fullName = `${user?.firstName || ''} ${user?.surname || ''}`.trim() || 'Valued Member';
+  // Derive Dynamic User Identity Fields from Backend User Context
+  const fullName = `${user?.firstName || user?.first_name || ''} ${user?.surname || user?.last_name || ''}`.trim() || 'Valued Member';
   const email = user?.email || 'Not Provided';
-  const uid = (user as any)?.uid || (user as any)?.id || 'BSM24001893';
-  const tier = (user as any)?.tier || 'Tier 2';
-  const verificationStatus = (user as any)?.verificationStatus || 'Verified';
+  
+  // Dynamic UID safely pulled from user's referral_code (matching Rewards page) with fallback
+  const rawUid = (user as any)?.referral_code || (user as any)?.referralCode || (user as any)?.uid || (user as any)?.id || (user as any)?.user_id;
+  const uid = rawUid ? String(rawUid) : 'BSM24001000';
+
+  // Dynamic Tier with Default Tier 1
+  const tier = (user as any)?.tier || (user as any)?.tierLevel || (user as any)?.tier_level || 'Tier 1';
+  
+  const verificationStatus = (user as any)?.verificationStatus || (user as any)?.verification_status || 'Verified';
   const gender = (user as any)?.gender || 'Not Specified';
-  const dateOfBirth = (user as any)?.dob || (user as any)?.dateOfBirth || 'Not Specified';
-  const memberSince = (user as any)?.createdAt 
-    ? new Date((user as any).createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-    : 'Jan 2024';
+  const dateOfBirth = (user as any)?.dob || (user as any)?.dateOfBirth || (user as any)?.date_of_birth || 'Not Specified';
+  
+  // Dynamic Date Registered safely retrieved from Backend
+  const rawCreatedAt = (user as any)?.createdAt || (user as any)?.created_at || (user as any)?.registeredAt || (user as any)?.dateRegistered;
+  const memberSince = rawCreatedAt 
+    ? new Date(rawCreatedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    : 'Not Specified';
 
   // Fetch Countries on Mount
   useEffect(() => {
@@ -190,15 +193,12 @@ export function Profile() {
   // Nickname Handlers
   const handleSaveNickname = () => {
     const trimmed = nicknameInput.trim();
-    // TODO:
-    // Local Storage placeholder.
-    // Replace with backend endpoint later.
     localStorage.setItem('profile_nickname', trimmed);
     setNickname(trimmed);
     setIsEditingNickname(false);
   };
 
-  // Phone Number Handlers (Strict Enforcement)
+  // Phone Number Handlers
   const handlePhoneInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '');
     if (val.length <= 10) {
@@ -221,8 +221,6 @@ export function Profile() {
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       
       if (response) {
-        // TODO:
-        // Replace Local Storage with backend flag when API becomes available.
         localStorage.setItem('profile_phone_edited', 'true');
         setIsPhoneEdited(true);
         setIsEditingPhone(false);
@@ -261,9 +259,6 @@ export function Profile() {
         updatedAt: new Date().toISOString()
       };
 
-      // TODO:
-      // Currently stored in Local Storage.
-      // Replace with backend endpoint when Address API becomes available.
       localStorage.setItem('marketplace_delivery_location', JSON.stringify(dataToSave));
       setResidentialAddress(dataToSave);
       setIsEditingAddress(false);
@@ -278,11 +273,11 @@ export function Profile() {
   const selectClassName = "flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:ring-offset-slate-950 dark:focus-visible:ring-sky-400 appearance-none text-slate-800 dark:text-slate-100";
 
   return (
-    <div className="h-screen bg-slate-50 dark:bg-slate-950 flex overflow-hidden font-sans">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden font-sans">
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         
         {/* FIXED APP HEADER */}
-        <header className="sticky top-0 z-30 shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
+        <header className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
           <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3.5">
             <div className="flex items-center gap-3">
               <button 
@@ -297,8 +292,8 @@ export function Profile() {
           </div>
         </header>
 
-        {/* ISOLATED SCROLLABLE CONTENT AREA */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto scrollbar-hide z-10">
+        {/* ISOLATED SCROLLABLE CONTENT AREA - Scrollbar removed on mobile screens */}
+        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden z-10">
           <div className="max-w-5xl mx-auto space-y-6">
             
             {/* DESKTOP TWO-COLUMN LAYOUT CONTAINER */}
@@ -411,7 +406,7 @@ export function Profile() {
 
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
                     
-                    {/* Full Name (Read-Only) */}
+                    {/* Full Name */}
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400 dark:text-slate-500">Full Name</p>
@@ -476,7 +471,7 @@ export function Profile() {
                       )}
                     </div>
 
-                    {/* Gender (Read-Only) */}
+                    {/* Gender */}
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400 dark:text-slate-500">Gender</p>
@@ -484,7 +479,7 @@ export function Profile() {
                       </div>
                     </div>
 
-                    {/* Date of Birth (Read-Only) */}
+                    {/* Date of Birth */}
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400 dark:text-slate-500">Date of Birth</p>
@@ -507,7 +502,7 @@ export function Profile() {
 
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
                     
-                    {/* Mobile Number (Editable ONE TIME ONLY) */}
+                    {/* Mobile Number */}
                     <div className="p-4 transition-colors">
                       <div className="flex items-center justify-between">
                         <div>
@@ -581,7 +576,7 @@ export function Profile() {
                       )}
                     </div>
 
-                    {/* Email Address (Read-Only) */}
+                    {/* Email Address */}
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400 dark:text-slate-500">Email Address</p>
@@ -787,7 +782,7 @@ export function Profile() {
         </main>
 
         {/* FIXED MOBILE BOTTOM NAVIGATION */}
-        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <MobileBottomNavigation />
         </div>
       </div>
