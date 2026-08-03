@@ -117,8 +117,9 @@ export function Marketplace() {
   const { PinComponent, showPinModal, message } = PinModal();
   const { showToast, ToastComponent } = Toast();
 
-  // Reference for Main Viewport to reset scroll position
+  // References
   const mainViewportRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null); // Reference for Header Action Menu Click Outside
 
   // --- GLOBAL UI STATE ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -137,6 +138,24 @@ export function Marketplace() {
   const [shareModalEvent, setShareModalEvent] = useState<ExtendedEvent | null>(null);
   const [activeShareTab, setActiveShareTab] = useState<'link' | 'poster' | 'banner' | 'embed' | 'affiliate'>('link');
   const [copiedType, setCopiedType] = useState<string | null>(null);
+
+  // ==========================================
+  // CLICK OUTSIDE LISTENER FOR HEADER MENU
+  // ==========================================
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
 
   // ==========================================
   // EVENT SYSTEM
@@ -1008,11 +1027,11 @@ export function Marketplace() {
     );
   };
 
-  // --- RIGHT ACTION MENU ---
+  // --- RIGHT ACTION MENU WITH CLICK OUTSIDE REF ---
   const renderActionMenu = () => (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       <button 
-        onClick={() => setShowMenu(!showMenu)} 
+        onClick={() => setShowMenu((prev) => !prev)} 
         className="p-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
       >
         <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-400" />
