@@ -20,16 +20,19 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
   const [displayCurrency, setDisplayCurrency] = useState<'NGN' | 'USDT' | 'BTC'>('NGN');
   const [bspBalance, setBspBalance] = useState<number>(0);
 
-  // Fetch actual backend bonus summary
+  // Conversion Rates (Default estimated market values)
+  const USDT_RATE_NGN = 1550;
+  const BTC_RATE_NGN = 100000000; // ≈ $64,500 USD per BTC
+
   useEffect(() => {
     getRequest(ENDPOINTS.bonus_summary)
       .then(res => {
         if (res?.data?.current_points !== undefined) {
-          setBspBalance(res.data.current_points);
+          setBspBalance(Number(res.data.current_points) || 0);
         }
       })
       .catch(() => {
-        // Fallback or silent catch
+        setBspBalance(0);
       });
   }, []);
 
@@ -38,13 +41,29 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
     ? Number(rawBalance.replace(/[^0-9.-]+/g, '')) || 0
     : typeof rawBalance === 'number' ? rawBalance : 0;
 
-  const usdtBalance = Number((ngnBalance / 1550).toFixed(2));
+  const totalNgnEquivalent = ngnBalance + bspBalance;
+  const usdtBalance = Number((totalNgnEquivalent / USDT_RATE_NGN).toFixed(2));
+  const btcBalance = Number((totalNgnEquivalent / BTC_RATE_NGN).toFixed(6));
+
   const referralCode = user?.referral_code || 'BLUESEA';
   const referralLink = `https://blueseamobile.com.ng/login?ref=${referralCode}`;
 
   const handleCopyReferral = () => {
     navigator.clipboard.writeText(referralLink);
     showToast('Referral link copied to clipboard!');
+  };
+
+  const renderFormattedBalance = () => {
+    if (!showBalance) return '••••••••';
+    switch (displayCurrency) {
+      case 'USDT':
+        return `$${usdtBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
+      case 'BTC':
+        return `₿${btcBalance.toFixed(6)} BTC`;
+      case 'NGN':
+      default:
+        return `₦${totalNgnEquivalent.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
   };
 
   return (
@@ -85,12 +104,11 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
 
         <div className="my-6">
           <p className="text-3xl sm:text-4xl font-black tracking-tight">
-            {showBalance 
-              ? displayCurrency === 'NGN' ? `₦${(ngnBalance + bspBalance).toLocaleString()}` : `$${usdtBalance} USDT`
-              : '••••••••'
-            }
+            {renderFormattedBalance()}
           </p>
-          <p className="text-xs text-sky-300/80 mt-1">Includes Fiat Balance & Digital Rewards (1 BSP = ₦1)</p>
+          <p className="text-xs text-sky-300/80 mt-1">
+            {displayCurrency === 'BTC' ? `≈ ₦${totalNgnEquivalent.toLocaleString()} NGN` : 'Includes Fiat Balance & Digital Rewards'}
+          </p>
         </div>
 
         {/* QUICK ACTIONS */}
@@ -98,7 +116,7 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
           <ActionButton icon={<ArrowDownLeft className="w-5 h-5" />} label="Receive" onClick={() => onNavigate('receive')} />
           <ActionButton icon={<Send className="w-5 h-5" />} label="Send" onClick={() => onNavigate('send')} />
           <ActionButton icon={<Repeat className="w-5 h-5" />} label="Convert" onClick={() => onNavigate('convert')} />
-          <ActionButton icon={<QrCode className="w-5 h-5" />} label="Scan" onClick={() => onNavigate('receive')} />
+          <ActionButton icon={<QrCode className="w-5 h-5" />} label="Scan" onClick={() => onNavigate('send')} />
         </div>
       </div>
 
@@ -110,11 +128,10 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
             icon={<span className="font-black text-xs">₮</span>} 
             name="USDT (Tether)" 
             detail="TRC20 / BEP20" 
-            balance={showBalance ? `${usdtBalance}` : '••••'} 
-            fiat={`≈ ₦${(usdtBalance * 1550).toLocaleString()}`} 
+            balance={showBalance ? `$${(ngnBalance / USDT_RATE_NGN).toFixed(2)}` : '••••'} 
+            fiat={`≈ ₦${ngnBalance.toLocaleString()}`} 
             color="emerald" 
           />
-          {/* Fix TS6133: Utilizing Gift icon in BSP Row */}
           <AssetRow 
             icon={<Gift className="w-5 h-5 text-sky-500" />} 
             name="BSP Points" 
