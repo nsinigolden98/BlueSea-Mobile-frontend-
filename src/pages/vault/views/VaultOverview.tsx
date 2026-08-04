@@ -39,8 +39,8 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
 
   const totalNgnEquivalent = ngnBalance + bspBalance;
   
-  // USDT starts at 0.00 default as requested
-  const usdtBalance = Number(user?.usdt_balance || 0); 
+  // Safely cast user to allow usdt_balance access without TS error
+  const usdtBalance = Number((user as any)?.usdt_balance || 0); 
   const btcBalance = Number((totalNgnEquivalent / BTC_RATE_NGN).toFixed(6));
 
   const referralCode = user?.referral_code || 'BLUESEA';

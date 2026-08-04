@@ -55,7 +55,10 @@ export function VaultMissions({ showToast }: { showToast: (msg: string) => void 
         {tasks.map((task) => (
           <div key={task.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold">
+              <div className={cn(
+                "w-10 h-10 rounded-2xl flex items-center justify-center font-bold",
+                task.category === 'video' ? "bg-purple-500/10 text-purple-500" : "bg-sky-500/10 text-sky-500"
+              )}>
                 {task.category === 'video' ? <Play className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
               </div>
               <div>
@@ -71,7 +74,10 @@ export function VaultMissions({ showToast }: { showToast: (msg: string) => void 
             ) : (
               <Button 
                 onClick={() => setActiveTask(task)} 
-                className="bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-bold cursor-pointer h-9 px-4"
+                className={cn(
+                  "rounded-xl text-xs font-bold cursor-pointer h-9 px-4 text-white",
+                  task.category === 'video' ? "bg-purple-500 hover:bg-purple-600" : "bg-sky-500 hover:bg-sky-600"
+                )}
               >
                 Perform & Verify
               </Button>
@@ -86,7 +92,7 @@ export function VaultMissions({ showToast }: { showToast: (msg: string) => void 
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-md space-y-4 shadow-xl">
             <div className="flex justify-between items-center">
               <h4 className="font-bold text-slate-800 dark:text-white text-sm">Task Verification</h4>
-              <button onClick={() => setActiveTask(null)} className="text-slate-400 text-xs">Close</button>
+              <button onClick={() => setActiveTask(null)} className="text-slate-400 text-xs cursor-pointer">Close</button>
             </div>
 
             <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl space-y-1">
@@ -119,7 +125,7 @@ export function VaultMissions({ showToast }: { showToast: (msg: string) => void 
               </div>
             )}
 
-            <Button onClick={handleVerifySubmit} className="w-full bg-sky-500 text-white rounded-2xl h-11 font-bold text-xs">
+            <Button onClick={handleVerifySubmit} className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-11 font-bold text-xs cursor-pointer">
               <ShieldCheck className="w-4 h-4 mr-1" /> Submit for Verification
             </Button>
           </div>
