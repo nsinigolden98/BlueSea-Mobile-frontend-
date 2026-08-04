@@ -32,7 +32,7 @@ import {
   GOTV,
   Startimes,
   ShowMax,
-  Rewards,
+  // Rewards, // Replaced by Vault modular system
   WAECRegistration,
   WAECResult,
   JAMBRegistration,
@@ -73,7 +73,10 @@ import AddEmployee from './screens/payroll-pro/AddEmployee';
 import CreateBranch from './screens/payroll-pro/CreateBranch';
 import PayrollDetail from './screens/payroll-pro/PayrollDetail';
 
-//legal-center
+// VAULT / REWARDS SYSTEM IMPORT
+import { Rewards } from '@/pages/vault';
+
+// LEGAL CENTER IMPORTS
 import {
   TermsAndConditions,
   PrivacyPolicy,
@@ -160,7 +163,11 @@ function AppRoutes() {
           <Route path="/pin" element={<ProtectedRoute><CreatePin /></ProtectedRoute>} />
           <Route path="/light-bills" element={<ProtectedRoute><LightBills /></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+          
+          {/* VAULT / REWARDS ROUTES */}
           <Route path="/rewards" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
+          <Route path="/vault" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
+
           <Route path="/transaction-history" element={<ProtectedRoute><TransactionFilterPage /></ProtectedRoute>} />
           <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} /> 
           <Route path="/airtime-buyback" element={<ProtectedRoute><AirtimeBuyback /></ProtectedRoute>} />
@@ -183,17 +190,17 @@ function AppRoutes() {
           <Route path="/tv-subscription" element={<ProtectedRoute><TVSubscription /></ProtectedRoute>} />
           <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
           <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
- 
           <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/gift-cards" element={<GiftCards />} />
-          <Route path="/flights" element={<Flights />} />
-          <Route path="/spin-vault" element={<SpinVault />} />
-          <Route path="/betting" element={<Betting />} />
           
-          <Route path="/identity-center" element={<IdentityCenter />} />
+          {/* NOW SECURED WITH PROTECTED ROUTE */}
+          <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+          <Route path="/gift-cards" element={<ProtectedRoute><GiftCards /></ProtectedRoute>} />
+          <Route path="/flights" element={<ProtectedRoute><Flights /></ProtectedRoute>} />
+          <Route path="/spin-vault" element={<ProtectedRoute><SpinVault /></ProtectedRoute>} />
+          <Route path="/betting" element={<ProtectedRoute><Betting /></ProtectedRoute>} />
+          <Route path="/identity-center" element={<ProtectedRoute><IdentityCenter /></ProtectedRoute>} />
 
-          {/* Legal Center Routes */}
+          {/* Legal Center Routes (Kept accessible for compliance & terms viewing) */}
           <Route path="/legal/terms" element={<TermsAndConditions />} />
           <Route path="/legal/refund" element={<RefundPolicy />} />
           <Route path="/legal/privacy" element={<PrivacyPolicy />} />
@@ -202,16 +209,16 @@ function AppRoutes() {
           <Route path="/legal/kyc" element={<KYCPolicy />} />
           <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
 
-          {/* Payroll Pro Routes */}
-          <Route path="/payroll-pro" element={<PayrollProHome />} />
-          <Route path="/payroll-pro/create-company" element={<CreateCompany />} />
-          <Route path="/payroll-pro/company/:companyId" element={<CompanyWorkspace />} />
-          <Route path="/payroll-pro/company/:companyId/add-employee" element={<AddEmployee />} />
-          <Route path="/payroll-pro/company/:companyId/create-branch" element={<CreateBranch />} />
-          <Route path="/payroll-pro/branch/:branchId" element={<BranchDetails />} />
-          <Route path="/payroll-pro/employee/:employeeId" element={<EmployeeProfile />} />
-          <Route path="/payroll-pro/portal/:companyId" element={<EmployeePortal />} />
-          <Route path="/payroll-pro/payroll/:payrollId" element={<PayrollDetail />} />
+          {/* NOW SECURED PAYROLL PRO ROUTES */}
+          <Route path="/payroll-pro" element={<ProtectedRoute><PayrollProHome /></ProtectedRoute>} />
+          <Route path="/payroll-pro/create-company" element={<ProtectedRoute><CreateCompany /></ProtectedRoute>} />
+          <Route path="/payroll-pro/company/:companyId" element={<ProtectedRoute><CompanyWorkspace /></ProtectedRoute>} />
+          <Route path="/payroll-pro/company/:companyId/add-employee" element={<ProtectedRoute><AddEmployee /></ProtectedRoute>} />
+          <Route path="/payroll-pro/company/:companyId/create-branch" element={<ProtectedRoute><CreateBranch /></ProtectedRoute>} />
+          <Route path="/payroll-pro/branch/:branchId" element={<ProtectedRoute><BranchDetails /></ProtectedRoute>} />
+          <Route path="/payroll-pro/employee/:employeeId" element={<ProtectedRoute><EmployeeProfile /></ProtectedRoute>} />
+          <Route path="/payroll-pro/portal/:companyId" element={<ProtectedRoute><EmployeePortal /></ProtectedRoute>} />
+          <Route path="/payroll-pro/payroll/:payrollId" element={<ProtectedRoute><PayrollDetail /></ProtectedRoute>} />
         </Route>
 
         {/* Fallback */}

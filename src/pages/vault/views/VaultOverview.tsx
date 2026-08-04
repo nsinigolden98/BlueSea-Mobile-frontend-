@@ -1,12 +1,13 @@
 // src/pages/vault/views/VaultOverview.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { getRequest, ENDPOINTS } from '@/types';
 import { 
   Sparkles, Eye, EyeOff, ArrowDownLeft, Send, Repeat, QrCode, 
-  Gift, Users, BookMarked, History as HistoryIcon, CreditCard, Trophy 
+  Gift, Users, BookMarked, History as HistoryIcon, CreditCard, Trophy, Copy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { VaultViewMode } from '../VaultLayout';
+import type { VaultViewMode } from '../VaultLayout';
 
 interface VaultOverviewProps {
   onNavigate: (view: VaultViewMode) => void;
@@ -17,6 +18,20 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
   const { user } = useAuth();
   const [showBalance, setShowBalance] = useState(true);
   const [displayCurrency, setDisplayCurrency] = useState<'NGN' | 'USDT' | 'BTC'>('NGN');
+  const [bspBalance, setBspBalance] = useState<number>(0);
+
+  // Fetch actual backend bonus summary
+  useEffect(() => {
+    getRequest(ENDPOINTS.bonus_summary)
+      .then(res => {
+        if (res?.data?.current_points !== undefined) {
+          setBspBalance(res.data.current_points);
+        }
+      })
+      .catch(() => {
+        // Fallback or silent catch
+      });
+  }, []);
 
   const rawBalance = user?.balance;
   const ngnBalance = typeof rawBalance === 'string'
@@ -24,6 +39,13 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
     : typeof rawBalance === 'number' ? rawBalance : 0;
 
   const usdtBalance = Number((ngnBalance / 1550).toFixed(2));
+  const referralCode = user?.referral_code || 'BLUESEA';
+  const referralLink = `https://blueseamobile.com.ng/login?ref=${referralCode}`;
+
+  const handleCopyReferral = () => {
+    navigator.clipboard.writeText(referralLink);
+    showToast('Referral link copied to clipboard!');
+  };
 
   return (
     <div className="space-y-6">
@@ -64,11 +86,11 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
         <div className="my-6">
           <p className="text-3xl sm:text-4xl font-black tracking-tight">
             {showBalance 
-              ? displayCurrency === 'NGN' ? `₦${ngnBalance.toLocaleString()}` : `$${usdtBalance} USDT`
+              ? displayCurrency === 'NGN' ? `₦${(ngnBalance + bspBalance).toLocaleString()}` : `$${usdtBalance} USDT`
               : '••••••••'
             }
           </p>
-          <p className="text-xs text-sky-300/80 mt-1">Includes Fiat Balance & Digital Rewards</p>
+          <p className="text-xs text-sky-300/80 mt-1">Includes Fiat Balance & Digital Rewards (1 BSP = ₦1)</p>
         </div>
 
         {/* QUICK ACTIONS */}
@@ -84,8 +106,48 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Supported Assets</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <AssetRow symbol="₮" name="USDT (Tether)" detail="TRC20 / BEP20" balance={showBalance ? `${usdtBalance}` : '••••'} fiat={`≈ ₦${(usdtBalance * 1550).toLocaleString()}`} color="emerald" />
-          <AssetRow symbol="BSP" name="BlueSea Points" detail="1 BSP = ₦1.00" balance={showBalance ? '1,250' : '••••'} fiat="≈ ₦1,250" color="sky" />
+          <AssetRow 
+            icon={<span className="font-black text-xs">₮</span>} 
+            name="USDT (Tether)" 
+            detail="TRC20 / BEP20" 
+            balance={showBalance ? `${usdtBalance}` : '••••'} 
+            fiat={`≈ ₦${(usdtBalance * 1550).toLocaleString()}`} 
+            color="emerald" 
+          />
+          {/* Fix TS6133: Utilizing Gift icon in BSP Row */}
+          <AssetRow 
+            icon={<Gift className="w-5 h-5 text-sky-500" />} 
+            name="BSP Points" 
+            detail="1 BSP = ₦1.00 Guaranteed" 
+            balance={showBalance ? bspBalance.toLocaleString() : '••••'} 
+            fiat={`≈ ₦${bspBalance.toLocaleString()}`} 
+            color="sky" 
+          />
+        </div>
+      </div>
+
+      {/* REFERRAL QUICK CARD */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-sky-500" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Invite & Earn Rewards</h3>
+          </div>
+          <button onClick={() => onNavigate('referral')} className="text-xs font-bold text-sky-500 hover:underline cursor-pointer">
+            View Details →
+          </button>
+        </div>
+        <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Your Referral Link</p>
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{referralLink}</p>
+          </div>
+          <button 
+            onClick={handleCopyReferral} 
+            className="p-2.5 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition-all cursor-pointer shrink-0"
+          >
+            <Copy className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
@@ -112,12 +174,12 @@ function ActionButton({ icon, label, onClick }: { icon: React.ReactNode; label: 
   );
 }
 
-function AssetRow({ symbol, name, detail, balance, fiat, color }: any) {
+function AssetRow({ icon, name, detail, balance, fiat, color }: any) {
   return (
     <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 flex justify-between items-center">
       <div className="flex items-center gap-3">
         <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-black text-xs", color === 'emerald' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-sky-500/10 text-sky-500')}>
-          {symbol}
+          {icon}
         </div>
         <div>
           <p className="font-bold text-slate-800 dark:text-white text-sm">{name}</p>

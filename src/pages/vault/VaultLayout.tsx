@@ -1,5 +1,5 @@
 // src/pages/vault/VaultLayout.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar, Header, Toast, Loader, PinModal } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
@@ -25,13 +25,22 @@ export type VaultViewMode =
   | 'referral' 
   | 'cards';
 
-export function VaultLayout() {
+export function Rewards() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState<VaultViewMode>('overview');
 
   const { showToast, ToastComponent } = Toast();
   const { LoaderComponent, showLoader, hideLoader } = Loader();
   const { showPinModal, PinComponent } = PinModal();
+
+  // Fix TS6133: Use showLoader and hideLoader on view transitions
+  useEffect(() => {
+    showLoader();
+    const timer = setTimeout(() => {
+      hideLoader();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [activeView, showLoader, hideLoader]);
 
   const renderActiveView = () => {
     switch (activeView) {
@@ -97,3 +106,6 @@ export function VaultLayout() {
     </div>
   );
 }
+
+// Alias export for backward compatibility
+export const VaultLayout = Rewards;
