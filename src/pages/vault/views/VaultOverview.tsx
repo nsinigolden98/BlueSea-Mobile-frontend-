@@ -20,9 +20,7 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
   const [displayCurrency, setDisplayCurrency] = useState<'NGN' | 'USDT' | 'BTC'>('NGN');
   const [bspBalance, setBspBalance] = useState<number>(0);
 
-  // Conversion Rates (Default estimated market values)
-  const USDT_RATE_NGN = 1550;
-  const BTC_RATE_NGN = 100000000; // ≈ $64,500 USD per BTC
+  const BTC_RATE_NGN = 100000000; // ≈ Market Rate per BTC
 
   useEffect(() => {
     getRequest(ENDPOINTS.bonus_summary)
@@ -31,9 +29,7 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
           setBspBalance(Number(res.data.current_points) || 0);
         }
       })
-      .catch(() => {
-        setBspBalance(0);
-      });
+      .catch(() => setBspBalance(0));
   }, []);
 
   const rawBalance = user?.balance;
@@ -42,7 +38,9 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
     : typeof rawBalance === 'number' ? rawBalance : 0;
 
   const totalNgnEquivalent = ngnBalance + bspBalance;
-  const usdtBalance = Number((totalNgnEquivalent / USDT_RATE_NGN).toFixed(2));
+  
+  // USDT starts at 0.00 default as requested
+  const usdtBalance = Number(user?.usdt_balance || 0); 
   const btcBalance = Number((totalNgnEquivalent / BTC_RATE_NGN).toFixed(6));
 
   const referralCode = user?.referral_code || 'BLUESEA';
@@ -57,12 +55,25 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
     if (!showBalance) return '••••••••';
     switch (displayCurrency) {
       case 'USDT':
-        return `$${usdtBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
+        return `$${usdtBalance.toFixed(2)} USDT`;
       case 'BTC':
         return `₿${btcBalance.toFixed(6)} BTC`;
       case 'NGN':
       default:
         return `₦${totalNgnEquivalent.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+  };
+
+  const renderSubtextEstimate = () => {
+    if (!showBalance) return 'Balance hidden';
+    switch (displayCurrency) {
+      case 'USDT':
+        return `≈ ₦${(usdtBalance * 1550).toLocaleString()} NGN`;
+      case 'BTC':
+        return `≈ ₦${totalNgnEquivalent.toLocaleString()} NGN`;
+      case 'NGN':
+      default:
+        return `≈ $${usdtBalance.toFixed(2)} USDT • ₿${btcBalance.toFixed(6)} BTC`;
     }
   };
 
@@ -106,8 +117,8 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
           <p className="text-3xl sm:text-4xl font-black tracking-tight">
             {renderFormattedBalance()}
           </p>
-          <p className="text-xs text-sky-300/80 mt-1">
-            {displayCurrency === 'BTC' ? `≈ ₦${totalNgnEquivalent.toLocaleString()} NGN` : 'Includes Fiat Balance & Digital Rewards'}
+          <p className="text-xs text-sky-300/80 mt-1 font-semibold">
+            {renderSubtextEstimate()}
           </p>
         </div>
 
@@ -128,8 +139,8 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
             icon={<span className="font-black text-xs">₮</span>} 
             name="USDT (Tether)" 
             detail="TRC20 / BEP20" 
-            balance={showBalance ? `$${(ngnBalance / USDT_RATE_NGN).toFixed(2)}` : '••••'} 
-            fiat={`≈ ₦${ngnBalance.toLocaleString()}`} 
+            balance={showBalance ? `$${usdtBalance.toFixed(2)}` : '••••'} 
+            fiat={`≈ ₦${(usdtBalance * 1550).toLocaleString()}`} 
             color="emerald" 
           />
           <AssetRow 
@@ -143,7 +154,7 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
         </div>
       </div>
 
-      {/* REFERRAL QUICK CARD */}
+      {/* REFERRAL CARD */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -168,7 +179,7 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
         </div>
       </div>
 
-      {/* NAVIGATION SHORTCUTS */}
+      {/* SHORTCUTS */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <ShortcutCard icon={<HistoryIcon className="w-5 h-5 text-amber-500" />} title="History" subtitle="All activity logs" onClick={() => onNavigate('history')} />
         <ShortcutCard icon={<BookMarked className="w-5 h-5 text-blue-500" />} title="Address Book" subtitle="Saved wallets" onClick={() => onNavigate('address_book')} />
