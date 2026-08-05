@@ -78,9 +78,9 @@ export function Dashboard() {
       path: '/flights',
     },
     {
-      label: 'Events',
+      label: 'Scan Events',
       icon: Ticket,
-      path: '/marketplace',
+      path: '/scanner-assignments',
     },
   ];
 
