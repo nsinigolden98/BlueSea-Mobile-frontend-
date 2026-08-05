@@ -71,7 +71,7 @@ export const PromotionalPreviewModal: React.FC<PromotionalPreviewModalProps> = (
   const handleDownload = () => {
     if (!previewDataUrl) return;
     downloadMarketingAsset(previewDataUrl, event.event_title, selectedFormat);
-    if (onCopyToast) onCopyToast('Asset downloaded successfully!');
+    if (onCopyToast) onCopyToast('Asset download initiated!');
   };
 
   const handleCopyLink = () => {
@@ -98,7 +98,7 @@ export const PromotionalPreviewModal: React.FC<PromotionalPreviewModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-between p-3 sm:p-6 animate-in fade-in duration-200 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-between p-3 sm:p-6 animate-in fade-in duration-200 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="w-full max-w-5xl flex items-center justify-between py-2 border-b border-slate-800 text-white shrink-0">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-sky-400" />
@@ -181,26 +181,17 @@ export const PromotionalPreviewModal: React.FC<PromotionalPreviewModalProps> = (
               </button>
             </div>
           </div>
-
-          <button
-            onClick={renderAsset}
-            disabled={generating}
-            className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-          >
-            {generating ? <Loader2 className="w-4 h-4 animate-spin text-sky-400" /> : <RotateCcw className="w-4 h-4" />}
-            Regenerate Asset
-          </button>
         </div>
 
         <div className="md:col-span-8 flex items-center justify-center min-h-[350px] sm:min-h-[480px] bg-slate-900/60 rounded-3xl border border-slate-800 p-4 relative overflow-hidden">
           {generating ? (
             <div className="flex flex-col items-center justify-center space-y-3 text-slate-400">
               <Loader2 className="w-8 h-8 animate-spin text-sky-400" />
-              <p className="text-xs font-semibold">Composing high-res promotional preview...</p>
+              <p className="text-xs font-semibold">Generating promotional asset preview...</p>
             </div>
           ) : previewDataUrl ? (
             <div 
-              className="max-h-[60vh] overflow-auto rounded-2xl flex items-center justify-center transition-all duration-300"
+              className="max-h-[60vh] overflow-auto rounded-2xl flex items-center justify-center transition-all duration-300 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'center center' }}
             >
               <img

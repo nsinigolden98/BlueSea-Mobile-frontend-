@@ -441,7 +441,7 @@ export function Marketplace() {
   };
 
   const renderCategories = () => (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden">
+    <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <button
         onClick={() => setActiveCategory('All')}
         className={cn(
@@ -571,7 +571,7 @@ export function Marketplace() {
           </h3>
         </div>
 
-        <div className="flex items-stretch gap-4 overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden snap-x snap-mandatory scroll-smooth pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="flex items-stretch gap-4 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory scroll-smooth pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
           {items.map((event) => (
             <div 
               key={event.id} 
@@ -588,7 +588,7 @@ export function Marketplace() {
   const renderEvents = () => {
     if (loading) {
       return (
-        <div className="flex items-stretch gap-4 overflow-x-auto pb-3">
+        <div className="flex items-stretch gap-4 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="shrink-0 w-[84vw] sm:w-[320px] animate-pulse bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 space-y-3">
               <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800 rounded-xl" />
@@ -1023,7 +1023,7 @@ export function Marketplace() {
     starting_price: shareModalEvent.ticket_types?.[0]?.price,
     attendance_mode: shareModalEvent.attendance_mode,
     tags: shareModalEvent.tags,
-    event_banner: shareModalEvent.event_banner ? getImageUrl(shareModalEvent.event_banner) : undefined,
+    event_banner: getEventImage(shareModalEvent),
     ticket_image: shareModalEvent.ticket_image ? getImageUrl(shareModalEvent.ticket_image) : undefined,
   } : null;
 
@@ -1150,7 +1150,7 @@ export function Marketplace() {
 
         <main 
           ref={mainViewportRef} 
-          className="flex-1 p-4 md:p-6 overflow-y-auto z-10"
+          className="flex-1 p-4 md:p-6 overflow-y-auto z-10 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <div className="max-w-6xl mx-auto space-y-6">
             <div className="relative">

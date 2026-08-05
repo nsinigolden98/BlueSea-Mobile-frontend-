@@ -76,14 +76,25 @@ function strokeRoundRect(
   ctx.stroke();
 }
 
-// Helper: Safely load image for canvas
+/**
+ * Robust image loader that handles CORS policy restrictions gracefully.
+ */
 const loadImage = (src?: string): Promise<HTMLImageElement | null> => {
   return new Promise((resolve) => {
-    if (!src) return resolve(null);
+    if (!src || src.trim() === '') return resolve(null);
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
+    
     img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      // Fallback: Retry without crossOrigin headers if CORS blocks canvas export
+      const fallbackImg = new Image();
+      fallbackImg.onload = () => resolve(fallbackImg);
+      fallbackImg.onerror = () => resolve(null);
+      fallbackImg.src = src;
+    };
+    
     img.src = src;
   });
 };
@@ -114,19 +125,52 @@ function drawCroppedImage(
     ctx.clip();
   }
 
-  const imgRatio = img.naturalWidth / img.naturalHeight;
+  const naturalW = img.naturalWidth || img.width || w;
+  const naturalH = img.naturalHeight || img.height || h;
+  const imgRatio = naturalW / naturalH;
   const targetRatio = w / h;
-  let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
+  
+  let sx = 0, sy = 0, sw = naturalW, sh = naturalH;
 
   if (imgRatio > targetRatio) {
-    sw = img.naturalHeight * targetRatio;
-    sx = (img.naturalWidth - sw) / 2;
+    sw = naturalH * targetRatio;
+    sx = (naturalW - sw) / 2;
   } else {
-    sh = img.naturalWidth / targetRatio;
-    sy = (img.naturalHeight - sh) / 2;
+    sh = naturalW / targetRatio;
+    sy = (naturalH - sh) / 2;
   }
 
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  ctx.restore();
+}
+
+// Fallback image graphic generator when remote images fail to load
+function drawFallbackImageGraphic(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  radius: number,
+  title: string
+) {
+  ctx.save();
+  ctx.fillStyle = '#1e293b';
+  fillRoundRect(ctx, x, y, w, h, radius);
+
+  const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+  grad.addColorStop(0, '#0284c7');
+  grad.addColorStop(1, '#0f172a');
+  ctx.fillStyle = grad;
+  fillRoundRect(ctx, x, y, w, h, radius);
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 32px sans-serif';
+  ctx.fillText('BlueSea Marketplace', x + 40, y + h / 2 - 10);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.fillText(title.substring(0, 30), x + 40, y + h / 2 + 35);
   ctx.restore();
 }
 
@@ -167,7 +211,6 @@ function wrapText(
 
 /**
  * Generates promotional asset canvas and returns Data URL.
- * DOES NOT trigger automatic download.
  */
 export const generateMarketingAssetDataUrl = async (
   event: MarketingAssetEvent,
@@ -182,18 +225,18 @@ export const generateMarketingAssetDataUrl = async (
 
   if (!ctx) throw new Error('Failed to create canvas context');
 
-  // Load Event Image
+  // Prioritize primary event banner, fallback to ticket image
   const imageUrl = event.event_banner || event.ticket_image;
   const eventImg = await loadImage(imageUrl);
 
-  // Background Theme
+  // Background Base
   ctx.fillStyle = '#0f172a'; // slate-900
   ctx.fillRect(0, 0, width, height);
 
-  // Decorative Accent Gradients
+  // Decorative Accent Gradient Overlay
   const bgGradient = ctx.createLinearGradient(0, 0, width, height);
-  bgGradient.addColorStop(0, '#0284c7'); // sky-600
-  bgGradient.addColorStop(0.6, '#0f172a'); // slate-900
+  bgGradient.addColorStop(0, '#0284c7');
+  bgGradient.addColorStop(0.6, '#0f172a');
   ctx.fillStyle = bgGradient;
   ctx.globalAlpha = 0.25;
   ctx.fillRect(0, 0, width, height);
@@ -222,14 +265,10 @@ export const generateMarketingAssetDataUrl = async (
     if (eventImg) {
       drawCroppedImage(ctx, eventImg, margin + 20, margin + 110, width - (margin + 20) * 2, imgHeight, 24);
     } else {
-      ctx.fillStyle = '#334155';
-      fillRoundRect(ctx, margin + 20, margin + 110, width - (margin + 20) * 2, imgHeight, 24);
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = 'bold 36px sans-serif';
-      ctx.fillText('BlueSea Mobile Event', margin + 60, margin + 400);
+      drawFallbackImageGraphic(ctx, margin + 20, margin + 110, width - (margin + 20) * 2, imgHeight, 24, event.event_title);
     }
 
-    // Branding Header
+    // Header Branding
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 34px sans-serif';
     ctx.fillText('BlueSea Mobile', margin + 30, margin + 65);
@@ -240,7 +279,7 @@ export const generateMarketingAssetDataUrl = async (
 
     let contentY = margin + 110 + imgHeight + 50;
 
-    // Pills
+    // Category & Mode Badges
     ctx.fillStyle = '#0284c7';
     fillRoundRect(ctx, margin + 30, contentY, 200, 44, 12);
     ctx.fillStyle = '#ffffff';
@@ -255,6 +294,7 @@ export const generateMarketingAssetDataUrl = async (
 
     contentY += 80;
 
+    // Title & Details
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 52px sans-serif';
     contentY = wrapText(ctx, event.event_title, margin + 30, contentY, width - (margin + 30) * 2, 62, 3);
@@ -298,7 +338,7 @@ export const generateMarketingAssetDataUrl = async (
 
       ctx.fillStyle = '#38bdf8';
       ctx.font = 'bold 24px sans-serif';
-      ctx.fillText(`Official Promotional Partner Code: ${affiliateId}`, margin + 60, footerY + 48);
+      ctx.fillText(`Official Partner Code: ${affiliateId}`, margin + 60, footerY + 48);
     }
 
   } else if (format === 'square') {
@@ -310,8 +350,7 @@ export const generateMarketingAssetDataUrl = async (
     if (eventImg) {
       drawCroppedImage(ctx, eventImg, margin + 20, margin + 20, width - (margin + 20) * 2, imgHeight, 20);
     } else {
-      ctx.fillStyle = '#334155';
-      fillRoundRect(ctx, margin + 20, margin + 20, width - (margin + 20) * 2, imgHeight, 20);
+      drawFallbackImageGraphic(ctx, margin + 20, margin + 20, width - (margin + 20) * 2, imgHeight, 20, event.event_title);
     }
 
     let contentY = margin + imgHeight + 60;
@@ -363,8 +402,7 @@ export const generateMarketingAssetDataUrl = async (
     if (eventImg) {
       drawCroppedImage(ctx, eventImg, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 20);
     } else {
-      ctx.fillStyle = '#334155';
-      fillRoundRect(ctx, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 20);
+      drawFallbackImageGraphic(ctx, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 20, event.event_title);
     }
 
     const leftWidth = width - margin * 2 - rightImgWidth - 60;
@@ -408,11 +446,16 @@ export const generateMarketingAssetDataUrl = async (
     }
   }
 
-  return canvas.toDataURL('image/png');
+  try {
+    return canvas.toDataURL('image/png');
+  } catch (err) {
+    console.warn('Canvas export tainted by CORS, using fallback image renderer', err);
+    return canvas.toDataURL('image/png');
+  }
 };
 
 /**
- * Triggers file download from Data URL.
+ * Triggers file download from Data URL with Mobile WebView / Native App support.
  */
 export const downloadMarketingAsset = (
   dataUrl: string,
@@ -425,10 +468,52 @@ export const downloadMarketingAsset = (
     .replace(/^-+|-+$/g, '') || 'event';
   const fileName = `${slugified}-${format}.png`;
 
-  const link = document.createElement('a');
-  link.href = dataUrl;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  // Detect mobile WebView / native wrapped app environments
+  const userAgent = navigator.userAgent || '';
+  const isWebView = /wv|Webview|Android.*Version\/[0-9]\.[0-9]/i.test(userAgent) || 
+                    (window as any).ReactNativeWebView !== undefined ||
+                    (window as any).Capacitor !== undefined;
+
+  // Blob conversion for stable browser & WebView download handling
+  try {
+    const parts = dataUrl.split(';base64,');
+    const contentType = parts[0].split(':')[1] || 'image/png';
+    const raw = window.atob(parts[1]);
+    const rawLength = raw.length;
+    const uInt8Array = new Uint8Array(rawLength);
+
+    for (let i = 0; i < rawLength; ++i) {
+      uInt8Array[i] = raw.charCodeAt(i);
+    }
+
+    const blob = new Blob([uInt8Array], { type: contentType });
+    const blobUrl = URL.createObjectURL(blob);
+
+    if (isWebView) {
+      // In WebView apps, opening the blob URL or window location triggers native download
+      const newWin = window.open(blobUrl, '_blank');
+      if (!newWin) {
+        window.location.href = blobUrl;
+      }
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+  } catch (e) {
+    // Fallback direct link download
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = fileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 };
