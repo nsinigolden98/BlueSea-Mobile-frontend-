@@ -1,52 +1,125 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sidebar, Header, TransactionModal, PinModal, Toast } from '@/components/ui-custom';
+import { Sidebar, Header, Toast, TransactionModal, PinModal, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { networks, airtimeAmounts } from '@/data';
-import { cn } from '@/lib/utils';
-import type { Network } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Users, Plus, X, RefreshCw, ChevronDown, History } from 'lucide-react';
+import { ENDPOINTS, postRequest } from '@/types';
+import { Users, Plus, X, RefreshCw, ChevronDown, History, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function Airtime() {
-  const { user } = useAuth();
-  const defaultNumber = user?.phone ? "0" + user.phone.slice(-10) : '';
-  const navigate = useNavigate();
-  const { PinComponent, showPinModal, modalData, message } = PinModal();
-  const { showToast, ToastComponent } = Toast();
+const meterTypes = ['Prepaid', 'Postpaid'];
+interface BillerName {
+  'Ikeja Electric(IKEDC)': string;
+  'Eko Electric(EKEDC)': string;
+  'Kano Electric(KEDCO)': string;
+  'Port-harcourt Electric(PHED)': string;
+  'Jos Electric(JED)': string;
+  'Ibadan Electric(IBEDC)': string;
+  'Kaduna Electric(KAEDCO)': string;
+  'Abuja Electric(AEDC)': string;
+  'Enugu Electric(EEDC)': string;
+  'Benin Electric(BEDC)': string;
+  'Aba Electric(ABA)': string;
+  'Yola Electric(YEDC)': string;
+}
+const BILLER_NAME: BillerName = {
+  'Ikeja Electric(IKEDC)': 'ikeja-electric',
+  'Eko Electric(EKEDC)': 'eko-electric',
+  'Kano Electric(KEDCO)': 'kano-electric',
+  'Port-harcourt Electric(PHED)': 'portharcourt-electric',
+  'Jos Electric(JED)': 'jos-electric',
+  'Ibadan Electric(IBEDC)': 'ibadan-electric',
+  'Kaduna Electric(KAEDCO)': 'kaduna-electric',
+  'Abuja Electric(AEDC)': 'abuja-electric',
+  'Enugu Electric(EEDC)': 'enugu-electric',
+  'Benin Electric(BEDC)': 'benin-electric',
+  'Aba Electric(ABA)': 'aba-electric',
+  'Yola Electric(YEDC)': 'yola-electric'
+};
+const billers = Object.keys(BILLER_NAME);
 
-  // Existing State
+interface VerificationData {
+  Customer_Name?: string;
+  Address?: string;
+  Customer_Number?: string;
+  Meter_Number?: string;
+  Tariff?: string;
+  [key: string]: any;
+}
+
+export function LightBills() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedNetwork, setSelectedNetwork] = useState<Network>('MTN');
-  const [phoneNumber, setPhoneNumber] = useState(defaultNumber);
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const [customAmount, setCustomAmount] = useState('');
+  const [meterNumber, setMeterNumber] = useState('');
+  const [meterType, setMeterType] = useState('');
+  const [biller, setBiller] = useState('');
+  const [amount, setAmount] = useState('');
+  
+  // Verification State Management
+  const [verificationData, setVerificationData] = useState<VerificationData | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
+  const [isConfirmed, setIsConfirmed] = useState(false);
+
+  const { PinComponent, showPinModal, modalData, message } = PinModal();
+  const { user, refreshUser } = useAuth();
+  const { LoaderComponent, showLoader, hideLoader } = Loader();
+  const navigate = useNavigate();
+  const [customer, setCustomer] = useState('');
+  const { showToast, ToastComponent } = Toast();
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // New UX State
+  // New UX Loading States for State-Sync Consistency
   const [isLoading, setIsLoading] = useState(false);
-  const [recentNumbers, setRecentNumbers] = useState<string[]>([]);
+  const [recentMeters, setRecentMeters] = useState<string[]>([]);
   const [showRecentDropdown, setShowRecentDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Group payment state (Untouched)
+  // Group payment state
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
 
-  // Refs
-  const bodyDivRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const pricePerUnit = 70;
+  const units = amount ? Math.floor(Number(amount) / pricePerUnit) : 0;
+  
+  // Points logic: 100 Naira = 1 point
+  const pointsEarned = Number(amount || 0) / 100;
 
-  // Load recent numbers on mount
+  const payload = isGroupPayment ? {
+    name: groupName,
+    description: groupDescription,
+    service_type: 'electricity',
+    sub_number: meterNumber,
+    target_amount: Number(amount),
+    invite_members: inviteMembers.filter(e => e.trim()).join(','),
+    plan: BILLER_NAME[biller as keyof BillerName],
+    plan_type: meterType.toLowerCase()
+  } : {
+    billerCode: meterNumber,
+    amount: Number(amount),
+    biller_name: BILLER_NAME[biller as keyof BillerName],
+    meter_type: meterType.toLowerCase(),
+  };
+
+  // Field Change Protection: Force re-verification if core meter details are altered
   useEffect(() => {
-    const stored = localStorage.getItem('airtime_recent_numbers');
+    setIsVerified(false);
+    setIsConfirmed(false);
+    setVerificationData(null);
+    setCustomer('');
+  }, [meterNumber, meterType, biller]);
+
+  // Load recent meters on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('light_recent_meters');
     if (stored) {
-      setRecentNumbers(JSON.parse(stored));
+      setRecentMeters(JSON.parse(stored));
     }
   }, []);
 
@@ -62,42 +135,28 @@ export function Airtime() {
   }, []);
 
   const saveToRecent = (num: string) => {
-    const updated = [num, ...recentNumbers.filter(item => item !== num)].slice(0, 3);
-    setRecentNumbers(updated);
-    localStorage.setItem('airtime_recent_numbers', JSON.stringify(updated));
+    const updated = [num, ...recentMeters.filter(item => item !== num)].slice(0, 3);
+    setRecentMeters(updated);
+    localStorage.setItem('light_recent_meters', JSON.stringify(updated));
   };
 
-  const handleRecharge = (amount: number) => {
-    setSelectedAmount(amount);
-    setCustomAmount('');
-  };
-
-  const handleCustomAmount = (value: string) => {
-    setCustomAmount(value);
-    setSelectedAmount(null);
-  };
-
-  const handleBuyAirtime = async () => {
-    const amount = selectedAmount || Number(customAmount);
-    
-    // Validation
-    if (!phoneNumber || phoneNumber.length !== 11) {
-      showToast('Please enter a valid 11-digit phone number');
+  const handleContinue = async () => {
+    if (!meterNumber || !meterType || !biller || !amount) {
+      showToast('Please fill in all fields');
       return;
     }
-    if (!amount || amount < 50) {
-      showToast('Minimum amount is ₦50');
+    else if (!user?.pin_is_set) {
+      navigate('/settings');
+      navigate('/pin');
       return;
     }
-    
-    if (!user?.pin_is_set) {
-      navigate('/settings/pin');
-      return;
-    }
-
-    if (isGroupPayment) {
+    else if (isGroupPayment) {
       if (!groupName) {
         showToast('Please enter a group name');
+        return;
+      }
+      if (!meterNumber) {
+        showToast('Please enter meter number');
         return;
       }
       const memberEmails = inviteMembers.filter(e => e.trim());
@@ -105,49 +164,105 @@ export function Airtime() {
         showToast('Please add at least one member to invite');
         return;
       }
+
+      showPinModal();
+      return;
     }
-    
+
+    // Normal Payment Flow - Step 1: Customer Verification
+    if (!isVerified) {
+      showToast("Searching For Customer ...", 3000);
+      showLoader();
+      const data = {
+        meter_number: Number(meterNumber),
+        meter_type: meterType.toLowerCase(),
+        biller: BILLER_NAME[biller as keyof BillerName]
+      };
+      
+      const response = await postRequest(ENDPOINTS.electricity_user, data);
+      hideLoader();
+      
+      if (response.success) {
+        const customerDetails = response.response || response.data || {};
+        
+        // STRICT CHECK: Ensure actual customer data was returned before verifying
+        if (customerDetails.Customer_Name || customerDetails.Customer_Number || customerDetails.Address) {
+          setVerificationData(customerDetails);
+          setCustomer(`Customer: ${customerDetails.Customer_Name || 'Verified'}`);
+          setIsVerified(true);
+        } else {
+          // Triggers if API returns 200 OK but payload is empty/null
+          showToast('Customer not found. Please check the meter details and try again.');
+          setIsVerified(false);
+          setVerificationData(null);
+          setCustomer('');
+        }
+      } else {
+        showToast(response.error || 'Failed to verify meter details.');
+        setIsVerified(false);
+        setVerificationData(null);
+        setCustomer('');
+      }
+      return;
+    }
+
+    // Normal Payment Flow - Step 2: Ensure User Has Confirmed Verified Data
+    if (isVerified && !isConfirmed) {
+      showToast("Please confirm the meter details to proceed.");
+      return;
+    }
+
+    // Normal Payment Flow - Step 3: Trigger PIN Modal
     showPinModal();
   };
 
-  const finalAmount = selectedAmount || Number(customAmount) || 0;
-  
-  // Point System Consistency
-  const pointsEarned = finalAmount / 100;
+  const bodyDivRef = useRef<HTMLDivElement>(null);
 
-  const payload = isGroupPayment ? {
-    name: groupName,
-    description: groupDescription,
-    service_type: 'airtime',
-    sub_number: phoneNumber,
-    target_amount: finalAmount,
-    invite_members: inviteMembers.filter(e => e.trim()).join(','),
-    plan: selectedNetwork.toLowerCase() !== "9mobile" ? selectedNetwork.toLowerCase() : "etisalat",
-  } : {
-    amount: String(finalAmount),
-    network: selectedNetwork.toLowerCase() !== "9mobile" ? selectedNetwork.toLowerCase() : "etisalat",
-    phone_number: String(phoneNumber),
+  const hidePaymentModal = () => {
+    if (bodyDivRef.current) {
+      bodyDivRef.current.style.opacity = '1';
+    }
   };
 
-  useEffect(() => {
-    if (modalData.visible) {
-      if (bodyDivRef.current) bodyDivRef.current.style.opacity = '0.5';
-    } else {
-      if (bodyDivRef.current) bodyDivRef.current.style.opacity = '1';
+  const showPaymentModal = () => {
+    if (bodyDivRef.current) {
+      bodyDivRef.current.style.opacity = '0.5';
     }
-  }, [modalData.visible]);
+  };
 
+  if (!modalData.visible) {
+    hidePaymentModal();
+  } else {
+    showPaymentModal();
+  }
+
+  // Production-Grade Unified Success Pipeline Tracking Effect Block
   useEffect(() => {
     if (message) {
       setIsLoading(true);
-      setTimeout(() => {
+      
+      const timer = setTimeout(async () => {
         setIsLoading(false);
         setIsOpen(true);
-        if (message?.success || message?.code === '000') {
-          saveToRecent(phoneNumber);
+
+        const targetPayload = message as any;
+        const isSuccess = 
+          targetPayload?.success === true || 
+          targetPayload?.success === 'true' ||
+          targetPayload?.code === '000' || 
+          targetPayload?.code === '200' || 
+          targetPayload?.code === 200 ||
+          targetPayload?.status === 'success' || 
+          targetPayload?.status === '000' || 
+          targetPayload?.state === 'success';
+
+        if (isSuccess) {
+          saveToRecent(meterNumber);
           showToast(message?.response_description || message?.message || 'Success');
           setToastMessage(message?.response_description || message?.message || 'Success');
           setTxStatus(true);
+
+          await refreshUser();
 
           if (isGroupPayment) {
             setIsGroupPayment(false);
@@ -155,282 +270,381 @@ export function Airtime() {
             setInviteMembers(['']);
           }
         } else {
-          showToast(message?.error || message?.response_description || 'Failed');
-          setToastMessage(message?.error || message?.response_description || 'Failed');
+          showToast(message?.error || message?.response_description || message?.message || 'Failed');
+          setToastMessage(message?.error || message?.response_description || message?.message || 'Failed');
           setTxStatus(false);
         }
       }, 1500);
+
+      return () => clearTimeout(timer);
     }
-  }, [message]);
+  }, [message, meterNumber]);
 
   return (
-    <div className="relative">
-      <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden" ref={bodyDivRef}>
-        {/* Sidebar Panel Overlay */}
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden" ref={bodyDivRef}>
+      {/* Sidebar Panel Overlay */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {/* Main Viewport Content Context Area */}
-        <div className="flex-1 flex flex-col h-full min-w-0 relative">
-          
-          {/* FIXED APP HEADER LAYER */}
-          <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
-            <Header
-              title="Airtime"
-              subtitle="Buy Smarter & Cheaper"
-              onMenuClick={() => setSidebarOpen(true)}
-            />
-          </div>
+      {/* Main Viewport Content Context Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+        
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+          <Header 
+            title="Light Bills" 
+            subtitle="Buy Smarter & Cheaper"
+            onMenuClick={() => setSidebarOpen(true)} 
+          />
+        </div>
 
-          {/* ISOLATED SCROLLABLE CONTENT AREA WITH HIDDEN SCROLLBAR */}
-          <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
+        {/* ISOLATED SCROLLABLE CONTENT AREA */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden z-10">
+          <div className="max-w-5xl mx-auto">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 p-6 md:p-8 shadow-sm">
+              <div className="grid md:grid-cols-2 gap-10 lg:gap-16">
                 
-                {/* Network Selection */}
-                <div className="space-y-3">
-                  <Label>Select Network</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {networks.map((network) => (
-                      <button
-                        key={network}
-                        onClick={() => setSelectedNetwork(network)}
-                        className={cn(
-                          'px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
-                          selectedNetwork === network
-                            ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-                        )}
-                      >
-                        {network}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Phone Number with Dropdown */}
-                <div className="space-y-3 relative" ref={dropdownRef}>
-                  <Label htmlFor="phone">Recipient's Phone Number</Label>
-                  <div className="relative">
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="Enter phone number"
-                      maxLength={11}
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="focus:ring-2 focus:ring-sky-400 pr-10"
-                    />
-                    <button 
-                      onClick={() => setShowRecentDropdown(!showRecentDropdown)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500 transition-colors"
-                    >
-                      <ChevronDown className={cn("w-5 h-5 transition-transform", showRecentDropdown && "rotate-180")} />
-                    </button>
+                {/* LEFT COLUMN: Meter Profile */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-white leading-tight">
+                      Meter Profile
+                      {customer && (
+                        <span className="block mt-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                          {customer}
+                        </span>
+                      )}
+                    </h3>
                   </div>
 
-                  {showRecentDropdown && recentNumbers.length > 0 && (
-                    <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1">
-                      <div className="p-2 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center gap-2">
-                        <History className="w-3 h-3 text-slate-400" />
-                        <span className="text-[10px] font-bold uppercase text-slate-400">Recent Numbers</span>
-                      </div>
-                      {recentNumbers.map((num, index) => (
+                  <div className="space-y-5">
+                    <div className="space-y-2 relative" ref={dropdownRef}>
+                      <Label htmlFor="meterNumber" className="text-slate-700 dark:text-slate-300">Meter Number</Label>
+                      <div className="relative">
+                        <Input
+                          id="meterNumber"
+                          type='text'
+                          maxLength={15}
+                          placeholder="Enter meter number"
+                          value={meterNumber}
+                          onChange={(e) => setMeterNumber(e.target.value)}
+                          className="pr-10 h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                        />
                         <button
-                          key={index}
-                          className="w-full text-left px-4 py-3 text-sm hover:bg-sky-50 dark:hover:bg-sky-900/20 text-slate-700 dark:text-slate-300 transition-colors border-b last:border-0 border-slate-50 dark:border-slate-700"
-                          onClick={() => {
-                            setPhoneNumber(num);
-                            setShowRecentDropdown(false);
-                          }}
+                          onClick={() => setShowRecentDropdown(!showRecentDropdown)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                         >
-                          {num}
+                          <ChevronDown className={cn("w-5 h-5 transition-transform duration-200", showRecentDropdown && "rotate-180")} />
                         </button>
-                      ))}
+                      </div>
+
+                      {showRecentDropdown && recentMeters.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1">
+                          <div className="p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center gap-2">
+                            <History className="w-4 h-4 text-slate-400" />
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Recent Meters</span>
+                          </div>
+                          {recentMeters.map((num, index) => (
+                            <button
+                              key={index}
+                              className="w-full text-left px-4 py-3.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors border-b last:border-0 border-slate-50 dark:border-slate-700 font-medium"
+                              onClick={() => {
+                                  setMeterNumber(num);
+                                  setShowRecentDropdown(false);
+                              }}
+                            >
+                              {num}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                    
+                    <div className="space-y-2">
+                      <Label className="text-slate-700 dark:text-slate-300">Meter Type</Label>
+                      <Select value={meterType} onValueChange={setMeterType}>
+                        <SelectTrigger className="h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                          <SelectValue placeholder="Select meter type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {meterTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-slate-700 dark:text-slate-300">Biller</Label>
+                      <Select value={biller} onValueChange={setBiller}>
+                        <SelectTrigger className="h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                          <SelectValue placeholder="Select Biller" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {billers.map((b) => (
+                            <SelectItem key={b} value={b}>
+                              {b}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Amount Selection */}
-                <div className="space-y-3">
-                  <Label>Select or Enter Airtime Amount (₦)</Label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {airtimeAmounts.map((amount) => (
+                {/* RIGHT COLUMN: Purchase Units & Verification */}
+                <div className="space-y-6">
+                  <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
+                      Purchase Units
+                    </h3>
+                  </div>
+
+                  <div className="space-y-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="amount" className="text-slate-700 dark:text-slate-300">Amount (₦)</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        placeholder="Enter amount"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="h-12 text-lg font-medium bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                      />
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-5 space-y-3 border border-slate-200/60 dark:border-slate-700">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-slate-500 dark:text-slate-400">Price per unit</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300">₦{pricePerUnit}/unit</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-slate-500 dark:text-slate-400">Units you'll receive</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">{units}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm pt-3 border-t border-slate-200 dark:border-slate-700 mt-1">
+                        <span className="text-slate-600 dark:text-slate-400 font-medium italic">Points Earned</span>
+                        <span className="font-bold text-sky-600 dark:text-sky-400">
+                          +{pointsEarned.toFixed(1).replace(/\.0$/, '')} pts
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Group Payment Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                          <Users className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-800 dark:text-white text-sm">Group Payment</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Split with friends & family</p>
+                        </div>
+                      </div>
                       <button
-                        key={amount}
-                        onClick={() => handleRecharge(amount)}
+                        onClick={() => setIsGroupPayment(!isGroupPayment)}
                         className={cn(
-                          'p-4 rounded-xl border-2 transition-all text-center active:scale-95',
-                          selectedAmount === amount
-                            ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-400'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-sky-300 shadow-sm'
+                          "w-12 h-6 rounded-full transition-colors relative",
+                          isGroupPayment ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
                         )}
                       >
-                        <p className="font-bold text-slate-800 dark:text-white">₦{amount}</p>
-                        <p className="text-xs text-slate-500">Airtime</p>
+                        <div className={cn(
+                          "absolute top-0.5 w-5 h-5 bg-white dark:bg-slate-900 rounded-full transition-transform duration-300 shadow-sm",
+                          isGroupPayment ? "translate-x-6" : "translate-x-0.5"
+                        )} />
                       </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Custom Amount */}
-                <div className="space-y-3">
-                  <Label htmlFor="custom">Or enter custom amount (Min 50)</Label>
-                  <Input
-                    id="custom"
-                    type="number"
-                    placeholder="Enter amount"
-                    value={customAmount}
-                    onChange={(e) => handleCustomAmount(e.target.value)}
-                    min={50}
-                    className="focus:ring-2 focus:ring-sky-400"
-                  />
-                </div>
-
-                {/* Group Payment Toggle */}
-                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <Users className="w-5 h-5 text-sky-500" />
-                    <div>
-                      <p className="font-medium text-slate-800 dark:text-white">Group Payment</p>
-                      <p className="text-xs text-slate-500">Split with friends & family</p>
                     </div>
-                  </div>
-                  <button
-                    onClick={() => setIsGroupPayment(!isGroupPayment)}
-                    className={cn(
-                      "w-12 h-6 rounded-full transition-colors",
-                      isGroupPayment ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-5 h-5 bg-white rounded-full transition-transform",
-                      isGroupPayment ? "translate-x-6" : "translate-x-0.5"
-                    )} />
-                  </button>
-                </div>
 
-                {isGroupPayment && (
-                  <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="space-y-2">
-                      <Label htmlFor="groupName">Group Name</Label>
-                      <Input
-                        id="groupName"
-                        placeholder="e.g., Family Airtime"
-                        value={groupName}
-                        onChange={(e) => setGroupName(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="groupDescription">Group Description</Label>
-                      <Input
-                        id="groupDescription"
-                        placeholder="Enter a description for the payment"
-                        value={groupDescription}
-                        onChange={(e) => setGroupDescription(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Invite Members (Email addresses)</Label>
-                      {inviteMembers.map((email, index) => (
-                        <div key={index} className="flex gap-2">
+                    {/* Group Payment Details */}
+                    {isGroupPayment && (
+                      <div className="space-y-5 p-5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 animate-in fade-in slide-in-from-top-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="groupName" className="text-sm">Group Name</Label>
                           <Input
-                            placeholder="Enter email address"
-                            value={email}
-                            onChange={(e) => {
-                              const newMembers = [...inviteMembers];
-                              newMembers[index] = e.target.value;
-                              setInviteMembers(newMembers);
-                            }}
+                            id="groupName"
+                            placeholder="e.g., Family Light Bill"
+                            value={groupName}
+                            onChange={(e) => setGroupName(e.target.value)}
+                            className="h-11 bg-white dark:bg-slate-900"
                           />
-                          {inviteMembers.length > 1 && (
-                            <button
-                              onClick={() => {
-                                const newMembers = inviteMembers.filter((_, i) => i !== index);
-                                setInviteMembers(newMembers);
-                              }}
-                              className="p-2 text-red-500 hover:scale-110 transition-transform"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="groupDescription" className="text-sm">Group Description</Label>
+                          <Input
+                            id="groupDescription"
+                            placeholder="Enter a description for the payment"
+                            value={groupDescription}
+                            onChange={(e) => setGroupDescription(e.target.value)}
+                            className="h-11 bg-white dark:bg-slate-900"
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <Label className="text-sm">Invite Members (Email addresses)</Label>
+                          {inviteMembers.map((email, index) => (
+                            <div key={index} className="flex gap-2">
+                              <Input
+                                placeholder="Enter email address"
+                                value={email}
+                                onChange={(e) => {
+                                  const newMembers = [...inviteMembers];
+                                  newMembers[index] = e.target.value;
+                                  setInviteMembers(newMembers);
+                                }}
+                                className="h-11 bg-white dark:bg-slate-900"
+                              />
+                              {inviteMembers.length > 1 && (
+                                <button
+                                  onClick={() => {
+                                    const newMembers = inviteMembers.filter((_, i) => i !== index);
+                                    setInviteMembers(newMembers);
+                                  }}
+                                  className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => setInviteMembers([...inviteMembers, ''])}
+                            className="text-sm text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors py-2"
+                          >
+                            <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                              <Plus className="w-3.5 h-3.5" />
+                            </div>
+                            Add another member
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* VERIFICATION CARD */}
+                    {isVerified && !isGroupPayment && verificationData && (
+                      <div className="mt-6 mb-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/40 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+                        <div className="bg-emerald-50 dark:bg-emerald-900/20 border-b border-slate-100 dark:border-slate-700 px-5 py-3.5 flex items-center gap-3">
+                          <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                          </div>
+                          <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 text-sm">
+                            Meter Successfully Verified
+                          </h4>
+                        </div>
+
+                        <div className="p-5 space-y-4">
+                          {verificationData.Customer_Name && (
+                            <div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Customer Name</p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white leading-tight">{verificationData.Customer_Name}</p>
+                            </div>
+                          )}
+                          
+                          {verificationData.Address && (
+                            <div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Customer Address</p>
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-tight">{verificationData.Address}</p>
+                            </div>
+                          )}
+                          
+                          {(verificationData.Customer_Number || verificationData.Meter_Number) && (
+                            <div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Customer Number</p>
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-tight font-mono">{verificationData.Customer_Number || verificationData.Meter_Number}</p>
+                            </div>
+                          )}
+                          
+                          {verificationData.Tariff && (
+                            <div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Tariff / Rate</p>
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-tight">{verificationData.Tariff}</p>
+                            </div>
                           )}
                         </div>
-                      ))}
-                      <button
-                        onClick={() => setInviteMembers([...inviteMembers, ''])}
-                        className="text-sm text-sky-500 flex items-center gap-1 hover:underline"
-                      >
-                        <Plus className="w-4 h-4" /> Add another
-                      </button>
-                    </div>
-                  </div>
-                )}
 
-                {/* Summary */}
-                <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2 border border-slate-100 dark:border-slate-700">
-                  <h3 className="font-semibold text-slate-800 dark:text-white mb-3">Summary</h3>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Network</span>
-                    <span className="font-medium">{selectedNetwork}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Amount</span>
-                    <span className="font-medium">₦{finalAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Recipient</span>
-                    <span className="font-medium">{phoneNumber || '-'}</span>
-                  </div>
-                  
-                  {finalAmount > 0 && (
-                    <div className="flex justify-between text-sm pt-2 border-t border-slate-200 dark:border-slate-700 mt-2">
-                      <span className="text-sky-600 font-medium italic">Points Earned</span>
-                      <span className="font-bold text-sky-500">
-                        +{pointsEarned.toFixed(1).replace(/\.0$/, '')} pts
-                      </span>
-                    </div>
-                  )}
-                </div>
+                        {/* Confirmation Action Box */}
+                        <div className="bg-slate-50 dark:bg-slate-900/40 p-4 border-t border-slate-100 dark:border-slate-700">
+                          <label className="flex items-start gap-3.5 cursor-pointer group">
+                            <div className="relative flex items-start mt-0.5">
+                              <input
+                                type="checkbox"
+                                checked={isConfirmed}
+                                onChange={(e) => setIsConfirmed(e.target.checked)}
+                                className="peer sr-only"
+                              />
+                              <div className={cn(
+                                "w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center",
+                                isConfirmed 
+                                  ? "bg-sky-500 border-sky-500" 
+                                  : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-slate-400 dark:group-hover:border-slate-500"
+                              )}>
+                                <Check 
+                                  className={cn(
+                                    "w-3.5 h-3.5 transition-transform duration-200 text-white", 
+                                    isConfirmed ? "scale-100" : "scale-0"
+                                  )} 
+                                  strokeWidth={3} 
+                                />
+                              </div>
+                            </div>
+                            <span className="text-sm text-slate-700 dark:text-slate-300 font-medium select-none leading-snug pt-0.5 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                              I confirm that these meter details belong to the intended customer.
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
 
-                {/* Buttons */}
-                <div className="space-y-3">
-                  <Button
-                    onClick={handleBuyAirtime}
-                    className="w-full rounded-full py-7 text-lg font-bold transition-all duration-200 shadow-sm mt-2 bg-sky-500 hover:bg-sky-600 text-white active:scale-[0.98]"
-                    disabled={!phoneNumber || phoneNumber.length !== 11 || finalAmount < 50 || isLoading}
-                  >
-                    {isLoading ? "Processing..." : "Buy Airtime"}
-                  </Button>
+                    {/* Main Action Button */}
+                    <Button
+                      onClick={handleContinue}
+                      className={cn(
+                        "w-full rounded-full py-7 text-lg font-bold transition-all duration-200 shadow-sm mt-2",
+                        (!isGroupPayment && isVerified && !isConfirmed)
+                          ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800"
+                          : "bg-sky-500 hover:bg-sky-600 text-white active:scale-[0.98]"
+                      )}
+                      disabled={!meterNumber || !meterType || !biller || !amount || isLoading || (!isGroupPayment && isVerified && !isConfirmed)}
+                    >
+                      {isLoading 
+                        ? "Processing..." 
+                        : (!isGroupPayment && !isVerified 
+                            ? "Verify Meter Details" 
+                            : "Continue Payment")}
+                    </Button>
 
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate(`/auto-topup?service_type=airtime&network=${selectedNetwork.toLowerCase()}&phone_number=${phoneNumber}&amount=${finalAmount}`)}
-                    className="w-full rounded-full py-6 mt-3 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all"
-                    disabled={!phoneNumber || finalAmount < 50}
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Set Up Auto Top-Up
-                  </Button>
+                    {/* Auto Top-Up Button */}
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(`/auto-topup?service_type=lightbill&network=${BILLER_NAME[biller as keyof BillerName] || biller}&phone_number=${meterNumber}&amount=${amount}`)}
+                      className="w-full rounded-full py-6 mt-3 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Set Up Auto Top-Up
+                    </Button>
+
+                  </div>
                 </div>
               </div>
             </div>
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
 
-      {/* Floating Action Trigger Link */}
-      <button 
-        onClick={() => navigate('/data')}
-        className="fixed right-4 top-24 z-50 bg-sky-500 text-white rounded-full px-6 py-2 shadow-lg hover:bg-sky-600 transition-all duration-200 active:scale-95 flex items-center gap-2 animate-in fade-in slide-in-from-right-4"
-      >
-        <span className="font-medium text-sm">Data</span>
-        <span>→</span>
-      </button>
-
-      {/* Overlays & Modals */}
-      <PinComponent type={isGroupPayment ? "group-airtime" : "airtime"} value={payload} />
+      {/* Global layouts and alerts */}
+      <LoaderComponent />
+      <PinComponent type={isGroupPayment ? "group-lightbill" : "light"} value={payload} />
       <ToastComponent />
       {isOpen && (
-        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
+        <TransactionModal 
+          isSuccess={txStatus} 
+          onClose={() => {
+            setIsOpen(false);
+            if (txStatus) {
+              window.location.reload();
+            }
+          }} 
+          toastMessage={toastMessage} 
+        />
       )}
     </div>
   );
