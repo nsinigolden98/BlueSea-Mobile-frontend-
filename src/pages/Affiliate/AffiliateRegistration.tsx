@@ -106,20 +106,24 @@ export function AffiliateRegistration() {
             Preferred Promotion Categories
           </label>
           <div className="flex flex-wrap gap-2">
-            {CATEGORY_OPTIONS.map((cat) => (
-              <button
-                type="button"
-                key={cat}
-                onClick={() => toggleCategory(cat)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                  selectedCategories.includes(cat)
-                    ? 'bg-sky-500 text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            {CATEGORY_OPTIONS.map((cat) => {
+              const isSelected = selectedCategories.includes(cat);
+              return (
+                <button
+                  type="button"
+                  key={cat}
+                  onClick={() => toggleCategory(cat)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-sky-500 text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {isSelected && <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />}
+                  {cat}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -160,20 +164,24 @@ export function AffiliateRegistration() {
             Promotion Methods
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {PROMOTION_METHODS.map((method) => (
-              <button
-                type="button"
-                key={method}
-                onClick={() => toggleMethod(method)}
-                className={`p-3 rounded-2xl border text-xs font-bold text-left transition-all ${
-                  selectedMethods.includes(method)
-                    ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400'
-                    : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                {method}
-              </button>
-            ))}
+            {PROMOTION_METHODS.map((method) => {
+              const isSelected = selectedMethods.includes(method);
+              return (
+                <button
+                  type="button"
+                  key={method}
+                  onClick={() => toggleMethod(method)}
+                  className={`p-3 rounded-2xl border text-xs font-bold text-left transition-all flex items-center justify-between gap-2 ${
+                    isSelected
+                      ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400'
+                      : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <span>{method}</span>
+                  {isSelected && <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />}
+                </button>
+              );
+            })}
           </div>
         </div>
 
