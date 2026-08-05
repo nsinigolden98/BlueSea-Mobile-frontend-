@@ -1,3 +1,5 @@
+import { API_BASE } from '@/types';
+
 export type AssetFormat = 'poster' | 'square' | 'banner';
 
 export interface CanvasDimensions {
@@ -23,12 +25,55 @@ export interface MarketingAssetEvent {
   tags?: string[];
   event_banner?: string;
   ticket_image?: string;
+  resolved_image?: string;
+  image_url?: string;
 }
 
 export const FORMAT_DIMENSIONS: Record<AssetFormat, CanvasDimensions> = {
   poster: { width: 1200, height: 1600 }, // Portrait 3:4
   square: { width: 1080, height: 1080 }, // Square 1:1
   banner: { width: 1200, height: 630 },  // Landscape 16:9
+};
+
+export const DEFAULT_MARKETPLACE_IMAGE = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80';
+
+/**
+ * Resolves relative and absolute image URLs to match Marketplace behavior.
+ */
+export const resolveEventImageUrl = (path?: string): string => {
+  if (!path) return '';
+  if (
+    path.startsWith('http://') ||
+    path.startsWith('https://') ||
+    path.startsWith('data:') ||
+    path.startsWith('blob:')
+  ) {
+    return path;
+  }
+  const baseUrl = API_BASE || '';
+  if (path.startsWith('/') && baseUrl.endsWith('/')) {
+    return `${baseUrl}${path.slice(1)}`;
+  }
+  if (!path.startsWith('/') && !baseUrl.endsWith('/') && baseUrl) {
+    return `${baseUrl}/${path}`;
+  }
+  return `${baseUrl}${path}`;
+};
+
+/**
+ * Inherits the exact same resolved image logic used on Marketplace cards.
+ */
+export const getMarketingEventImage = (event: MarketingAssetEvent): string => {
+  const candidate =
+    event.resolved_image ||
+    event.image_url ||
+    event.event_banner ||
+    event.ticket_image;
+
+  if (candidate) {
+    return resolveEventImageUrl(candidate);
+  }
+  return DEFAULT_MARKETPLACE_IMAGE;
 };
 
 // Helper: Defensive roundRect with fallback for legacy environments
@@ -182,9 +227,12 @@ export const generateMarketingAssetDataUrl = async (
 
   if (!ctx) throw new Error('Failed to create canvas context');
 
-  // Load Event Image
-  const imageUrl = event.event_banner || event.ticket_image;
-  const eventImg = await loadImage(imageUrl);
+  // Load Event Image with fallback
+  const primaryImageUrl = getMarketingEventImage(event);
+  let eventImg = await loadImage(primaryImageUrl);
+  if (!eventImg && primaryImageUrl !== DEFAULT_MARKETPLACE_IMAGE) {
+    eventImg = await loadImage(DEFAULT_MARKETPLACE_IMAGE);
+  }
 
   // Background Theme
   ctx.fillStyle = '#0f172a'; // slate-900
@@ -206,206 +254,245 @@ export const generateMarketingAssetDataUrl = async (
     day: 'numeric',
     year: 'numeric',
   });
-  const organizerText = event.organizer_name || 'Verified BlueTickets Host';
-  const priceTag = event.is_free ? 'Free Pass' : (event.starting_price ? `Pass: ₦${Number(event.starting_price).toLocaleString()}` : 'Tickets Available');
+  const organizerText = event.organizer_name || 'BlueTickets Host';
+  const priceTag = event.is_free
+    ? 'Free Pass'
+    : event.starting_price
+    ? `Price: ₦${Number(event.starting_price).toLocaleString()}`
+    : 'Tickets Available';
   const attendanceMode = (event.attendance_mode || 'Physical').toUpperCase();
 
   if (format === 'poster') {
     // ------------------- PORTRAIT POSTER (1200 x 1600) -------------------
     ctx.fillStyle = '#1e293b';
     fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 32);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
     ctx.lineWidth = 2;
     strokeRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 32);
 
-    const imgHeight = 620;
-    if (eventImg) {
-      drawCroppedImage(ctx, eventImg, margin + 20, margin + 110, width - (margin + 20) * 2, imgHeight, 24);
-    } else {
-      ctx.fillStyle = '#334155';
-      fillRoundRect(ctx, margin + 20, margin + 110, width - (margin + 20) * 2, imgHeight, 24);
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = 'bold 36px sans-serif';
-      ctx.fillText('BlueSea Mobile Event', margin + 60, margin + 400);
-    }
-
     // Branding Header
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 34px sans-serif';
+    ctx.font = 'bold 36px sans-serif';
     ctx.fillText('BlueSea Mobile', margin + 30, margin + 65);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '500 20px sans-serif';
-    ctx.fillText('Powered by BlueSea Mobile Marketplace', width - margin - 420, margin + 65);
+    ctx.fillText('BlueSea Mobile Marketplace', width - margin - 310, margin + 65);
 
-    let contentY = margin + 110 + imgHeight + 50;
+    // Main Image
+    const imgY = margin + 95;
+    const imgHeight = 650;
+    const imgWidth = width - (margin + 30) * 2;
+    if (eventImg) {
+      drawCroppedImage(ctx, eventImg, margin + 30, imgY, imgWidth, imgHeight, 24);
+    } else {
+      ctx.fillStyle = '#334155';
+      fillRoundRect(ctx, margin + 30, imgY, imgWidth, imgHeight, 24);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText('BlueSea Mobile Event', margin + 70, imgY + imgHeight / 2);
+    }
 
-    // Pills
+    let contentY = imgY + imgHeight + 45;
+
+    // Pills Row (Category & Attendance)
+    ctx.font = 'bold 20px sans-serif';
+    const catText = event.category.toUpperCase();
+    const catWidth = ctx.measureText(catText).width + 40;
+
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, margin + 30, contentY, 200, 44, 12);
+    fillRoundRect(ctx, margin + 30, contentY, catWidth, 44, 12);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillText(event.category.toUpperCase(), margin + 50, contentY + 28);
+    ctx.fillText(catText, margin + 50, contentY + 29);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    fillRoundRect(ctx, margin + 245, contentY, 180, 44, 12);
+    const modeText = attendanceMode;
+    const modeWidth = ctx.measureText(modeText).width + 40;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    fillRoundRect(ctx, margin + 30 + catWidth + 16, contentY, modeWidth, 44, 12);
     ctx.fillStyle = '#e2e8f0';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillText(attendanceMode, margin + 265, contentY + 28);
+    ctx.fillText(modeText, margin + 30 + catWidth + 36, contentY + 29);
 
     contentY += 80;
 
+    // Prominent Event Title
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 52px sans-serif';
-    contentY = wrapText(ctx, event.event_title, margin + 30, contentY, width - (margin + 30) * 2, 62, 3);
+    ctx.font = 'bold 54px sans-serif';
+    contentY = wrapText(ctx, event.event_title, margin + 30, contentY, width - (margin + 30) * 2, 64, 3);
 
-    if (event.subtitle) {
-      contentY += 40;
-      ctx.fillStyle = '#cbd5e1';
-      ctx.font = '500 26px sans-serif';
-      contentY = wrapText(ctx, event.subtitle, margin + 30, contentY, width - (margin + 30) * 2, 34, 2);
-    }
-
-    contentY += 55;
-
+    // Subtitle / Hosted By
+    contentY += 35;
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 26px sans-serif';
     ctx.fillText(`Hosted by: ${organizerText}`, margin + 30, contentY);
 
-    contentY += 50;
-
+    // Date & Time
+    contentY += 45;
     ctx.fillStyle = '#f8fafc';
-    ctx.font = '500 26px sans-serif';
+    ctx.font = '600 26px sans-serif';
     ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, margin + 30, contentY);
 
-    contentY += 45;
+    // Venue & Location
+    contentY += 40;
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '500 24px sans-serif';
     ctx.fillText(`📍 ${event.venue_name ? `${event.venue_name}, ` : ''}${event.event_location}`, margin + 30, contentY);
 
+    // Prominent Price Tag
+    contentY += 45;
+    const priceBoxWidth = 340;
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, width - margin - 360, contentY - 70, 320, 75, 20);
+    fillRoundRect(ctx, margin + 30, contentY, priceBoxWidth, 68, 18);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 28px sans-serif';
-    ctx.fillText(priceTag, width - margin - 330, contentY - 24);
+    ctx.fillText(priceTag, margin + 55, contentY + 44);
 
+    // Affiliate Partner Box (if present)
     if (affiliateId) {
-      const footerY = height - margin - 110;
+      const affiliateY = height - margin - 120;
       ctx.fillStyle = '#0f172a';
-      fillRoundRect(ctx, margin + 30, footerY, width - (margin + 30) * 2, 80, 20);
+      fillRoundRect(ctx, margin + 30, affiliateY, width - (margin + 30) * 2, 70, 16);
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2;
-      strokeRoundRect(ctx, margin + 30, footerY, width - (margin + 30) * 2, 80, 20);
+      strokeRoundRect(ctx, margin + 30, affiliateY, width - (margin + 30) * 2, 70, 16);
 
       ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 24px sans-serif';
-      ctx.fillText(`Official Promotional Partner Code: ${affiliateId}`, margin + 60, footerY + 48);
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText(`Official Promotional Partner Code: ${affiliateId}`, margin + 50, affiliateY + 43);
     }
+
+    // Clean Footer
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Powered by BlueSea Mobile', width / 2, height - margin - 25);
+    ctx.textAlign = 'left';
 
   } else if (format === 'square') {
     // ------------------- SQUARE SOCIAL (1080 x 1080) -------------------
     ctx.fillStyle = '#1e293b';
     fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 28);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 2;
+    strokeRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 28);
 
-    const imgHeight = 440;
+    const imgHeight = 460;
+    const imgWidth = width - (margin + 24) * 2;
     if (eventImg) {
-      drawCroppedImage(ctx, eventImg, margin + 20, margin + 20, width - (margin + 20) * 2, imgHeight, 20);
+      drawCroppedImage(ctx, eventImg, margin + 24, margin + 24, imgWidth, imgHeight, 20);
     } else {
       ctx.fillStyle = '#334155';
-      fillRoundRect(ctx, margin + 20, margin + 20, width - (margin + 20) * 2, imgHeight, 20);
+      fillRoundRect(ctx, margin + 24, margin + 24, imgWidth, imgHeight, 20);
     }
 
     let contentY = margin + imgHeight + 60;
 
+    // Category Pill
+    ctx.font = 'bold 16px sans-serif';
+    const catText = event.category.toUpperCase();
+    const catWidth = ctx.measureText(catText).width + 32;
+
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, margin + 30, contentY - 30, 180, 38, 10);
+    fillRoundRect(ctx, margin + 30, contentY - 26, catWidth, 36, 10);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 18px sans-serif';
-    ctx.fillText(event.category.toUpperCase(), margin + 45, contentY - 5);
+    ctx.fillText(catText, margin + 46, contentY - 3);
 
+    // Title
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 44px sans-serif';
-    contentY = wrapText(ctx, event.event_title, margin + 30, contentY + 30, width - (margin + 30) * 2, 52, 2);
+    ctx.font = 'bold 42px sans-serif';
+    contentY = wrapText(ctx, event.event_title, margin + 30, contentY + 32, width - (margin + 30) * 2, 50, 2);
 
-    contentY += 45;
-
+    contentY += 38;
     ctx.fillStyle = '#38bdf8';
-    ctx.font = '600 24px sans-serif';
-    ctx.fillText(`Organizer: ${organizerText}`, margin + 30, contentY);
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText(`Hosted by: ${organizerText}`, margin + 30, contentY);
 
-    contentY += 40;
+    contentY += 36;
     ctx.fillStyle = '#e2e8f0';
-    ctx.font = '500 24px sans-serif';
-    ctx.fillText(`📅 ${dateStr} | 📍 ${event.event_location}`, margin + 30, contentY);
+    ctx.font = '500 22px sans-serif';
+    ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''} | 📍 ${event.event_location}`, margin + 30, contentY);
 
-    contentY += 45;
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 26px sans-serif';
-    ctx.fillText(priceTag, margin + 30, contentY);
+    contentY += 42;
+    ctx.fillStyle = '#0284c7';
+    fillRoundRect(ctx, margin + 30, contentY - 28, 280, 52, 14);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText(priceTag, margin + 50, contentY + 6);
 
+    // Footer
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 18px sans-serif';
+    ctx.textAlign = 'center';
     if (affiliateId) {
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '500 20px sans-serif';
-      ctx.fillText(`Ref Partner Code: ${affiliateId} • Powered by BlueSea Mobile`, margin + 30, height - margin - 35);
+      ctx.fillText(`Partner Code: ${affiliateId}  •  Powered by BlueSea Mobile`, width / 2, height - margin - 20);
     } else {
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '500 20px sans-serif';
-      ctx.fillText('Powered by BlueSea Mobile Marketplace', margin + 30, height - margin - 35);
+      ctx.fillText('Powered by BlueSea Mobile', width / 2, height - margin - 20);
     }
+    ctx.textAlign = 'left';
 
   } else {
     // ------------------- LANDSCAPE BANNER (1200 x 630) -------------------
     ctx.fillStyle = '#1e293b';
     fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 24);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 2;
+    strokeRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 24);
 
-    const rightImgWidth = 440;
+    const rightImgWidth = 460;
     const rightImgHeight = height - margin * 2 - 40;
 
     if (eventImg) {
-      drawCroppedImage(ctx, eventImg, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 20);
+      drawCroppedImage(ctx, eventImg, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 18);
     } else {
       ctx.fillStyle = '#334155';
-      fillRoundRect(ctx, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 20);
+      fillRoundRect(ctx, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 18);
     }
 
     const leftWidth = width - margin * 2 - rightImgWidth - 60;
-    let contentY = margin + 60;
+    let contentY = margin + 55;
 
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 24px sans-serif';
-    ctx.fillText('BlueSea Mobile Marketplace', margin + 30, contentY);
+    ctx.fillText('BlueSea Mobile', margin + 30, contentY);
 
     contentY += 50;
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 40px sans-serif';
-    contentY = wrapText(ctx, event.event_title, margin + 30, contentY, leftWidth, 48, 2);
+    ctx.font = 'bold 38px sans-serif';
+    contentY = wrapText(ctx, event.event_title, margin + 30, contentY, leftWidth, 46, 2);
 
-    contentY += 40;
-
+    contentY += 36;
     ctx.fillStyle = '#38bdf8';
-    ctx.font = '600 22px sans-serif';
+    ctx.font = 'bold 22px sans-serif';
     ctx.fillText(`Hosted by: ${organizerText}`, margin + 30, contentY);
 
-    contentY += 40;
-
+    contentY += 36;
     ctx.fillStyle = '#e2e8f0';
-    ctx.font = '500 22px sans-serif';
-    ctx.fillText(`📅 ${dateStr} • 📍 ${event.event_location}`, margin + 30, contentY);
+    ctx.font = '500 20px sans-serif';
+    ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, margin + 30, contentY);
 
-    contentY += 45;
+    contentY += 32;
+    ctx.fillText(`📍 ${event.event_location}`, margin + 30, contentY);
 
+    contentY += 40;
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, margin + 30, contentY - 25, 240, 50, 14);
+    fillRoundRect(ctx, margin + 30, contentY - 24, 260, 48, 14);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 22px sans-serif';
     ctx.fillText(priceTag, margin + 50, contentY + 8);
 
     if (affiliateId) {
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '500 18px sans-serif';
-      ctx.fillText(`Affiliate Code: ${affiliateId}`, margin + 300, contentY + 8);
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(`Code: ${affiliateId}`, margin + 310, contentY + 8);
     }
+
+    // Footer
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 18px sans-serif';
+    ctx.fillText('Powered by BlueSea Mobile', margin + 30, height - margin - 20);
   }
 
   return canvas.toDataURL('image/png');

@@ -1023,6 +1023,7 @@ export function Marketplace() {
     starting_price: shareModalEvent.ticket_types?.[0]?.price,
     attendance_mode: shareModalEvent.attendance_mode,
     tags: shareModalEvent.tags,
+    resolved_image: getEventImage(shareModalEvent),
     event_banner: getEventImage(shareModalEvent),
     ticket_image: shareModalEvent.ticket_image ? getImageUrl(shareModalEvent.ticket_image) : undefined,
   } : null;
