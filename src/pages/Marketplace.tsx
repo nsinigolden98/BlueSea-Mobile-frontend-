@@ -19,27 +19,26 @@ import {
   Share2, 
   Globe, 
   Building2, 
-  Download, 
-  Copy, 
-  Code, 
+ // Code, 
   Sparkles, 
   Clock, 
   Tag,
   Check, 
-  X, 
   Video, 
- // AlertCircle, 
   CalendarDays,
   Star,
   Menu,
-  Bookmark
+  Bookmark,
+  ExternalLink,
+  ShieldCheck,
+  //AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRequest, ENDPOINTS, API_BASE } from '@/types';
 import type { MarketplaceEvent } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
-// --- AFFILIATE IMPORTS ---
+// --- AFFILIATE & CANVAS PREVIEW IMPORTS ---
 import { 
   getAffiliateStatus, 
   getOrGenerateAffiliateId, 
@@ -49,7 +48,8 @@ import {
   toggleSaveAffiliateEventId,
   getSavedAffiliateEventIds
 } from '@/utils/affiliateStorage';
-import { generateMarketingAsset } from '@/utils/canvasGenerator';
+import type { PromotionalPreviewModal } from '@/components/marketplace/PromotionalPreviewModal';
+import type { MarketingAssetEvent } from '@/utils/canvasGenerator';
 
 // --- CATEGORIES CONSTANT ---
 const EVENT_CATEGORIES = [
@@ -93,7 +93,6 @@ interface ExtendedEvent extends MarketplaceEvent {
   dress_code?: string;
 }
 
-// --- UNIVERSAL COMPONENTS ---
 const VerifiedBadge = ({ className }: { className?: string }) => (
   <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 text-[10px] font-bold uppercase tracking-wider", className)}>
     <CheckCircle2 className="w-3 h-3" />
@@ -101,7 +100,6 @@ const VerifiedBadge = ({ className }: { className?: string }) => (
   </span>
 );
 
-// --- DEBOUNCE HOOK ---
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -119,7 +117,6 @@ export function Marketplace() {
   const { PinComponent, showPinModal, message } = PinModal();
   const { showToast, ToastComponent } = Toast();
 
-  // References
   const mainViewportRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -138,36 +135,25 @@ export function Marketplace() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [followedOrganizers, setFollowedOrganizers] = useState<Record<string, boolean>>({});
   const [shareModalEvent, setShareModalEvent] = useState<ExtendedEvent | null>(null);
-  const [activeShareTab, setActiveShareTab] = useState<'link' | 'poster' | 'square' | 'banner' | 'embed' | 'affiliate'>('link');
-  const [copiedType, setCopiedType] = useState<string | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState<boolean>(false);
 
   // --- AFFILIATE SYSTEM STATES ---
   const [affiliateStatus, setAffiliateStatusState] = useState<string>('unverified');
   const [affiliateId, setAffiliateId] = useState<string>('');
   const [savedAffiliateEvents, setSavedAffiliateEvents] = useState<string[]>([]);
 
-  /*
-  ==============================
-  TEMP LOCAL STORAGE
-  REMOVE AFTER BACKEND INTEGRATION
-  AUTOMATIC REFERRAL TRACKING
-  ==============================
-  */
   useEffect(() => {
-    // Read affiliate status and ID
     const currentStatus = getAffiliateStatus();
     const currentAffId = getOrGenerateAffiliateId();
     setAffiliateStatusState(currentStatus);
     setAffiliateId(currentAffId);
     setSavedAffiliateEvents(getSavedAffiliateEventIds());
 
-    // Auto-detect referral link param "?affiliate=AFF001" or "?ref=..."
     const referralParam = searchParams.get('affiliate') || searchParams.get('ref');
     const eventParam = searchParams.get('event');
 
     if (referralParam) {
       const myProfile = getAffiliateProfile();
-      // Self-Referral Protection: Do not attach if affiliate ID belongs to logged in user
       if (myProfile?.affiliateId === referralParam || currentAffId === referralParam) {
         console.log('Self-referral link detected. Referral tracking ignored.');
       } else {
@@ -176,12 +162,10 @@ export function Marketplace() {
           event_id: eventParam || undefined,
           timestamp: Date.now()
         });
-        console.log(`Referral link tracked for Affiliate ID: ${referralParam}`);
       }
     }
   }, [searchParams]);
 
-  // Click Outside Listener for Header Menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -259,12 +243,11 @@ export function Marketplace() {
 
   const isSoldOut = selectedEvent && selectedEvent.tickets_sold >= selectedEvent.total_tickets;
   const isEventEnded = selectedEvent && new Date(selectedEvent.event_date) < new Date();
-  
+
   const handlePurchase = () => {
     if (!selectedEvent || isSoldOut || isEventEnded) return;
     if (!selectedEvent.is_free && !selectedTicketType) return;
     
-    // Attach affiliate tracking payload if present
     const trackingData = getAffiliateTracking();
     if (trackingData && trackingData.affiliate_id) {
       console.log(`Attaching Affiliate Referral ${trackingData.affiliate_id} to checkout payload.`);
@@ -297,9 +280,8 @@ export function Marketplace() {
       const venueMatch = (event.venue_name || '').toLowerCase().includes(query);
       const cityMatch = (event.city || '').toLowerCase().includes(query);
       const tagsMatch = event.tags?.some(tag => tag.toLowerCase().includes(query)) || false;
-      const modeMatch = (event.attendance_mode || 'physical').toLowerCase().includes(query);
 
-      return matchesCategory && (titleMatch || catMatch || organizerMatch || locationMatch || venueMatch || cityMatch || tagsMatch || modeMatch);
+      return matchesCategory && (titleMatch || catMatch || organizerMatch || locationMatch || venueMatch || cityMatch || tagsMatch);
     });
   }, [activeEvents, debouncedSearch, activeCategory]);
 
@@ -348,11 +330,10 @@ export function Marketplace() {
     showToast(isNowSaved ? 'Saved for affiliate promotion!' : 'Removed from saved promotion events');
   };
 
-  const handleCopy = (text: string, type: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedType(type);
-    showToast('Copied to clipboard!');
-    setTimeout(() => setCopiedType(null), 2000);
+  const openSharePreviewModal = (event: ExtendedEvent, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setShareModalEvent(event);
+    setPreviewModalOpen(true);
   };
 
   useEffect(() => {
@@ -378,20 +359,13 @@ export function Marketplace() {
   const collections = useMemo(() => {
     return {
       trending: activeEvents.filter(e => e.tickets_sold > 0),
-      nearYou: activeEvents.filter(e => e.event_location || e.venue_name),
       upcoming: [...activeEvents].sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()),
-      online: activeEvents.filter(e => e.attendance_mode === 'online' || e.attendance_mode === 'hybrid'),
-      physical: activeEvents.filter(e => e.attendance_mode === 'physical' || !e.attendance_mode || e.attendance_mode === 'hybrid'),
-      hybrid: activeEvents.filter(e => e.attendance_mode === 'hybrid'),
+      online: activeEvents.filter(e => e.attendance_mode === 'online'),
+      physical: activeEvents.filter(e => e.attendance_mode === 'physical' || !e.attendance_mode),
       free: activeEvents.filter(e => e.is_free || e.ticket_types?.some(t => Number(t.price) === 0)),
-      recentlyAdded: [...activeEvents].reverse(),
-      endingSoon: activeEvents.filter(e => {
-        const diffDays = (new Date(e.event_date).getTime() - now.getTime()) / (1000 * 3600 * 24);
-        return diffDays >= 0 && diffDays <= 7;
-      }),
       past: pastEvents
     };
-  }, [activeEvents, pastEvents, now]);
+  }, [activeEvents, pastEvents]);
 
   const renderHeroSection = () => {
     if (!featuredEvent) return null;
@@ -422,7 +396,7 @@ export function Marketplace() {
                 <Heart className={cn("w-3.5 h-3.5", favorites[featuredEvent.id] && "fill-red-500 text-red-500")} />
               </button>
               <button 
-                onClick={() => setShareModalEvent(featuredEvent)}
+                onClick={(e) => openSharePreviewModal(featuredEvent, e)}
                 className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
               >
                 <Share2 className="w-3.5 h-3.5" />
@@ -533,7 +507,7 @@ export function Marketplace() {
               <Heart className={cn("w-3.5 h-3.5", favorites[event.id] && "fill-red-500 text-red-500")} />
             </button>
             <button 
-              onClick={(e) => { e.stopPropagation(); setShareModalEvent(event); }}
+              onClick={(e) => openSharePreviewModal(event, e)}
               className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
             >
               <Share2 className="w-3.5 h-3.5" />
@@ -587,8 +561,6 @@ export function Marketplace() {
   const renderEventCollection = (title: string, items: ExtendedEvent[]) => {
     if (!items || items.length === 0) return null;
 
-    const isSingle = items.length === 1;
-
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
@@ -600,24 +572,16 @@ export function Marketplace() {
           </h3>
         </div>
 
-        {isSingle ? (
-          <div className="flex justify-center max-w-md mx-auto w-full">
-            <div className="w-full">
-              {renderEventCard(items[0])}
+        <div className="flex items-stretch gap-4 overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden snap-x snap-mandatory scroll-smooth pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
+          {items.map((event) => (
+            <div 
+              key={event.id} 
+              className="snap-start shrink-0 w-[84vw] sm:w-[320px] md:w-[340px] flex flex-col"
+            >
+              {renderEventCard(event)}
             </div>
-          </div>
-        ) : (
-          <div className="flex items-stretch gap-4 overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden snap-x snap-mandatory scroll-smooth pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
-            {items.map((event) => (
-              <div 
-                key={event.id} 
-                className="snap-start shrink-0 w-[84vw] sm:w-[320px] md:w-[340px] flex flex-col"
-              >
-                {renderEventCard(event)}
-              </div>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
       </div>
     );
   };
@@ -625,7 +589,7 @@ export function Marketplace() {
   const renderEvents = () => {
     if (loading) {
       return (
-        <div className="flex items-stretch gap-4 overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden pb-3">
+        <div className="flex items-stretch gap-4 overflow-x-auto pb-3">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="shrink-0 w-[84vw] sm:w-[320px] animate-pulse bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 space-y-3">
               <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800 rounded-xl" />
@@ -648,7 +612,7 @@ export function Marketplace() {
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Showing {filteredEvents.length} result{filteredEvents.length !== 1 ? 's' : ''} {activeCategory !== 'All' ? `in "${activeCategory}"` : ''}
+                Showing {filteredEvents.length} result{filteredEvents.length !== 1 ? 's' : ''}
               </p>
               <button 
                 onClick={() => { setActiveCategory('All'); setSearchQuery(''); }}
@@ -664,7 +628,7 @@ export function Marketplace() {
                   <CalendarDays className="w-8 h-8 text-slate-400" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">No Events Found</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">
+                <p className="text-slate-500 text-sm max-w-md mx-auto">
                   Try broadening your search criteria or selecting a different category.
                 </p>
               </div>
@@ -678,13 +642,9 @@ export function Marketplace() {
           <div className="space-y-8">
             {renderEventCollection('Trending Events', collections.trending)}
             {renderEventCollection('Upcoming Events', collections.upcoming)}
-            {renderEventCollection('Near You', collections.nearYou)}
             {renderEventCollection('Online Events', collections.online)}
             {renderEventCollection('Physical Events', collections.physical)}
-            {renderEventCollection('Hybrid Events', collections.hybrid)}
             {renderEventCollection('Free Events', collections.free)}
-            {renderEventCollection('Recently Added', collections.recentlyAdded)}
-            {renderEventCollection('Ending Soon', collections.endingSoon)}
             {renderEventCollection('Past Events', collections.past)}
           </div>
         )}
@@ -700,8 +660,8 @@ export function Marketplace() {
         id: 'standard',
         name: selectedEvent.is_free ? 'Free Pass' : 'General Admission',
         price: selectedEvent.is_free ? 0 : 5000,
-        quantity_available: selectedEvent.total_tickets - selectedEvent.tickets_sold,
-        benefits: ['Full Event Access', 'Digital Ticket', 'Standard Support'],
+        quantity_available: Math.max(0, selectedEvent.total_tickets - selectedEvent.tickets_sold),
+        benefits: ['Full Event Access', 'Digital Pass QR Code', 'Verified Security Ticket'],
         is_refundable: false,
         is_transferable: true
       }
@@ -712,13 +672,22 @@ export function Marketplace() {
     const totalPrice = unitPrice * quantity;
     const isOnlineMode = selectedAttendanceMode === 'online';
 
+    // Calculate Sales Progress
+    const totalTickets = selectedEvent.total_tickets || 100;
+    const ticketsSold = selectedEvent.tickets_sold || 0;
+    const remainingTickets = Math.max(0, totalTickets - ticketsSold);
+    const progressPercent = Math.min(100, Math.round((ticketsSold / totalTickets) * 100));
+
+    // Related Events
+    const relatedEvents = activeEvents.filter(e => e.id !== selectedEvent.id && e.category === selectedEvent.category).slice(0, 3);
+
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
         <button 
           onClick={() => setSelectedEvent(null)} 
           className="flex items-center gap-2 text-sky-500 font-bold text-sm hover:underline"
         >
-          <ChevronLeft className="w-4 h-4" /> Back to Discover
+          <ChevronLeft className="w-4 h-4" /> Back to Marketplace
         </button>
 
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-xl">
@@ -738,7 +707,7 @@ export function Marketplace() {
                 <Heart className={cn("w-5 h-5", favorites[selectedEvent.id] && "fill-red-500 text-red-500")} />
               </button>
               <button 
-                onClick={() => setShareModalEvent(selectedEvent)}
+                onClick={(e) => openSharePreviewModal(selectedEvent, e)}
                 className="w-10 h-10 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
               >
                 <Share2 className="w-5 h-5" />
@@ -760,11 +729,32 @@ export function Marketplace() {
               <h1 className="text-2xl md:text-4xl font-black text-slate-800 dark:text-white leading-tight">
                 {selectedEvent.event_title}
               </h1>
+              {selectedEvent.tags && selectedEvent.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {selectedEvent.tags.map((tag, idx) => (
+                    <span key={idx} className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
+            {/* Sales Progress Bar */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span>Ticket Availability</span>
+                <span className="text-sky-500">{remainingTickets} tickets remaining ({progressPercent}% claimed)</span>
+              </div>
+              <div className="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                <div className="bg-sky-500 h-full rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+              </div>
+            </div>
+
+            {/* Organizer Profile Card */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-sky-500/10 text-sky-500 font-bold flex items-center justify-center text-lg border border-sky-500/20">
+                <div className="w-12 h-12 rounded-full bg-sky-500/10 text-sky-500 font-bold flex items-center justify-center text-lg border border-sky-500/20 shrink-0">
                   {selectedEvent.organizer_name ? selectedEvent.organizer_name.charAt(0) : 'B'}
                 </div>
                 <div>
@@ -786,21 +776,20 @@ export function Marketplace() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => toggleFollowOrganizer(selectedEvent.organizer_name || 'BlueTickets Organizer')}
-                  className={cn(
-                    "px-4 py-2 rounded-xl text-xs font-bold transition-all",
-                    followedOrganizers[selectedEvent.organizer_name || 'BlueTickets Organizer']
-                      ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white"
-                      : "bg-sky-500 text-white hover:bg-sky-600"
-                  )}
-                >
-                  {followedOrganizers[selectedEvent.organizer_name || 'BlueTickets Organizer'] ? 'Following' : 'Follow'}
-                </button>
-              </div>
+              <button 
+                onClick={() => toggleFollowOrganizer(selectedEvent.organizer_name || 'BlueTickets Organizer')}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0",
+                  followedOrganizers[selectedEvent.organizer_name || 'BlueTickets Organizer']
+                    ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white"
+                    : "bg-sky-500 text-white hover:bg-sky-600"
+                )}
+              >
+                {followedOrganizers[selectedEvent.organizer_name || 'BlueTickets Organizer'] ? 'Following' : 'Follow'}
+              </button>
             </div>
 
+            {/* Event Time & Location Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
                 <Clock className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
@@ -809,26 +798,27 @@ export function Marketplace() {
                   <p className="text-sm font-bold text-slate-800 dark:text-white mt-0.5">
                     {formatDate(selectedEvent.event_date)}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {formatTime(selectedEvent.event_date)}
+                  <p className="text-xs text-slate-500">
+                    {formatTime(selectedEvent.event_date)} {selectedEvent.timezone ? `(${selectedEvent.timezone})` : ''}
                   </p>
                 </div>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
-                <div>
+                <div className="flex-1">
                   <h5 className="text-xs font-bold text-slate-400 uppercase">Venue & Location</h5>
                   <p className="text-sm font-bold text-slate-800 dark:text-white mt-0.5">
                     {selectedEvent.venue_name || 'Main Event Center'}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {selectedEvent.event_location}
+                  <p className="text-xs text-slate-500">
+                    {selectedEvent.event_location} {selectedEvent.city ? `• ${selectedEvent.city}` : ''}
                   </p>
                 </div>
               </div>
             </div>
 
+            {/* Attendance Mode Info */}
             <div className="space-y-4">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">Attendance Mode</h3>
               
@@ -871,11 +861,8 @@ export function Marketplace() {
               {isOnlineMode ? (
                 <div className="p-4 rounded-2xl bg-sky-50/50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50 space-y-2 text-xs">
                   <div className="flex justify-between"><span className="text-slate-500">Meeting Platform:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.meeting_platform || 'Zoom HD Live'}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Timezone:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.timezone || 'GMT+1 (West Africa Standard Time)'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Timezone:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.timezone || 'GMT+1'}</span></div>
                   <div className="flex justify-between"><span className="text-slate-500">Internet Requirement:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.internet_req || '10 Mbps Stable Connection'}</span></div>
-                  <p className="text-[11px] text-sky-600 dark:text-sky-400 pt-2 border-t border-sky-200 dark:border-sky-900">
-                    * Join link and calendar invite will be emailed after ticket confirmation.
-                  </p>
                 </div>
               ) : (
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2 text-xs">
@@ -886,13 +873,61 @@ export function Marketplace() {
               )}
             </div>
 
+            {/* Google Maps Location Link Placeholder */}
+            {selectedEvent.event_location && (
+              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-5 h-5 text-sky-500" />
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-800 dark:text-white">Map Location</h5>
+                    <p className="text-[11px] text-slate-500">Open venue location in Google Maps</p>
+                  </div>
+                </div>
+                <a 
+                  href={`https://maps.google.com/?q=${encodeURIComponent(selectedEvent.event_location)}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-1.5 rounded-xl bg-sky-500 text-white font-bold text-xs flex items-center gap-1.5 hover:bg-sky-600 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Google Maps
+                </a>
+              </div>
+            )}
+
+            {/* Description */}
             <div className="space-y-2">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">About Event</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                 {selectedEvent.event_description || 'No detailed description provided for this event.'}
               </p>
             </div>
 
+            {/* Gallery Images */}
+            {selectedEvent.gallery && selectedEvent.gallery.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-bold text-slate-800 dark:text-white text-base">Event Gallery</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {selectedEvent.gallery.map((img, idx) => (
+                    <div key={idx} className="aspect-square rounded-2xl overflow-hidden bg-slate-800 border border-slate-700">
+                      <img src={getImageUrl(img)} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Refund & Security Information */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3 text-xs">
+              <ShieldCheck className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
+              <div>
+                <h5 className="font-bold text-slate-800 dark:text-white">Buyer Protection & Refund Policy</h5>
+                <p className="text-slate-500 mt-0.5">
+                  All tickets are cryptographically verified by BlueSea Mobile Marketplace. Refunds are supported up to 48 hours prior to event start if canceled by organizer.
+                </p>
+              </div>
+            </div>
+
+            {/* Ticket Selector */}
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">Select Ticket Type</h3>
               <div className="space-y-3">
@@ -910,7 +945,7 @@ export function Marketplace() {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h4 className="font-bold text-slate-800 dark:text-white text-sm">{ticket.name}</h4>
-                        <p className="text-xs text-slate-500 mt-0.5">{ticket.description || `${ticket.quantity_available} tickets remaining`}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{ticket.description || `${ticket.quantity_available} passes remaining`}</p>
                       </div>
                       <span className="text-lg font-black text-sky-500">
                         {Number(ticket.price) === 0 ? 'Free' : `₦${Number(ticket.price).toLocaleString()}`}
@@ -931,6 +966,7 @@ export function Marketplace() {
               </div>
             </div>
 
+            {/* Quantity Selector */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-bold text-slate-800 dark:text-white">Buying for a group?</h4>
@@ -953,6 +989,7 @@ export function Marketplace() {
               </div>
             </div>
 
+            {/* Total Amount & Purchase Button */}
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
               <div>
                 <span className="text-xs text-slate-400 block">Total Amount</span>
@@ -969,11 +1006,41 @@ export function Marketplace() {
                 {isSoldOut ? 'Sold Out' : isEventEnded ? 'Event Ended' : selectedEvent.is_free ? 'Get Free Ticket' : 'Proceed to Payment'}
               </button>
             </div>
+
+            {/* Related Events Section */}
+            {relatedEvents.length > 0 && (
+              <div className="pt-8 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                <h3 className="font-bold text-slate-800 dark:text-white text-lg">Related Events in {selectedEvent.category}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {relatedEvents.map((item) => renderEventCard(item))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
     );
   };
+
+  const marketingAssetEvent: MarketingAssetEvent | null = shareModalEvent ? {
+    id: shareModalEvent.id,
+    event_title: shareModalEvent.event_title,
+    subtitle: shareModalEvent.organizer_name ? `Hosted by ${shareModalEvent.organizer_name}` : undefined,
+    organizer_name: shareModalEvent.organizer_name,
+    is_verified_organizer: shareModalEvent.is_approved,
+    event_date: shareModalEvent.event_date,
+    event_time: formatTime(shareModalEvent.event_date),
+    event_location: shareModalEvent.event_location,
+    venue_name: shareModalEvent.venue_name,
+    city: shareModalEvent.city,
+    category: shareModalEvent.category,
+    is_free: shareModalEvent.is_free,
+    starting_price: shareModalEvent.ticket_types?.[0]?.price,
+    attendance_mode: shareModalEvent.attendance_mode,
+    tags: shareModalEvent.tags,
+    event_banner: shareModalEvent.event_banner ? getImageUrl(shareModalEvent.event_banner) : undefined,
+    ticket_image: shareModalEvent.ticket_image ? getImageUrl(shareModalEvent.ticket_image) : undefined,
+  } : null;
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden font-sans">
@@ -995,7 +1062,6 @@ export function Marketplace() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Affiliate Center Direct Navigation Link */}
             <button 
               onClick={() => navigate('/affiliate')}
               className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 text-xs font-bold transition-colors"
@@ -1034,17 +1100,13 @@ export function Marketplace() {
               <button 
                 onClick={() => setShowMenu((prev) => !prev)} 
                 className="p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition-colors flex items-center gap-1 font-bold text-xs"
-                aria-label="Toggle Header Navigation Menu"
+                aria-label="Toggle Navigation Menu"
               >
                 <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-300" />
               </button>
               
               {showMenu && (
-                <div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700/60 mb-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Navigation Menu</p>
-                  </div>
-
+                <div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2 z-50">
                   <button 
                     onClick={() => { navigate('/affiliate'); setShowMenu(false); }} 
                     className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
@@ -1103,7 +1165,7 @@ export function Marketplace() {
 
         <main 
           ref={mainViewportRef} 
-          className="flex-1 p-4 md:p-6 overflow-y-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden z-10"
+          className="flex-1 p-4 md:p-6 overflow-y-auto z-10"
         >
           <div className="max-w-6xl mx-auto space-y-6">
             <div className="relative">
@@ -1126,156 +1188,15 @@ export function Marketplace() {
         </div>
       </div>
 
-      {/* SHARE MODAL WITH AFFILIATE VERIFICATION CHECK & CANVAS GENERATION */}
-      {shareModalEvent && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-3xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-2xl p-6 space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">
-                <Share2 className="w-5 h-5 text-sky-500" /> Share Event
-              </h3>
-              <button onClick={() => setShareModalEvent(null)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex gap-2 border-b border-slate-100 dark:border-slate-800 overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden pb-2">
-              {[
-                { id: 'link', label: 'Share Link', icon: Share2, verifiedOnly: false },
-                { id: 'embed', label: 'Embed Code', icon: Code, verifiedOnly: false },
-                { id: 'affiliate', label: 'Affiliate Link', icon: Sparkles, verifiedOnly: true },
-                { id: 'poster', label: 'Portrait Poster', icon: Download, verifiedOnly: true },
-                { id: 'square', label: 'Square Post', icon: Download, verifiedOnly: true },
-                { id: 'banner', label: 'Landscape Banner', icon: Download, verifiedOnly: true },
-              ]
-              .filter(tab => !tab.verifiedOnly || affiliateStatus === 'verified')
-              .map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveShareTab(tab.id as any)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all",
-                      activeShareTab === tab.id
-                        ? "bg-sky-500 text-white"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                    )}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {activeShareTab === 'link' && (
-              <div className="space-y-4">
-                <p className="text-xs text-slate-500">Copy standard event link to share with attendees.</p>
-                <div className="flex gap-2">
-                  <Input readOnly value={`${window.location.origin}/marketplace?event=${shareModalEvent.id}`} className="text-xs" />
-                  <button 
-                    onClick={() => handleCopy(`${window.location.origin}/marketplace?event=${shareModalEvent.id}`, 'link')}
-                    className="px-4 py-2 bg-sky-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 shrink-0"
-                  >
-                    {copiedType === 'link' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    Copy Link
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {activeShareTab === 'embed' && (
-              <div className="space-y-4">
-                <p className="text-xs text-slate-500">Paste this HTML snippet to embed this ticket widget into your website.</p>
-                <div className="p-3 bg-slate-900 text-slate-200 rounded-xl font-mono text-[11px] break-all border border-slate-800">
-                  {`<iframe src="${window.location.origin}/marketplace?event=${shareModalEvent.id}&embed=true" width="100%" height="500" frameborder="0"></iframe>`}
-                </div>
-                <button 
-                  onClick={() => handleCopy(`<iframe src="${window.location.origin}/marketplace?event=${shareModalEvent.id}&embed=true" width="100%" height="500" frameborder="0"></iframe>`, 'embed')}
-                  className="w-full py-3 rounded-2xl bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2"
-                >
-                  {copiedType === 'embed' ? <Check className="w-4 h-4" /> : <Code className="w-4 h-4" />} Copy Embed Code
-                </button>
-              </div>
-            )}
-
-            {/* VERIFIED AFFILIATE TABS */}
-            {affiliateStatus === 'verified' ? (
-              <>
-                {activeShareTab === 'affiliate' && (
-                  <div className="space-y-4">
-                    <p className="text-xs text-slate-500">
-                      Your unique Affiliate Link includes your permanent ID (<span className="font-bold text-sky-500">{affiliateId}</span>).
-                    </p>
-                    <div className="flex gap-2">
-                      <Input readOnly value={`${window.location.origin}/marketplace?event=${shareModalEvent.id}&affiliate=${affiliateId}`} className="text-xs" />
-                      <button 
-                        onClick={() => handleCopy(`${window.location.origin}/marketplace?event=${shareModalEvent.id}&affiliate=${affiliateId}`, 'affiliate')}
-                        className="px-4 py-2 bg-sky-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 shrink-0"
-                      >
-                        {copiedType === 'affiliate' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                        Copy Link
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {activeShareTab === 'poster' && (
-                  <div className="space-y-4 text-center">
-                    <p className="text-xs text-slate-500">Generate high-res Portrait Poster for Instagram Stories / WhatsApp Status.</p>
-                    <button 
-                      onClick={() => generateMarketingAsset(shareModalEvent, 'poster', affiliateId)}
-                      className="w-full py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
-                    >
-                      <Download className="w-4 h-4" /> Download Branded Portrait Poster
-                    </button>
-                  </div>
-                )}
-
-                {activeShareTab === 'square' && (
-                  <div className="space-y-4 text-center">
-                    <p className="text-xs text-slate-500">Generate 1:1 Square Post for Instagram Feed & Facebook.</p>
-                    <button 
-                      onClick={() => generateMarketingAsset(shareModalEvent, 'square', affiliateId)}
-                      className="w-full py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
-                    >
-                      <Download className="w-4 h-4" /> Download Square Social Post
-                    </button>
-                  </div>
-                )}
-
-                {activeShareTab === 'banner' && (
-                  <div className="space-y-4 text-center">
-                    <p className="text-xs text-slate-500">Generate Landscape Banner for Twitter (X), LinkedIn & Web.</p>
-                    <button 
-                      onClick={() => generateMarketingAsset(shareModalEvent, 'banner', affiliateId)}
-                      className="w-full py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
-                    >
-                      <Download className="w-4 h-4" /> Download Branded Landscape Banner
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50 space-y-3">
-                <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-bold text-xs">
-                  <Sparkles className="w-4 h-4 shrink-0" />
-                  <span>Become a Verified Affiliate to unlock marketing tools</span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
-                  Earn commissions, generate branded posters, and track referrals automatically.
-                </p>
-                <button 
-                  onClick={() => { setShareModalEvent(null); navigate('/affiliate/register'); }}
-                  className="w-full py-2.5 rounded-xl bg-sky-500 text-white font-bold text-xs hover:bg-sky-600 transition-colors"
-                >
-                  Apply to Become an Affiliate
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* PROMOTIONAL ASSET PREVIEW WORKFLOW MODAL */}
+      {marketingAssetEvent && (
+        <PromotionalPreviewModal
+          isOpen={previewModalOpen}
+          onClose={() => { setPreviewModalOpen(false); setShareModalEvent(null); }}
+          event={marketingAssetEvent}
+          affiliateId={affiliateStatus === 'verified' ? affiliateId : undefined}
+          onCopyToast={(msg) => showToast(msg)}
+        />
       )}
 
       <PinComponent 
