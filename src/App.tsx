@@ -229,14 +229,21 @@ function AppRoutes() {
           <Route path="/payroll-pro/payroll/:payrollId" element={<ProtectedRoute><PayrollDetail /></ProtectedRoute>} />
 
           {/* =========================================
-              4. AFFILIATE ROUTES (FIXED NESTING & INDEX REDIRECT)
-             ========================================= */}
-          <Route path="/affiliate" element={<ProtectedRoute><AffiliateLayout /></ProtectedRoute>}>
-            <Route index element={<Navigate to="/affiliate/dashboard" replace />} />
-            <Route path="dashboard" element={<AffiliateDashboard />} />
-            <Route path="register" element={<AffiliateRegistration />} />
-            <Route path="pending" element={<AffiliatePending />} />
-          </Route>
+    AFFILIATE ROUTES (ALL SUB-ROUTES REGISTERED)
+   ========================================= */}
+<Route path="/affiliate" element={<ProtectedRoute><AffiliateLayout /></ProtectedRoute>}>
+  <Route index element={<Navigate to="/affiliate/dashboard" replace />} />
+  <Route path="dashboard" element={<AffiliateDashboard />} />
+  <Route path="events" element={<AffiliateDashboard />} /> {/* Or your dedicated My Events page component */}
+  <Route path="analytics" element={<AffiliateDashboard />} />
+  <Route path="leaderboard" element={<AffiliateDashboard />} />
+  <Route path="achievements" element={<AffiliateDashboard />} />
+  <Route path="saved" element={<AffiliateDashboard />} />
+  <Route path="alerts" element={<AffiliateDashboard />} />
+  <Route path="settings" element={<AffiliateDashboard />} />
+  <Route path="register" element={<AffiliateRegistration />} />
+  <Route path="pending" element={<AffiliatePending />} />
+</Route>
         </Route>
 
         {/* Fallback */}
