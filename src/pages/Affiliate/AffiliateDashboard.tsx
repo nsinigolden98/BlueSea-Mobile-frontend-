@@ -42,7 +42,7 @@ const POSTERS: PosterData[] = [
   },
 ];
 
-export function AffiliateDashboard() {
+export function AffiliateDashboard(): React.ReactElement {
   const profile = getAffiliateProfile();
   const affiliateId = profile?.affiliateId || 'AFF-DEMO123';
   const referralLink = `${window.location.origin}/signup?ref=${affiliateId}`;
@@ -56,7 +56,6 @@ export function AffiliateDashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Canvas Image Engine (Generates PNG Blob on demand to bypass CORS and download reliably)
   const downloadPosterImage = (poster: PosterData) => {
     const canvas = document.createElement('canvas');
     canvas.width = 1000;
@@ -64,14 +63,12 @@ export function AffiliateDashboard() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Background Fill
     const fillGradient = ctx.createLinearGradient(0, 0, 1000, 1300);
     fillGradient.addColorStop(0, '#0f172a');
     fillGradient.addColorStop(1, '#0369a1');
     ctx.fillStyle = fillGradient;
     ctx.fillRect(0, 0, 1000, 1300);
 
-    // Poster Decorative Top Badge
     ctx.fillStyle = poster.badgeBg;
     ctx.roundRect(80, 80, 240, 50, 25);
     ctx.fill();
@@ -80,7 +77,6 @@ export function AffiliateDashboard() {
     ctx.font = 'bold 20px sans-serif';
     ctx.fillText(poster.category.toUpperCase(), 110, 112);
 
-    // Title & Date
     ctx.fillStyle = '#38BDF8';
     ctx.font = 'bold 28px sans-serif';
     ctx.fillText('BLUESEA EXCLUSIVE EVENT', 80, 200);
@@ -93,7 +89,6 @@ export function AffiliateDashboard() {
     ctx.font = '24px sans-serif';
     ctx.fillText(poster.tagline, 80, 340, 840);
 
-    // Inner Graphic Card Box
     ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.roundRect(80, 420, 840, 550, 40);
     ctx.fill();
@@ -108,7 +103,6 @@ export function AffiliateDashboard() {
     ctx.textAlign = 'center';
     ctx.fillText('SCAN / BUY', 500, 662);
 
-    // Affiliate Referral Display Box
     ctx.fillStyle = '#0284c7';
     ctx.roundRect(140, 820, 720, 100, 24);
     ctx.fill();
@@ -120,7 +114,6 @@ export function AffiliateDashboard() {
     ctx.font = '900 36px sans-serif';
     ctx.fillText(affiliateId, 500, 895);
 
-    // Export & Download Trigger
     canvas.toBlob((blob) => {
       if (!blob) return;
       const downloadUrl = URL.createObjectURL(blob);
@@ -162,7 +155,11 @@ export function AffiliateDashboard() {
 
       {/* Posters Grid */}
       <div className="space-y-4">
-        <h2 className="text-lg font-black text-slate-800 dark:text-white">Available Event Posters</h2>
+        <div className="flex items-center gap-2">
+          <ImageIcon className="w-5 h-5 text-sky-500 shrink-0" />
+          <h2 className="text-lg font-black text-slate-800 dark:text-white">Available Event Posters</h2>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {POSTERS.map((poster) => (
             <div key={poster.id} className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-md flex flex-col justify-between">

@@ -5,7 +5,7 @@ import {
   Award, Bookmark, Bell, Settings, UserPlus, Sparkles 
 } from 'lucide-react';
 
-export function AffiliateLayout() {
+export function AffiliateLayout(): React.ReactElement {
   const location = useLocation();
 
   const navItems = [
@@ -16,6 +16,7 @@ export function AffiliateLayout() {
     { label: 'Achievements', path: '/affiliate/achievements', icon: Award },
     { label: 'Saved Events', path: '/affiliate/saved', icon: Bookmark },
     { label: 'Alerts', path: '/affiliate/alerts', icon: Bell },
+    { label: 'Registration', path: '/affiliate/register', icon: UserPlus },
     { label: 'Settings', path: '/affiliate/settings', icon: Settings },
   ];
 
