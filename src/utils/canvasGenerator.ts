@@ -26,12 +26,11 @@ export interface MarketingAssetEvent {
 }
 
 export const FORMAT_DIMENSIONS: Record<AssetFormat, CanvasDimensions> = {
-  poster: { width: 1200, height: 1600 }, // Portrait 3:4
-  square: { width: 1080, height: 1080 }, // Square 1:1
-  banner: { width: 1200, height: 630 },  // Landscape 16:9
+  poster: { width: 1200, height: 1600 },
+  square: { width: 1080, height: 1080 },
+  banner: { width: 1200, height: 630 },
 };
 
-// Helper: Defensive roundRect with fallback for legacy environments
 function fillRoundRect(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -77,29 +76,50 @@ function strokeRoundRect(
 }
 
 /**
- * Robust image loader that handles CORS policy restrictions gracefully.
+ * Converts external remote image URLs to Base64 Data URLs prior to canvas drawing.
+ * This prevents browser cross-origin security errors and guarantees image preview rendering.
  */
 const loadImage = (src?: string): Promise<HTMLImageElement | null> => {
   return new Promise((resolve) => {
     if (!src || src.trim() === '') return resolve(null);
 
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    
-    img.onload = () => resolve(img);
-    img.onerror = () => {
-      // Fallback: Retry without crossOrigin headers if CORS blocks canvas export
-      const fallbackImg = new Image();
-      fallbackImg.onload = () => resolve(fallbackImg);
-      fallbackImg.onerror = () => resolve(null);
-      fallbackImg.src = src;
-    };
-    
-    img.src = src;
+    // If image is already a Data URL or Blob URL, load directly
+    if (src.startsWith('data:') || src.startsWith('blob:')) {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+      return;
+    }
+
+    // Convert remote URLs via fetch blob to bypass CORS canvas taint
+    fetch(src, { mode: 'cors' })
+      .then((res) => {
+        if (!res.ok) throw new Error('CORS fetch blocked');
+        return res.blob();
+      })
+      .then((blob) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = reader.result as string;
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      })
+      .catch(() => {
+        // Fallback: standard image loader with crossOrigin anonymous header
+        const fallbackImg = new Image();
+        fallbackImg.crossOrigin = 'anonymous';
+        fallbackImg.onload = () => resolve(fallbackImg);
+        fallbackImg.onerror = () => resolve(null);
+        fallbackImg.src = src;
+      });
   });
 };
 
-// Helper: Crop and draw image keeping aspect ratio
 function drawCroppedImage(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
@@ -129,7 +149,7 @@ function drawCroppedImage(
   const naturalH = img.naturalHeight || img.height || h;
   const imgRatio = naturalW / naturalH;
   const targetRatio = w / h;
-  
+
   let sx = 0, sy = 0, sw = naturalW, sh = naturalH;
 
   if (imgRatio > targetRatio) {
@@ -144,7 +164,6 @@ function drawCroppedImage(
   ctx.restore();
 }
 
-// Fallback image graphic generator when remote images fail to load
 function drawFallbackImageGraphic(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -174,7 +193,6 @@ function drawFallbackImageGraphic(
   ctx.restore();
 }
 
-// Helper: Wrap text onto multiple lines
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -209,9 +227,6 @@ function wrapText(
   return currentY;
 }
 
-/**
- * Generates promotional asset canvas and returns Data URL.
- */
 export const generateMarketingAssetDataUrl = async (
   event: MarketingAssetEvent,
   format: AssetFormat,
@@ -225,12 +240,12 @@ export const generateMarketingAssetDataUrl = async (
 
   if (!ctx) throw new Error('Failed to create canvas context');
 
-  // Prioritize primary event banner, fallback to ticket image
+  // Retrieve primary event banner or ticket image
   const imageUrl = event.event_banner || event.ticket_image;
   const eventImg = await loadImage(imageUrl);
 
   // Background Base
-  ctx.fillStyle = '#0f172a'; // slate-900
+  ctx.fillStyle = '#0f172a';
   ctx.fillRect(0, 0, width, height);
 
   // Decorative Accent Gradient Overlay
@@ -254,7 +269,7 @@ export const generateMarketingAssetDataUrl = async (
   const attendanceMode = (event.attendance_mode || 'Physical').toUpperCase();
 
   if (format === 'poster') {
-    // ------------------- PORTRAIT POSTER (1200 x 1600) -------------------
+    // PORTRAIT POSTER (1200 x 1600)
     ctx.fillStyle = '#1e293b';
     fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 32);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
@@ -268,7 +283,7 @@ export const generateMarketingAssetDataUrl = async (
       drawFallbackImageGraphic(ctx, margin + 20, margin + 110, width - (margin + 20) * 2, imgHeight, 24, event.event_title);
     }
 
-    // Header Branding
+    // Branding Header
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 34px sans-serif';
     ctx.fillText('BlueSea Mobile', margin + 30, margin + 65);
@@ -279,7 +294,7 @@ export const generateMarketingAssetDataUrl = async (
 
     let contentY = margin + 110 + imgHeight + 50;
 
-    // Category & Mode Badges
+    // Badges
     ctx.fillStyle = '#0284c7';
     fillRoundRect(ctx, margin + 30, contentY, 200, 44, 12);
     ctx.fillStyle = '#ffffff';
@@ -294,7 +309,7 @@ export const generateMarketingAssetDataUrl = async (
 
     contentY += 80;
 
-    // Title & Details
+    // Title & Metadata
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 52px sans-serif';
     contentY = wrapText(ctx, event.event_title, margin + 30, contentY, width - (margin + 30) * 2, 62, 3);
@@ -342,7 +357,7 @@ export const generateMarketingAssetDataUrl = async (
     }
 
   } else if (format === 'square') {
-    // ------------------- SQUARE SOCIAL (1080 x 1080) -------------------
+    // SQUARE SOCIAL (1080 x 1080)
     ctx.fillStyle = '#1e293b';
     fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 28);
 
@@ -392,7 +407,7 @@ export const generateMarketingAssetDataUrl = async (
     }
 
   } else {
-    // ------------------- LANDSCAPE BANNER (1200 x 630) -------------------
+    // LANDSCAPE BANNER (1200 x 630)
     ctx.fillStyle = '#1e293b';
     fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 24);
 
@@ -449,14 +464,22 @@ export const generateMarketingAssetDataUrl = async (
   try {
     return canvas.toDataURL('image/png');
   } catch (err) {
-    console.warn('Canvas export tainted by CORS, using fallback image renderer', err);
-    return canvas.toDataURL('image/png');
+    console.warn('CORS export safeguard triggered: Rendering clean fallback asset graphic.', err);
+    // Draw clean fallback asset if cross-origin image taints export
+    const fallbackCanvas = document.createElement('canvas');
+    fallbackCanvas.width = width;
+    fallbackCanvas.height = height;
+    const fallbackCtx = fallbackCanvas.getContext('2d');
+    if (fallbackCtx) {
+      fallbackCtx.fillStyle = '#0f172a';
+      fallbackCtx.fillRect(0, 0, width, height);
+      drawFallbackImageGraphic(fallbackCtx, margin + 20, margin + 110, width - (margin + 20) * 2, height - 300, 24, event.event_title);
+      return fallbackCanvas.toDataURL('image/png');
+    }
+    return '';
   }
 };
 
-/**
- * Triggers file download from Data URL with Mobile WebView / Native App support.
- */
 export const downloadMarketingAsset = (
   dataUrl: string,
   eventTitle: string,
@@ -468,13 +491,11 @@ export const downloadMarketingAsset = (
     .replace(/^-+|-+$/g, '') || 'event';
   const fileName = `${slugified}-${format}.png`;
 
-  // Detect mobile WebView / native wrapped app environments
   const userAgent = navigator.userAgent || '';
   const isWebView = /wv|Webview|Android.*Version\/[0-9]\.[0-9]/i.test(userAgent) || 
                     (window as any).ReactNativeWebView !== undefined ||
                     (window as any).Capacitor !== undefined;
 
-  // Blob conversion for stable browser & WebView download handling
   try {
     const parts = dataUrl.split(';base64,');
     const contentType = parts[0].split(':')[1] || 'image/png';
@@ -490,7 +511,6 @@ export const downloadMarketingAsset = (
     const blobUrl = URL.createObjectURL(blob);
 
     if (isWebView) {
-      // In WebView apps, opening the blob URL or window location triggers native download
       const newWin = window.open(blobUrl, '_blank');
       if (!newWin) {
         window.location.href = blobUrl;
@@ -507,7 +527,6 @@ export const downloadMarketingAsset = (
 
     setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
   } catch (e) {
-    // Fallback direct link download
     const link = document.createElement('a');
     link.href = dataUrl;
     link.download = fileName;
