@@ -319,7 +319,7 @@ export function ScannerAssignments() {
         </div>
 
         {/* ISOLATED SCROLLABLE CONTENT AREA */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10 space-y-6">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:[scrollbar-width:auto] md:[&::-webkit-scrollbar]:block z-10 space-y-6">
           
           {/* Breadcrumb Header Block */}
           <div className="max-w-[1600px] mx-auto border-b border-slate-200/60 dark:border-slate-800 pb-4 flex flex-wrap items-center justify-between gap-4">

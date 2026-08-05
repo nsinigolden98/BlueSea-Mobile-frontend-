@@ -173,7 +173,7 @@ export function Scanner() {
       </div>
 
       {/* Primary Workspace Centered Viewport Panel */}
-      <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full">
+      <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:[scrollbar-width:auto] md:[&::-webkit-scrollbar]:block">
         <div className="max-w-2xl mx-auto space-y-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
