@@ -73,15 +73,13 @@ import AddEmployee from './screens/payroll-pro/AddEmployee';
 import CreateBranch from './screens/payroll-pro/CreateBranch';
 import PayrollDetail from './screens/payroll-pro/PayrollDetail';
 
-
-//affilate routes
+// AFFILIATE ROUTES
 import { 
   AffiliateLayout, 
   AffiliateDashboard, 
   AffiliateRegistration, 
   AffiliatePending 
 } from '@/pages/Affiliate';
-
 
 // VAULT / REWARDS SYSTEM IMPORT
 import { Rewards } from '@/pages/vault';
@@ -202,7 +200,7 @@ function AppRoutes() {
           <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
           <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
           
-          {/* NOW SECURED WITH PROTECTED ROUTE */}
+          {/* SECURED WITH PROTECTED ROUTE */}
           <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
           <Route path="/gift-cards" element={<ProtectedRoute><GiftCards /></ProtectedRoute>} />
           <Route path="/flights" element={<ProtectedRoute><Flights /></ProtectedRoute>} />
@@ -210,7 +208,7 @@ function AppRoutes() {
           <Route path="/betting" element={<ProtectedRoute><Betting /></ProtectedRoute>} />
           <Route path="/identity-center" element={<ProtectedRoute><IdentityCenter /></ProtectedRoute>} />
 
-          {/* Legal Center Routes (Kept accessible for compliance & terms viewing) */}
+          {/* Legal Center Routes */}
           <Route path="/legal/terms" element={<TermsAndConditions />} />
           <Route path="/legal/refund" element={<RefundPolicy />} />
           <Route path="/legal/privacy" element={<PrivacyPolicy />} />
@@ -219,7 +217,7 @@ function AppRoutes() {
           <Route path="/legal/kyc" element={<KYCPolicy />} />
           <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
 
-          {/* NOW SECURED PAYROLL PRO ROUTES */}
+          {/* SECURED PAYROLL PRO ROUTES */}
           <Route path="/payroll-pro" element={<ProtectedRoute><PayrollProHome /></ProtectedRoute>} />
           <Route path="/payroll-pro/create-company" element={<ProtectedRoute><CreateCompany /></ProtectedRoute>} />
           <Route path="/payroll-pro/company/:companyId" element={<ProtectedRoute><CompanyWorkspace /></ProtectedRoute>} />
@@ -230,16 +228,16 @@ function AppRoutes() {
           <Route path="/payroll-pro/portal/:companyId" element={<ProtectedRoute><EmployeePortal /></ProtectedRoute>} />
           <Route path="/payroll-pro/payroll/:payrollId" element={<ProtectedRoute><PayrollDetail /></ProtectedRoute>} />
 
-
-
           {/* =========================================
-              4. AFFILIATE ROUTES (UNIVERSAL PULL-TO-REFRESH ENABLED)
+              4. AFFILIATE ROUTES (FIXED NESTING & INDEX REDIRECT)
              ========================================= */}
-          <Route path="/affiliate" element={<ProtectedRoute><AffiliateLayout /></ProtectedRoute>}/>
-            <Route path="dashboard" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
-            <Route path="register" element={<ProtectedRoute><AffiliateRegistration /></ProtectedRoute>} />
-            <Route path="pending" element={<ProtectedRoute><AffiliatePending /></ProtectedRoute>} />
+          <Route path="/affiliate" element={<ProtectedRoute><AffiliateLayout /></ProtectedRoute>}>
+            <Route index element={<Navigate to="/affiliate/dashboard" replace />} />
+            <Route path="dashboard" element={<AffiliateDashboard />} />
+            <Route path="register" element={<AffiliateRegistration />} />
+            <Route path="pending" element={<AffiliatePending />} />
           </Route>
+        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
@@ -249,18 +247,15 @@ function AppRoutes() {
 }
 
 function App() {
-  // Global Network Monitor to trigger offline page redirection mid-session
   useEffect(() => {
     const handleOffline = () => {
       window.location.href = 'file:////android/app/src/main/assets/offline.html';
     };
 
-    // Check on initial load
     if (!navigator.onLine) {
       handleOffline();
     }
 
-    // Listen for live connection drop events
     window.addEventListener('offline', handleOffline);
     return () => {
       window.removeEventListener('offline', handleOffline);
