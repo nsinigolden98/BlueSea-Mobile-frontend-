@@ -143,9 +143,9 @@ export function MyTickets() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden">
           <div className="max-w-4xl mx-auto space-y-6">
-            <div className="flex overflow-x-auto gap-2 pb-2">
+            <div className="flex overflow-x-auto gap-2 pb-2 max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden">
               {filters.map((filter) => (
                 <button
                   key={filter.value}
@@ -256,7 +256,7 @@ export function MyTickets() {
 
       {showDetailModal && selectedTicket && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden">
             <div className="sticky top-0 bg-white dark:bg-slate-900 p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-800 dark:text-white">Ticket Details</h2>
               <button 
