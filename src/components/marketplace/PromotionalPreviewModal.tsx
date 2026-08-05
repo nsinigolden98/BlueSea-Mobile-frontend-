@@ -15,13 +15,15 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
- type  AssetFormat, 
- type MarketingAssetEvent, 
   generateMarketingAssetDataUrl, 
   downloadMarketingAsset 
 } from '@/utils/canvasGenerator';
+import type { 
+  AssetFormat, 
+  MarketingAssetEvent 
+} from '@/utils/canvasGenerator';
 
-interface PromotionalPreviewModalProps {
+export interface PromotionalPreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   event: MarketingAssetEvent;
@@ -97,7 +99,6 @@ export const PromotionalPreviewModal: React.FC<PromotionalPreviewModalProps> = (
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-between p-3 sm:p-6 animate-in fade-in duration-200 overflow-y-auto">
-      {/* Header Bar */}
       <div className="w-full max-w-5xl flex items-center justify-between py-2 border-b border-slate-800 text-white shrink-0">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-sky-400" />
@@ -117,9 +118,7 @@ export const PromotionalPreviewModal: React.FC<PromotionalPreviewModalProps> = (
         </button>
       </div>
 
-      {/* Main Content Area */}
       <div className="w-full max-w-5xl flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 my-4 items-center min-h-0">
-        {/* Left Side: Layout Picker & Controls */}
         <div className="md:col-span-4 space-y-5 text-white flex flex-col justify-center">
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Select Asset Format</label>
@@ -146,7 +145,6 @@ export const PromotionalPreviewModal: React.FC<PromotionalPreviewModalProps> = (
             </div>
           </div>
 
-          {/* Zoom & View Controls */}
           <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
             <div className="flex items-center justify-between text-xs text-slate-400">
               <span>Preview Scale</span>
@@ -184,7 +182,6 @@ export const PromotionalPreviewModal: React.FC<PromotionalPreviewModalProps> = (
             </div>
           </div>
 
-          {/* Regenerate Button */}
           <button
             onClick={renderAsset}
             disabled={generating}
@@ -195,8 +192,7 @@ export const PromotionalPreviewModal: React.FC<PromotionalPreviewModalProps> = (
           </button>
         </div>
 
-        {/* Right Side: Preview Display Screen */}
-        <div className="md:col-span-8 flex items-center justify-center min-h-[350px] sm:min-h-[480px] bg-slate-900/60 rounded-3xl border border-slate-800 p-4 relative overflow-hidden group">
+        <div className="md:col-span-8 flex items-center justify-center min-h-[350px] sm:min-h-[480px] bg-slate-900/60 rounded-3xl border border-slate-800 p-4 relative overflow-hidden">
           {generating ? (
             <div className="flex flex-col items-center justify-center space-y-3 text-slate-400">
               <Loader2 className="w-8 h-8 animate-spin text-sky-400" />
@@ -222,7 +218,6 @@ export const PromotionalPreviewModal: React.FC<PromotionalPreviewModalProps> = (
         </div>
       </div>
 
-      {/* Footer Action Bar */}
       <div className="w-full max-w-5xl pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-2 flex-1 min-w-[240px]">
           <input
@@ -260,3 +255,5 @@ export const PromotionalPreviewModal: React.FC<PromotionalPreviewModalProps> = (
     </div>
   );
 };
+
+export default PromotionalPreviewModal;

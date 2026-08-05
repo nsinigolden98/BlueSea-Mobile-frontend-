@@ -19,7 +19,6 @@ import {
   Share2, 
   Globe, 
   Building2, 
- // Code, 
   Sparkles, 
   Clock, 
   Tag,
@@ -30,25 +29,26 @@ import {
   Menu,
   Bookmark,
   ExternalLink,
-  ShieldCheck,
-  //AlertCircle
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRequest, ENDPOINTS, API_BASE } from '@/types';
 import type { MarketplaceEvent } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
-// --- AFFILIATE & CANVAS PREVIEW IMPORTS ---
+// --- AFFILIATE IMPORTS ---
 import { 
   getAffiliateStatus, 
   getOrGenerateAffiliateId, 
-  setAffiliateTracking, 
   getAffiliateTracking,
   getAffiliateProfile,
   toggleSaveAffiliateEventId,
-  getSavedAffiliateEventIds
+  getSavedAffiliateEventIds,
+  setAffiliateTracking
 } from '@/utils/affiliateStorage';
-import type { PromotionalPreviewModal } from '@/components/marketplace/PromotionalPreviewModal';
+
+// --- PROMOTIONAL PREVIEW COMPONENT IMPORTS ---
+import { PromotionalPreviewModal } from '@/components/marketplace/PromotionalPreviewModal';
 import type { MarketingAssetEvent } from '@/utils/canvasGenerator';
 
 // --- CATEGORIES CONSTANT ---
@@ -59,7 +59,6 @@ const EVENT_CATEGORIES = [
   'Government', 'Entertainment'
 ] as const;
 
-// --- EXTENDED TYPES FOR BLUETICKETS ---
 interface ExtendedTicketType {
   id: string;
   name: string;
@@ -672,13 +671,11 @@ export function Marketplace() {
     const totalPrice = unitPrice * quantity;
     const isOnlineMode = selectedAttendanceMode === 'online';
 
-    // Calculate Sales Progress
     const totalTickets = selectedEvent.total_tickets || 100;
     const ticketsSold = selectedEvent.tickets_sold || 0;
     const remainingTickets = Math.max(0, totalTickets - ticketsSold);
     const progressPercent = Math.min(100, Math.round((ticketsSold / totalTickets) * 100));
 
-    // Related Events
     const relatedEvents = activeEvents.filter(e => e.id !== selectedEvent.id && e.category === selectedEvent.category).slice(0, 3);
 
     return (
@@ -740,7 +737,6 @@ export function Marketplace() {
               )}
             </div>
 
-            {/* Sales Progress Bar */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                 <span>Ticket Availability</span>
@@ -751,7 +747,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Organizer Profile Card */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-sky-500/10 text-sky-500 font-bold flex items-center justify-center text-lg border border-sky-500/20 shrink-0">
@@ -789,7 +784,6 @@ export function Marketplace() {
               </button>
             </div>
 
-            {/* Event Time & Location Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
                 <Clock className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
@@ -818,7 +812,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Attendance Mode Info */}
             <div className="space-y-4">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">Attendance Mode</h3>
               
@@ -873,7 +866,6 @@ export function Marketplace() {
               )}
             </div>
 
-            {/* Google Maps Location Link Placeholder */}
             {selectedEvent.event_location && (
               <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -894,7 +886,6 @@ export function Marketplace() {
               </div>
             )}
 
-            {/* Description */}
             <div className="space-y-2">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">About Event</h3>
               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
@@ -902,7 +893,6 @@ export function Marketplace() {
               </p>
             </div>
 
-            {/* Gallery Images */}
             {selectedEvent.gallery && selectedEvent.gallery.length > 0 && (
               <div className="space-y-3">
                 <h3 className="font-bold text-slate-800 dark:text-white text-base">Event Gallery</h3>
@@ -916,7 +906,6 @@ export function Marketplace() {
               </div>
             )}
 
-            {/* Refund & Security Information */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3 text-xs">
               <ShieldCheck className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
               <div>
@@ -927,7 +916,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Ticket Selector */}
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">Select Ticket Type</h3>
               <div className="space-y-3">
@@ -966,7 +954,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Quantity Selector */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-bold text-slate-800 dark:text-white">Buying for a group?</h4>
@@ -989,7 +976,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Total Amount & Purchase Button */}
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
               <div>
                 <span className="text-xs text-slate-400 block">Total Amount</span>
@@ -1007,7 +993,6 @@ export function Marketplace() {
               </button>
             </div>
 
-            {/* Related Events Section */}
             {relatedEvents.length > 0 && (
               <div className="pt-8 border-t border-slate-100 dark:border-slate-800 space-y-4">
                 <h3 className="font-bold text-slate-800 dark:text-white text-lg">Related Events in {selectedEvent.category}</h3>

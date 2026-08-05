@@ -31,7 +31,52 @@ export const FORMAT_DIMENSIONS: Record<AssetFormat, CanvasDimensions> = {
   banner: { width: 1200, height: 630 },  // Landscape 16:9
 };
 
-// Helper: Safely load image for canvas with fallback
+// Helper: Defensive roundRect with fallback for legacy environments
+function fillRoundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
+  ctx.beginPath();
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  ctx.fill();
+}
+
+function strokeRoundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
+  ctx.beginPath();
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  ctx.stroke();
+}
+
+// Helper: Safely load image for canvas
 const loadImage = (src?: string): Promise<HTMLImageElement | null> => {
   return new Promise((resolve) => {
     if (!src) return resolve(null);
@@ -43,7 +88,7 @@ const loadImage = (src?: string): Promise<HTMLImageElement | null> => {
   });
 };
 
-// Helper: Crop and draw image on canvas keeping aspect ratio
+// Helper: Crop and draw image keeping aspect ratio
 function drawCroppedImage(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
@@ -56,7 +101,16 @@ function drawCroppedImage(
   ctx.save();
   if (radius > 0) {
     ctx.beginPath();
-    ctx.roundRect(x, y, w, h, radius);
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(x, y, w, h, radius);
+    } else {
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
     ctx.clip();
   }
 
@@ -76,7 +130,7 @@ function drawCroppedImage(
   ctx.restore();
 }
 
-// Helper: Wrap text onto multiple lines on canvas
+// Helper: Wrap text onto multiple lines
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -132,7 +186,7 @@ export const generateMarketingAssetDataUrl = async (
   const imageUrl = event.event_banner || event.ticket_image;
   const eventImg = await loadImage(imageUrl);
 
-  // Background Slate Theme
+  // Background Theme
   ctx.fillStyle = '#0f172a'; // slate-900
   ctx.fillRect(0, 0, width, height);
 
@@ -156,31 +210,26 @@ export const generateMarketingAssetDataUrl = async (
   const priceTag = event.is_free ? 'Free Pass' : (event.starting_price ? `Pass: ₦${Number(event.starting_price).toLocaleString()}` : 'Tickets Available');
   const attendanceMode = (event.attendance_mode || 'Physical').toUpperCase();
 
-  // FORMAT SPECIFIC CUSTOM LAYOUTS
   if (format === 'poster') {
     // ------------------- PORTRAIT POSTER (1200 x 1600) -------------------
-    // Outer Border Card
     ctx.fillStyle = '#1e293b';
-    ctx.roundRect(margin, margin, width - margin * 2, height - margin * 2, 32);
-    ctx.fill();
+    fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 32);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 2;
-    ctx.stroke();
+    strokeRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 32);
 
-    // Banner Image Box
     const imgHeight = 620;
     if (eventImg) {
       drawCroppedImage(ctx, eventImg, margin + 20, margin + 110, width - (margin + 20) * 2, imgHeight, 24);
     } else {
       ctx.fillStyle = '#334155';
-      ctx.roundRect(margin + 20, margin + 110, width - (margin + 20) * 2, imgHeight, 24);
-      ctx.fill();
+      fillRoundRect(ctx, margin + 20, margin + 110, width - (margin + 20) * 2, imgHeight, 24);
       ctx.fillStyle = '#94a3b8';
       ctx.font = 'bold 36px sans-serif';
       ctx.fillText('BlueSea Mobile Event', margin + 60, margin + 400);
     }
 
-    // Branding Top Header
+    // Branding Header
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 34px sans-serif';
     ctx.fillText('BlueSea Mobile', margin + 30, margin + 65);
@@ -189,32 +238,27 @@ export const generateMarketingAssetDataUrl = async (
     ctx.font = '500 20px sans-serif';
     ctx.fillText('Powered by BlueSea Mobile Marketplace', width - margin - 420, margin + 65);
 
-    // Event Info Section Below Image
     let contentY = margin + 110 + imgHeight + 50;
 
-    // Category Pill & Mode Pill
+    // Pills
     ctx.fillStyle = '#0284c7';
-    ctx.roundRect(margin + 30, contentY, 200, 44, 12);
-    ctx.fill();
+    fillRoundRect(ctx, margin + 30, contentY, 200, 44, 12);
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 20px sans-serif';
     ctx.fillText(event.category.toUpperCase(), margin + 50, contentY + 28);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.roundRect(margin + 245, contentY, 180, 44, 12);
-    ctx.fill();
+    fillRoundRect(ctx, margin + 245, contentY, 180, 44, 12);
     ctx.fillStyle = '#e2e8f0';
     ctx.font = 'bold 20px sans-serif';
     ctx.fillText(attendanceMode, margin + 265, contentY + 28);
 
     contentY += 80;
 
-    // Event Title
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 52px sans-serif';
     contentY = wrapText(ctx, event.event_title, margin + 30, contentY, width - (margin + 30) * 2, 62, 3);
 
-    // Subtitle if available
     if (event.subtitle) {
       contentY += 40;
       ctx.fillStyle = '#cbd5e1';
@@ -224,14 +268,12 @@ export const generateMarketingAssetDataUrl = async (
 
     contentY += 55;
 
-    // Organizer Row
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 26px sans-serif';
     ctx.fillText(`Hosted by: ${organizerText}`, margin + 30, contentY);
 
     contentY += 50;
 
-    // Date & Location
     ctx.fillStyle = '#f8fafc';
     ctx.font = '500 26px sans-serif';
     ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, margin + 30, contentY);
@@ -239,24 +281,20 @@ export const generateMarketingAssetDataUrl = async (
     contentY += 45;
     ctx.fillText(`📍 ${event.venue_name ? `${event.venue_name}, ` : ''}${event.event_location}`, margin + 30, contentY);
 
-    // Price Box
     ctx.fillStyle = '#0284c7';
-    ctx.roundRect(width - margin - 360, contentY - 70, 320, 75, 20);
-    ctx.fill();
+    fillRoundRect(ctx, width - margin - 360, contentY - 70, 320, 75, 20);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 28px sans-serif';
     ctx.fillText(priceTag, width - margin - 330, contentY - 24);
 
-    // Affiliate Footer Badge
     if (affiliateId) {
       const footerY = height - margin - 110;
       ctx.fillStyle = '#0f172a';
-      ctx.roundRect(margin + 30, footerY, width - (margin + 30) * 2, 80, 20);
-      ctx.fill();
+      fillRoundRect(ctx, margin + 30, footerY, width - (margin + 30) * 2, 80, 20);
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2;
-      ctx.stroke();
+      strokeRoundRect(ctx, margin + 30, footerY, width - (margin + 30) * 2, 80, 20);
 
       ctx.fillStyle = '#38bdf8';
       ctx.font = 'bold 24px sans-serif';
@@ -266,37 +304,30 @@ export const generateMarketingAssetDataUrl = async (
   } else if (format === 'square') {
     // ------------------- SQUARE SOCIAL (1080 x 1080) -------------------
     ctx.fillStyle = '#1e293b';
-    ctx.roundRect(margin, margin, width - margin * 2, height - margin * 2, 28);
-    ctx.fill();
+    fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 28);
 
-    // Top Image
     const imgHeight = 440;
     if (eventImg) {
       drawCroppedImage(ctx, eventImg, margin + 20, margin + 20, width - (margin + 20) * 2, imgHeight, 20);
     } else {
       ctx.fillStyle = '#334155';
-      ctx.roundRect(margin + 20, margin + 20, width - (margin + 20) * 2, imgHeight, 20);
-      ctx.fill();
+      fillRoundRect(ctx, margin + 20, margin + 20, width - (margin + 20) * 2, imgHeight, 20);
     }
 
     let contentY = margin + imgHeight + 60;
 
-    // Category Pill
     ctx.fillStyle = '#0284c7';
-    ctx.roundRect(margin + 30, contentY - 30, 180, 38, 10);
-    ctx.fill();
+    fillRoundRect(ctx, margin + 30, contentY - 30, 180, 38, 10);
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 18px sans-serif';
     ctx.fillText(event.category.toUpperCase(), margin + 45, contentY - 5);
 
-    // Title
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 44px sans-serif';
     contentY = wrapText(ctx, event.event_title, margin + 30, contentY + 30, width - (margin + 30) * 2, 52, 2);
 
     contentY += 45;
 
-    // Host & Details
     ctx.fillStyle = '#38bdf8';
     ctx.font = '600 24px sans-serif';
     ctx.fillText(`Organizer: ${organizerText}`, margin + 30, contentY);
@@ -324,8 +355,7 @@ export const generateMarketingAssetDataUrl = async (
   } else {
     // ------------------- LANDSCAPE BANNER (1200 x 630) -------------------
     ctx.fillStyle = '#1e293b';
-    ctx.roundRect(margin, margin, width - margin * 2, height - margin * 2, 24);
-    ctx.fill();
+    fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 24);
 
     const rightImgWidth = 440;
     const rightImgHeight = height - margin * 2 - 40;
@@ -334,8 +364,7 @@ export const generateMarketingAssetDataUrl = async (
       drawCroppedImage(ctx, eventImg, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 20);
     } else {
       ctx.fillStyle = '#334155';
-      ctx.roundRect(width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 20);
-      ctx.fill();
+      fillRoundRect(ctx, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 20);
     }
 
     const leftWidth = width - margin * 2 - rightImgWidth - 60;
@@ -366,8 +395,7 @@ export const generateMarketingAssetDataUrl = async (
     contentY += 45;
 
     ctx.fillStyle = '#0284c7';
-    ctx.roundRect(margin + 30, contentY - 25, 240, 50, 14);
-    ctx.fill();
+    fillRoundRect(ctx, margin + 30, contentY - 25, 240, 50, 14);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 22px sans-serif';
@@ -385,7 +413,6 @@ export const generateMarketingAssetDataUrl = async (
 
 /**
  * Triggers file download from Data URL.
- * File name format: event-name-poster.png, event-name-square.png, event-name-banner.png
  */
 export const downloadMarketingAsset = (
   dataUrl: string,
