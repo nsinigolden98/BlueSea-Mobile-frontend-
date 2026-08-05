@@ -1,175 +1,146 @@
-type MarketingAssetEvent = {
-  event_title: string;
+import type { MarketplaceEvent } from '@/types';
+
+export type MarketingAssetType = 'poster' | 'square' | 'banner';
+
+interface ExtendedEvent extends MarketplaceEvent {
   organizer_name?: string;
-  event_date: string | Date;
-  event_location: string;
-  category: string;
-  is_free: boolean;
-};
-
-export type AssetFormat = 'poster' | 'square' | 'banner';
-
-export interface CanvasDimensions {
-  width: number;
-  height: number;
+  venue_name?: string;
 }
 
-const FORMAT_DIMENSIONS: Record<AssetFormat, CanvasDimensions> = {
-  poster: { width: 1200, height: 1600 }, // Portrait 3:4
-  square: { width: 1080, height: 1080 }, // Square 1:1
-  banner: { width: 1200, height: 630 },  // Landscape 16:9
-};
+function getEventImageUrl(event: ExtendedEvent): string {
+  if (event.event_banner && event.event_banner.startsWith('http')) return event.event_banner;
+  if (event.ticket_image && event.ticket_image.startsWith('http')) return event.ticket_image;
+  return 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80';
+}
 
-export const generateMarketingAsset = async (
-  event: MarketingAssetEvent,
-  format: AssetFormat,
-  affiliateId?: string
-): Promise<void> => {
-  const { width, height } = FORMAT_DIMENSIONS[format];
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
+/**
+ * Draws the branded poster canvas using the event's main image.
+ */
+export function renderMarketingCanvas(
+  event: ExtendedEvent,
+  assetType: MarketingAssetType,
+  affiliateId: string
+): Promise<HTMLCanvasElement> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
 
-  if (!ctx) return;
+    let width = 1080;
+    let height = 1350; // Poster 4:5
 
-  // Background Dark Theme
-  ctx.fillStyle = '#0f172a'; // slate-900
-  ctx.fillRect(0, 0, width, height);
+    if (assetType === 'square') {
+      width = 1080;
+      height = 1080; // Square 1:1
+    } else if (assetType === 'banner') {
+      width = 1200;
+      height = 630; // Banner 16:9
+    }
 
-  // Decorative Accent Gradients
-  const bgGradient = ctx.createLinearGradient(0, 0, width, height);
-  bgGradient.addColorStop(0, '#0284c7'); // sky-600
-  bgGradient.addColorStop(1, '#0f172a'); // slate-900
-  ctx.fillStyle = bgGradient;
-  ctx.globalAlpha = 0.25;
-  ctx.fillRect(0, 0, width, height);
-  ctx.globalAlpha = 1.0;
+    canvas.width = width;
+    canvas.height = height;
 
-  // Card Container Box
-  const margin = 40;
-  ctx.fillStyle = '#1e293b'; // slate-800
-  ctx.roundRect(margin, margin, width - margin * 2, height - margin * 2, 32);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return resolve(canvas);
 
-  // Branding Header: BlueSea Mobile Logo Text
-  ctx.fillStyle = '#38bdf8'; // sky-400
-  ctx.font = 'bold 36px sans-serif';
-  ctx.fillText('BlueSea Mobile', margin + 40, margin + 70);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = getEventImageUrl(event);
 
-  ctx.fillStyle = '#94a3b8'; // slate-400
-  ctx.font = '500 22px sans-serif';
-  ctx.fillText('Powered by BlueSea Mobile Marketplace', margin + 40, margin + 105);
+    const drawCanvas = () => {
+      // 1. Draw Background / Event Main Image
+      if (img.complete && img.naturalWidth > 0) {
+        const scale = Math.max(width / img.width, height / img.height);
+        const x = (width / 2) - (img.width / 2) * scale;
+        const y = (height / 2) - (img.height / 2) * scale;
+        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+      } else {
+        const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+        bgGrad.addColorStop(0, '#0f172a');
+        bgGrad.addColorStop(1, '#0284c7');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+      }
 
-  // Format Specific Rendering
-  if (format === 'poster') {
-    // Event Title
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 54px sans-serif';
-    wrapText(ctx, event.event_title, margin + 40, margin + 200, width - (margin + 40) * 2, 64);
+      // 2. Dark Overlay Gradient for Typography Readability
+      const overlay = ctx.createLinearGradient(0, 0, 0, height);
+      overlay.addColorStop(0, 'rgba(15, 23, 42, 0.4)');
+      overlay.addColorStop(0.5, 'rgba(15, 23, 42, 0.7)');
+      overlay.addColorStop(1, 'rgba(15, 23, 42, 0.95)');
+      ctx.fillStyle = overlay;
+      ctx.fillRect(0, 0, width, height);
 
-    // Organizer Name
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '600 28px sans-serif';
-    ctx.fillText(`Hosted by: ${event.organizer_name || 'BlueTickets Host'}`, margin + 40, margin + 340);
-
-    // Event Details
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '500 28px sans-serif';
-    ctx.fillText(`📅 Date: ${new Date(event.event_date).toLocaleDateString()}`, margin + 40, margin + 420);
-    ctx.fillText(`📍 Venue: ${event.event_location}`, margin + 40, margin + 470);
-    ctx.fillText(`🏷️ Category: ${event.category}`, margin + 40, margin + 520);
-
-    // Starting Price Box
-    ctx.fillStyle = '#0284c7';
-    ctx.roundRect(margin + 40, margin + 580, 360, 80, 20);
-    ctx.fill();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 32px sans-serif';
-    ctx.fillText(`Pass: ${event.is_free ? 'Free Entry' : 'Tickets Available'}`, margin + 60, margin + 632);
-
-    // Affiliate ID Footer Badge
-    if (affiliateId) {
-      ctx.fillStyle = '#0f172a';
-      ctx.roundRect(margin + 40, height - margin - 120, width - (margin + 40) * 2, 80, 20);
+      // 3. Top Header Branding Badge
+      ctx.fillStyle = '#0284c7';
+      ctx.roundRect(50, 50, 220, 44, 22);
       ctx.fill();
-      ctx.strokeStyle = '#38bdf8';
-      ctx.stroke();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('BLUESEA EVENTS', 75, 78);
 
       ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 26px sans-serif';
-      ctx.fillText(`Official Promotional Partner Code: ${affiliateId}`, margin + 70, height - margin - 72);
-    }
-  } else if (format === 'square') {
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 44px sans-serif';
-    wrapText(ctx, event.event_title, margin + 40, margin + 200, width - (margin + 40) * 2, 54);
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText('POWERED BY BLUESEA MOBILE', 300, 78);
 
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '600 26px sans-serif';
-    ctx.fillText(`Organizer: ${event.organizer_name || 'BlueTickets Host'}`, margin + 40, margin + 320);
+      // 4. Event Title & Organizer
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '900 48px sans-serif';
+      ctx.fillText(event.event_title || 'Featured Event', 50, height - 320, width - 100);
 
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '500 26px sans-serif';
-    ctx.fillText(`📅 ${new Date(event.event_date).toLocaleDateString()} | 📍 ${event.event_location}`, margin + 40, margin + 390);
-
-    if (affiliateId) {
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 24px sans-serif';
-      ctx.fillText(`Ref Code: ${affiliateId}`, margin + 40, margin + 460);
-    }
-  } else {
-    // Banner
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 40px sans-serif';
-    wrapText(ctx, event.event_title, margin + 40, margin + 190, width - (margin + 40) * 2, 48);
-
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '600 24px sans-serif';
-    ctx.fillText(`📅 ${new Date(event.event_date).toLocaleDateString()} • 📍 ${event.event_location}`, margin + 40, margin + 290);
-
-    if (affiliateId) {
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '500 22px sans-serif';
-      ctx.fillText(`Affiliate Reference: ${affiliateId}`, margin + 40, margin + 340);
-    }
-  }
+      ctx.font = '20px sans-serif';
+      ctx.fillText(`Hosted by: ${event.organizer_name || 'BlueTickets Organizer'}`, 50, height - 270);
 
-  // Convert to downloadable image
-  const dataUrl = canvas.toDataURL('image/png');
-  const link = document.createElement('a');
-  link.download = `${event.event_title.replace(/\s+/g, '-').toLowerCase()}-${format}.png`;
-  link.href = dataUrl;
-  link.click();
-};
+      // 5. Date & Location Footer Box
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.roundRect(50, height - 230, width - 100, 160, 24);
+      ctx.fill();
 
-// Canvas Text Wrapping Helper Function
-function wrapText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number
-) {
-  const words = text.split(' ');
-  let line = '';
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText(`📅 ${new Date(event.event_date).toLocaleDateString()}`, 80, height - 170);
 
-  for (let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-    if (testWidth > maxWidth && n > 0) {
-      ctx.fillText(line, x, y);
-      line = words[n] + ' ';
-      y += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-  ctx.fillText(line, x, y);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '18px sans-serif';
+      ctx.fillText(`📍 ${event.event_location || 'Main Venue'}`, 80, height - 130);
+
+      // 6. Referral Promo Badge Box
+      ctx.fillStyle = '#0284c7';
+      ctx.roundRect(width - 380, height - 210, 310, 120, 20);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText('USE REFERRAL CODE', width - 350, height - 165);
+
+      ctx.font = '900 28px sans-serif';
+      ctx.fillText(affiliateId, width - 350, height - 125);
+
+      resolve(canvas);
+    };
+
+    img.onload = drawCanvas;
+    img.onerror = drawCanvas;
+  });
+}
+
+/**
+ * Generates and triggers browser PNG download for an event marketing asset.
+ */
+export async function generateMarketingAsset(
+  event: ExtendedEvent,
+  assetType: MarketingAssetType,
+  affiliateId: string
+): Promise<void> {
+  const canvas = await renderMarketingCanvas(event, assetType, affiliateId);
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `BlueSea-${assetType}-${event.id}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 'image/png');
 }

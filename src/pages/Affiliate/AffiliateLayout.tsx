@@ -1,63 +1,73 @@
-import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, Calendar, BarChart3, Trophy, 
-  Award, Bookmark, Bell, Settings, UserPlus, Sparkles 
+  LayoutDashboard, 
+  Calendar, 
+  BarChart2, 
+  Trophy, 
+  Award, 
+  Bell, 
+  Bookmark, 
+  Settings, 
+  ArrowLeft 
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function AffiliateLayout(): React.ReactElement {
+const NAV_ITEMS = [
+  { path: '/affiliate/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/affiliate/events', label: 'My Events', icon: Calendar },
+  { path: '/affiliate/analytics', label: 'Analytics', icon: BarChart2 },
+  { path: '/affiliate/leaderboard', label: 'Leaderboard', icon: Trophy },
+  { path: '/affiliate/achievements', label: 'Achievements', icon: Award },
+  { path: '/affiliate/saved', label: 'Saved Events', icon: Bookmark },
+  { path: '/affiliate/notifications', label: 'Alerts', icon: Bell },
+  { path: '/affiliate/settings', label: 'Settings', icon: Settings },
+];
+
+export function AffiliateLayout() {
+  const navigate = useNavigate();
   const location = useLocation();
 
-  const navItems = [
-    { label: 'Dashboard', path: '/affiliate/dashboard', icon: LayoutDashboard },
-    { label: 'My Events', path: '/affiliate/events', icon: Calendar },
-    { label: 'Analytics', path: '/affiliate/analytics', icon: BarChart3 },
-    { label: 'Leaderboard', path: '/affiliate/leaderboard', icon: Trophy },
-    { label: 'Achievements', path: '/affiliate/achievements', icon: Award },
-    { label: 'Saved Events', path: '/affiliate/saved', icon: Bookmark },
-    { label: 'Alerts', path: '/affiliate/alerts', icon: Bell },
-    { label: 'Registration', path: '/affiliate/register', icon: UserPlus },
-    { label: 'Settings', path: '/affiliate/settings', icon: Settings },
-  ];
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col md:flex-row">
-      {/* Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shrink-0">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="font-black text-base leading-tight">Affiliate Hub</h1>
-            <p className="text-[10px] text-slate-400">BlueSea Partner Center</p>
-          </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-4 md:px-8 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate('/marketplace')}
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+            title="Return to Marketplace"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-lg font-black text-sky-500">Affiliate Center</h1>
         </div>
+      </header>
 
-        <nav className="p-3 space-y-1">
-          {navItems.map((item) => {
+      {/* Navigation Sub-Menu Bar */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 md:px-8 overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden">
+        <div className="flex items-center gap-1 md:gap-2 py-2">
+          {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
-              <Link
+              <button
                 key={item.path}
-                to={item.path}
-                className={`w-full px-4 py-3 rounded-2xl text-xs font-bold transition-all flex items-center gap-3 ${
+                onClick={() => navigate(item.path)}
+                className={cn(
+                  "px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all shrink-0",
                   isActive
-                    ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
+                    ? "bg-sky-500 text-white shadow-md shadow-sky-500/20"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                )}
               >
-                <Icon className="w-4 h-4 shrink-0" />
-                <span>{item.label}</span>
-              </Link>
+                <Icon className="w-4 h-4" />
+                {item.label}
+              </button>
             );
           })}
-        </nav>
-      </aside>
+        </div>
+      </div>
 
-      {/* Main View Display */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-8 max-w-6xl mx-auto w-full">
         <Outlet />
       </main>
     </div>
