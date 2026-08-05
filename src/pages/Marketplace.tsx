@@ -28,15 +28,28 @@ import {
   Check, 
   X, 
   Video, 
-  AlertCircle, 
+ // AlertCircle, 
   CalendarDays,
   Star,
-  Menu
+  Menu,
+  Bookmark
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRequest, ENDPOINTS, API_BASE } from '@/types';
 import type { MarketplaceEvent } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
+
+// --- AFFILIATE IMPORTS ---
+import { 
+  getAffiliateStatus, 
+  getOrGenerateAffiliateId, 
+  setAffiliateTracking, 
+  getAffiliateTracking,
+  getAffiliateProfile,
+  toggleSaveAffiliateEventId,
+  getSavedAffiliateEventIds
+} from '@/utils/affiliateStorage';
+import { generateMarketingAsset } from '@/utils/canvasGenerator';
 
 // --- CATEGORIES CONSTANT ---
 const EVENT_CATEGORIES = [
@@ -78,15 +91,6 @@ interface ExtendedEvent extends MarketplaceEvent {
   parking_info?: string;
   arrival_time?: string;
   dress_code?: string;
-  timeline?: {
-    registration_opens?: string;
-    ticket_sales?: string;
-    early_bird_ends?: string;
-    general_sales?: string;
-    checkin_opens?: string;
-    event_starts?: string;
-    event_ends?: string;
-  };
 }
 
 // --- UNIVERSAL COMPONENTS ---
@@ -134,12 +138,50 @@ export function Marketplace() {
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [followedOrganizers, setFollowedOrganizers] = useState<Record<string, boolean>>({});
   const [shareModalEvent, setShareModalEvent] = useState<ExtendedEvent | null>(null);
-  const [activeShareTab, setActiveShareTab] = useState<'link' | 'poster' | 'banner' | 'embed' | 'affiliate'>('link');
+  const [activeShareTab, setActiveShareTab] = useState<'link' | 'poster' | 'square' | 'banner' | 'embed' | 'affiliate'>('link');
   const [copiedType, setCopiedType] = useState<string | null>(null);
 
-  // ==========================================
-  // CLICK OUTSIDE LISTENER FOR HEADER MENU
-  // ==========================================
+  // --- AFFILIATE SYSTEM STATES ---
+  const [affiliateStatus, setAffiliateStatusState] = useState<string>('unverified');
+  const [affiliateId, setAffiliateId] = useState<string>('');
+  const [savedAffiliateEvents, setSavedAffiliateEvents] = useState<string[]>([]);
+
+  /*
+  ==============================
+  TEMP LOCAL STORAGE
+  REMOVE AFTER BACKEND INTEGRATION
+  AUTOMATIC REFERRAL TRACKING
+  ==============================
+  */
+  useEffect(() => {
+    // Read affiliate status and ID
+    const currentStatus = getAffiliateStatus();
+    const currentAffId = getOrGenerateAffiliateId();
+    setAffiliateStatusState(currentStatus);
+    setAffiliateId(currentAffId);
+    setSavedAffiliateEvents(getSavedAffiliateEventIds());
+
+    // Auto-detect referral link param "?affiliate=AFF001" or "?ref=..."
+    const referralParam = searchParams.get('affiliate') || searchParams.get('ref');
+    const eventParam = searchParams.get('event');
+
+    if (referralParam) {
+      const myProfile = getAffiliateProfile();
+      // Self-Referral Protection: Do not attach if affiliate ID belongs to logged in user
+      if (myProfile?.affiliateId === referralParam || currentAffId === referralParam) {
+        console.log('Self-referral link detected. Referral tracking ignored.');
+      } else {
+        setAffiliateTracking({
+          affiliate_id: referralParam,
+          event_id: eventParam || undefined,
+          timestamp: Date.now()
+        });
+        console.log(`Referral link tracked for Affiliate ID: ${referralParam}`);
+      }
+    }
+  }, [searchParams]);
+
+  // Click Outside Listener for Header Menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -155,9 +197,7 @@ export function Marketplace() {
     };
   }, [showMenu]);
 
-  // ==========================================
-  // EVENT SYSTEM
-  // ==========================================
+  // Event System
   const [events, setEvents] = useState<ExtendedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<ExtendedEvent | null>(null);
@@ -223,6 +263,13 @@ export function Marketplace() {
   const handlePurchase = () => {
     if (!selectedEvent || isSoldOut || isEventEnded) return;
     if (!selectedEvent.is_free && !selectedTicketType) return;
+    
+    // Attach affiliate tracking payload if present
+    const trackingData = getAffiliateTracking();
+    if (trackingData && trackingData.affiliate_id) {
+      console.log(`Attaching Affiliate Referral ${trackingData.affiliate_id} to checkout payload.`);
+    }
+
     showPinModal();
   };
 
@@ -293,6 +340,12 @@ export function Marketplace() {
   const toggleFollowOrganizer = (organizerName: string) => {
     setFollowedOrganizers(prev => ({ ...prev, [organizerName]: !prev[organizerName] }));
     showToast(followedOrganizers[organizerName] ? `Unfollowed ${organizerName}` : `Following ${organizerName}`);
+  };
+
+  const toggleSaveForAffiliatePromotion = (eventId: string) => {
+    const isNowSaved = toggleSaveAffiliateEventId(eventId);
+    setSavedAffiliateEvents(getSavedAffiliateEventIds());
+    showToast(isNowSaved ? 'Saved for affiliate promotion!' : 'Removed from saved promotion events');
   };
 
   const handleCopy = (text: string, type: string) => {
@@ -464,6 +517,15 @@ export function Marketplace() {
             {event.category}
           </span>
           <div className="flex items-center gap-1.5">
+            {affiliateStatus === 'verified' && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); toggleSaveForAffiliatePromotion(event.id); }}
+                className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
+                title="Save for Affiliate Promotion"
+              >
+                <Bookmark className={cn("w-3.5 h-3.5", savedAffiliateEvents.includes(event.id) && "fill-sky-400 text-sky-400")} />
+              </button>
+            )}
             <button 
               onClick={(e) => toggleFavorite(event.id, e)}
               className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
@@ -933,13 +995,22 @@ export function Marketplace() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Affiliate Center Direct Navigation Link */}
+            <button 
+              onClick={() => navigate('/affiliate')}
+              className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 text-xs font-bold transition-colors"
+            >
+              <Sparkles className="w-4 h-4 text-sky-500" />
+              Affiliate Center
+            </button>
+
             {!vendorStatus ? (
               <button 
                 onClick={() => navigate('/vendor-verification')}
-                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 text-xs font-bold transition-colors"
+                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 text-xs font-bold transition-colors"
               >
                 <Shield className="w-4 h-4" />
-                Become Verified Organizer
+                Become Organizer
               </button>
             ) : (
               <button 
@@ -973,6 +1044,14 @@ export function Marketplace() {
                   <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700/60 mb-1">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Navigation Menu</p>
                   </div>
+
+                  <button 
+                    onClick={() => { navigate('/affiliate'); setShowMenu(false); }} 
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4 text-sky-500" /> 
+                    Affiliate Center
+                  </button>
 
                   {!vendorStatus ? (
                     <button 
@@ -1047,6 +1126,7 @@ export function Marketplace() {
         </div>
       </div>
 
+      {/* SHARE MODAL WITH AFFILIATE VERIFICATION CHECK & CANVAS GENERATION */}
       {shareModalEvent && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-3xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-2xl p-6 space-y-6">
@@ -1061,12 +1141,15 @@ export function Marketplace() {
 
             <div className="flex gap-2 border-b border-slate-100 dark:border-slate-800 overflow-x-auto max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden pb-2">
               {[
-                { id: 'link', label: 'Share Link', icon: Share2 },
-                { id: 'poster', label: 'Poster', icon: Download },
-                { id: 'banner', label: 'Banner', icon: Download },
-                { id: 'embed', label: 'Embed Code', icon: Code },
-                { id: 'affiliate', label: 'Affiliate', icon: Sparkles },
-              ].map((tab) => {
+                { id: 'link', label: 'Share Link', icon: Share2, verifiedOnly: false },
+                { id: 'embed', label: 'Embed Code', icon: Code, verifiedOnly: false },
+                { id: 'affiliate', label: 'Affiliate Link', icon: Sparkles, verifiedOnly: true },
+                { id: 'poster', label: 'Portrait Poster', icon: Download, verifiedOnly: true },
+                { id: 'square', label: 'Square Post', icon: Download, verifiedOnly: true },
+                { id: 'banner', label: 'Landscape Banner', icon: Download, verifiedOnly: true },
+              ]
+              .filter(tab => !tab.verifiedOnly || affiliateStatus === 'verified')
+              .map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
@@ -1088,7 +1171,7 @@ export function Marketplace() {
 
             {activeShareTab === 'link' && (
               <div className="space-y-4">
-                <p className="text-xs text-slate-500">Copy link to share on social media or directly with friends.</p>
+                <p className="text-xs text-slate-500">Copy standard event link to share with attendees.</p>
                 <div className="flex gap-2">
                   <Input readOnly value={`${window.location.origin}/marketplace?event=${shareModalEvent.id}`} className="text-xs" />
                   <button 
@@ -1099,54 +1182,6 @@ export function Marketplace() {
                     Copy Link
                   </button>
                 </div>
-              </div>
-            )}
-
-            {activeShareTab === 'poster' && (
-              <div className="space-y-4 text-center">
-                <div className="aspect-[3/4] max-w-xs mx-auto rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-900">
-                  <img src={getEventImage(shareModalEvent)} alt="Poster" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
-                  <div className="absolute bottom-4 inset-x-4 text-white text-left space-y-1">
-                    <p className="text-xs font-bold text-sky-400">BlueTickets Exclusive</p>
-                    <h4 className="font-bold text-sm leading-tight">{shareModalEvent.event_title}</h4>
-                    <p className="text-[10px] text-slate-300">{formatDate(shareModalEvent.event_date)}</p>
-                  </div>
-                </div>
-                <a 
-                  href={getEventImage(shareModalEvent)} 
-                  download={`${shareModalEvent.event_title}-poster.jpg`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-3 rounded-2xl bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2"
-                >
-                  <Download className="w-4 h-4" /> Download Event Poster
-                </a>
-              </div>
-            )}
-
-            {activeShareTab === 'banner' && (
-              <div className="space-y-4 text-center">
-                <div className="aspect-[21/9] w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative bg-slate-900">
-                  <img src={getEventImage(shareModalEvent)} alt="Banner" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/60 to-transparent" />
-                  <div className="absolute inset-4 flex flex-col justify-between text-white text-left">
-                    <span className="text-[10px] font-bold text-sky-400">BlueTickets</span>
-                    <div>
-                      <h4 className="font-bold text-sm leading-tight">{shareModalEvent.event_title}</h4>
-                      <p className="text-[10px] text-slate-300">{formatDate(shareModalEvent.event_date)} • {shareModalEvent.event_location}</p>
-                    </div>
-                  </div>
-                </div>
-                <a 
-                  href={getEventImage(shareModalEvent)} 
-                  download={`${shareModalEvent.event_title}-banner.jpg`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-3 rounded-2xl bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-2"
-                >
-                  <Download className="w-4 h-4" /> Download Web Banner
-                </a>
               </div>
             )}
 
@@ -1165,30 +1200,78 @@ export function Marketplace() {
               </div>
             )}
 
-            {activeShareTab === 'affiliate' && (
-              <div className="space-y-4">
-                {shareModalEvent.affiliate_enabled !== false ? (
-                  <>
+            {/* VERIFIED AFFILIATE TABS */}
+            {affiliateStatus === 'verified' ? (
+              <>
+                {activeShareTab === 'affiliate' && (
+                  <div className="space-y-4">
                     <p className="text-xs text-slate-500">
-                      Share your custom affiliate link. You earn a commission every time a user buys a ticket using your link.
+                      Your unique Affiliate Link includes your permanent ID (<span className="font-bold text-sky-500">{affiliateId}</span>).
                     </p>
                     <div className="flex gap-2">
-                      <Input readOnly value={`${window.location.origin}/marketplace?event=${shareModalEvent.id}&ref=user_affiliate`} className="text-xs" />
+                      <Input readOnly value={`${window.location.origin}/marketplace?event=${shareModalEvent.id}&affiliate=${affiliateId}`} className="text-xs" />
                       <button 
-                        onClick={() => handleCopy(`${window.location.origin}/marketplace?event=${shareModalEvent.id}&ref=user_affiliate`, 'affiliate')}
+                        onClick={() => handleCopy(`${window.location.origin}/marketplace?event=${shareModalEvent.id}&affiliate=${affiliateId}`, 'affiliate')}
                         className="px-4 py-2 bg-sky-500 text-white text-xs font-bold rounded-xl flex items-center gap-1 shrink-0"
                       >
                         {copiedType === 'affiliate' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                        Copy
+                        Copy Link
                       </button>
                     </div>
-                  </>
-                ) : (
-                  <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>Affiliate promotion is unavailable for this event.</span>
                   </div>
                 )}
+
+                {activeShareTab === 'poster' && (
+                  <div className="space-y-4 text-center">
+                    <p className="text-xs text-slate-500">Generate high-res Portrait Poster for Instagram Stories / WhatsApp Status.</p>
+                    <button 
+                      onClick={() => generateMarketingAsset(shareModalEvent, 'poster', affiliateId)}
+                      className="w-full py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
+                    >
+                      <Download className="w-4 h-4" /> Download Branded Portrait Poster
+                    </button>
+                  </div>
+                )}
+
+                {activeShareTab === 'square' && (
+                  <div className="space-y-4 text-center">
+                    <p className="text-xs text-slate-500">Generate 1:1 Square Post for Instagram Feed & Facebook.</p>
+                    <button 
+                      onClick={() => generateMarketingAsset(shareModalEvent, 'square', affiliateId)}
+                      className="w-full py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
+                    >
+                      <Download className="w-4 h-4" /> Download Square Social Post
+                    </button>
+                  </div>
+                )}
+
+                {activeShareTab === 'banner' && (
+                  <div className="space-y-4 text-center">
+                    <p className="text-xs text-slate-500">Generate Landscape Banner for Twitter (X), LinkedIn & Web.</p>
+                    <button 
+                      onClick={() => generateMarketingAsset(shareModalEvent, 'banner', affiliateId)}
+                      className="w-full py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
+                    >
+                      <Download className="w-4 h-4" /> Download Branded Landscape Banner
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50 space-y-3">
+                <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-bold text-xs">
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <span>Become a Verified Affiliate to unlock marketing tools</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  Earn commissions, generate branded posters, and track referrals automatically.
+                </p>
+                <button 
+                  onClick={() => { setShareModalEvent(null); navigate('/affiliate/register'); }}
+                  className="w-full py-2.5 rounded-xl bg-sky-500 text-white font-bold text-xs hover:bg-sky-600 transition-colors"
+                >
+                  Apply to Become an Affiliate
+                </button>
               </div>
             )}
           </div>

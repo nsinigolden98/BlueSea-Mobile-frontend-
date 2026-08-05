@@ -73,6 +73,16 @@ import AddEmployee from './screens/payroll-pro/AddEmployee';
 import CreateBranch from './screens/payroll-pro/CreateBranch';
 import PayrollDetail from './screens/payroll-pro/PayrollDetail';
 
+
+//affilate routes
+import { 
+  AffiliateLayout, 
+  AffiliateDashboard, 
+  AffiliateRegistration, 
+  AffiliatePending 
+} from '@/pages/Affiliate';
+
+
 // VAULT / REWARDS SYSTEM IMPORT
 import { Rewards } from '@/pages/vault';
 
@@ -219,7 +229,17 @@ function AppRoutes() {
           <Route path="/payroll-pro/employee/:employeeId" element={<ProtectedRoute><EmployeeProfile /></ProtectedRoute>} />
           <Route path="/payroll-pro/portal/:companyId" element={<ProtectedRoute><EmployeePortal /></ProtectedRoute>} />
           <Route path="/payroll-pro/payroll/:payrollId" element={<ProtectedRoute><PayrollDetail /></ProtectedRoute>} />
-        </Route>
+
+
+
+          {/* =========================================
+              4. AFFILIATE ROUTES (UNIVERSAL PULL-TO-REFRESH ENABLED)
+             ========================================= */}
+          <Route path="/affiliate" element={<ProtectedRoute><AffiliateLayout /></ProtectedRoute>}/>
+            <Route path="dashboard" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+            <Route path="register" element={<ProtectedRoute><AffiliateRegistration /></ProtectedRoute>} />
+            <Route path="pending" element={<ProtectedRoute><AffiliatePending /></ProtectedRoute>} />
+          </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
