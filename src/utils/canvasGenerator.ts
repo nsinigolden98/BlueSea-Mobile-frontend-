@@ -1,4 +1,5 @@
 import { API_BASE } from '@/types';
+import { toPng } from 'html-to-image';
 
 export type AssetFormat = 'poster' | 'square' | 'banner';
 
@@ -35,7 +36,8 @@ export const FORMAT_DIMENSIONS: Record<AssetFormat, CanvasDimensions> = {
   banner: { width: 1200, height: 630 },  // Landscape 16:9
 };
 
-export const DEFAULT_MARKETPLACE_IMAGE = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80';
+export const DEFAULT_MARKETPLACE_IMAGE =
+  'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80';
 
 /**
  * Resolves relative and absolute image URLs to match Marketplace behavior.
@@ -76,142 +78,482 @@ export const getMarketingEventImage = (event: MarketingAssetEvent): string => {
   return DEFAULT_MARKETPLACE_IMAGE;
 };
 
-// Helper: Defensive roundRect with fallback for legacy environments
-function fillRoundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number
-) {
-  ctx.beginPath();
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(x, y, w, h, r);
-  } else {
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-  ctx.fill();
-}
-
-function strokeRoundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number
-) {
-  ctx.beginPath();
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(x, y, w, h, r);
-  } else {
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-  ctx.stroke();
-}
-
-// Helper: Safely load image for canvas
-const loadImage = (src?: string): Promise<HTMLImageElement | null> => {
-  return new Promise((resolve) => {
-    if (!src) return resolve(null);
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
-};
-
-// Helper: Crop and draw image keeping aspect ratio
-function drawCroppedImage(
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  radius: number = 0
-) {
-  ctx.save();
-  if (radius > 0) {
-    ctx.beginPath();
-    if (typeof ctx.roundRect === 'function') {
-      ctx.roundRect(x, y, w, h, radius);
-    } else {
-      ctx.moveTo(x + radius, y);
-      ctx.arcTo(x + w, y, x + w, y + h, radius);
-      ctx.arcTo(x + w, y + h, x, y + h, radius);
-      ctx.arcTo(x, y + h, x, y, radius);
-      ctx.arcTo(x, y, x + w, y, radius);
-      ctx.closePath();
-    }
-    ctx.clip();
-  }
-
-  const imgRatio = img.naturalWidth / img.naturalHeight;
-  const targetRatio = w / h;
-  let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
-
-  if (imgRatio > targetRatio) {
-    sw = img.naturalHeight * targetRatio;
-    sx = (img.naturalWidth - sw) / 2;
-  } else {
-    sh = img.naturalWidth / targetRatio;
-    sy = (img.naturalHeight - sh) / 2;
-  }
-
-  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-  ctx.restore();
-}
-
-// Helper: Wrap text onto multiple lines
-function wrapText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineHeight: number,
-  maxLines: number = 3
-): number {
-  const words = text.split(' ');
-  let line = '';
-  let currentY = y;
-  let lineCount = 1;
-
-  for (let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    if (metrics.width > maxWidth && n > 0) {
-      if (lineCount >= maxLines) {
-        ctx.fillText(line.trim() + '...', x, currentY);
-        return currentY;
-      }
-      ctx.fillText(line, x, currentY);
-      line = words[n] + ' ';
-      currentY += lineHeight;
-      lineCount++;
-    } else {
-      line = testLine;
-    }
-  }
-  ctx.fillText(line, x, currentY);
-  return currentY;
+/**
+ * Escapes unsafe characters for safe embedding inside HTML string templates.
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /**
- * Generates promotional asset canvas and returns Data URL.
+ * Converts an image URL into a base64 Data URL to prevent CORS/canvas tainting issues.
+ * Gracefully falls back to DEFAULT_MARKETPLACE_IMAGE if the primary image cannot be fetched.
+ */
+async function imageUrlToDataUrl(url: string): Promise<string> {
+  if (!url) return DEFAULT_MARKETPLACE_IMAGE;
+  if (url.startsWith('data:')) return url;
+
+  const fetchAsBase64 = async (targetUrl: string): Promise<string | null> => {
+    try {
+      const response = await fetch(targetUrl, { mode: 'cors' });
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      return await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === 'string' && reader.result.startsWith('data:image')) {
+            resolve(reader.result);
+          } else {
+            resolve(null);
+          }
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return null;
+    }
+  };
+
+  const drawToCanvasBase64 = async (targetUrl: string): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(null);
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } catch {
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = targetUrl;
+    });
+  };
+
+  // Try converting primary image
+  let dataUrl = await fetchAsBase64(url);
+  if (dataUrl) return dataUrl;
+
+  dataUrl = await drawToCanvasBase64(url);
+  if (dataUrl) return dataUrl;
+
+  // Fallback to DEFAULT_MARKETPLACE_IMAGE if primary image failed
+  if (url !== DEFAULT_MARKETPLACE_IMAGE) {
+    let fallbackDataUrl = await fetchAsBase64(DEFAULT_MARKETPLACE_IMAGE);
+    if (!fallbackDataUrl) {
+      fallbackDataUrl = await drawToCanvasBase64(DEFAULT_MARKETPLACE_IMAGE);
+    }
+    if (fallbackDataUrl) return fallbackDataUrl;
+  }
+
+  return url;
+}
+
+/**
+ * Builds modern, high-resolution HTML template for the specified asset format.
+ */
+function buildMarketingAssetHtml(
+  event: MarketingAssetEvent,
+  format: AssetFormat,
+  imageDataUrl: string,
+  affiliateId?: string
+): string {
+  const fontStack =
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
+  const dateObj = new Date(event.event_date);
+  const formattedDate = isNaN(dateObj.getTime())
+    ? escapeHtml(String(event.event_date))
+    : dateObj.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+
+  const title = escapeHtml(event.event_title);
+  const organizerText = escapeHtml(event.organizer_name || 'BlueTickets Host');
+
+  const priceTagText = escapeHtml(
+    event.is_free
+      ? 'Free Pass'
+      : event.starting_price
+      ? `Price: ₦${Number(event.starting_price).toLocaleString()}`
+      : 'Tickets Available'
+  );
+
+  const attendanceMode = escapeHtml((event.attendance_mode || 'Physical').toUpperCase());
+  const categoryText = escapeHtml((event.category || 'EVENT').toUpperCase());
+
+  const locationParts: string[] = [];
+  if (event.venue_name) locationParts.push(event.venue_name);
+  if (event.event_location) locationParts.push(event.event_location);
+  if (event.city && !event.event_location?.includes(event.city)) locationParts.push(event.city);
+  const locationText = escapeHtml(locationParts.join(', ') || 'See Event Details');
+
+  const formattedTime = event.event_time ? escapeHtml(event.event_time) : '';
+  const escapedAffiliateId = affiliateId ? escapeHtml(affiliateId) : '';
+
+  if (format === 'poster') {
+    return `
+      <div style="
+        width: 1200px;
+        height: 1600px;
+        background: #090d16;
+        background-image:
+          radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.18) 0%, transparent 45%),
+          radial-gradient(circle at 15% 85%, rgba(2, 132, 199, 0.18) 0%, transparent 45%),
+          linear-gradient(180deg, #090d16 0%, #0f172a 100%);
+        padding: 40px;
+        box-sizing: border-box;
+        font-family: ${fontStack};
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+      ">
+        <div style="
+          width: 1120px;
+          height: 1520px;
+          background: rgba(30, 41, 59, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 32px;
+          padding: 44px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        ">
+          <!-- Header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div style="font-size: 34px; font-weight: 800; color: #38bdf8; letter-spacing: -0.5px;">
+              BlueSea Mobile
+            </div>
+            <div style="font-size: 20px; font-weight: 500; color: #94a3b8; letter-spacing: 0.5px;">
+              BlueSea Mobile Marketplace
+            </div>
+          </div>
+
+          <!-- Hero Image -->
+          <div style="width: 1032px; height: 600px; border-radius: 24px; overflow: hidden; position: relative; background: #1e293b; box-shadow: 0 16px 32px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);">
+            <img src="${imageDataUrl}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+          </div>
+
+          <!-- Main Content -->
+          <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+            <div style="display: flex; gap: 14px; align-items: center;">
+              <span style="background: #0284c7; color: #ffffff; font-size: 18px; font-weight: 700; padding: 8px 20px; border-radius: 12px; letter-spacing: 0.8px; text-transform: uppercase;">
+                ${categoryText}
+              </span>
+              <span style="background: rgba(255, 255, 255, 0.12); color: #e2e8f0; font-size: 18px; font-weight: 600; padding: 8px 20px; border-radius: 12px; letter-spacing: 0.8px; text-transform: uppercase;">
+                ${attendanceMode}
+              </span>
+            </div>
+
+            <h1 style="font-size: 50px; font-weight: 800; color: #ffffff; margin: 0; line-height: 1.15; letter-spacing: -0.5px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;">
+              ${title}
+            </h1>
+
+            <div style="font-size: 26px; font-weight: 600; color: #38bdf8;">
+              Hosted by: ${organizerText}
+            </div>
+
+            <div style="font-size: 26px; font-weight: 600; color: #f8fafc; display: flex; align-items: center; gap: 10px;">
+              <span>📅</span>
+              <span>${formattedDate}${formattedTime ? ` • ${formattedTime}` : ''}</span>
+            </div>
+
+            <div style="font-size: 24px; font-weight: 500; color: #cbd5e1; display: flex; align-items: center; gap: 10px;">
+              <span>📍</span>
+              <span style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${locationText}</span>
+            </div>
+
+            <div>
+              <span style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; font-size: 28px; font-weight: 800; padding: 14px 32px; border-radius: 16px; display: inline-block; box-shadow: 0 8px 16px rgba(2, 132, 199, 0.3);">
+                ${priceTagText}
+              </span>
+            </div>
+          </div>
+
+          <!-- Affiliate Code Box -->
+          ${
+            escapedAffiliateId
+              ? `<div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #38bdf8; border-radius: 16px; padding: 16px 28px; display: flex; justify-content: center; align-items: center; gap: 12px;">
+                  <span style="font-size: 22px; font-weight: 700; color: #38bdf8;">Official Promotional Partner Code:</span>
+                  <span style="font-size: 24px; font-weight: 800; color: #ffffff; background: #0284c7; padding: 4px 16px; border-radius: 8px;">${escapedAffiliateId}</span>
+                </div>`
+              : ''
+          }
+
+          <!-- Footer -->
+          <div style="text-align: center; font-size: 20px; font-weight: 500; color: #94a3b8; letter-spacing: 0.5px;">
+            Powered by BlueSea Mobile
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (format === 'square') {
+    return `
+      <div style="
+        width: 1080px;
+        height: 1080px;
+        background: #090d16;
+        background-image:
+          radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.18) 0%, transparent 45%),
+          radial-gradient(circle at 15% 85%, rgba(2, 132, 199, 0.18) 0%, transparent 45%),
+          linear-gradient(180deg, #090d16 0%, #0f172a 100%);
+        padding: 32px;
+        box-sizing: border-box;
+        font-family: ${fontStack};
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+      ">
+        <div style="
+          width: 1016px;
+          height: 1016px;
+          background: rgba(30, 41, 59, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 28px;
+          padding: 32px;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        ">
+          <!-- Hero Image -->
+          <div style="width: 952px; height: 420px; border-radius: 20px; overflow: hidden; position: relative; background: #1e293b; box-shadow: 0 12px 24px rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08);">
+            <img src="${imageDataUrl}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+          </div>
+
+          <!-- Main Content -->
+          <div style="display: flex; flex-direction: column; gap: 14px; width: 100%;">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span style="background: #0284c7; color: #ffffff; font-size: 16px; font-weight: 700; padding: 6px 16px; border-radius: 10px; letter-spacing: 0.8px; text-transform: uppercase;">
+                ${categoryText}
+              </span>
+              <span style="background: rgba(255, 255, 255, 0.12); color: #e2e8f0; font-size: 16px; font-weight: 600; padding: 6px 16px; border-radius: 10px; letter-spacing: 0.8px; text-transform: uppercase;">
+                ${attendanceMode}
+              </span>
+            </div>
+
+            <h1 style="font-size: 38px; font-weight: 800; color: #ffffff; margin: 0; line-height: 1.18; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;">
+              ${title}
+            </h1>
+
+            <div style="font-size: 22px; font-weight: 600; color: #38bdf8;">
+              Hosted by: ${organizerText}
+            </div>
+
+            <div style="font-size: 20px; font-weight: 500; color: #e2e8f0; display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+              <span>📅 ${formattedDate}${formattedTime ? ` • ${formattedTime}` : ''}</span>
+              <span>📍 ${locationText}</span>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center; margin-top: 4px;">
+              <span style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; font-size: 22px; font-weight: 800; padding: 10px 24px; border-radius: 14px; display: inline-block;">
+                ${priceTagText}
+              </span>
+              ${
+                escapedAffiliateId
+                  ? `<span style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #38bdf8; color: #38bdf8; font-size: 18px; font-weight: 700; padding: 8px 18px; border-radius: 12px;">
+                      Partner Code: ${escapedAffiliateId}
+                    </span>`
+                  : ''
+              }
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="text-align: center; font-size: 18px; font-weight: 500; color: #94a3b8; letter-spacing: 0.5px;">
+            Powered by BlueSea Mobile
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Banner format
+  return `
+    <div style="
+      width: 1200px;
+      height: 630px;
+      background: #090d16;
+      background-image:
+        radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 15% 85%, rgba(2, 132, 199, 0.18) 0%, transparent 45%),
+        linear-gradient(180deg, #090d16 0%, #0f172a 100%);
+      padding: 24px;
+      box-sizing: border-box;
+      font-family: ${fontStack};
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    ">
+      <div style="
+        width: 1152px;
+        height: 582px;
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        padding: 28px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 28px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      ">
+        <!-- Left Side Content -->
+        <div style="display: flex; flex-direction: column; justify-content: space-between; width: 620px; height: 100%;">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 24px; font-weight: 800; color: #38bdf8;">BlueSea Mobile</span>
+              <span style="font-size: 16px; font-weight: 500; color: #94a3b8;">Marketplace</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span style="background: #0284c7; color: #ffffff; font-size: 14px; font-weight: 700; padding: 4px 14px; border-radius: 8px; letter-spacing: 0.8px; text-transform: uppercase;">
+                ${categoryText}
+              </span>
+              <span style="background: rgba(255, 255, 255, 0.12); color: #e2e8f0; font-size: 14px; font-weight: 600; padding: 4px 14px; border-radius: 8px; letter-spacing: 0.8px; text-transform: uppercase;">
+                ${attendanceMode}
+              </span>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <h1 style="font-size: 34px; font-weight: 800; color: #ffffff; margin: 0; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;">
+              ${title}
+            </h1>
+            <div style="font-size: 20px; font-weight: 600; color: #38bdf8;">
+              Hosted by: ${organizerText}
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 18px; font-weight: 500; color: #cbd5e1;">
+            <div>📅 ${formattedDate}${formattedTime ? ` • ${formattedTime}` : ''}</div>
+            <div style="display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">📍 ${locationText}</div>
+          </div>
+
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <span style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; font-size: 20px; font-weight: 800; padding: 8px 20px; border-radius: 12px; display: inline-block;">
+              ${priceTagText}
+            </span>
+            ${
+              escapedAffiliateId
+                ? `<span style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #38bdf8; color: #38bdf8; font-size: 16px; font-weight: 700; padding: 6px 14px; border-radius: 10px;">
+                    Code: ${escapedAffiliateId}
+                  </span>`
+                : ''
+            }
+          </div>
+
+          <div style="font-size: 16px; font-weight: 500; color: #94a3b8;">
+            Powered by BlueSea Mobile
+          </div>
+        </div>
+
+        <!-- Right Side Hero Image -->
+        <div style="width: 440px; height: 526px; border-radius: 20px; overflow: hidden; background: #1e293b; box-shadow: 0 10px 20px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;">
+          <img src="${imageDataUrl}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Converts a DOM element to PNG Data URL using html-to-image with SVG foreignObject fallback.
+ */
+async function elementToDataUrl(
+  element: HTMLElement,
+  width: number,
+  height: number
+): Promise<string> {
+  try {
+    return await toPng(element, {
+      width,
+      height,
+      pixelRatio: 1,
+      cacheBust: false,
+    });
+  } catch (err) {
+    return svgForeignObjectToDataUrl(element, width, height);
+  }
+}
+
+/**
+ * Fallback converter using SVG foreignObject + Canvas.
+ */
+async function svgForeignObjectToDataUrl(
+  element: HTMLElement,
+  width: number,
+  height: number
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    try {
+      const htmlString = element.outerHTML;
+      const svgString = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%;">
+              ${htmlString}
+            </div>
+          </foreignObject>
+        </svg>
+      `;
+
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          URL.revokeObjectURL(url);
+          return reject(new Error('Failed to create canvas context'));
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/png'));
+      };
+
+      img.onerror = (e) => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to render SVG to image: ' + String(e)));
+      };
+
+      img.src = url;
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+/**
+ * Generates promotional asset Data URL using HTML rendering.
  * DOES NOT trigger automatic download.
  */
 export const generateMarketingAssetDataUrl = async (
@@ -220,282 +562,36 @@ export const generateMarketingAssetDataUrl = async (
   affiliateId?: string
 ): Promise<string> => {
   const { width, height } = FORMAT_DIMENSIONS[format];
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
 
-  if (!ctx) throw new Error('Failed to create canvas context');
-
-  // Load Event Image with fallback
+  // 1. Resolve event image using exact same logic as Marketplace
   const primaryImageUrl = getMarketingEventImage(event);
-  let eventImg = await loadImage(primaryImageUrl);
-  if (!eventImg && primaryImageUrl !== DEFAULT_MARKETPLACE_IMAGE) {
-    eventImg = await loadImage(DEFAULT_MARKETPLACE_IMAGE);
+  const imageDataUrl = await imageUrlToDataUrl(primaryImageUrl);
+
+  // 2. Build HTML template
+  const templateHtml = buildMarketingAssetHtml(event, format, imageDataUrl, affiliateId);
+
+  // 3. Mount offscreen DOM element
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '-9999px';
+  container.style.width = `${width}px`;
+  container.style.height = `${height}px`;
+  container.style.overflow = 'hidden';
+  container.style.zIndex = '-9999';
+  container.innerHTML = templateHtml;
+
+  document.body.appendChild(container);
+
+  try {
+    const targetElement = (container.firstElementChild as HTMLElement) || container;
+    const dataUrl = await elementToDataUrl(targetElement, width, height);
+    return dataUrl;
+  } finally {
+    if (container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
   }
-
-  // Background Theme
-  ctx.fillStyle = '#0f172a'; // slate-900
-  ctx.fillRect(0, 0, width, height);
-
-  // Decorative Accent Gradients
-  const bgGradient = ctx.createLinearGradient(0, 0, width, height);
-  bgGradient.addColorStop(0, '#0284c7'); // sky-600
-  bgGradient.addColorStop(0.6, '#0f172a'); // slate-900
-  ctx.fillStyle = bgGradient;
-  ctx.globalAlpha = 0.25;
-  ctx.fillRect(0, 0, width, height);
-  ctx.globalAlpha = 1.0;
-
-  const margin = 40;
-  const dateStr = new Date(event.event_date).toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-  const organizerText = event.organizer_name || 'BlueTickets Host';
-  const priceTag = event.is_free
-    ? 'Free Pass'
-    : event.starting_price
-    ? `Price: ₦${Number(event.starting_price).toLocaleString()}`
-    : 'Tickets Available';
-  const attendanceMode = (event.attendance_mode || 'Physical').toUpperCase();
-
-  if (format === 'poster') {
-    // ------------------- PORTRAIT POSTER (1200 x 1600) -------------------
-    ctx.fillStyle = '#1e293b';
-    fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 32);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-    ctx.lineWidth = 2;
-    strokeRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 32);
-
-    // Branding Header
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 36px sans-serif';
-    ctx.fillText('BlueSea Mobile', margin + 30, margin + 65);
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '500 20px sans-serif';
-    ctx.fillText('BlueSea Mobile Marketplace', width - margin - 310, margin + 65);
-
-    // Main Image
-    const imgY = margin + 95;
-    const imgHeight = 650;
-    const imgWidth = width - (margin + 30) * 2;
-    if (eventImg) {
-      drawCroppedImage(ctx, eventImg, margin + 30, imgY, imgWidth, imgHeight, 24);
-    } else {
-      ctx.fillStyle = '#334155';
-      fillRoundRect(ctx, margin + 30, imgY, imgWidth, imgHeight, 24);
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = 'bold 36px sans-serif';
-      ctx.fillText('BlueSea Mobile Event', margin + 70, imgY + imgHeight / 2);
-    }
-
-    let contentY = imgY + imgHeight + 45;
-
-    // Pills Row (Category & Attendance)
-    ctx.font = 'bold 20px sans-serif';
-    const catText = event.category.toUpperCase();
-    const catWidth = ctx.measureText(catText).width + 40;
-
-    ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, margin + 30, contentY, catWidth, 44, 12);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(catText, margin + 50, contentY + 29);
-
-    const modeText = attendanceMode;
-    const modeWidth = ctx.measureText(modeText).width + 40;
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    fillRoundRect(ctx, margin + 30 + catWidth + 16, contentY, modeWidth, 44, 12);
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(modeText, margin + 30 + catWidth + 36, contentY + 29);
-
-    contentY += 80;
-
-    // Prominent Event Title
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 54px sans-serif';
-    contentY = wrapText(ctx, event.event_title, margin + 30, contentY, width - (margin + 30) * 2, 64, 3);
-
-    // Subtitle / Hosted By
-    contentY += 35;
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 26px sans-serif';
-    ctx.fillText(`Hosted by: ${organizerText}`, margin + 30, contentY);
-
-    // Date & Time
-    contentY += 45;
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = '600 26px sans-serif';
-    ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, margin + 30, contentY);
-
-    // Venue & Location
-    contentY += 40;
-    ctx.fillStyle = '#cbd5e1';
-    ctx.font = '500 24px sans-serif';
-    ctx.fillText(`📍 ${event.venue_name ? `${event.venue_name}, ` : ''}${event.event_location}`, margin + 30, contentY);
-
-    // Prominent Price Tag
-    contentY += 45;
-    const priceBoxWidth = 340;
-    ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, margin + 30, contentY, priceBoxWidth, 68, 18);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText(priceTag, margin + 55, contentY + 44);
-
-    // Affiliate Partner Box (if present)
-    if (affiliateId) {
-      const affiliateY = height - margin - 120;
-      ctx.fillStyle = '#0f172a';
-      fillRoundRect(ctx, margin + 30, affiliateY, width - (margin + 30) * 2, 70, 16);
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 2;
-      strokeRoundRect(ctx, margin + 30, affiliateY, width - (margin + 30) * 2, 70, 16);
-
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.fillText(`Official Promotional Partner Code: ${affiliateId}`, margin + 50, affiliateY + 43);
-    }
-
-    // Clean Footer
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '500 20px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Powered by BlueSea Mobile', width / 2, height - margin - 25);
-    ctx.textAlign = 'left';
-
-  } else if (format === 'square') {
-    // ------------------- SQUARE SOCIAL (1080 x 1080) -------------------
-    ctx.fillStyle = '#1e293b';
-    fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 28);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-    ctx.lineWidth = 2;
-    strokeRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 28);
-
-    const imgHeight = 460;
-    const imgWidth = width - (margin + 24) * 2;
-    if (eventImg) {
-      drawCroppedImage(ctx, eventImg, margin + 24, margin + 24, imgWidth, imgHeight, 20);
-    } else {
-      ctx.fillStyle = '#334155';
-      fillRoundRect(ctx, margin + 24, margin + 24, imgWidth, imgHeight, 20);
-    }
-
-    let contentY = margin + imgHeight + 60;
-
-    // Category Pill
-    ctx.font = 'bold 16px sans-serif';
-    const catText = event.category.toUpperCase();
-    const catWidth = ctx.measureText(catText).width + 32;
-
-    ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, margin + 30, contentY - 26, catWidth, 36, 10);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(catText, margin + 46, contentY - 3);
-
-    // Title
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 42px sans-serif';
-    contentY = wrapText(ctx, event.event_title, margin + 30, contentY + 32, width - (margin + 30) * 2, 50, 2);
-
-    contentY += 38;
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.fillText(`Hosted by: ${organizerText}`, margin + 30, contentY);
-
-    contentY += 36;
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '500 22px sans-serif';
-    ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''} | 📍 ${event.event_location}`, margin + 30, contentY);
-
-    contentY += 42;
-    ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, margin + 30, contentY - 28, 280, 52, 14);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.fillText(priceTag, margin + 50, contentY + 6);
-
-    // Footer
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '500 18px sans-serif';
-    ctx.textAlign = 'center';
-    if (affiliateId) {
-      ctx.fillText(`Partner Code: ${affiliateId}  •  Powered by BlueSea Mobile`, width / 2, height - margin - 20);
-    } else {
-      ctx.fillText('Powered by BlueSea Mobile', width / 2, height - margin - 20);
-    }
-    ctx.textAlign = 'left';
-
-  } else {
-    // ------------------- LANDSCAPE BANNER (1200 x 630) -------------------
-    ctx.fillStyle = '#1e293b';
-    fillRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 24);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-    ctx.lineWidth = 2;
-    strokeRoundRect(ctx, margin, margin, width - margin * 2, height - margin * 2, 24);
-
-    const rightImgWidth = 460;
-    const rightImgHeight = height - margin * 2 - 40;
-
-    if (eventImg) {
-      drawCroppedImage(ctx, eventImg, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 18);
-    } else {
-      ctx.fillStyle = '#334155';
-      fillRoundRect(ctx, width - margin - rightImgWidth - 20, margin + 20, rightImgWidth, rightImgHeight, 18);
-    }
-
-    const leftWidth = width - margin * 2 - rightImgWidth - 60;
-    let contentY = margin + 55;
-
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.fillText('BlueSea Mobile', margin + 30, contentY);
-
-    contentY += 50;
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 38px sans-serif';
-    contentY = wrapText(ctx, event.event_title, margin + 30, contentY, leftWidth, 46, 2);
-
-    contentY += 36;
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.fillText(`Hosted by: ${organizerText}`, margin + 30, contentY);
-
-    contentY += 36;
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '500 20px sans-serif';
-    ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, margin + 30, contentY);
-
-    contentY += 32;
-    ctx.fillText(`📍 ${event.event_location}`, margin + 30, contentY);
-
-    contentY += 40;
-    ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, margin + 30, contentY - 24, 260, 48, 14);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.fillText(priceTag, margin + 50, contentY + 8);
-
-    if (affiliateId) {
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.fillText(`Code: ${affiliateId}`, margin + 310, contentY + 8);
-    }
-
-    // Footer
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '500 18px sans-serif';
-    ctx.fillText('Powered by BlueSea Mobile', margin + 30, height - margin - 20);
-  }
-
-  return canvas.toDataURL('image/png');
 };
 
 /**
@@ -506,10 +602,11 @@ export const downloadMarketingAsset = (
   eventTitle: string,
   format: AssetFormat
 ): void => {
-  const slugified = eventTitle
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'event';
+  const slugified =
+    eventTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'event';
   const fileName = `${slugified}-${format}.png`;
 
   const link = document.createElement('a');
