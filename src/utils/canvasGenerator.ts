@@ -103,7 +103,7 @@ async function imageUrlToDataUrl(url: string): Promise<string> {
       const response = await fetch(targetUrl, { mode: 'cors' });
       if (!response.ok) return null;
       const blob = await response.blob();
-      return await new Promise<string>((resolve) => {
+      return await new Promise<string | null>((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           if (typeof reader.result === 'string' && reader.result.startsWith('data:image')) {
@@ -121,7 +121,7 @@ async function imageUrlToDataUrl(url: string): Promise<string> {
   };
 
   const drawToCanvasBase64 = async (targetUrl: string): Promise<string | null> => {
-    return new Promise((resolve) => {
+    return new Promise<string | null>((resolve) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
@@ -496,7 +496,7 @@ async function elementToDataUrl(
       pixelRatio: 1,
       cacheBust: false,
     });
-  } catch (err) {
+  } catch {
     return svgForeignObjectToDataUrl(element, width, height);
   }
 }
