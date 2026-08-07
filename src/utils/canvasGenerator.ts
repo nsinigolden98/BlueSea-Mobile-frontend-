@@ -80,8 +80,8 @@ export const getMarketingEventImage = (event: MarketingAssetEvent): string => {
   return DEFAULT_MARKETPLACE_IMAGE;
 };
 
-// Defensive roundRect with fallback for legacy environments
-function fillRoundRect(
+// Helper for drawing rounded rectangle paths safely across environments
+function fillRoundRectPath(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -100,6 +100,17 @@ function fillRoundRect(
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
   }
+}
+
+function fillRoundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
+  fillRoundRectPath(ctx, x, y, w, h, r);
   ctx.fill();
 }
 
@@ -111,33 +122,63 @@ function strokeRoundRect(
   h: number,
   r: number
 ) {
-  ctx.beginPath();
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(x, y, w, h, r);
-  } else {
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
+  fillRoundRectPath(ctx, x, y, w, h, r);
   ctx.stroke();
 }
 
-// Safely load image for canvas with cross-origin handling
+// Safely load image for canvas with defensive mobile WebView handling
 const loadImage = (src?: string): Promise<HTMLImageElement | null> => {
   return new Promise((resolve) => {
     if (!src) return resolve(null);
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
+
+    let settled = false;
+    const finalize = (result: HTMLImageElement | null) => {
+      if (!settled) {
+        settled = true;
+        resolve(result);
+      }
+    };
+
+    // Timeout safety for mobile WebViews that may stall on CORS or network lag
+    const timeoutId = setTimeout(() => {
+      finalize(null);
+    }, 8000);
+
+    img.onload = async () => {
+      clearTimeout(timeoutId);
+      if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+        if ('decode' in img && typeof img.decode === 'function') {
+          try {
+            await img.decode();
+          } catch {
+            // Decoding failure should not invalidate standard loaded images
+          }
+        }
+        finalize(img);
+      } else {
+        finalize(null);
+      }
+    };
+
+    img.onerror = () => {
+      clearTimeout(timeoutId);
+      finalize(null);
+    };
+
     img.src = src;
+
+    // Check if already cached / complete
+    if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+      clearTimeout(timeoutId);
+      finalize(img);
+    }
   });
 };
 
-// Crop and draw image maintaining aspect ratio
+// Crop and draw image maintaining aspect ratio safely
 function drawCroppedImage(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
@@ -147,25 +188,20 @@ function drawCroppedImage(
   h: number,
   radius: number = 0
 ) {
+  if (!img.naturalWidth || !img.naturalHeight) return;
+
   ctx.save();
   if (radius > 0) {
-    ctx.beginPath();
-    if (typeof ctx.roundRect === 'function') {
-      ctx.roundRect(x, y, w, h, radius);
-    } else {
-      ctx.moveTo(x + radius, y);
-      ctx.arcTo(x + w, y, x + w, y + h, radius);
-      ctx.arcTo(x + w, y + h, x, y + h, radius);
-      ctx.arcTo(x, y + h, x, y, radius);
-      ctx.arcTo(x, y, x + w, y, radius);
-      ctx.closePath();
-    }
+    fillRoundRectPath(ctx, x, y, w, h, radius);
     ctx.clip();
   }
 
   const imgRatio = img.naturalWidth / img.naturalHeight;
   const targetRatio = w / h;
-  let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
+  let sx = 0,
+    sy = 0,
+    sw = img.naturalWidth,
+    sh = img.naturalHeight;
 
   if (imgRatio > targetRatio) {
     sw = img.naturalHeight * targetRatio;
@@ -179,7 +215,7 @@ function drawCroppedImage(
   ctx.restore();
 }
 
-// Wrap text onto multiple lines cleanly
+// Wrap text onto multiple lines cleanly with bounds checking
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -189,28 +225,35 @@ function wrapText(
   lineHeight: number,
   maxLines: number = 3
 ): number {
-  const words = text.split(' ');
+  if (!text) return y;
+
+  const words = text.trim().split(/\s+/);
   let line = '';
   let currentY = y;
   let lineCount = 1;
 
   for (let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + ' ';
+    const testLine = line ? `${line} ${words[n]}` : words[n];
     const metrics = ctx.measureText(testLine);
+
     if (metrics.width > maxWidth && n > 0) {
       if (lineCount >= maxLines) {
-        ctx.fillText(line.trim() + '...', x, currentY);
+        ctx.fillText(`${line}...`, x, currentY);
         return currentY;
       }
-      ctx.fillText(line.trim(), x, currentY);
-      line = words[n] + ' ';
+      ctx.fillText(line, x, currentY);
+      line = words[n];
       currentY += lineHeight;
       lineCount++;
     } else {
       line = testLine;
     }
   }
-  ctx.fillText(line.trim(), x, currentY);
+
+  if (line) {
+    ctx.fillText(line, x, currentY);
+  }
+
   return currentY;
 }
 
@@ -313,14 +356,14 @@ export const generateMarketingAssetDataUrl = async (
 
   if (format === 'poster') {
     // ------------------- PORTRAIT POSTER (1200 x 1600) -------------------
-    const margin = 40;
+    const margin = 44;
     const cardX = margin;
     const cardY = margin;
     const cardW = width - margin * 2;
     const cardH = height - margin * 2;
 
     // Card Background & Glassmorphic Border
-    ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.75)';
     fillRoundRect(ctx, cardX, cardY, cardW, cardH, 32);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
     ctx.lineWidth = 2;
@@ -342,7 +385,7 @@ export const generateMarketingAssetDataUrl = async (
 
     // Hero Image
     const imgY = cardY + 104;
-    const imgHeight = 600;
+    const imgHeight = 560;
     if (eventImg) {
       drawCroppedImage(ctx, eventImg, contentX, imgY, contentWidth, imgHeight, 24);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
@@ -377,44 +420,44 @@ export const generateMarketingAssetDataUrl = async (
 
     // Primary Focus: Prominent Event Title
     ctx.fillStyle = '#ffffff';
-    ctx.font = `800 50px ${FONT_FAMILY}`;
-    currentY = wrapText(ctx, event.event_title, contentX, currentY, contentWidth, 58, 3);
+    ctx.font = `800 48px ${FONT_FAMILY}`;
+    currentY = wrapText(ctx, event.event_title, contentX, currentY, contentWidth, 56, 3);
 
     // Hosted By
-    currentY += 46;
+    currentY += 44;
     ctx.fillStyle = '#38bdf8';
-    ctx.font = `600 26px ${FONT_FAMILY}`;
+    ctx.font = `600 25px ${FONT_FAMILY}`;
     ctx.fillText(`Hosted by: ${organizerText}`, contentX, currentY);
 
     // Date & Time
-    currentY += 44;
+    currentY += 42;
     ctx.fillStyle = '#f8fafc';
-    ctx.font = `600 26px ${FONT_FAMILY}`;
+    ctx.font = `600 25px ${FONT_FAMILY}`;
     ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, contentX, currentY);
 
     // Location & Venue
     currentY += 40;
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = `500 24px ${FONT_FAMILY}`;
+    ctx.font = `500 23px ${FONT_FAMILY}`;
     currentY = wrapText(ctx, `📍 ${locationText}`, contentX, currentY, contentWidth, 32, 2);
 
     // Prominent Price Tag
     currentY += 44;
-    ctx.font = `800 28px ${FONT_FAMILY}`;
-    const priceWidth = ctx.measureText(priceTag).width + 64;
+    ctx.font = `800 26px ${FONT_FAMILY}`;
+    const priceWidth = ctx.measureText(priceTag).width + 56;
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, contentX, currentY, priceWidth, 60, 16);
+    fillRoundRect(ctx, contentX, currentY, priceWidth, 56, 16);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(priceTag, contentX + 32, currentY + 41);
+    ctx.fillText(priceTag, contentX + 28, currentY + 37);
 
     // Affiliate Code Box (if present)
     if (affiliateId) {
-      const affiliateY = height - margin - 130;
+      const affiliateY = height - margin - 126;
       ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      fillRoundRect(ctx, contentX, affiliateY, contentWidth, 70, 16);
+      fillRoundRect(ctx, contentX, affiliateY, contentWidth, 64, 16);
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2;
-      strokeRoundRect(ctx, contentX, affiliateY, contentWidth, 70, 16);
+      strokeRoundRect(ctx, contentX, affiliateY, contentWidth, 64, 16);
 
       ctx.textAlign = 'center';
       ctx.fillStyle = '#38bdf8';
@@ -422,7 +465,7 @@ export const generateMarketingAssetDataUrl = async (
       ctx.fillText(
         `Official Promotional Partner Code: ${affiliateId}`,
         width / 2,
-        affiliateY + 43
+        affiliateY + 40
       );
       ctx.textAlign = 'left';
     }
@@ -436,24 +479,24 @@ export const generateMarketingAssetDataUrl = async (
 
   } else if (format === 'square') {
     // ------------------- SQUARE SOCIAL (1080 x 1080) -------------------
-    const margin = 32;
+    const margin = 36;
     const cardX = margin;
     const cardY = margin;
     const cardW = width - margin * 2;
     const cardH = height - margin * 2;
 
-    ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.75)';
     fillRoundRect(ctx, cardX, cardY, cardW, cardH, 28);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
     ctx.lineWidth = 2;
     strokeRoundRect(ctx, cardX, cardY, cardW, cardH, 28);
 
-    const contentX = cardX + 32;
-    const contentWidth = cardW - 64;
+    const contentX = cardX + 36;
+    const contentWidth = cardW - 72;
 
     // Hero Image
-    const imgY = cardY + 32;
-    const imgHeight = 420;
+    const imgY = cardY + 36;
+    const imgHeight = 400;
     if (eventImg) {
       drawCroppedImage(ctx, eventImg, contentX, imgY, contentWidth, imgHeight, 20);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
@@ -494,15 +537,17 @@ export const generateMarketingAssetDataUrl = async (
     ctx.font = `600 22px ${FONT_FAMILY}`;
     ctx.fillText(`Hosted by: ${organizerText}`, contentX, currentY);
 
-    // Date & Location
+    // Date & Time
     currentY += 36;
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = `500 20px ${FONT_FAMILY}`;
-    ctx.fillText(
-      `📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}   📍 ${locationText}`,
-      contentX,
-      currentY
-    );
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = `600 20px ${FONT_FAMILY}`;
+    ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, contentX, currentY);
+
+    // Location
+    currentY += 32;
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = `500 19px ${FONT_FAMILY}`;
+    currentY = wrapText(ctx, `📍 ${locationText}`, contentX, currentY, contentWidth, 26, 2);
 
     // Price Badge & Affiliate Pill
     currentY += 36;
@@ -536,22 +581,22 @@ export const generateMarketingAssetDataUrl = async (
 
   } else {
     // ------------------- LANDSCAPE BANNER (1200 x 630) -------------------
-    const margin = 24;
+    const margin = 28;
     const cardX = margin;
     const cardY = margin;
     const cardW = width - margin * 2;
     const cardH = height - margin * 2;
 
-    ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.75)';
     fillRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
     ctx.lineWidth = 2;
     strokeRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
 
-    const rightImgW = 440;
-    const rightImgH = cardH - 56;
-    const rightImgX = cardX + cardW - 28 - rightImgW;
-    const rightImgY = cardY + 28;
+    const rightImgW = 430;
+    const rightImgH = cardH - 52;
+    const rightImgX = cardX + cardW - 26 - rightImgW;
+    const rightImgY = cardY + 26;
 
     if (eventImg) {
       drawCroppedImage(ctx, eventImg, rightImgX, rightImgY, rightImgW, rightImgH, 20);
@@ -563,22 +608,22 @@ export const generateMarketingAssetDataUrl = async (
       fillRoundRect(ctx, rightImgX, rightImgY, rightImgW, rightImgH, 20);
     }
 
-    const leftX = cardX + 28;
+    const leftX = cardX + 32;
     const leftWidth = rightImgX - leftX - 28;
-    let currentY = cardY + 54;
+    let currentY = cardY + 52;
 
-    // Header
+    // Header Branding
     ctx.fillStyle = '#38bdf8';
     ctx.font = `800 24px ${FONT_FAMILY}`;
     ctx.fillText('BlueSea Mobile', leftX, currentY);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = `500 16px ${FONT_FAMILY}`;
-    ctx.fillText('Marketplace', leftX + 200, currentY);
+    ctx.fillText('Marketplace', leftX + 190, currentY);
 
     currentY += 28;
 
-    // Badges
+    // Badges Row
     ctx.font = `bold 14px ${FONT_FAMILY}`;
     const catWidth = ctx.measureText(categoryText).width + 28;
     ctx.fillStyle = '#0284c7';
@@ -593,7 +638,7 @@ export const generateMarketingAssetDataUrl = async (
     ctx.fillStyle = '#e2e8f0';
     ctx.fillText(attendanceMode, modeX + 14, currentY + 21);
 
-    currentY += 62;
+    currentY += 58;
 
     // Title
     ctx.fillStyle = '#ffffff';
@@ -601,23 +646,24 @@ export const generateMarketingAssetDataUrl = async (
     currentY = wrapText(ctx, event.event_title, leftX, currentY, leftWidth, 42, 2);
 
     // Hosted By
-    currentY += 36;
+    currentY += 34;
     ctx.fillStyle = '#38bdf8';
     ctx.font = `600 20px ${FONT_FAMILY}`;
     ctx.fillText(`Hosted by: ${organizerText}`, leftX, currentY);
 
     // Date & Location
-    currentY += 34;
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = `500 18px ${FONT_FAMILY}`;
+    currentY += 32;
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = `600 18px ${FONT_FAMILY}`;
     ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, leftX, currentY);
 
     currentY += 28;
     ctx.fillStyle = '#cbd5e1';
+    ctx.font = `500 17px ${FONT_FAMILY}`;
     currentY = wrapText(ctx, `📍 ${locationText}`, leftX, currentY, leftWidth, 24, 1);
 
-    // Price Badge & Code
-    currentY += 34;
+// Price Badge & Code
+    currentY += 32;
     ctx.font = `800 20px ${FONT_FAMILY}`;
     const priceWidth = ctx.measureText(priceTag).width + 40;
     ctx.fillStyle = '#0284c7';
