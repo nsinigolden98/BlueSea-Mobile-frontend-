@@ -142,7 +142,6 @@ const loadImage = (src?: string): Promise<HTMLImageElement | null> => {
       }
     };
 
-    // Timeout safety for mobile WebViews that may stall on CORS or network lag
     const timeoutId = setTimeout(() => {
       finalize(null);
     }, 8000);
@@ -154,7 +153,7 @@ const loadImage = (src?: string): Promise<HTMLImageElement | null> => {
           try {
             await img.decode();
           } catch {
-            // Decoding failure should not invalidate standard loaded images
+            // Safe fallback on decode error
           }
         }
         finalize(img);
@@ -170,7 +169,6 @@ const loadImage = (src?: string): Promise<HTMLImageElement | null> => {
 
     img.src = src;
 
-    // Check if already cached / complete
     if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
       clearTimeout(timeoutId);
       finalize(img);
@@ -263,14 +261,12 @@ function drawBackground(
   width: number,
   height: number
 ) {
-  // Main background gradient
   const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
   bgGrad.addColorStop(0, '#090d16');
   bgGrad.addColorStop(1, '#0f172a');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
-  // Top-right sky glow
   ctx.save();
   const glow1 = ctx.createRadialGradient(
     width * 0.85,
@@ -285,7 +281,6 @@ function drawBackground(
   ctx.fillStyle = glow1;
   ctx.fillRect(0, 0, width, height);
 
-  // Bottom-left blue glow
   const glow2 = ctx.createRadialGradient(
     width * 0.15,
     height * 0.85,
@@ -303,7 +298,6 @@ function drawBackground(
 
 /**
  * Generates promotional asset canvas and returns Data URL using HTML5 Canvas API.
- * DOES NOT trigger automatic download.
  */
 export const generateMarketingAssetDataUrl = async (
   event: MarketingAssetEvent,
@@ -351,41 +345,39 @@ export const generateMarketingAssetDataUrl = async (
   if (event.city && !event.event_location?.includes(event.city)) locationParts.push(event.city);
   const locationText = locationParts.join(', ') || 'See Event Details';
 
-  // Render Background
   drawBackground(ctx, width, height);
 
   if (format === 'poster') {
     // ------------------- PORTRAIT POSTER (1200 x 1600) -------------------
-    const margin = 44;
+    const margin = 40;
     const cardX = margin;
     const cardY = margin;
     const cardW = width - margin * 2;
     const cardH = height - margin * 2;
 
-    // Card Background & Glassmorphic Border
     ctx.fillStyle = 'rgba(30, 41, 59, 0.75)';
     fillRoundRect(ctx, cardX, cardY, cardW, cardH, 32);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
     ctx.lineWidth = 2;
     strokeRoundRect(ctx, cardX, cardY, cardW, cardH, 32);
 
-    const contentX = cardX + 44;
-    const contentWidth = cardW - 88;
+    const contentX = cardX + 48;
+    const contentWidth = cardW - 96;
 
     // Header Branding
     ctx.fillStyle = '#38bdf8';
-    ctx.font = `800 34px ${FONT_FAMILY}`;
-    ctx.fillText('BlueSea Mobile', contentX, cardY + 70);
+    ctx.font = `800 36px ${FONT_FAMILY}`;
+    ctx.fillText('BlueSea Mobile', contentX, cardY + 68);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = `500 20px ${FONT_FAMILY}`;
+    ctx.font = `500 22px ${FONT_FAMILY}`;
     ctx.textAlign = 'right';
-    ctx.fillText('BlueSea Mobile Marketplace', contentX + contentWidth, cardY + 70);
+    ctx.fillText('BlueSea Mobile Marketplace', contentX + contentWidth, cardY + 68);
     ctx.textAlign = 'left';
 
-    // Hero Image
-    const imgY = cardY + 104;
-    const imgHeight = 560;
+    // Hero Image (Expanded height to remove bottom dead space)
+    const imgY = cardY + 100;
+    const imgHeight = 680;
     if (eventImg) {
       drawCroppedImage(ctx, eventImg, contentX, imgY, contentWidth, imgHeight, 24);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
@@ -399,73 +391,73 @@ export const generateMarketingAssetDataUrl = async (
       ctx.fillText('BlueSea Mobile Event', contentX + 40, imgY + imgHeight / 2);
     }
 
-    let currentY = imgY + imgHeight + 44;
+    let currentY = imgY + imgHeight + 48;
 
-    // Badges Row (Category & Attendance)
-    ctx.font = `bold 18px ${FONT_FAMILY}`;
-    const catWidth = ctx.measureText(categoryText).width + 40;
+    // Badges Row
+    ctx.font = `bold 20px ${FONT_FAMILY}`;
+    const catWidth = ctx.measureText(categoryText).width + 44;
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, contentX, currentY, catWidth, 40, 12);
+    fillRoundRect(ctx, contentX, currentY, catWidth, 44, 12);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(categoryText, contentX + 20, currentY + 26);
+    ctx.fillText(categoryText, contentX + 22, currentY + 29);
 
-    const modeWidth = ctx.measureText(attendanceMode).width + 40;
-    const modeX = contentX + catWidth + 14;
+    const modeWidth = ctx.measureText(attendanceMode).width + 44;
+    const modeX = contentX + catWidth + 16;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    fillRoundRect(ctx, modeX, currentY, modeWidth, 40, 12);
+    fillRoundRect(ctx, modeX, currentY, modeWidth, 44, 12);
     ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(attendanceMode, modeX + 20, currentY + 26);
+    ctx.fillText(attendanceMode, modeX + 22, currentY + 29);
 
-    currentY += 80;
+    currentY += 88;
 
-    // Primary Focus: Prominent Event Title
+    // Prominent Large Event Title
     ctx.fillStyle = '#ffffff';
-    ctx.font = `800 48px ${FONT_FAMILY}`;
-    currentY = wrapText(ctx, event.event_title, contentX, currentY, contentWidth, 56, 3);
+    ctx.font = `800 64px ${FONT_FAMILY}`;
+    currentY = wrapText(ctx, event.event_title, contentX, currentY, contentWidth, 74, 3);
 
     // Hosted By
-    currentY += 44;
+    currentY += 52;
     ctx.fillStyle = '#38bdf8';
-    ctx.font = `600 25px ${FONT_FAMILY}`;
+    ctx.font = `600 30px ${FONT_FAMILY}`;
     ctx.fillText(`Hosted by: ${organizerText}`, contentX, currentY);
 
     // Date & Time
-    currentY += 42;
+    currentY += 48;
     ctx.fillStyle = '#f8fafc';
-    ctx.font = `600 25px ${FONT_FAMILY}`;
+    ctx.font = `600 30px ${FONT_FAMILY}`;
     ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, contentX, currentY);
 
     // Location & Venue
-    currentY += 40;
+    currentY += 44;
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = `500 23px ${FONT_FAMILY}`;
-    currentY = wrapText(ctx, `📍 ${locationText}`, contentX, currentY, contentWidth, 32, 2);
+    ctx.font = `500 28px ${FONT_FAMILY}`;
+    currentY = wrapText(ctx, `📍 ${locationText}`, contentX, currentY, contentWidth, 38, 2);
 
     // Prominent Price Tag
-    currentY += 44;
-    ctx.font = `800 26px ${FONT_FAMILY}`;
-    const priceWidth = ctx.measureText(priceTag).width + 56;
+    currentY += 52;
+    ctx.font = `800 32px ${FONT_FAMILY}`;
+    const priceWidth = ctx.measureText(priceTag).width + 64;
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, contentX, currentY, priceWidth, 56, 16);
+    fillRoundRect(ctx, contentX, currentY, priceWidth, 68, 18);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(priceTag, contentX + 28, currentY + 37);
+    ctx.fillText(priceTag, contentX + 32, currentY + 45);
 
     // Affiliate Code Box (if present)
     if (affiliateId) {
-      const affiliateY = height - margin - 126;
+      const affiliateY = height - margin - 130;
       ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      fillRoundRect(ctx, contentX, affiliateY, contentWidth, 64, 16);
+      fillRoundRect(ctx, contentX, affiliateY, contentWidth, 70, 16);
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 2;
-      strokeRoundRect(ctx, contentX, affiliateY, contentWidth, 64, 16);
+      strokeRoundRect(ctx, contentX, affiliateY, contentWidth, 70, 16);
 
       ctx.textAlign = 'center';
       ctx.fillStyle = '#38bdf8';
-      ctx.font = `bold 22px ${FONT_FAMILY}`;
+      ctx.font = `bold 24px ${FONT_FAMILY}`;
       ctx.fillText(
         `Official Promotional Partner Code: ${affiliateId}`,
         width / 2,
-        affiliateY + 40
+        affiliateY + 43
       );
       ctx.textAlign = 'left';
     }
@@ -473,13 +465,13 @@ export const generateMarketingAssetDataUrl = async (
     // Footer
     ctx.textAlign = 'center';
     ctx.fillStyle = '#94a3b8';
-    ctx.font = `500 20px ${FONT_FAMILY}`;
+    ctx.font = `500 22px ${FONT_FAMILY}`;
     ctx.fillText('Powered by BlueSea Mobile', width / 2, height - margin - 25);
     ctx.textAlign = 'left';
 
   } else if (format === 'square') {
     // ------------------- SQUARE SOCIAL (1080 x 1080) -------------------
-    const margin = 36;
+    const margin = 32;
     const cardX = margin;
     const cardY = margin;
     const cardW = width - margin * 2;
@@ -495,8 +487,8 @@ export const generateMarketingAssetDataUrl = async (
     const contentWidth = cardW - 72;
 
     // Hero Image
-    const imgY = cardY + 36;
-    const imgHeight = 400;
+    const imgY = cardY + 28;
+    const imgHeight = 440;
     if (eventImg) {
       drawCroppedImage(ctx, eventImg, contentX, imgY, contentWidth, imgHeight, 20);
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
@@ -510,78 +502,78 @@ export const generateMarketingAssetDataUrl = async (
     let currentY = imgY + imgHeight + 32;
 
     // Badges Row
-    ctx.font = `bold 16px ${FONT_FAMILY}`;
-    const catWidth = ctx.measureText(categoryText).width + 32;
+    ctx.font = `bold 18px ${FONT_FAMILY}`;
+    const catWidth = ctx.measureText(categoryText).width + 36;
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, contentX, currentY, catWidth, 36, 10);
+    fillRoundRect(ctx, contentX, currentY, catWidth, 40, 10);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(categoryText, contentX + 16, currentY + 23);
+    ctx.fillText(categoryText, contentX + 18, currentY + 26);
 
-    const modeWidth = ctx.measureText(attendanceMode).width + 32;
-    const modeX = contentX + catWidth + 12;
+    const modeWidth = ctx.measureText(attendanceMode).width + 36;
+    const modeX = contentX + catWidth + 14;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    fillRoundRect(ctx, modeX, currentY, modeWidth, 36, 10);
+    fillRoundRect(ctx, modeX, currentY, modeWidth, 40, 10);
     ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(attendanceMode, modeX + 16, currentY + 23);
+    ctx.fillText(attendanceMode, modeX + 18, currentY + 26);
 
-    currentY += 66;
+    currentY += 60;
 
     // Event Title
     ctx.fillStyle = '#ffffff';
-    ctx.font = `800 38px ${FONT_FAMILY}`;
-    currentY = wrapText(ctx, event.event_title, contentX, currentY, contentWidth, 46, 2);
+    ctx.font = `800 44px ${FONT_FAMILY}`;
+    currentY = wrapText(ctx, event.event_title, contentX, currentY, contentWidth, 52, 2);
 
     // Hosted By
-    currentY += 38;
+    currentY += 42;
     ctx.fillStyle = '#38bdf8';
-    ctx.font = `600 22px ${FONT_FAMILY}`;
+    ctx.font = `600 24px ${FONT_FAMILY}`;
     ctx.fillText(`Hosted by: ${organizerText}`, contentX, currentY);
 
     // Date & Time
-    currentY += 36;
+    currentY += 38;
     ctx.fillStyle = '#f8fafc';
-    ctx.font = `600 20px ${FONT_FAMILY}`;
+    ctx.font = `600 22px ${FONT_FAMILY}`;
     ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, contentX, currentY);
 
     // Location
-    currentY += 32;
+    currentY += 34;
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = `500 19px ${FONT_FAMILY}`;
-    currentY = wrapText(ctx, `📍 ${locationText}`, contentX, currentY, contentWidth, 26, 2);
+    ctx.font = `500 21px ${FONT_FAMILY}`;
+    currentY = wrapText(ctx, `📍 ${locationText}`, contentX, currentY, contentWidth, 28, 2);
 
-    // Price Badge & Affiliate Pill
-    currentY += 36;
-    ctx.font = `800 22px ${FONT_FAMILY}`;
-    const priceWidth = ctx.measureText(priceTag).width + 48;
+    // Price Badge & Affiliate Code Box
+    currentY += 42;
+    ctx.font = `800 24px ${FONT_FAMILY}`;
+    const priceWidth = ctx.measureText(priceTag).width + 52;
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, contentX, currentY, priceWidth, 48, 14);
+    fillRoundRect(ctx, contentX, currentY, priceWidth, 52, 14);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(priceTag, contentX + 24, currentY + 32);
+    ctx.fillText(priceTag, contentX + 26, currentY + 35);
 
     if (affiliateId) {
       const codeX = contentX + priceWidth + 16;
-      ctx.font = `700 18px ${FONT_FAMILY}`;
+      ctx.font = `700 20px ${FONT_FAMILY}`;
       const codeText = `Partner Code: ${affiliateId}`;
-      const codeWidth = ctx.measureText(codeText).width + 36;
+      const codeWidth = ctx.measureText(codeText).width + 40;
       ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      fillRoundRect(ctx, codeX, currentY, codeWidth, 48, 12);
+      fillRoundRect(ctx, codeX, currentY, codeWidth, 52, 12);
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 1.5;
-      strokeRoundRect(ctx, codeX, currentY, codeWidth, 48, 12);
+      strokeRoundRect(ctx, codeX, currentY, codeWidth, 52, 12);
       ctx.fillStyle = '#38bdf8';
-      ctx.fillText(codeText, codeX + 18, currentY + 31);
+      ctx.fillText(codeText, codeX + 20, currentY + 33);
     }
 
     // Footer
     ctx.textAlign = 'center';
     ctx.fillStyle = '#94a3b8';
-    ctx.font = `500 18px ${FONT_FAMILY}`;
+    ctx.font = `500 20px ${FONT_FAMILY}`;
     ctx.fillText('Powered by BlueSea Mobile', width / 2, height - margin - 20);
     ctx.textAlign = 'left';
 
   } else {
     // ------------------- LANDSCAPE BANNER (1200 x 630) -------------------
-    const margin = 28;
+    const margin = 24;
     const cardX = margin;
     const cardY = margin;
     const cardW = width - margin * 2;
@@ -593,7 +585,7 @@ export const generateMarketingAssetDataUrl = async (
     ctx.lineWidth = 2;
     strokeRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
 
-    const rightImgW = 430;
+    const rightImgW = 460;
     const rightImgH = cardH - 52;
     const rightImgX = cardX + cardW - 26 - rightImgW;
     const rightImgY = cardY + 26;
@@ -610,79 +602,80 @@ export const generateMarketingAssetDataUrl = async (
 
     const leftX = cardX + 32;
     const leftWidth = rightImgX - leftX - 28;
-    let currentY = cardY + 52;
+    let currentY = cardY + 48;
 
-    // Header Branding
+    // Header
     ctx.fillStyle = '#38bdf8';
-    ctx.font = `800 24px ${FONT_FAMILY}`;
+    ctx.font = `800 26px ${FONT_FAMILY}`;
     ctx.fillText('BlueSea Mobile', leftX, currentY);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = `500 16px ${FONT_FAMILY}`;
-    ctx.fillText('Marketplace', leftX + 190, currentY);
+    ctx.font = `500 18px ${FONT_FAMILY}`;
+    ctx.fillText('Marketplace', leftX + 210, currentY);
 
-    currentY += 28;
+    currentY += 30;
 
     // Badges Row
-    ctx.font = `bold 14px ${FONT_FAMILY}`;
-    const catWidth = ctx.measureText(categoryText).width + 28;
+    ctx.font = `bold 15px ${FONT_FAMILY}`;
+    const catWidth = ctx.measureText(categoryText).width + 30;
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, leftX, currentY, catWidth, 32, 8);
+    fillRoundRect(ctx, leftX, currentY, catWidth, 34, 8);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(categoryText, leftX + 14, currentY + 21);
+    ctx.fillText(categoryText, leftX + 15, currentY + 22);
 
-    const modeWidth = ctx.measureText(attendanceMode).width + 28;
-    const modeX = leftX + catWidth + 10;
+    const modeWidth = ctx.measureText(attendanceMode).width + 30;
+    const modeX = leftX + catWidth + 12;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    fillRoundRect(ctx, modeX, currentY, modeWidth, 32, 8);
+    fillRoundRect(ctx, modeX, currentY, modeWidth, 34, 8);
     ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(attendanceMode, modeX + 14, currentY + 21);
+    ctx.fillText(attendanceMode, modeX + 15, currentY + 22);
 
-    currentY += 58;
+    currentY += 56;
 
     // Title
     ctx.fillStyle = '#ffffff';
-    ctx.font = `800 34px ${FONT_FAMILY}`;
-    currentY = wrapText(ctx, event.event_title, leftX, currentY, leftWidth, 42, 2);
+    ctx.font = `800 38px ${FONT_FAMILY}`;
+    currentY = wrapText(ctx, event.event_title, leftX, currentY, leftWidth, 46, 2);
 
     // Hosted By
-    currentY += 34;
+    currentY += 38;
     ctx.fillStyle = '#38bdf8';
-    ctx.font = `600 20px ${FONT_FAMILY}`;
+    ctx.font = `600 22px ${FONT_FAMILY}`;
     ctx.fillText(`Hosted by: ${organizerText}`, leftX, currentY);
 
-    // Date & Location
-    currentY += 32;
+    // Date & Time
+    currentY += 34;
     ctx.fillStyle = '#f8fafc';
-    ctx.font = `600 18px ${FONT_FAMILY}`;
+    ctx.font = `600 20px ${FONT_FAMILY}`;
     ctx.fillText(`📅 ${dateStr}${event.event_time ? ` • ${event.event_time}` : ''}`, leftX, currentY);
 
-    currentY += 28;
+    // Location
+    currentY += 30;
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = `500 17px ${FONT_FAMILY}`;
+    ctx.font = `500 18px ${FONT_FAMILY}`;
     currentY = wrapText(ctx, `📍 ${locationText}`, leftX, currentY, leftWidth, 24, 1);
 
 // Price Badge & Code
-    currentY += 32;
-    ctx.font = `800 20px ${FONT_FAMILY}`;
-    const priceWidth = ctx.measureText(priceTag).width + 40;
+    currentY += 34;
+    ctx.font = `800 22px ${FONT_FAMILY}`;
+    const priceWidth = ctx.measureText(priceTag).width + 44;
     ctx.fillStyle = '#0284c7';
-    fillRoundRect(ctx, leftX, currentY, priceWidth, 44, 12);
+    fillRoundRect(ctx, leftX, currentY, priceWidth, 46, 12);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(priceTag, leftX + 20, currentY + 29);
+    ctx.fillText(priceTag, leftX + 22, currentY + 30);
 
     if (affiliateId) {
       const codeX = leftX + priceWidth + 14;
-      ctx.font = `700 16px ${FONT_FAMILY}`;
+      ctx.font = `700 18px ${FONT_FAMILY}`;
       const codeText = `Code: ${affiliateId}`;
-      const codeWidth = ctx.measureText(codeText).width + 28;
+      const codeWidth = ctx.measureText(codeText).width + 30;
       ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      fillRoundRect(ctx, codeX, currentY, codeWidth, 44, 10);
+      fillRoundRect(ctx, codeX, currentY, codeWidth, 46, 10);
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 1.5;
-      strokeRoundRect(ctx, codeX, currentY, codeWidth, 44, 10);
+      strokeRoundRect(ctx, codeX, currentY, codeWidth, 46, 10);
       ctx.fillStyle = '#38bdf8';
-      ctx.fillText(codeText, codeX + 14, currentY + 28);
+      ctx.fillText(codeText, codeX + 15, currentY + 29);
     }
 
     // Footer
