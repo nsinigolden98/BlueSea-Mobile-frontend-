@@ -40,7 +40,6 @@ import {
   AutoTopUp,
   Marketplace,
   Support,
-  Campaigns,
   ScannerAssignments,
   EventPublic,
   TransactionFilterPage,
@@ -177,7 +176,6 @@ function AppRoutes() {
           <Route path="/vault" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
 
           <Route path="/transaction-history" element={<ProtectedRoute><TransactionFilterPage /></ProtectedRoute>} />
-          <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} /> 
           <Route path="/airtime-buyback" element={<ProtectedRoute><AirtimeBuyback /></ProtectedRoute>} />
           <Route path="/group-payment" element={<ProtectedRoute><GroupPayment /></ProtectedRoute>} />
           <Route path="/loyalty" element={<ProtectedRoute><Loyalty /></ProtectedRoute>} />
