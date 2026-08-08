@@ -240,8 +240,18 @@ export function Marketplace() {
     }
   };
 
-  const isSoldOut = selectedEvent && selectedEvent.tickets_sold >= selectedEvent.total_tickets;
-  const isEventEnded = selectedEvent && new Date(selectedEvent.event_date) < new Date();
+  const isSoldOut = useMemo(() => {
+    if (!selectedEvent) return false;
+    if (typeof selectedEvent.total_tickets === 'number' && selectedEvent.total_tickets > 0) {
+      return (selectedEvent.tickets_sold ?? 0) >= selectedEvent.total_tickets;
+    }
+    return false;
+  }, [selectedEvent]);
+
+  const isEventEnded = useMemo(() => {
+    if (!selectedEvent || !selectedEvent.event_date) return false;
+    return new Date(selectedEvent.event_date) < new Date();
+  }, [selectedEvent]);
 
   const handlePurchase = () => {
     if (!selectedEvent || isSoldOut || isEventEnded) return;
@@ -258,27 +268,27 @@ export function Marketplace() {
   const now = useMemo(() => new Date(), []);
 
   const activeEvents = useMemo(() => {
-    return events.filter(e => new Date(e.event_date) >= now);
+    return events.filter(e => e.event_date && new Date(e.event_date) >= now);
   }, [events, now]);
 
   const pastEvents = useMemo(() => {
-    return events.filter(e => new Date(e.event_date) < now);
+    return events.filter(e => e.event_date && new Date(e.event_date) < now);
   }, [events, now]);
 
   const filteredEvents = useMemo(() => {
     return activeEvents.filter(event => {
       const query = debouncedSearch.toLowerCase().trim();
-      const matchesCategory = activeCategory === 'All' || event.category.toLowerCase() === activeCategory.toLowerCase();
+      const matchesCategory = activeCategory === 'All' || (event.category && event.category.toLowerCase() === activeCategory.toLowerCase());
 
       if (!query) return matchesCategory;
 
-      const titleMatch = event.event_title.toLowerCase().includes(query);
-      const catMatch = event.category.toLowerCase().includes(query);
-      const organizerMatch = (event.organizer_name || 'BlueTickets Organizer').toLowerCase().includes(query);
-      const locationMatch = event.event_location.toLowerCase().includes(query);
-      const venueMatch = (event.venue_name || '').toLowerCase().includes(query);
-      const cityMatch = (event.city || '').toLowerCase().includes(query);
-      const tagsMatch = event.tags?.some(tag => tag.toLowerCase().includes(query)) || false;
+      const titleMatch = (event.event_title ?? '').toLowerCase().includes(query);
+      const catMatch = (event.category ?? '').toLowerCase().includes(query);
+      const organizerMatch = event.organizer_name ? event.organizer_name.toLowerCase().includes(query) : false;
+      const locationMatch = (event.event_location ?? '').toLowerCase().includes(query);
+      const venueMatch = (event.venue_name ?? '').toLowerCase().includes(query);
+      const cityMatch = (event.city ?? '').toLowerCase().includes(query);
+      const tagsMatch = event.tags?.some(tag => tag.toLowerCase().includes(query)) ?? false;
 
       return matchesCategory && (titleMatch || catMatch || organizerMatch || locationMatch || venueMatch || cityMatch || tagsMatch);
     });
@@ -293,21 +303,24 @@ export function Marketplace() {
   const getEventImage = (event: MarketplaceEvent) => {
     if (event.event_banner) return getImageUrl(event.event_banner);
     if (event.ticket_image) return getImageUrl(event.ticket_image);
-    return 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80';
+    return '';
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   const formatTime = (dateString: string) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
   const getStartingPrice = (event: ExtendedEvent) => {
     if (event.is_free) return 'Free';
-    if (!event.ticket_types || event.ticket_types.length === 0) return '₦0';
-    const prices = event.ticket_types.map(t => Number(t.price));
+    if (!event.ticket_types || event.ticket_types.length === 0) return 'Price N/A';
+    const prices = event.ticket_types.map(t => Number(t.price)).filter(p => !isNaN(p));
+    if (prices.length === 0) return 'Price N/A';
     const minPrice = Math.min(...prices);
     return minPrice === 0 ? 'Free' : `₦${minPrice.toLocaleString()}`;
   };
@@ -319,6 +332,7 @@ export function Marketplace() {
   };
 
   const toggleFollowOrganizer = (organizerName: string) => {
+    if (!organizerName) return;
     setFollowedOrganizers(prev => ({ ...prev, [organizerName]: !prev[organizerName] }));
     showToast(followedOrganizers[organizerName] ? `Unfollowed ${organizerName}` : `Following ${organizerName}`);
   };
@@ -329,10 +343,40 @@ export function Marketplace() {
     showToast(isNowSaved ? 'Saved for affiliate promotion!' : 'Removed from saved promotion events');
   };
 
-  const openSharePreviewModal = (event: ExtendedEvent, e?: React.MouseEvent) => {
+  const handleShareEvent = async (event: ExtendedEvent, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setShareModalEvent(event);
-    setPreviewModalOpen(true);
+
+    if (affiliateStatus === 'verified') {
+      setShareModalEvent(event);
+      setPreviewModalOpen(true);
+    } else {
+      const shareUrl = `${window.location.origin}/marketplace?event=${event.id}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: event.event_title,
+            text: `Check out ${event.event_title} on BlueTickets!`,
+            url: shareUrl,
+          });
+        } catch (err) {
+          if ((err as Error).name !== 'AbortError') {
+            try {
+              await navigator.clipboard.writeText(shareUrl);
+              showToast('Event link copied to clipboard!');
+            } catch {
+              showToast('Unable to share link');
+            }
+          }
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          showToast('Event link copied to clipboard!');
+        } catch {
+          showToast('Unable to copy link');
+        }
+      }
+    }
   };
 
   useEffect(() => {
@@ -357,7 +401,7 @@ export function Marketplace() {
 
   const collections = useMemo(() => {
     return {
-      trending: activeEvents.filter(e => e.tickets_sold > 0),
+      trending: activeEvents.filter(e => (e.tickets_sold ?? 0) > 0),
       upcoming: [...activeEvents].sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()),
       online: activeEvents.filter(e => e.attendance_mode === 'online'),
       physical: activeEvents.filter(e => e.attendance_mode === 'physical' || !e.attendance_mode),
@@ -368,14 +412,23 @@ export function Marketplace() {
 
   const renderHeroSection = () => {
     if (!featuredEvent) return null;
+    const heroImg = getEventImage(featuredEvent);
+
     return (
       <div className="relative rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-900 text-white shadow-lg">
         <div className="h-48 sm:h-56 md:h-60 relative w-full overflow-hidden">
-          <img 
-            src={getEventImage(featuredEvent)} 
-            alt={featuredEvent.event_title} 
-            className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700" 
-          />
+          {heroImg ? (
+            <img 
+              src={heroImg} 
+              alt={featuredEvent.event_title} 
+              loading="lazy"
+              className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700" 
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 flex items-center justify-center">
+              <Sparkles className="w-12 h-12 text-sky-500/30" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-transparent" />
           
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
@@ -383,9 +436,11 @@ export function Marketplace() {
               <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-sky-500/90 text-white backdrop-blur-md shadow-md">
                 Featured Event
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-white/20 text-white backdrop-blur-md hidden sm:inline-block">
-                {featuredEvent.category}
-              </span>
+              {featuredEvent.category && (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-white/20 text-white backdrop-blur-md hidden sm:inline-block">
+                  {featuredEvent.category}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <button 
@@ -395,7 +450,7 @@ export function Marketplace() {
                 <Heart className={cn("w-3.5 h-3.5", favorites[featuredEvent.id] && "fill-red-500 text-red-500")} />
               </button>
               <button 
-                onClick={(e) => openSharePreviewModal(featuredEvent, e)}
+                onClick={(e) => handleShareEvent(featuredEvent, e)}
                 className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
               >
                 <Share2 className="w-3.5 h-3.5" />
@@ -404,21 +459,31 @@ export function Marketplace() {
           </div>
 
           <div className="absolute bottom-0 inset-x-0 p-4 md:p-5 space-y-1.5 z-10">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-sky-400 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                {featuredEvent.organizer_name || 'BlueTickets Organizer'}
-              </span>
-              <VerifiedBadge />
-            </div>
+            {featuredEvent.organizer_name && (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold text-sky-400 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  {featuredEvent.organizer_name}
+                </span>
+                {featuredEvent.is_approved && <VerifiedBadge />}
+              </div>
+            )}
 
             <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white leading-tight tracking-tight line-clamp-1">
               {featuredEvent.event_title}
             </h2>
 
             <div className="flex flex-wrap items-center gap-3 text-[11px] sm:text-xs text-slate-300">
-              <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-sky-400" /> {formatDate(featuredEvent.event_date)}</span>
-              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-sky-400" /> {featuredEvent.event_location}</span>
+              {featuredEvent.event_date && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-sky-400" /> {formatDate(featuredEvent.event_date)}
+                </span>
+              )}
+              {featuredEvent.event_location && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-sky-400" /> {featuredEvent.event_location}
+                </span>
+              )}
             </div>
 
             <div className="pt-1 flex items-center justify-between gap-4">
@@ -470,92 +535,111 @@ export function Marketplace() {
     </div>
   );
 
-  const renderEventCard = (event: ExtendedEvent) => (
-    <div 
-      key={event.id} 
-      onClick={() => setSelectedEvent(event)} 
-      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col h-full w-full"
-    >
-      <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800 relative overflow-hidden shrink-0">
-        <img 
-          src={getEventImage(event)} 
-          alt={event.event_title} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-80" />
-        
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-          <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-900/80 backdrop-blur-md text-white border border-white/10 uppercase tracking-wider flex items-center gap-1">
-            <Tag className="w-3 h-3 text-sky-400" />
-            {event.category}
-          </span>
-          <div className="flex items-center gap-1.5">
-            {affiliateStatus === 'verified' && (
+  const renderEventCard = (event: ExtendedEvent) => {
+    const cardImg = getEventImage(event);
+
+    return (
+      <div 
+        key={event.id} 
+        onClick={() => setSelectedEvent(event)} 
+        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col h-full w-full"
+      >
+        <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800 relative overflow-hidden shrink-0">
+          {cardImg ? (
+            <img 
+              src={cardImg} 
+              alt={event.event_title} 
+              loading="lazy"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
+              <Ticket className="w-10 h-10 text-slate-400 dark:text-slate-600" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-80" />
+          
+          <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+            {event.category ? (
+              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-900/80 backdrop-blur-md text-white border border-white/10 uppercase tracking-wider flex items-center gap-1">
+                <Tag className="w-3 h-3 text-sky-400" />
+                {event.category}
+              </span>
+            ) : <div />}
+            <div className="flex items-center gap-1.5">
+              {affiliateStatus === 'verified' && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); toggleSaveForAffiliatePromotion(event.id); }}
+                  className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
+                  title="Save for Affiliate Promotion"
+                >
+                  <Bookmark className={cn("w-3.5 h-3.5", savedAffiliateEvents.includes(event.id) && "fill-sky-400 text-sky-400")} />
+                </button>
+              )}
               <button 
-                onClick={(e) => { e.stopPropagation(); toggleSaveForAffiliatePromotion(event.id); }}
+                onClick={(e) => toggleFavorite(event.id, e)}
                 className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-                title="Save for Affiliate Promotion"
               >
-                <Bookmark className={cn("w-3.5 h-3.5", savedAffiliateEvents.includes(event.id) && "fill-sky-400 text-sky-400")} />
+                <Heart className={cn("w-3.5 h-3.5", favorites[event.id] && "fill-red-500 text-red-500")} />
               </button>
+              <button 
+                onClick={(e) => handleShareEvent(event, e)}
+                className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs">
+            <span className="flex items-center gap-1 font-medium text-[11px] bg-slate-900/60 px-2 py-0.5 rounded-md backdrop-blur-sm">
+              {event.attendance_mode === 'online' ? <Video className="w-3 h-3 text-sky-400" /> : <Building2 className="w-3 h-3 text-sky-400" />}
+              <span className="capitalize">{event.attendance_mode || 'Physical'}</span>
+            </span>
+            {event.is_approved && <VerifiedBadge />}
+          </div>
+        </div>
+
+        <div className="p-4 flex flex-col flex-1 justify-between space-y-3">
+          <div className="space-y-1.5">
+            {event.organizer_name && (
+              <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                <span>By {event.organizer_name}</span>
+              </p>
             )}
-            <button 
-              onClick={(e) => toggleFavorite(event.id, e)}
-              className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-            >
-              <Heart className={cn("w-3.5 h-3.5", favorites[event.id] && "fill-red-500 text-red-500")} />
-            </button>
-            <button 
-              onClick={(e) => openSharePreviewModal(event, e)}
-              className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs">
-          <span className="flex items-center gap-1 font-medium text-[11px] bg-slate-900/60 px-2 py-0.5 rounded-md backdrop-blur-sm">
-            {event.attendance_mode === 'online' ? <Video className="w-3 h-3 text-sky-400" /> : <Building2 className="w-3 h-3 text-sky-400" />}
-            <span className="capitalize">{event.attendance_mode || 'Physical'}</span>
-          </span>
-          {event.is_approved && <VerifiedBadge />}
-        </div>
-      </div>
-
-      <div className="p-4 flex flex-col flex-1 justify-between space-y-3">
-        <div className="space-y-1.5">
-          <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-            <span>By {event.organizer_name || 'BlueTickets Host'}</span>
-          </p>
-          <h3 className="font-bold text-slate-800 dark:text-white text-base line-clamp-1 group-hover:text-sky-500 transition-colors">
-            {event.event_title}
-          </h3>
-          <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-              <span>{formatDate(event.event_date)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-              <span className="line-clamp-1">{event.event_location}</span>
+            <h3 className="font-bold text-slate-800 dark:text-white text-base line-clamp-1 group-hover:text-sky-500 transition-colors">
+              {event.event_title}
+            </h3>
+            <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400">
+              {event.event_date && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                  <span>{formatDate(event.event_date)}</span>
+                </div>
+              )}
+              {event.event_location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-3.5 h-3.5 text-sky-500 shrink-0" />
+                  <span className="line-clamp-1">{event.event_location}</span>
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <div>
-            <span className="text-[10px] text-slate-400 block uppercase">Starting at</span>
-            <span className="text-base font-bold text-sky-500">{getStartingPrice(event)}</span>
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-slate-400 block uppercase">Starting at</span>
+              <span className="text-base font-bold text-sky-500">{getStartingPrice(event)}</span>
+            </div>
+
+            <button className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-500 hover:text-white text-slate-700 dark:text-slate-300 text-xs font-bold transition-all flex items-center gap-1">
+              Details
+            </button>
           </div>
-
-          <button className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-500 hover:text-white text-slate-700 dark:text-slate-300 text-xs font-bold transition-all flex items-center gap-1">
-            Details
-          </button>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderEventCollection = (title: string, items: ExtendedEvent[]) => {
     if (!items || items.length === 0) return null;
@@ -654,29 +738,33 @@ export function Marketplace() {
   const renderEventDetails = () => {
     if (!selectedEvent) return null;
 
-    const ticketTypes: ExtendedTicketType[] = selectedEvent.ticket_types?.length ? selectedEvent.ticket_types : [
-      {
-        id: 'standard',
-        name: selectedEvent.is_free ? 'Free Pass' : 'General Admission',
-        price: selectedEvent.is_free ? 0 : 5000,
-        quantity_available: Math.max(0, selectedEvent.total_tickets - selectedEvent.tickets_sold),
-        benefits: ['Full Event Access', 'Digital Pass QR Code', 'Verified Security Ticket'],
-        is_refundable: false,
-        is_transferable: true
-      }
-    ];
+    const ticketTypes: ExtendedTicketType[] = selectedEvent.ticket_types?.length 
+      ? selectedEvent.ticket_types 
+      : selectedEvent.is_free 
+        ? [{
+            id: 'free-pass',
+            name: 'Free Pass',
+            price: 0,
+            quantity_available: selectedEvent.total_tickets ? Math.max(0, selectedEvent.total_tickets - (selectedEvent.tickets_sold ?? 0)) : 1,
+            benefits: ['Full Event Access']
+          }]
+        : [];
 
     const currentTicket = ticketTypes.find(t => t.id === selectedTicketType);
     const unitPrice = currentTicket ? Number(currentTicket.price) : 0;
     const totalPrice = unitPrice * quantity;
     const isOnlineMode = selectedAttendanceMode === 'online';
 
-    const totalTickets = selectedEvent.total_tickets || 100;
-    const ticketsSold = selectedEvent.tickets_sold || 0;
-    const remainingTickets = Math.max(0, totalTickets - ticketsSold);
-    const progressPercent = Math.min(100, Math.round((ticketsSold / totalTickets) * 100));
+    const totalTickets = selectedEvent.total_tickets;
+    const ticketsSold = selectedEvent.tickets_sold ?? 0;
+    const hasValidTicketCount = typeof totalTickets === 'number' && totalTickets > 0;
+    const remainingTickets = hasValidTicketCount ? Math.max(0, totalTickets - ticketsSold) : null;
+    const progressPercent = hasValidTicketCount 
+      ? Math.min(100, Math.max(0, Math.round((ticketsSold / totalTickets) * 100))) 
+      : null;
 
     const relatedEvents = activeEvents.filter(e => e.id !== selectedEvent.id && e.category === selectedEvent.category).slice(0, 3);
+    const detailHeroImg = getEventImage(selectedEvent);
 
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -689,11 +777,18 @@ export function Marketplace() {
 
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-xl">
           <div className="aspect-[16/9] md:aspect-[21/9] relative bg-slate-900">
-            <img 
-              src={getEventImage(selectedEvent)} 
-              alt={selectedEvent.event_title} 
-              className="w-full h-full object-cover" 
-            />
+            {detailHeroImg ? (
+              <img 
+                src={detailHeroImg} 
+                alt={selectedEvent.event_title} 
+                loading="lazy"
+                className="w-full h-full object-cover" 
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 flex items-center justify-center">
+                <Ticket className="w-16 h-16 text-slate-700" />
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
             
             <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -704,7 +799,7 @@ export function Marketplace() {
                 <Heart className={cn("w-5 h-5", favorites[selectedEvent.id] && "fill-red-500 text-red-500")} />
               </button>
               <button 
-                onClick={(e) => openSharePreviewModal(selectedEvent, e)}
+                onClick={(e) => handleShareEvent(selectedEvent, e)}
                 className="w-10 h-10 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
               >
                 <Share2 className="w-5 h-5" />
@@ -713,9 +808,11 @@ export function Marketplace() {
 
             <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between text-white">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-sky-500 text-white uppercase tracking-wider">
-                  {selectedEvent.category}
-                </span>
+                {selectedEvent.category && (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-sky-500 text-white uppercase tracking-wider">
+                    {selectedEvent.category}
+                  </span>
+                )}
                 {selectedEvent.is_approved && <VerifiedBadge />}
               </div>
             </div>
@@ -737,79 +834,101 @@ export function Marketplace() {
               )}
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-                <span>Ticket Availability</span>
-                <span className="text-sky-500">{remainingTickets} tickets remaining ({progressPercent}% claimed)</span>
-              </div>
-              <div className="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
-                <div className="bg-sky-500 h-full rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-sky-500/10 text-sky-500 font-bold flex items-center justify-center text-lg border border-sky-500/20 shrink-0">
-                  {selectedEvent.organizer_name ? selectedEvent.organizer_name.charAt(0) : 'B'}
+            {hasValidTicketCount && remainingTickets !== null && progressPercent !== null && (
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <span>Ticket Availability</span>
+                  <span className="text-sky-500">{remainingTickets} tickets remaining ({progressPercent}% claimed)</span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h4 className="font-bold text-slate-800 dark:text-white text-sm md:text-base">
-                      {selectedEvent.organizer_name || 'BlueTickets Organizer'}
-                    </h4>
-                    <VerifiedBadge />
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    <span>{selectedEvent.organizer_hosted_count || 12} Events</span>
-                    <span>•</span>
-                    <span>{selectedEvent.organizer_followers || '1.2k'} Followers</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-0.5 text-amber-500 font-medium">
-                      <Star className="w-3 h-3 fill-current" /> {selectedEvent.organizer_rating || 4.9}
-                    </span>
-                  </div>
+                <div className="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                  <div className="bg-sky-500 h-full rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
                 </div>
               </div>
+            )}
 
-              <button 
-                onClick={() => toggleFollowOrganizer(selectedEvent.organizer_name || 'BlueTickets Organizer')}
-                className={cn(
-                  "px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0",
-                  followedOrganizers[selectedEvent.organizer_name || 'BlueTickets Organizer']
-                    ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white"
-                    : "bg-sky-500 text-white hover:bg-sky-600"
-                )}
-              >
-                {followedOrganizers[selectedEvent.organizer_name || 'BlueTickets Organizer'] ? 'Following' : 'Follow'}
-              </button>
-            </div>
+            {selectedEvent.organizer_name && (
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-sky-500/10 text-sky-500 font-bold flex items-center justify-center text-lg border border-sky-500/20 shrink-0">
+                    {selectedEvent.organizer_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="font-bold text-slate-800 dark:text-white text-sm md:text-base">
+                        {selectedEvent.organizer_name}
+                      </h4>
+                      {selectedEvent.is_approved && <VerifiedBadge />}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {typeof selectedEvent.organizer_hosted_count === 'number' && (
+                        <span>{selectedEvent.organizer_hosted_count} Event{selectedEvent.organizer_hosted_count !== 1 ? 's' : ''}</span>
+                      )}
+                      {selectedEvent.organizer_followers && (
+                        <>
+                          {typeof selectedEvent.organizer_hosted_count === 'number' && <span>•</span>}
+                          <span>{selectedEvent.organizer_followers} Followers</span>
+                        </>
+                      )}
+                      {typeof selectedEvent.organizer_rating === 'number' && selectedEvent.organizer_rating > 0 && (
+                        <>
+                          {(typeof selectedEvent.organizer_hosted_count === 'number' || selectedEvent.organizer_followers) && <span>•</span>}
+                          <span className="flex items-center gap-0.5 text-amber-500 font-medium">
+                            <Star className="w-3 h-3 fill-current" /> {selectedEvent.organizer_rating}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => toggleFollowOrganizer(selectedEvent.organizer_name!)}
+                  className={cn(
+                    "px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0",
+                    followedOrganizers[selectedEvent.organizer_name!]
+                      ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white"
+                      : "bg-sky-500 text-white hover:bg-sky-600"
+                  )}
+                >
+                  {followedOrganizers[selectedEvent.organizer_name!] ? 'Following' : 'Follow'}
+                </button>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
-                <Clock className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
-                <div>
-                  <h5 className="text-xs font-bold text-slate-400 uppercase">Date & Time</h5>
-                  <p className="text-sm font-bold text-slate-800 dark:text-white mt-0.5">
-                    {formatDate(selectedEvent.event_date)}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {formatTime(selectedEvent.event_date)} {selectedEvent.timezone ? `(${selectedEvent.timezone})` : ''}
-                  </p>
+              {selectedEvent.event_date && (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-400 uppercase">Date & Time</h5>
+                    <p className="text-sm font-bold text-slate-800 dark:text-white mt-0.5">
+                      {formatDate(selectedEvent.event_date)}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {formatTime(selectedEvent.event_date)} {selectedEvent.timezone ? `(${selectedEvent.timezone})` : ''}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h5 className="text-xs font-bold text-slate-400 uppercase">Venue & Location</h5>
-                  <p className="text-sm font-bold text-slate-800 dark:text-white mt-0.5">
-                    {selectedEvent.venue_name || 'Main Event Center'}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {selectedEvent.event_location} {selectedEvent.city ? `• ${selectedEvent.city}` : ''}
-                  </p>
+              {(selectedEvent.venue_name || selectedEvent.event_location) && (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h5 className="text-xs font-bold text-slate-400 uppercase">Venue & Location</h5>
+                    {selectedEvent.venue_name && (
+                      <p className="text-sm font-bold text-slate-800 dark:text-white mt-0.5">
+                        {selectedEvent.venue_name}
+                      </p>
+                    )}
+                    {selectedEvent.event_location && (
+                      <p className="text-xs text-slate-500">
+                        {selectedEvent.event_location} {selectedEvent.city ? `• ${selectedEvent.city}` : ''}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -851,22 +970,54 @@ export function Marketplace() {
                 </button>
               </div>
 
-              {isOnlineMode ? (
+              {isOnlineMode && (selectedEvent.meeting_platform || selectedEvent.timezone || selectedEvent.internet_req) && (
                 <div className="p-4 rounded-2xl bg-sky-50/50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50 space-y-2 text-xs">
-                  <div className="flex justify-between"><span className="text-slate-500">Meeting Platform:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.meeting_platform || 'Zoom HD Live'}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Timezone:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.timezone || 'GMT+1'}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Internet Requirement:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.internet_req || '10 Mbps Stable Connection'}</span></div>
+                  {selectedEvent.meeting_platform && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Meeting Platform:</span>
+                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.meeting_platform}</span>
+                    </div>
+                  )}
+                  {selectedEvent.timezone && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Timezone:</span>
+                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.timezone}</span>
+                    </div>
+                  )}
+                  {selectedEvent.internet_req && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Internet Requirement:</span>
+                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.internet_req}</span>
+                    </div>
+                  )}
                 </div>
-              ) : (
+              )}
+
+              {!isOnlineMode && (selectedEvent.parking_info || selectedEvent.arrival_time || selectedEvent.dress_code) && (
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2 text-xs">
-                  <div className="flex justify-between"><span className="text-slate-500">Parking:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.parking_info || 'Free On-site VIP Parking'}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Arrival Time:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.arrival_time || '30 Minutes before start'}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Dress Code:</span> <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.dress_code || 'Smart Casual'}</span></div>
+                  {selectedEvent.parking_info && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Parking:</span>
+                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.parking_info}</span>
+                    </div>
+                  )}
+                  {selectedEvent.arrival_time && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Arrival Time:</span>
+                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.arrival_time}</span>
+                    </div>
+                  )}
+                  {selectedEvent.dress_code && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Dress Code:</span>
+                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.dress_code}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            {selectedEvent.event_location && (
+            {selectedEvent.event_location && selectedEvent.event_location.trim() !== '' && (
               <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <MapPin className="w-5 h-5 text-sky-500" />
@@ -899,7 +1050,12 @@ export function Marketplace() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {selectedEvent.gallery.map((img, idx) => (
                     <div key={idx} className="aspect-square rounded-2xl overflow-hidden bg-slate-800 border border-slate-700">
-                      <img src={getImageUrl(img)} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
+                      <img 
+                        src={getImageUrl(img)} 
+                        alt={`Gallery ${idx + 1}`} 
+                        loading="lazy"
+                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" 
+                      />
                     </div>
                   ))}
                 </div>
@@ -911,85 +1067,103 @@ export function Marketplace() {
               <div>
                 <h5 className="font-bold text-slate-800 dark:text-white">Buyer Protection & Refund Policy</h5>
                 <p className="text-slate-500 mt-0.5">
-                  All tickets are cryptographically verified by BlueSea Mobile Marketplace. Refunds are supported up to 48 hours prior to event start if canceled by organizer.
+                  All tickets are cryptographically verified by BlueSea Mobile Marketplace.
                 </p>
               </div>
             </div>
 
             <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <h3 className="font-bold text-slate-800 dark:text-white text-base">Select Ticket Type</h3>
-              <div className="space-y-3">
-                {ticketTypes.map((ticket) => (
-                  <div
-                    key={ticket.id}
-                    onClick={() => setSelectedTicketType(ticket.id)}
-                    className={cn(
-                      'p-4 rounded-2xl border-2 cursor-pointer transition-all',
-                      selectedTicketType === ticket.id
-                        ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-900/20 shadow-md'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-sky-300'
-                    )}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-bold text-slate-800 dark:text-white text-sm">{ticket.name}</h4>
-                        <p className="text-xs text-slate-500 mt-0.5">{ticket.description || `${ticket.quantity_available} passes remaining`}</p>
+              {ticketTypes.length === 0 ? (
+                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 text-amber-800 dark:text-amber-300 text-xs font-medium">
+                  Ticket information is currently unavailable for this event.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {ticketTypes.map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      onClick={() => setSelectedTicketType(ticket.id)}
+                      className={cn(
+                        'p-4 rounded-2xl border-2 cursor-pointer transition-all',
+                        selectedTicketType === ticket.id
+                          ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-900/20 shadow-md'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-sky-300'
+                      )}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-bold text-slate-800 dark:text-white text-sm">{ticket.name}</h4>
+                          {ticket.description && (
+                            <p className="text-xs text-slate-500 mt-0.5">{ticket.description}</p>
+                          )}
+                        </div>
+                        <span className="text-lg font-black text-sky-500">
+                          {Number(ticket.price) === 0 ? 'Free' : `₦${Number(ticket.price).toLocaleString()}`}
+                        </span>
                       </div>
-                      <span className="text-lg font-black text-sky-500">
-                        {Number(ticket.price) === 0 ? 'Free' : `₦${Number(ticket.price).toLocaleString()}`}
-                      </span>
+
+                      {ticket.benefits && ticket.benefits.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-2">
+                          {ticket.benefits.map((b, idx) => (
+                            <span key={idx} className="text-[10px] font-medium bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                              <Check className="w-3 h-3 text-emerald-500" /> {b}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-
-                    {ticket.benefits && ticket.benefits.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-2">
-                        {ticket.benefits.map((b, idx) => (
-                          <span key={idx} className="text-[10px] font-medium bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-1">
-                            <Check className="w-3 h-3 text-emerald-500" /> {b}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <div>
-                <h4 className="text-sm font-bold text-slate-800 dark:text-white">Buying for a group?</h4>
-                <p className="text-xs text-slate-500">Adjust quantity for bulk ticket purchase</p>
+            {ticketTypes.length > 0 && (
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-white">Buying for a group?</h4>
+                  <p className="text-xs text-slate-500">Adjust quantity for bulk ticket purchase</p>
+                </div>
+                <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))} 
+                    className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200"
+                  >
+                    -
+                  </button>
+                  <span className="text-sm font-bold w-4 text-center text-slate-800 dark:text-white">{quantity}</span>
+                  <button 
+                    onClick={() => setQuantity(quantity + 1)} 
+                    className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))} 
-                  className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200"
-                >
-                  -
-                </button>
-                <span className="text-sm font-bold w-4 text-center text-slate-800 dark:text-white">{quantity}</span>
-                <button 
-                  onClick={() => setQuantity(quantity + 1)} 
-                  className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+            )}
 
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
               <div>
                 <span className="text-xs text-slate-400 block">Total Amount</span>
                 <span className="text-2xl font-black text-sky-500">
-                  {totalPrice === 0 ? 'Free' : `₦${totalPrice.toLocaleString()}`}
+                  {ticketTypes.length === 0 ? 'N/A' : totalPrice === 0 ? 'Free' : `₦${totalPrice.toLocaleString()}`}
                 </span>
               </div>
 
               <button 
                 onClick={handlePurchase} 
-                disabled={isSoldOut || isEventEnded || (!selectedTicketType && !selectedEvent.is_free)} 
+                disabled={isSoldOut || isEventEnded || ticketTypes.length === 0 || (!selectedTicketType && !selectedEvent.is_free)} 
                 className="flex-1 max-w-xs py-4 rounded-2xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-sky-500/20"
               >
-                {isSoldOut ? 'Sold Out' : isEventEnded ? 'Event Ended' : selectedEvent.is_free ? 'Get Free Ticket' : 'Proceed to Payment'}
+                {isSoldOut 
+                  ? 'Sold Out' 
+                  : isEventEnded 
+                    ? 'Event Ended' 
+                    : ticketTypes.length === 0 
+                      ? 'Tickets Unavailable' 
+                      : selectedEvent.is_free 
+                        ? 'Get Free Ticket' 
+                        : 'Proceed to Payment'}
               </button>
             </div>
 
@@ -1189,7 +1363,7 @@ export function Marketplace() {
         type="marketplace" 
         value={{ 
           event_id: selectedEvent?.id, 
-          ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || 'Ticket Purchase', 
+          ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || (selectedEvent?.is_free ? 'Free Pass' : 'Ticket Purchase'), 
           quantity: quantity,
           attendance_mode: selectedAttendanceMode
         }} 
