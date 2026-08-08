@@ -1213,7 +1213,7 @@ export function Marketplace() {
 
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => navigate('/affiliate')}
+              onClick={() => navigate('/affiliate/')}
               className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 text-xs font-bold transition-colors"
             >
               <Sparkles className="w-4 h-4 text-sky-500" />
@@ -1449,7 +1449,7 @@ export function Marketplace() {
                   <button
                     onClick={() => {
                       setShareModalEvent(null);
-                      navigate('/affiliate');
+                      navigate('/affiliate/register');
                     }}
                     className="w-full py-2.5 rounded-xl bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:bg-slate-900 dark:hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
                   >
