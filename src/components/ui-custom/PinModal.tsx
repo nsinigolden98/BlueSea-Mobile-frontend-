@@ -75,7 +75,7 @@ export function PinModal() {
 
   // Centralized Transaction & Verification Action Handler
   const executeTransaction = async (type: string, value: any, pin: string) => {
-    const payload = { ...value, transaction_pin: pin, pin };
+    const payload = { ...value, transaction_pin: pin };
 
     const TRANSACTION_MAP: Record<string, () => Promise<any>> = {
       'verify-pin': async () => {
