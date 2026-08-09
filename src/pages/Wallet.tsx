@@ -104,21 +104,22 @@ export function Wallet() {
   useEffect(() => {
     if (message) {
       setIsOpen(true);
+      const msg = message as Record<string, any>;
       const isSuccess = Boolean(
-        message?.success === true ||
-        message?.state === true ||
-        (!message?.error && message?.code === '00') ||
-        message?.status === 'success' ||
-        message?.status, any  === true
+        msg?.success === true ||
+        msg?.state === true ||
+        (!msg?.error && msg?.code === '00') ||
+        msg?.status === 'success' ||
+        msg?.status === true
       );
 
       if (isSuccess) {
-        showToast(message?.message || 'Transaction successful');
-        setToastMessage(message?.message || 'Transaction successful');
+        showToast(msg?.message || 'Transaction successful');
+        setToastMessage(msg?.message || 'Transaction successful');
         setTxStatus(true);
         resetWithdrawState();
       } else {
-        setToastMessage(message?.message || 'Transaction failed');
+        setToastMessage(msg?.message || 'Transaction failed');
         setWithdrawing(false);
         setTxStatus(false);
       }
@@ -629,7 +630,7 @@ export function Wallet() {
       {/* FEEDBACK OVERLAYS */}
       {isOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
-          <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} transactionData={message} />
+          <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
         </div>
       )}
       <ToastComponent />
