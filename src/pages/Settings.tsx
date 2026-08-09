@@ -963,7 +963,7 @@ export function Settings() {
                     Engineered & Secured for Financial Growth
                   </span>
                   <span className="text-xs font-bold text-sky-500 tracking-wide">
-                    Developed by Lucid Core Technologies
+                    Developed by G Lucid Apex
                   </span>
                 </div>
 

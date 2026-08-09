@@ -365,7 +365,7 @@ export function LandingPage() {
               <a href="#" className="hover:text-white transition-colors">Support</a>
             </div>
             <p className="text-sm text-slate-500 text-center">
-              © 2025 BlueSea Mobile. All Rights Reserved.
+              © 2025 G Lucid Apex. All Rights Reserved.
             </p>
           </div>
         </div>

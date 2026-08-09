@@ -18,7 +18,7 @@ import { ArrowLeft } from 'lucide-react';
 interface LegalDocumentTemplateProps {
   config: LegalDocumentConfig;
 }
-
+ 
 export function LegalDocumentTemplate({ config }: LegalDocumentTemplateProps) {
   const [activeSectionId, setActiveSectionId] = useState<string>(
     config.sections[0]?.id || ''

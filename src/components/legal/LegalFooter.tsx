@@ -61,7 +61,7 @@ export function LegalFooter() {
         </div>
 
         <p className="text-[11px]">
-          &copy; {new Date().getFullYear()} BlueSea Mobile Technologies Ltd. All rights reserved.
+          &copy; {new Date().getFullYear()} G Lucid Apex. All rights reserved.
         </p>
       </div>
     </footer>
