@@ -104,7 +104,15 @@ export function Wallet() {
   useEffect(() => {
     if (message) {
       setIsOpen(true);
-      if (message?.success) {
+      const isSuccess = Boolean(
+        message?.success === true ||
+        message?.state === true ||
+        (!message?.error && message?.code === '00') ||
+        message?.status === 'success' ||
+        message?.status, any  === true
+      );
+
+      if (isSuccess) {
         showToast(message?.message || 'Transaction successful');
         setToastMessage(message?.message || 'Transaction successful');
         setTxStatus(true);
@@ -621,7 +629,7 @@ export function Wallet() {
       {/* FEEDBACK OVERLAYS */}
       {isOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
-          <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
+          <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} transactionData={message} />
         </div>
       )}
       <ToastComponent />
