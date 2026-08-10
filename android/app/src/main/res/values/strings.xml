@@ -4,4 +4,6 @@
     <string name="title_activity_main">BlueSea Mobile</string>
     <string name="package_name">com.blueseamobile.app</string>
     <string name="custom_url_scheme">com.blueseamobile.app</string>
+
+    <string name="default_web_client_id">557271059008-valbqrb7fmmls90n65dqci9ecrg54u0u.apps.googleusercontent.com</string>
 </resources>
