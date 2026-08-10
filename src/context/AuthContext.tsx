@@ -23,11 +23,13 @@ interface SignUpResponse {
 }
 import type { CredentialResponse } from '@react-oauth/google';
 
+type GoogleLoginInput = CredentialResponse | { credential?: string; idToken?: string };
+
 interface AuthContextType extends AuthState {
   login: (data: LoginFormData) => Promise<string>;
   signup: (data: SignupFormData) => Promise<SignUpResponse>;
   logout: () => void;
-  googleLogin: (credentialResponse: CredentialResponse) => Promise<void> | void;
+  googleLogin: (credentialResponse: GoogleLoginInput) => Promise<void> | void;
   load?: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -96,7 +98,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, []);
 
-  // New inline, unified state-synchronization functionality mapped directly to existing AuthState keys
   const refreshUser = async () => {
     try {
       if (TOKEN !== '') {
@@ -242,11 +243,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
   }, []);
 
-  const googleLogin = async (credentialResponse: CredentialResponse) => {
+  const googleLogin = async (credentialResponse: GoogleLoginInput) => {
     setState(prev => ({ ...prev, loading: true }));
     const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
+
+    const idToken = 'credential' in credentialResponse && credentialResponse.credential
+      ? credentialResponse.credential
+      : (credentialResponse as any).idToken || (credentialResponse as any).credential;
+
+    if (!idToken) {
+      setState(prev => ({ ...prev, loading: false }));
+      return;
+    }
+
     const response = await postRequest(ENDPOINTS.oauthGoogle, {
-      id_token: credentialResponse.credential,
+      id_token: idToken,
       redirect_uri
     });
     

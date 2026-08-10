@@ -12,12 +12,18 @@ const config: CapacitorConfig = {
       '*.blueseamobile.com.ng'
     ]
   },
-      android: {
-        allowMixedContent: true,
-        captureInput: true,
-        backgroundColor: '#0284c7',
-      }
-    
+  android: {
+    allowMixedContent: true,
+    captureInput: true,
+    backgroundColor: '#0284c7',
+  },
+  plugins: {
+    SocialLogin: {
+      google: {
+        webClientId: '557271059008-valbqrb7fmmls90n65dqci9ecrg54u0u.apps.googleusercontent.com',
+      },
+    },
+  },
 };
 
 export default config;
