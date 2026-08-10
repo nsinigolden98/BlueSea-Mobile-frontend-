@@ -32,11 +32,10 @@ export const performNativeGoogleSignIn = async (): Promise<string> => {
     await initializeNativeGoogleAuth();
   }
 
+  // Omit explicit scopes to avoid native MainActivity error
   const result = await SocialLogin.login({
     provider: 'google',
-    options: {
-      scopes: ['email', 'profile'],
-    },
+    options: {},
   });
 
   const res = result?.result as any;
