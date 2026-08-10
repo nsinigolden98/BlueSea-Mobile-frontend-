@@ -10,7 +10,7 @@ import { BlueConnectPreview } from '@/components/blueconnect';
 import { DashboardHeader } from '@/components/ui-custom/DashboardHeader';
 import { TransactionsData } from '@/data';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
-import { checkAndRequestCameraPermission } from '@/lib/permissions/appPermissions';
+import { checkAndRequestCameraPermission } from '@/lib/permissions/apppermissions';
 
 import { type Transaction } from '@/types';
 import {
