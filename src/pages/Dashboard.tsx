@@ -36,7 +36,7 @@ export function Dashboard() {
     if (hasRequestedCameraPermission.current) return;
     hasRequestedCameraPermission.current = true;
 
-    checkAndRequestCameraPermission().catch((error) => {
+    checkAndRequestCameraPermission().catch((error: unknown) => {
       console.error('Camera permission request failed:', error);
     });
   }, []);

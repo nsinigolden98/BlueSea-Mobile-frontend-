@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
-import { Camera, PermissionStatus } from '@capacitor/camera';
-import { CameraPermissionResult, CameraPermissionState } from './types';
+import { Camera, type PermissionStatus } from '@capacitor/camera';
+import type { CameraPermissionResult, CameraPermissionState } from './types';
 
 export function isNativePlatform(): boolean {
   return Capacitor.isNativePlatform();
