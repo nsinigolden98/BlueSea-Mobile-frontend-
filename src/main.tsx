@@ -11,7 +11,7 @@ if (isNativeAndroid()) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '557271059008-valbqrb7fmmls90n65dqci9ecrg54u0u.apps.googleusercontent.com'}>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''}>
       <App />
     </GoogleOAuthProvider>
   </StrictMode>,

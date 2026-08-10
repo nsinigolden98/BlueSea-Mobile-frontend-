@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
 
-const GOOGLE_WEB_CLIENT_ID = '557271059008-valbqrb7fmmls90n65dqci9ecrg54u0u.apps.googleusercontent.com';
+const GOOGLE_WEB_CLIENT_ID = '557271059008-u6r4bna1r9jqe5r20rkhcjr4rof9s18u.apps.googleusercontent.com';
 
 let isInitialized = false;
 
