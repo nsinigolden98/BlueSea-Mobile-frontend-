@@ -90,4 +90,4 @@ export async function checkAndRequestCameraPermission(): Promise<CameraPermissio
       isNative: true,
     };
   }
-}
+} 

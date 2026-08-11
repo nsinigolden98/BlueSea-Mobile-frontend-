@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Toast, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
-import { QrCode, CheckCircle, XCircle, Loader2, Camera, ArrowLeft } from 'lucide-react';
+import { QrCode, CheckCircle, XCircle, Loader2, Camera as CameraIcon, ArrowLeft } from 'lucide-react';
+import { Camera as CapacitorCamera } from '@capacitor/camera';
 import { cn } from '@/lib/utils';
 import { getRequest, postRequest, ENDPOINTS, API_BASE, type ScannerAssignment } from '@/types';
 
@@ -23,9 +24,12 @@ export function Scanner() {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [manualCode, setManualCode] = useState('');
+  
   const { showToast, ToastComponent } = Toast();
   const { showLoader, hideLoader, LoaderComponent } = Loader();
+  
   const qrRef = useRef<HTMLDivElement>(null);
+  const html5QrCodeRef = useRef<any>(null);
 
   const getImageUrl = (path: string | undefined | null) => {
     if (!path) return '';
@@ -38,11 +42,44 @@ export function Scanner() {
   }, []);
 
   useEffect(() => {
-    if (scanning && qrRef.current) {
-      initScanner();
-    }
+    let isMounted = true;
+
+    const startCameraScanner = async () => {
+      if (scanning && qrRef.current) {
+        try {
+          // Clean up any existing scanner instance before starting
+          await stopAndClearScanner();
+
+          const { Html5Qrcode } = await import('html5-qrcode');
+          if (!isMounted) return;
+
+          const scanner = new Html5Qrcode('qr-reader');
+          html5QrCodeRef.current = scanner;
+
+          await scanner.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText: string) => {
+              if (isMounted) {
+                onScanSuccess(decodedText);
+              }
+            },
+            () => {}
+          );
+        } catch (err: any) {
+          if (isMounted) {
+            showToast(err?.message || 'Failed to start camera feed');
+            setScanning(false);
+          }
+        }
+      }
+    };
+
+    startCameraScanner();
+
     return () => {
-      cleanupScanner();
+      isMounted = false;
+      stopAndClearScanner().catch(() => {});
     };
   }, [scanning]);
 
@@ -59,41 +96,24 @@ export function Scanner() {
     }
   };
 
-  let html5QrcodeScanner: any = null;
-
-  const initScanner = async () => {
-    try {
-      const { Html5Qrcode } = await import('html5-qrcode');
-      
-      html5QrcodeScanner = new Html5Qrcode("qr-reader");
-      
-      await html5QrcodeScanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        onScanSuccess,
-        onScanFailure
-      );
-    } catch (err: any) {
-      showToast(err.message || 'Failed to start camera');
-      setScanning(false);
-    }
-  };
-
-  const cleanupScanner = async () => {
-    if (html5QrcodeScanner) {
+  const stopAndClearScanner = async () => {
+    if (html5QrCodeRef.current) {
+      const instance = html5QrCodeRef.current;
+      html5QrCodeRef.current = null;
       try {
-        await html5QrcodeScanner.stop();
-      } catch (err) {}
+        await instance.stop();
+        instance.clear();
+      } catch (err) {
+        // Ignore error if camera was already stopped or not scanning
+      }
     }
   };
 
   const onScanSuccess = async (decodedText: string) => {
-    await cleanupScanner();
+    await stopAndClearScanner();
     setScanning(false);
     await scanTicket(decodedText);
   };
-
-  const onScanFailure = () => {};
 
   const scanTicket = async (ticketCode: string) => {
     try {
@@ -137,14 +157,47 @@ export function Scanner() {
     await scanTicket(manualCode.trim());
   };
 
-  const startScan = () => {
+  const startScan = async () => {
     setScanResult(null);
     setShowModal(false);
-    setScanning(true);
+
+    try {
+      // 1. Check existing native camera permission state
+      const checkStatus = await CapacitorCamera.checkPermissions();
+
+      if (checkStatus.camera === 'granted') {
+        setScanning(true);
+        return;
+      }
+
+      // 2. Request native camera permission if promptable or denied
+      if (
+        checkStatus.camera === 'prompt' ||
+        checkStatus.camera === 'prompt-with-rationale' ||
+        checkStatus.camera === 'denied'
+      ) {
+        const requestStatus = await CapacitorCamera.requestPermissions({ permissions: ['camera'] });
+
+        if (requestStatus.camera === 'granted') {
+          setScanning(true);
+          return;
+        }
+
+        if (requestStatus.camera === 'denied') {
+          showToast('Camera permission is required to scan tickets. Please enable it in Android Settings.');
+          return;
+        }
+      }
+
+      showToast('Camera permission is required to scan tickets.');
+    } catch (err) {
+      // Fallback for standard web browsers or non-native execution
+      setScanning(true);
+    }
   };
 
   const stopScan = async () => {
-    await cleanupScanner();
+    await stopAndClearScanner();
     setScanning(false);
   };
 
@@ -254,7 +307,7 @@ export function Scanner() {
                 <div className="space-y-4">
                   <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 text-center shadow-sm">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center border border-sky-200/20">
-                      <Camera className="w-8 h-8 text-sky-500" />
+                      <CameraIcon className="w-8 h-8 text-sky-500" />
                     </div>
                     <h3 className="text-base font-semibold text-slate-800 dark:text-white mb-1">
                       Optical Diagnostics Ready

@@ -10,7 +10,6 @@ import { BlueConnectPreview } from '@/components/blueconnect';
 import { DashboardHeader } from '@/components/ui-custom/DashboardHeader';
 import { TransactionsData } from '@/data';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
-import { checkAndRequestCameraPermission } from '@/lib/permissions/apppermissions';
 
 import { type Transaction } from '@/types';
 import {
@@ -27,19 +26,6 @@ export function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const navigate = useNavigate();
-
-  // Guard against React StrictMode / double mounting permission triggers
-  const hasRequestedCameraPermission = useRef(false);
-
-  // Check and request native camera permission upon authenticated Dashboard mount
-  useEffect(() => {
-    if (hasRequestedCameraPermission.current) return;
-    hasRequestedCameraPermission.current = true;
-
-    checkAndRequestCameraPermission().catch((error: unknown) => {
-      console.error('Camera permission request failed:', error);
-    });
-  }, []);
 
   // Synced state to ensure all sensitive details toggle together
   const [showBalance, setShowBalance] = useState(() => {

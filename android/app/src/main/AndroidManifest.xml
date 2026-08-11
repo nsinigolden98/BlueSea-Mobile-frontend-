@@ -1,15 +1,17 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.blueseamobile.app">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Network & Internet Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     
-    <!-- Camera permission entry -->
+    <!-- Camera Permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <!-- Camera Hardware Declarations (Prevents Play Store from blocking devices without specific camera setups) -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
     <application
         android:allowBackup="true"

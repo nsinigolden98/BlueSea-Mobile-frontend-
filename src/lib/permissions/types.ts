@@ -9,3 +9,4 @@ export interface CameraPermissionResult {
   camera: CameraPermissionState;
   isNative: boolean;
 }
+ 
