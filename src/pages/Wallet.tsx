@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { 
   Sidebar, 
   Header, 
@@ -21,6 +22,7 @@ import { postRequest, ENDPOINTS } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { useAuth } from '@/context/AuthContext';
 import { NIGERIAN_BANKS } from '@/data';
+import { openMobilePaystackCheckout } from '@/services/paystackCheckout';
 
 import { 
   Landmark, 
@@ -151,9 +153,28 @@ export function Wallet() {
     setProcessing(true);
     try {
       const response = await postRequest(ENDPOINTS.fund, { amount });
-      if (response.success) {
-        setProcessing(false);
-        window.location.href = response.authorization_url;
+      if (response.success && response.authorization_url) {
+        if (Capacitor.isNativePlatform()) {
+          setProcessing(false);
+          setDepositing(false);
+          setDepositModalOpen(false);
+
+          await openMobilePaystackCheckout(response.authorization_url);
+
+          // Safely attempt user state refresh if supported by AuthContext
+          const authCtx = user as any;
+          const refreshFn = authCtx?.refreshUser || authCtx?.checkAuth || authCtx?.fetchUserData;
+          if (typeof refreshFn === 'function') {
+            try {
+              await refreshFn();
+            } catch (err) {
+              console.error('Error refreshing user state after checkout:', err);
+            }
+          }
+        } else {
+          setProcessing(false);
+          window.location.href = response.authorization_url;
+        }
       } else {
         setProcessing(false);
         setDepositing(false);
