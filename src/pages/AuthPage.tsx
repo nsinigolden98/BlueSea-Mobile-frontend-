@@ -84,7 +84,7 @@ export function AuthPage() {
       }
       else {
        
-        const response = await signup({ email, phone, firstName, surname, password, confirmPassword, agreeToTerms, referralCode });
+        const response = await signup({ email, phone, firstName, surname, password, confirmPassword, agreeToTerms });
         
         if (response.state) {
           showToast(response.message);

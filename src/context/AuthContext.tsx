@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.user.email_verified) {
         setCookie('access_token', response.access_token);
         setCookie('refresh_token', response.refresh_token); 
-        referral()
+       await referral()
         const get_user = await getRequest(ENDPOINTS.user);
         const get_balance = await getRequest(ENDPOINTS.balance);
         const user: User = {
@@ -216,8 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       phone: String(data.phone),
       other_names: data.firstName,
       surname: data.surname,
-      password: data.password,
-      referral_code: data.referralCode || ''
+      password: data.password
     };
     const response = await postRequest(ENDPOINTS.signup, payload);
     return response
@@ -266,7 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCookie('access_token', response.access_token);
       const get_user = await getRequest(ENDPOINTS.user);
       const get_balance = await getRequest(ENDPOINTS.balance);
-      referral()
+      await referral()
       const user: User = {
         id: get_user.id,
         email: get_user.email,

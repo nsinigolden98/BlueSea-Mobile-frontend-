@@ -85,7 +85,6 @@ export interface SignupFormData {
   password: string;
   confirmPassword: string;
   agreeToTerms: boolean;
-  referralCode?: string;
 }
 
 // BluePoints Types
