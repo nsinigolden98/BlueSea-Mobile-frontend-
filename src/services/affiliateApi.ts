@@ -13,7 +13,12 @@ import type {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 async function getAuthHeaders(): Promise<HeadersInit> {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const token =
+    localStorage.getItem('access_token') ||
+    localStorage.getItem('token') ||
+    sessionStorage.getItem('access_token') ||
+    sessionStorage.getItem('token');
+
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -43,6 +48,12 @@ async function handleResponse<T>(response: Response): Promise<T> {
     }
     throw new Error(errorMessage);
   }
+
+  // Handle empty HTTP 204 No Content responses safely
+  if (response.status === 204) {
+    return {} as T;
+  }
+
   return response.json() as Promise<T>;
 }
 
@@ -122,3 +133,26 @@ export const affiliateApi = {
     return handleResponse<AffiliatePayoutResponse>(res);
   },
 };
+
+// Standalone Named Exports for direct function imports
+export const getAffiliateStatus = affiliateApi.getStatus;
+export const applyForAffiliate = affiliateApi.apply;
+export const getAffiliateDashboard = affiliateApi.getDashboard;
+export const getAffiliateLinks = affiliateApi.getLinks;
+export const createAffiliateLink = affiliateApi.createLink;
+export const recordAffiliateAttribution = affiliateApi.recordAttribution;
+export const getAffiliateSales = affiliateApi.getSales;
+export const requestAffiliatePayout = affiliateApi.requestPayout;
+
+// Legacy / Alternative Named Exports (with 'Api' suffix)
+export const getAffiliateStatusApi = affiliateApi.getStatus;
+export const applyForAffiliateApi = affiliateApi.apply;
+export const getAffiliateDashboardApi = affiliateApi.getDashboard;
+export const getAffiliateLinksApi = affiliateApi.getLinks;
+export const createAffiliateLinkApi = affiliateApi.createLink;
+export const recordAffiliateAttributionApi = affiliateApi.recordAttribution;
+export const getAffiliateSalesApi = affiliateApi.getSales;
+export const requestAffiliatePayoutApi = affiliateApi.requestPayout;
+
+// Default export
+export default affiliateApi;
