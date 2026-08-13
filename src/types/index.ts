@@ -400,6 +400,14 @@ export const ENDPOINTS = {
   marketplace_ticket_transfer: (id: string) => `${API_BASE}/marketplace/tickets/${id}/transfer/`,
   marketplace_ticket_cancel: (id: string) => `${API_BASE}/marketplace/tickets/${id}/cancel/`,
   referral: `${API_BASE}/bonus/referral/`,
+  // --- AFFILIATE ENDPOINTS ---
+  affiliate_apply: `${API_BASE}/affiliate/apply/`,
+  affiliate_attribution: `${API_BASE}/affiliate/attribution/`,
+  affiliate_dashboard: `${API_BASE}/affiliate/dashboard/`,
+  affiliate_links: `${API_BASE}/affiliate/links/`,
+  affiliate_payout: `${API_BASE}/affiliate/payout/`,
+  affiliate_sales: `${API_BASE}/affiliate/sales/`,
+  affiliate_status: `${API_BASE}/affiliate/status/`,
   
   
   

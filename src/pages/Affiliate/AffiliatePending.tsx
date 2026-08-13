@@ -1,13 +1,33 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, CheckCircle2, ArrowLeft } from 'lucide-react';
-import { setAffiliateStatus } from '@/utils/affiliateStorage';
+import { Clock, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
+import { affiliateApi } from '@/services/affiliateApi';
 
 export function AffiliatePending() {
   const navigate = useNavigate();
+  const [isChecking, setIsChecking] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSimulateApproval = () => {
-    setAffiliateStatus('verified');
-    navigate('/affiliate/dashboard');
+  const handleCheckStatus = async () => {
+    setIsChecking(true);
+    setErrorMessage(null);
+
+    try {
+      const statusData = await affiliateApi.getStatus();
+      if (statusData.is_approved || statusData.status === 'approved') {
+        navigate('/affiliate/dashboard');
+      } else if (statusData.status === 'rejected') {
+        setErrorMessage(
+          statusData.rejected_reason
+            ? `Application rejected: ${statusData.rejected_reason}`
+            : 'Your application was unfortunately not approved at this time.'
+        );
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Unable to check application status. Please try again.');
+    } finally {
+      setIsChecking(false);
+    }
   };
 
   return (
@@ -17,34 +37,41 @@ export function AffiliatePending() {
       </div>
 
       <div className="space-y-2">
-        <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600 uppercase tracking-wider">
+        <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 uppercase tracking-wider">
           Pending Review
         </span>
         <h2 className="text-2xl font-black text-slate-800 dark:text-white">
           Application Submitted
         </h2>
-        <p className="text-xs text-slate-500 leading-relaxed">
-          Our team is reviewing your affiliate marketing application. You will receive an alert as soon as your account is approved.
+        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          Our team is currently reviewing your affiliate application. Once approved, you will be able to access your dashboard and create unique tracking links.
         </p>
       </div>
 
-      {/* Dev Mode Simulator Button */}
-      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-2">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Demo / Testing Helper</p>
-        <button 
-          onClick={handleSimulateApproval}
-          className="w-full py-2.5 rounded-xl bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-1.5"
+      {errorMessage && (
+        <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2 text-left">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      <div className="space-y-3 pt-2">
+        <button
+          onClick={handleCheckStatus}
+          disabled={isChecking}
+          className="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
         >
-          <CheckCircle2 className="w-4 h-4" /> Simulate Instant Approval
+          <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
+          {isChecking ? 'Checking Status...' : 'Refresh Application Status'}
+        </button>
+
+        <button
+          onClick={() => navigate('/marketplace')}
+          className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Return to Marketplace
         </button>
       </div>
-
-      <button 
-        onClick={() => navigate('/marketplace')}
-        className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2"
-      >
-        <ArrowLeft className="w-4 h-4" /> Return to Marketplace
-      </button>
     </div>
   );
 }

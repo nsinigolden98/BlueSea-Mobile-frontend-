@@ -35,16 +35,15 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getRequest, ENDPOINTS, API_BASE } from '@/types';
+import { getRequest, postRequest, ENDPOINTS, API_BASE } from '@/types';
 import type { MarketplaceEvent } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
-// --- AFFILIATE IMPORTS ---
+// --- AFFILIATE UTILS ---
 import { 
   getAffiliateStatus, 
   getOrGenerateAffiliateId, 
   getAffiliateTracking,
-  getAffiliateProfile,
   toggleSaveAffiliateEventId,
   getSavedAffiliateEventIds,
   setAffiliateTracking
@@ -147,27 +146,52 @@ export function Marketplace() {
   const [affiliateId, setAffiliateId] = useState<string>('');
   const [savedAffiliateEvents, setSavedAffiliateEvents] = useState<string[]>([]);
 
+  // Fetch Affiliate status & handle referral attribution
   useEffect(() => {
-    const currentStatus = getAffiliateStatus();
-    const currentAffId = getOrGenerateAffiliateId();
-    setAffiliateStatusState(currentStatus);
-    setAffiliateId(currentAffId);
+    const initAffiliateSystem = async () => {
+      try {
+        const res = await getRequest(ENDPOINTS.affiliate_status);
+        if (res && res.status) {
+          const isApproved = res.is_approved || res.status === 'approved';
+          setAffiliateStatusState(isApproved ? 'verified' : res.status);
+          if (res.affiliate_name) {
+            setAffiliateId(res.affiliate_name);
+          }
+        }
+      } catch (err) {
+        // Fallback to local storage state if guest or unauthenticated
+        setAffiliateStatusState(getAffiliateStatus());
+        setAffiliateId(getOrGenerateAffiliateId());
+      }
+    };
+
+    initAffiliateSystem();
     setSavedAffiliateEvents(getSavedAffiliateEventIds());
 
     const referralParam = searchParams.get('affiliate') || searchParams.get('ref');
     const eventParam = searchParams.get('event');
 
     if (referralParam) {
-      const myProfile = getAffiliateProfile();
-      if (myProfile?.affiliateId === referralParam || currentAffId === referralParam) {
-        console.log('Self-referral link detected. Referral tracking ignored.');
-      } else {
-        setAffiliateTracking({
-          affiliate_id: referralParam,
-          event_id: eventParam || undefined,
-          timestamp: Date.now()
-        });
-      }
+      // Record link attribution on the backend API
+      const recordAttribution = async () => {
+        try {
+          await postRequest(ENDPOINTS.affiliate_attribution, {
+            affiliate_name: referralParam,
+            event_id: eventParam || undefined
+          });
+        } catch (err) {
+          console.log('Attribution recording note:', err);
+        }
+      };
+
+      recordAttribution();
+
+      // Track locally
+      setAffiliateTracking({
+        affiliate_id: referralParam,
+        event_id: eventParam || undefined,
+        timestamp: Date.now()
+      });
     }
   }, [searchParams]);
 
@@ -265,7 +289,7 @@ export function Marketplace() {
     
     const trackingData = getAffiliateTracking();
     if (trackingData && trackingData.affiliate_id) {
-      console.log(`Attaching Affiliate Referral ${trackingData.affiliate_id} to checkout payload.`);
+      console.log(`Attaching Affiliate Referral ${trackingData.affiliate_id} to checkout session.`);
     }
 
     showPinModal();
@@ -349,7 +373,6 @@ export function Marketplace() {
     showToast(isNowSaved ? 'Saved for affiliate promotion!' : 'Removed from saved promotion events');
   };
 
-  // --- TRIGGER SHARE MODAL ---
   const handleOpenShareModal = (event: ExtendedEvent, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setShareModalEvent(event);
@@ -357,11 +380,12 @@ export function Marketplace() {
   };
 
   const handleCopyEventLink = async (eventId: string) => {
-    const link = `${window.location.origin}/marketplace?event=${eventId}`;
+    const affiliateParam = affiliateId ? `&ref=${affiliateId}` : '';
+    const link = `${window.location.origin}/marketplace?event=${eventId}${affiliateParam}`;
     try {
       await navigator.clipboard.writeText(link);
       setCopiedLink(true);
-      showToast('Event link copied to clipboard!');
+      showToast('Event referral link copied to clipboard!');
       setTimeout(() => setCopiedLink(false), 3000);
     } catch {
       showToast('Failed to copy link');
@@ -1170,7 +1194,6 @@ export function Marketplace() {
     );
   };
 
-  // Convert for Promotional Canvas Generator if user triggers preview
   const marketingAssetEvent: MarketingAssetEvent | null = shareModalEvent ? {
     id: shareModalEvent.id,
     event_title: shareModalEvent.event_title,
@@ -1343,7 +1366,6 @@ export function Marketplace() {
         <div className="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative space-y-5">
             
-            {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
@@ -1362,7 +1384,6 @@ export function Marketplace() {
               </button>
             </div>
 
-            {/* Event Summary Card */}
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-3">
               {getEventImage(shareModalEvent) ? (
                 <img 
@@ -1385,7 +1406,6 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Copy Link Section */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                 Direct Event Link
@@ -1394,7 +1414,7 @@ export function Marketplace() {
                 <input 
                   type="text" 
                   readOnly 
-                  value={`${window.location.origin}/marketplace?event=${shareModalEvent.id}`}
+                  value={`${window.location.origin}/marketplace?event=${shareModalEvent.id}${affiliateId ? `&ref=${affiliateId}` : ''}`}
                   className="flex-1 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-600 dark:text-slate-300 truncate outline-none"
                 />
                 <button
@@ -1419,9 +1439,8 @@ export function Marketplace() {
               </div>
             </div>
 
-            {/* Affiliate Program Section */}
             <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-500/10 via-sky-500/5 to-transparent border border-sky-500/20 space-y-3">
-              {affiliateStatus === 'verified' ? (
+              {affiliateStatus === 'verified' || affiliateStatus === 'approved' ? (
                 <>
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-sky-500" />
@@ -1449,7 +1468,7 @@ export function Marketplace() {
                   <button
                     onClick={() => {
                       setShareModalEvent(null);
-                      navigate('/affiliate/register');
+                      navigate('/affiliate');
                     }}
                     className="w-full py-2.5 rounded-xl bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:bg-slate-900 dark:hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
                   >
@@ -1469,7 +1488,7 @@ export function Marketplace() {
           isOpen={previewModalOpen}
           onClose={() => { setPreviewModalOpen(false); setShareModalEvent(null); }}
           event={marketingAssetEvent}
-          affiliateId={affiliateStatus === 'verified' ? affiliateId : undefined}
+          affiliateId={affiliateStatus === 'verified' || affiliateStatus === 'approved' ? affiliateId : undefined}
           onCopyToast={(msg) => showToast(msg)}
         />
       )}

@@ -1,98 +1,91 @@
-import type { MarketplaceEvent } from '@/types';
+export type BackendAffiliateStatus = 'pending' | 'approved' | 'rejected' | 'none';
 
-export type AffiliateStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
-
-export type AffiliateLevel = 'Standard' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond';
-
-export interface SocialAccountInput {
-  platform: string;
-  url: string;
+export interface AffiliateApplicationRequest {
+  affiliate_name: string;
+  facebook?: string | null;
+  instagram?: string | null;
+  twitter?: string | null;
+  tiktok?: string | null;
+  agreement: boolean;
 }
 
-export interface AffiliateProfile {
-  id: string;
-  displayName: string;
-  status: AffiliateStatus;
-  affiliateId: string; // Permanent ID e.g., AFF001
-  categories: string[];
-  socialAccounts: SocialAccountInput[];
-  promotionMethods: string[];
-  agreedToTerms: boolean;
-  createdAt: string;
-  level: AffiliateLevel;
+export interface AffiliateApplicationResponse {
+  id: string | number;
+  affiliate_name: string;
+  status: BackendAffiliateStatus;
+  is_approved: boolean;
+  commission_rate?: string;
+  facebook?: string | null;
+  instagram?: string | null;
+  twitter?: string | null;
+  tiktok?: string | null;
+  agreement_accepted: boolean;
+  rejected_reason?: string | null;
+  created_at: string;
 }
 
-export interface AffiliateStats {
-  totalClicks: number;
-  totalSales: number;
-  conversionRate: number;
-  pendingEarnings: number;
-  lifetimeEarnings: number;
-  eventsPromoted: number;
+export interface AffiliateStatusResponse {
+  status: BackendAffiliateStatus;
+  is_approved: boolean;
+  affiliate_name?: string;
+  commission_rate?: string;
+  rejected_reason?: string | null;
 }
 
-export interface CommissionRecord {
-  id: string;
-  eventId: string;
-  eventTitle: string;
-  commissionAmount: number;
-  status: 'pending' | 'paid';
-  date: string;
+export interface AffiliateDashboardResponse {
+  total_clicks: number;
+  total_sales: number;
+  pending_count: number;
+  success_count: number;
+  payable_count: number;
+  paid_count: number;
+  revoked_count: number;
+  pending_amount: string;
+  payable_amount: string;
+  paid_amount: string;
 }
 
-export interface LeaderboardEntry {
-  rank: number;
-  displayName: string;
-  ticketsSold: number;
-  lifetimeEarnings: number;
-  currentLevel: AffiliateLevel;
-  badge: string;
+export interface AffiliateLink {
+  id: string | number;
+  event: string;
+  event_title: string;
+  commission_rate?: string;
+  clicks: number;
+  is_active: boolean;
+  link: string;
+  created_at: string;
 }
 
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  iconName: string;
-  isUnlocked: boolean;
-  unlockedAt?: string;
-  progress: number;
-  target: number;
+export interface CreateAffiliateLinkRequest {
+  event_id: string;
 }
 
-export interface AffiliateNotification {
-  id: string;
-  title: string;
+export interface AffiliateSaleRecord {
+  id: string | number;
+  affiliate_name?: string;
+  event: string;
+  event_title: string;
+  buyer?: string;
+  buyer_email?: string;
+  ticket_count?: number;
+  gross_amount?: string;
+  commission_rate?: string;
+  commission_amount: string;
+  status: 'pending' | 'success' | 'payable' | 'paid' | 'revoked';
+  created_at: string;
+  payable_at?: string | null;
+  paid_at?: string | null;
+}
+
+export interface AffiliateAttributionRequest {
+  event_id: string;
+  affiliate_name?: string;
+  link_id?: string | number;
+}
+
+export interface AffiliatePayoutResponse {
+  success: boolean;
   message: string;
-  date: string;
-  isRead: boolean;
-  type: 'event' | 'approval' | 'commission' | 'milestone';
-}
-
-export interface AffiliateTrackingData {
-  affiliate_id: string;
-  event_id?: string;
-  timestamp: number;
-}
-
-export interface ExtendedMarketplaceEvent extends MarketplaceEvent {
-  organizer_name?: string;
-  organizer_avatar?: string;
-  organizer_hosted_count?: number;
-  organizer_followers?: string;
-  organizer_rating?: number;
-  attendance_mode?: 'online' | 'physical' | 'hybrid';
-  venue_name?: string;
-  city?: string;
-  tags?: string[];
-  gallery?: string[];
-  affiliate_enabled?: boolean;
-  affiliate_rate?: string;
-  meeting_platform?: string;
-  join_instructions?: string;
-  timezone?: string;
-  internet_req?: string;
-  parking_info?: string;
-  arrival_time?: string;
-  dress_code?: string;
+  payout_amount?: string;
+  transaction_id?: string;
 }

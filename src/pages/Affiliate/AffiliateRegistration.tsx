@@ -1,212 +1,184 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { saveAffiliateProfile, getOrGenerateAffiliateId } from '@/utils/affiliateStorage';
-import type { SocialAccountInput } from '@/types/affiliate';
-
-const CATEGORY_OPTIONS = [
-  'Music', 'Technology', 'Business', 'Comedy', 'Education', 
-  'Church', 'Festival', 'Networking', 'Sports', 'Fashion', 'Health'
-];
-
-const PLATFORM_OPTIONS = [
-  'Facebook', 'Instagram', 'TikTok', 'WhatsApp', 'Telegram', 'X', 'LinkedIn', 'Website'
-];
-
-const PROMOTION_METHODS = [
-  'Social Media', 'WhatsApp Broadcast', 'Telegram Community', 
-  'Email Marketing', 'Physical Promotion', 'Community Groups', 'Website / Blog'
-];
+import { ShieldCheck, User, Share2, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { affiliateApi } from '@/services/affiliateApi';
 
 export function AffiliateRegistration() {
   const navigate = useNavigate();
 
-  const [displayName, setDisplayName] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<Record<string, boolean>>({});
-  const [socialUrls, setSocialUrls] = useState<Record<string, string>>({});
-  const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
+  const [affiliateName, setAffiliateName] = useState('');
+  const [facebook, setFacebook] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [tiktok, setTiktok] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  const toggleCategory = (cat: string) => {
-    setSelectedCategories(prev => 
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-    );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Strictly enforce: 6-13 chars, letters and numbers only, NO spaces/symbols
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value;
+    const sanitizedValue = rawValue.replace(/[^A-Za-z0-9]/g, '').slice(0, 13);
+    setAffiliateName(sanitizedValue);
+    setErrorMessage(null);
   };
 
-  const togglePlatform = (plat: string) => {
-    setSelectedPlatforms(prev => ({ ...prev, [plat]: !prev[plat] }));
-  };
+  const isNameValid = useMemo(() => {
+    return affiliateName.length >= 6 && affiliateName.length <= 13 && /^[A-Za-z0-9]+$/.test(affiliateName);
+  }, [affiliateName]);
 
-  const toggleMethod = (method: string) => {
-    setSelectedMethods(prev => 
-      prev.includes(method) ? prev.filter(m => m !== method) : [...prev, method]
-    );
-  };
+  const canSubmit = isNameValid && agreedToTerms && !isSubmitting;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!displayName || !agreedToTerms) return;
+    if (!canSubmit) return;
 
-    const formattedSocials: SocialAccountInput[] = Object.keys(selectedPlatforms)
-      .filter(plat => selectedPlatforms[plat])
-      .map(plat => ({ platform: plat, url: socialUrls[plat] || '' }));
+    setIsSubmitting(true);
+    setErrorMessage(null);
 
-    const newProfile = {
-      id: `aff_prof_${Date.now()}`,
-      displayName,
-      status: 'pending' as const,
-      affiliateId: getOrGenerateAffiliateId(),
-      categories: selectedCategories,
-      socialAccounts: formattedSocials,
-      promotionMethods: selectedMethods,
-      agreedToTerms,
-      createdAt: new Date().toISOString(),
-      level: 'Standard' as const,
-    };
+    try {
+      const response = await affiliateApi.apply({
+        affiliate_name: affiliateName,
+        facebook: facebook.trim() || null,
+        instagram: instagram.trim() || null,
+        twitter: twitter.trim() || null,
+        tiktok: tiktok.trim() || null,
+        agreement: agreedToTerms,
+      });
 
-    saveAffiliateProfile(newProfile);
-    navigate('/affiliate/pending');
+      if (response.status === 'approved' || response.is_approved) {
+        navigate('/affiliate/dashboard');
+      } else {
+        navigate('/affiliate/pending');
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to submit affiliate application. Please verify your details.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-8 animate-in fade-in duration-300">
-      <div className="text-center space-y-2">
-        <div className="w-12 h-12 mx-auto rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold">
-          <Sparkles className="w-6 h-6" />
+    <div className="max-w-xl mx-auto p-6 md:p-8 my-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl space-y-6">
+      <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <button
+          onClick={() => navigate('/marketplace')}
+          className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <div>
+          <h2 className="text-xl font-black text-slate-800 dark:text-white">Become a Partner Affiliate</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Promote events and earn commissions directly to your wallet.</p>
         </div>
-        <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white">
-          Become a BlueSea Affiliate Partner
-        </h1>
-        <p className="text-sm text-slate-500 max-w-lg mx-auto">
-          Promote events, earn referral commissions, and gain access to high-converting branded marketing tools.
-        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-xl space-y-8">
-        {/* Display Name */}
+      {errorMessage && (
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Affiliate Name Input */}
         <div className="space-y-2">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-            Public Display Name
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            Affiliate Name
           </label>
-          <Input 
-            type="text" 
-            required 
-            placeholder="e.g. Alex Promos or Lagos Event Plug" 
-            value={displayName} 
-            onChange={(e) => setDisplayName(e.target.value)} 
-            className="rounded-2xl"
-          />
-        </div>
-
-        {/* Promotion Categories */}
-        <div className="space-y-3">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-            Preferred Promotion Categories
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORY_OPTIONS.map((cat) => {
-              const isSelected = selectedCategories.includes(cat);
-              return (
-                <button
-                  type="button"
-                  key={cat}
-                  onClick={() => toggleCategory(cat)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    isSelected
-                      ? 'bg-sky-500 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                  }`}
-                >
-                  {isSelected && <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />}
-                  {cat}
-                </button>
-              );
-            })}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <User className="w-4 h-4" />
+            </div>
+            <input
+              type="text"
+              value={affiliateName}
+              onChange={handleNameChange}
+              placeholder="e.g. JohnPartner01"
+              maxLength={13}
+              required
+              className="w-full pl-10 pr-16 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"
+            />
+            <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[10px] font-bold text-slate-400">
+              {affiliateName.length}/13
+            </div>
           </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            6–13 characters • Letters and numbers only (no spaces or special characters).
+          </p>
         </div>
 
-        {/* Social Platforms */}
-        <div className="space-y-4">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-            Social Media Handles & Channels
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {PLATFORM_OPTIONS.map((plat) => (
-              <div key={plat} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer text-sm font-bold text-slate-800 dark:text-white">
-                  <input 
-                    type="checkbox" 
-                    checked={!!selectedPlatforms[plat]} 
-                    onChange={() => togglePlatform(plat)} 
-                    className="w-4 h-4 rounded text-sky-500 focus:ring-sky-400"
-                  />
-                  <span>{plat}</span>
-                </label>
-                {selectedPlatforms[plat] && (
-                  <Input 
-                    type="url" 
-                    placeholder={`Enter your ${plat} Profile URL`} 
-                    value={socialUrls[plat] || ''} 
-                    onChange={(e) => setSocialUrls({ ...socialUrls, [plat]: e.target.value })} 
-                    className="text-xs rounded-xl"
-                  />
-                )}
-              </div>
-            ))}
+        {/* Social Accounts */}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center gap-2">
+            <Share2 className="w-4 h-4 text-sky-500" />
+            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              Social Media Channels (Optional)
+            </h3>
           </div>
-        </div>
 
-        {/* Promotion Methods */}
-        <div className="space-y-3">
-          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
-            Promotion Methods
-          </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {PROMOTION_METHODS.map((method) => {
-              const isSelected = selectedMethods.includes(method);
-              return (
-                <button
-                  type="button"
-                  key={method}
-                  onClick={() => toggleMethod(method)}
-                  className={`p-3 rounded-2xl border text-xs font-bold text-left transition-all flex items-center justify-between gap-2 ${
-                    isSelected
-                      ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400'
-                      : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  <span>{method}</span>
-                  {isSelected && <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />}
-                </button>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="url"
+              placeholder="Facebook URL"
+              value={facebook}
+              onChange={(e) => setFacebook(e.target.value)}
+              className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+            <input
+              type="url"
+              placeholder="Instagram URL"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+            <input
+              type="url"
+              placeholder="Twitter / X URL"
+              value={twitter}
+              onChange={(e) => setTwitter(e.target.value)}
+              className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+            <input
+              type="url"
+              placeholder="TikTok URL"
+              value={tiktok}
+              onChange={(e) => setTiktok(e.target.value)}
+              className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
           </div>
         </div>
 
         {/* Terms Agreement */}
-        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-          <label className="flex items-start gap-3 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
-            <input 
-              type="checkbox" 
-              required 
-              checked={agreedToTerms} 
-              onChange={(e) => setAgreedToTerms(e.target.checked)} 
-              className="w-4 h-4 rounded text-sky-500 mt-0.5"
-            />
-            <span>
-              I agree to the <strong className="text-slate-800 dark:text-white">BlueSea Affiliate Terms & Conditions</strong> and understand commissions are tracked automatically based on ticket purchases.
-            </span>
+        <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700">
+          <input
+            type="checkbox"
+            id="agreement"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="mt-0.5 w-4 h-4 text-sky-500 rounded border-slate-300 focus:ring-sky-500"
+          />
+          <label htmlFor="agreement" className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            I agree to BlueSea Mobile&apos;s Affiliate Partner terms and conditions, and understand that referral attribution is verified by the server.
           </label>
         </div>
 
-        <button 
-          type="submit" 
-          disabled={!displayName || !agreedToTerms}
-          className="w-full py-4 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-sm shadow-lg shadow-sky-500/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+        {/* Submit CTA */}
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className="w-full py-3.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-sky-500/20 disabled:opacity-50 disabled:shadow-none"
         >
-          Submit Application <ArrowRight className="w-4 h-4" />
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" /> Submitting Application...
+            </>
+          ) : (
+            <>
+              <ShieldCheck className="w-4 h-4" /> Submit Application
+            </>
+          )}
         </button>
       </form>
     </div>
