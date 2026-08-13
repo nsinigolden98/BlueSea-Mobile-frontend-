@@ -2,7 +2,11 @@
 // Backend API Types
 // ==========================================
 
-export type BackendAffiliateStatus = 'pending' | 'approved' | 'rejected' | 'none';
+export type BackendAffiliateStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'none';
 
 export interface AffiliateApplicationRequest {
   affiliate_name: string;
@@ -69,7 +73,12 @@ export interface AffiliateSaleRecord {
   gross_amount: string;
   commission_rate: string;
   commission_amount: string;
-  status: 'pending' | 'success' | 'payable' | 'paid' | 'revoked';
+  status:
+    | 'pending'
+    | 'success'
+    | 'payable'
+    | 'paid'
+    | 'revoked';
   created_at: string;
   payable_at: string | null;
   paid_at: string | null;
@@ -94,7 +103,12 @@ export interface AffiliatePayoutResponse {
 // Frontend / UI Support Types
 // ==========================================
 
-export type AffiliateStatus = BackendAffiliateStatus | 'active' | 'suspended' | 'inactive' | 'unverified';
+export type AffiliateStatus =
+  | BackendAffiliateStatus
+  | 'active'
+  | 'suspended'
+  | 'inactive'
+  | 'unverified';
 
 export interface AffiliateProfile {
   id?: string | number;

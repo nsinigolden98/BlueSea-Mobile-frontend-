@@ -41,8 +41,8 @@ import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavi
 
 // --- AFFILIATE UTILS ---
 import { 
-  getAffiliateStatus, 
-  getOrGenerateAffiliateId, 
+  //getAffiliateStatus, 
+  //getOrGenerateAffiliateId, 
   getAffiliateTracking,
   toggleSaveAffiliateEventId,
   getSavedAffiliateEventIds,
@@ -160,8 +160,8 @@ export function Marketplace() {
         }
       } catch (err) {
         // Fallback to local storage state if guest or unauthenticated
-        setAffiliateStatusState(getAffiliateStatus());
-        setAffiliateId(getOrGenerateAffiliateId());
+        //setAffiliateStatusState(getAffiliateStatus());
+        //setAffiliateId(getOrGenerateAffiliateId());
       }
     };
 
