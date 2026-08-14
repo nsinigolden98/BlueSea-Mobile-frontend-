@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sidebar, PinModal, Toast, TransactionModal } from '@/components/ui-custom';
+import { Sidebar, PinModal, Toast, TransactionModal, Loader } from '@/components/ui-custom';
 import { Input } from '@/components/ui/input';
 import { 
   Search, 
@@ -41,8 +41,6 @@ import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavi
 
 // --- AFFILIATE UTILS ---
 import { 
-  //getAffiliateStatus, 
-  //getOrGenerateAffiliateId, 
   getAffiliateTracking,
   toggleSaveAffiliateEventId,
   getSavedAffiliateEventIds,
@@ -94,6 +92,16 @@ interface ExtendedEvent extends MarketplaceEvent {
   dress_code?: string;
 }
 
+interface AffiliateStatusResponse {
+  id?: number;
+  affiliate_name?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  is_approved?: boolean;
+  commission_rate?: string;
+  message?: string;
+  detail?: string;
+}
+
 const VerifiedBadge = ({ className }: { className?: string }) => (
   <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 text-[10px] font-bold uppercase tracking-wider", className)}>
     <CheckCircle2 className="w-3 h-3" />
@@ -117,6 +125,7 @@ export function Marketplace() {
   const [searchParams] = useSearchParams();
   const { PinComponent, showPinModal, message } = PinModal();
   const { showToast, ToastComponent } = Toast();
+  const { showLoader, hideLoader, LoaderComponent } = Loader();
 
   const mainViewportRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -145,23 +154,52 @@ export function Marketplace() {
   const [affiliateStatus, setAffiliateStatusState] = useState<string>('unverified');
   const [affiliateId, setAffiliateId] = useState<string>('');
   const [savedAffiliateEvents, setSavedAffiliateEvents] = useState<string[]>([]);
+  const [isVerifyingAffiliate, setIsVerifyingAffiliate] = useState<boolean>(false);
 
-  // Fetch Affiliate status & handle referral attribution
+  // Verification Helper for Backend Affiliate State
+  const checkBackendAffiliateStatus = useCallback(async (): Promise<{
+    registered: boolean;
+    approved: boolean;
+    status: string;
+    affiliateName?: string;
+    unauthenticated?: boolean;
+    error?: boolean;
+  }> => {
+    try {
+      const res: AffiliateStatusResponse = await getRequest(ENDPOINTS.affiliate_status);
+      if (res && (res.id || res.status || res.is_approved !== undefined)) {
+        const isApproved = res.is_approved === true || res.status === 'approved';
+        return {
+          registered: true,
+          approved: isApproved,
+          status: res.status || (isApproved ? 'approved' : 'pending'),
+          affiliateName: res.affiliate_name
+        };
+      }
+      return { registered: false, approved: false, status: 'none' };
+    } catch (err: any) {
+      const statusCode = err?.response?.status || err?.status;
+      if (statusCode === 401) {
+        return { registered: false, approved: false, status: 'unauthenticated', unauthenticated: true };
+      }
+      if (statusCode === 404) {
+        return { registered: false, approved: false, status: 'not_found' };
+      }
+      return { registered: false, approved: false, status: 'error', error: true };
+    }
+  }, []);
+
+  // Fetch initial Affiliate status & handle referral attribution
   useEffect(() => {
     const initAffiliateSystem = async () => {
-      try {
-        const res = await getRequest(ENDPOINTS.affiliate_status);
-        if (res && res.status) {
-          const isApproved = res.is_approved || res.status === 'approved';
-          setAffiliateStatusState(isApproved ? 'verified' : res.status);
-          if (res.affiliate_name) {
-            setAffiliateId(res.affiliate_name);
-          }
+      const res = await checkBackendAffiliateStatus();
+      if (res.registered) {
+        setAffiliateStatusState(res.approved ? 'verified' : res.status);
+        if (res.affiliateName) {
+          setAffiliateId(res.affiliateName);
         }
-      } catch (err) {
-        // Fallback to local storage state if guest or unauthenticated
-        //setAffiliateStatusState(getAffiliateStatus());
-        //setAffiliateId(getOrGenerateAffiliateId());
+      } else {
+        setAffiliateStatusState('unverified');
       }
     };
 
@@ -172,7 +210,6 @@ export function Marketplace() {
     const eventParam = searchParams.get('event');
 
     if (referralParam) {
-      // Record link attribution on the backend API
       const recordAttribution = async () => {
         try {
           await postRequest(ENDPOINTS.affiliate_attribution, {
@@ -180,20 +217,64 @@ export function Marketplace() {
             event_id: eventParam || undefined
           });
         } catch (err) {
-          console.log('Attribution recording note:', err);
+          console.error('Attribution recording notice:', err);
         }
       };
 
       recordAttribution();
 
-      // Track locally
       setAffiliateTracking({
         affiliate_id: referralParam,
         event_id: eventParam || undefined,
         timestamp: Date.now()
       });
     }
-  }, [searchParams]);
+  }, [searchParams, checkBackendAffiliateStatus]);
+
+  // Handle Specific Ticket/Event Affiliate Action (FLOW B)
+  const handleTicketAffiliateAction = async (targetEvent: ExtendedEvent, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!targetEvent || !targetEvent.id) {
+      showToast('Invalid event configuration. Unable to initiate affiliate action.');
+      return;
+    }
+
+    if (isVerifyingAffiliate) return;
+    setIsVerifyingAffiliate(true);
+    showLoader();
+
+    try {
+      const res = await checkBackendAffiliateStatus();
+
+      if (res.unauthenticated) {
+        showToast('Please log in to access affiliate promotion links.');
+        navigate(`/login?redirect=/marketplace?event=${targetEvent.id}`);
+        return;
+      }
+
+      if (res.error) {
+        showToast('Failed to verify affiliate registration. Please try again.');
+        return;
+      }
+
+      if (!res.registered) {
+        showToast('You must register as an affiliate first.');
+        navigate('/affiliate');
+        return;
+      }
+
+      if (!res.approved) {
+        showToast('Your affiliate account is pending approval.');
+        return;
+      }
+
+      setShareModalEvent(targetEvent);
+      setPreviewModalOpen(true);
+    } finally {
+      setIsVerifyingAffiliate(false);
+      hideLoader();
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -210,7 +291,7 @@ export function Marketplace() {
     };
   }, [showMenu]);
 
-  // Event System
+  // Event System State
   const [events, setEvents] = useState<ExtendedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<ExtendedEvent | null>(null);
@@ -244,7 +325,7 @@ export function Marketplace() {
   const fetchEvents = async () => {
     try {
       const data = await getRequest(ENDPOINTS.marketplace_events);
-      if (data) {
+      if (Array.isArray(data)) {
         setEvents(data);
         const eventId = searchParams.get('event');
         if (eventId) {
@@ -253,8 +334,8 @@ export function Marketplace() {
         }
       }
     } catch (err) {
-      console.log(err);
-      showToast('Failed to fetch events');
+      console.error('Failed to fetch marketplace events:', err);
+      showToast('Failed to load marketplace events. Please reload.');
     } finally {
       setLoading(false);
     }
@@ -265,7 +346,7 @@ export function Marketplace() {
       const response = await getRequest(ENDPOINTS.vendor_status);
       setVendorStatus(response?.vendor?.is_verified || false);
     } catch (err) {
-      console.log(err);
+      console.error('Vendor status error:', err);
       setVendorStatus(false);
     }
   };
@@ -580,6 +661,13 @@ export function Marketplace() {
               </span>
             ) : <div />}
             <div className="flex items-center gap-1.5">
+              <button 
+                onClick={(e) => handleTicketAffiliateAction(event, e)}
+                className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
+                title="Promote as Affiliate"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+              </button>
               {affiliateStatus === 'verified' && (
                 <button 
                   onClick={(e) => { e.stopPropagation(); toggleSaveForAffiliatePromotion(event.id); }}
@@ -685,14 +773,9 @@ export function Marketplace() {
   const renderEvents = () => {
     if (loading) {
       return (
-        <div className="flex items-stretch gap-4 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="shrink-0 w-[84vw] sm:w-[320px] animate-pulse bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 space-y-3">
-              <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800 rounded-xl" />
-              <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
-              <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
-            </div>
-          ))}
+        <div className="py-20 flex flex-col items-center justify-center space-y-4">
+          <LoaderComponent />
+          <p className="text-xs text-slate-400 font-medium">Loading Marketplace...</p>
         </div>
       );
     }
@@ -805,6 +888,13 @@ export function Marketplace() {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
             
             <div className="absolute top-4 right-4 flex items-center gap-2">
+              <button 
+                onClick={(e) => handleTicketAffiliateAction(selectedEvent, e)}
+                className="w-10 h-10 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
+                title="Promote as Affiliate"
+              >
+                <Sparkles className="w-5 h-5 text-sky-400" />
+              </button>
               <button 
                 onClick={(e) => toggleFavorite(selectedEvent.id, e)}
                 className="w-10 h-10 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
@@ -1236,11 +1326,11 @@ export function Marketplace() {
 
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => navigate('/affiliate/')}
+              onClick={() => navigate('/affiliate')}
               className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 text-xs font-bold transition-colors"
             >
               <Sparkles className="w-4 h-4 text-sky-500" />
-              Affiliate Center
+              Join Affiliate
             </button>
 
             {!vendorStatus ? (
@@ -1281,11 +1371,11 @@ export function Marketplace() {
               {showMenu && (
                 <div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2 z-50">
                   <button 
-                    onClick={() => { navigate('/affiliate'); setShowMenu(false); }} 
+                    onClick={() => { setShowMenu(false); navigate('/affiliate'); }} 
                     className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
                   >
                     <Sparkles className="w-4 h-4 text-sky-500" /> 
-                    Affiliate Center
+                    Join Affiliate
                   </button>
 
                   {!vendorStatus ? (
@@ -1361,7 +1451,7 @@ export function Marketplace() {
         </div>
       </div>
 
-      {/* --- STANDARD SHARE MODAL WITH AFFILIATE PROMPT --- */}
+      {/* --- STANDARD SHARE MODAL WITH DYNAMIC AFFILIATE PROMPT --- */}
       {shareModalEvent && !previewModalOpen && (
         <div className="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative space-y-5">
@@ -1493,6 +1583,7 @@ export function Marketplace() {
         />
       )}
 
+      <LoaderComponent />
       <PinComponent 
         type="marketplace" 
         value={{ 
