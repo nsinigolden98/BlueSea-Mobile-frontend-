@@ -14,6 +14,7 @@ import type {
   AffiliateAttributionRequest,
   AffiliatePayoutResponse,
 } from '@/types/affiliate';
+import { getAuthToken } from './api';
 
 /**
  * Production API base URL.
@@ -28,28 +29,6 @@ const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
   'https://api.blueseamobile.com.ng'
 ).replace(/\/+$/, '');
-
-/**
- * Retrieve the existing authenticated user's JWT.
- *
- * IMPORTANT:
- * These values are authentication credentials, not affiliate state.
- * Affiliate application/status/tracking data must NOT be persisted
- * independently in localStorage.
- *
- * This preserves compatibility with the application's existing
- * authentication implementation while allowing the affiliate module
- * to communicate with the backend.
- */
-function getAuthToken(): string | null {
-  return (
-    localStorage.getItem('access_token') ||
-    localStorage.getItem('token') ||
-    sessionStorage.getItem('access_token') ||
-    sessionStorage.getItem('token') ||
-    null
-  );
-}
 
 /**
  * Build headers for authenticated JSON API requests.
