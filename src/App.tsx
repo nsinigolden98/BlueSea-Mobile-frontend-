@@ -146,13 +146,25 @@ function AppRoutes() {
     <Routes>
       {/* Wrap everything in the MainLayout to ensure Header logic is global */}
       <Route element={<MainLayout />}>
-        {/* =========================================
-            PUBLIC ROUTES (NO Pull-To-Refresh)
-           ========================================= */}
-        <Route path="/" element={<RootRoute />} />
-        <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
-        <Route path="/signup" element={<PublicRoute><AuthPage /></PublicRoute>} />
-        <Route path="/event/:eventId" element={<EventPublic />} />
+{/* PUBLIC ROUTES */}
+<Route path="/" element={<RootRoute />} />
+<Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
+<Route path="/signup" element={<PublicRoute><AuthPage /></PublicRoute>} />
+
+{/* Public event sharing */}
+<Route path="/event/:eventId" element={<EventPublic />} />
+
+{/* Public support */}
+<Route path="/support" element={<Support />} />
+
+{/* Public legal pages */}
+<Route path="/legal/terms" element={<TermsAndConditions />} />
+<Route path="/legal/privacy" element={<PrivacyPolicy />} />
+<Route path="/legal/refund" element={<RefundPolicy />} />
+<Route path="/legal/security" element={<SecurityPolicy />} />
+<Route path="/legal/cookies" element={<CookiePolicy />} />
+<Route path="/legal/kyc" element={<KYCPolicy />} />
+<Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
 
         {/* =========================================
             3. AUTHENTICATED ROUTES (UNIVERSAL PULL-TO-REFRESH ENABLED)
@@ -195,7 +207,6 @@ function AppRoutes() {
           <Route path="/jamb-registration" element={<ProtectedRoute><JAMBRegistration /></ProtectedRoute>} />
           <Route path="/tv-subscription" element={<ProtectedRoute><TVSubscription /></ProtectedRoute>} />
           <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
-          <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
           <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
           
           {/* SECURED WITH PROTECTED ROUTE */}
@@ -205,15 +216,6 @@ function AppRoutes() {
           <Route path="/spin-vault" element={<ProtectedRoute><SpinVault /></ProtectedRoute>} />
           <Route path="/betting" element={<ProtectedRoute><Betting /></ProtectedRoute>} />
           <Route path="/identity-center" element={<ProtectedRoute><IdentityCenter /></ProtectedRoute>} />
-
-          {/* Legal Center Routes */}
-          <Route path="/legal/terms" element={<TermsAndConditions />} />
-          <Route path="/legal/refund" element={<RefundPolicy />} />
-          <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-          <Route path="/legal/security" element={<SecurityPolicy />} />
-          <Route path="/legal/cookies" element={<CookiePolicy />} />
-          <Route path="/legal/kyc" element={<KYCPolicy />} />
-          <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
 
           {/* SECURED PAYROLL PRO ROUTES */}
           <Route path="/payroll-pro" element={<ProtectedRoute><PayrollProHome /></ProtectedRoute>} />
@@ -280,4 +282,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; 

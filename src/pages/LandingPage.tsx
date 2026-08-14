@@ -358,12 +358,31 @@ export function LandingPage() {
           </div>
           
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
-              <a href="#" className="hover:text-white transition-colors">Legal</a>
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
-              <a href="#" className="hover:text-white transition-colors">Support</a>
-            </div>
+           <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
+  <button
+    type="button"
+    onClick={() => navigate('/legal/privacy')}
+    className="hover:text-white transition-colors"
+  >
+    Privacy
+  </button>
+
+  <button
+    type="button"
+    onClick={() => navigate('/legal/terms')}
+    className="hover:text-white transition-colors"
+  >
+    Terms & Conditions
+  </button>
+
+  <button
+    type="button"
+    onClick={() => navigate('/support')}
+    className="hover:text-white transition-colors"
+  >
+    Support
+  </button>
+</div>
             <p className="text-sm text-slate-500 text-center">
               © 2025 G Lucid Apex. All Rights Reserved.
             </p>
@@ -373,3 +392,4 @@ export function LandingPage() {
     </div>
   );
 }
+ 

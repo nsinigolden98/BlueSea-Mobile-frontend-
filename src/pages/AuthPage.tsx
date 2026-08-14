@@ -368,9 +368,16 @@ export function AuthPage() {
                     onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
                     required
                   />
-                  <Label htmlFor="terms" className="text-sm font-normal cursor-pointer">
-                    I agree to the <a href="#" className="text-sky-500 hover:underline font-medium font-normal">Terms & Policy</a>
-                  </Label>
+            <Label htmlFor="terms" className="text-sm font-normal cursor-pointer">
+  I agree to the{' '}
+  <button
+    type="button"
+    onClick={() => navigate('/legal/terms')}
+    className="text-sky-500 hover:underline font-medium"
+  >
+    Terms & Conditions
+  </button>
+</Label>
                 </div>
               )}
            
