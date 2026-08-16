@@ -1,5 +1,5 @@
 import React from 'react';
-import { SupportTicket } from './types';
+import type { SupportTicket } from './types';
 import { formatSupportTimestamp, getStatusBadgeStyle, formatStatusLabel, getPriorityBadgeStyle } from './utils';
 import { ChevronRight, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';

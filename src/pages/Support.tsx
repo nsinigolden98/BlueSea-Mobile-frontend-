@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Sidebar, Header, Toast, Loader } from '@/components/ui-custom';
 import { postRequest, getRequest, ENDPOINTS } from '@/types';
-import { SupportTicket, CreateTicketPayload, SupportMessage } from '@/components/support/types';
+import type { SupportTicket, CreateTicketPayload, SupportMessage } from '@/components/support/types';
 import {
   SupportHero,
   SupportAssistant,

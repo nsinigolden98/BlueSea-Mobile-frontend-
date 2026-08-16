@@ -1,5 +1,5 @@
 import React from 'react';
-import { SupportMessage } from './types';
+import type { SupportMessage } from './types';
 import { formatSupportTimestamp } from './utils';
 import { cn } from '@/lib/utils';
 import { ShieldCheck, User } from 'lucide-react';

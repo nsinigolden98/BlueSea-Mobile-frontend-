@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CreateTicketPayload } from './types';
+import type { CreateTicketPayload } from './types';
 import { X, Send } from 'lucide-react';
 
 interface TicketFormProps {

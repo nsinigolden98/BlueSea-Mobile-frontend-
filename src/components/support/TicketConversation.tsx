@@ -1,5 +1,5 @@
 import React from 'react';
-import { SupportTicket } from './types';
+import type { SupportTicket } from './types';
 import { TicketHeader } from './TicketHeader';
 import { MessageList } from './MessageList';
 import { MessageComposer } from './MessageComposer';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SupportTicket } from './types';
+import type { SupportTicket } from './types';
 import { TicketCard } from './TicketCard';
 import { Headphones, MessageSquarePlus } from 'lucide-react';
 

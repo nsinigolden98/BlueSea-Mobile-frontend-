@@ -1,5 +1,5 @@
 import React from 'react';
-import { SupportTicket } from './types';
+import type { SupportTicket } from './types';
 import { MessageBubble } from './MessageBubble';
 import { formatSupportTimestamp } from './utils';
 
