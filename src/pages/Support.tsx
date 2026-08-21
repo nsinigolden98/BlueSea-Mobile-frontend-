@@ -4,7 +4,7 @@ import { postRequest, getRequest, ENDPOINTS } from '@/types';
 import type { SupportTicket, CreateTicketPayload, SupportMessage } from '@/components/support/types';
 import {
   SupportHero,
-  SupportAssistant,
+  //SupportAssistant,
   SupportQuickActions,
   TicketList,
   TicketForm,
@@ -159,7 +159,7 @@ export function Support() {
                 {!showNewTicket && (
                   <>
                     <SupportHero onStartConversation={() => setShowNewTicket(true)} />
-                    <SupportAssistant />
+                    {/* <SupportAssistant /> */}
                     <SupportQuickActions onSelectCategory={handleQuickCategorySelect} />
                   </>
                 )}
