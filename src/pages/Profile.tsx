@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { 
-  ArrowLeft, Camera, Upload, Save, X, MapPin, ChevronDown, ChevronRight, 
+  ArrowLeft, Camera, Upload, Save, X, MapPin, ChevronDown, ChevronRight,
   CheckCircle2, User, Phone, Mail, ShieldCheck, Calendar, Hash, Sparkles, Edit3
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,159 @@ import { patchRequest, ENDPOINTS } from '@/types';
 import { Loader } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
+// CUSTOM DOB DATE PICKER COMPONENT
+function DOBDatePicker({ 
+  value, 
+  onSave, 
+  onCancel, 
+  isLoading 
+}: { 
+  value?: string; 
+  onSave: (dateStr: string) => Promise<void>; 
+  onCancel: () => void; 
+  isLoading?: boolean; 
+}) {
+  const parseInitialDate = (val?: string) => {
+    if (!val || val === 'Not Specified') return new Date(2000, 0, 1);
+    const parsed = new Date(val);
+    return isNaN(parsed.getTime()) ? new Date(2000, 0, 1) : parsed;
+  };
+
+  const initialDate = parseInitialDate(value);
+  const [viewYear, setViewYear] = useState<number>(initialDate.getFullYear());
+  const [viewMonth, setViewMonth] = useState<number>(initialDate.getMonth());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+    value && value !== 'Not Specified' && !isNaN(new Date(value).getTime()) ? new Date(value) : null
+  );
+  const [error, setError] = useState<string>('');
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1920 + 1 }, (_, i) => currentYear - i);
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
+
+  const handleSelectDay = (day: number) => {
+    const picked = new Date(viewYear, viewMonth, day);
+    if (picked > today) {
+      setError('Date of birth cannot be in the future');
+      return;
+    }
+    setError('');
+    setSelectedDate(picked);
+  };
+
+  const handleSave = async () => {
+    if (!selectedDate) {
+      setError('Please select a valid date');
+      return;
+    }
+    if (selectedDate > today) {
+      setError('Date of birth cannot be in the future');
+      return;
+    }
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const formatted = `${year}-${month}-${day}`;
+    await onSave(formatted);
+  };
+
+  return (
+    <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Select Date of Birth</span>
+        <div className="flex gap-2">
+          <select
+            value={viewMonth}
+            onChange={(e) => setViewMonth(Number(e.target.value))}
+            className="text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-1 text-slate-800 dark:text-slate-200"
+          >
+            {months.map((m, idx) => (
+              <option key={m} value={idx}>{m}</option>
+            ))}
+          </select>
+          <select
+            value={viewYear}
+            onChange={(e) => setViewYear(Number(e.target.value))}
+            className="text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-1 text-slate-800 dark:text-slate-200"
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-slate-400 dark:text-slate-500">
+        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+          <div key={`empty-${i}`} />
+        ))}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day = i + 1;
+          const dateObj = new Date(viewYear, viewMonth, day);
+          const isFuture = dateObj > today;
+          const isSelected = selectedDate &&
+            selectedDate.getFullYear() === viewYear &&
+            selectedDate.getMonth() === viewMonth &&
+            selectedDate.getDate() === day;
+
+          return (
+            <button
+              key={day}
+              type="button"
+              disabled={isFuture}
+              onClick={() => handleSelectDay(day)}
+              className={cn(
+                "h-8 w-8 mx-auto flex items-center justify-center rounded-xl text-xs font-medium transition-colors",
+                isFuture && "opacity-30 cursor-not-allowed text-slate-400",
+                !isFuture && !isSelected && "hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200",
+                isSelected && "bg-sky-500 text-white font-bold shadow-sm"
+              )}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+
+      {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+
+      <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isLoading}
+          className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isLoading || !selectedDate}
+          className="px-4 py-1.5 rounded-xl bg-sky-500 text-white text-xs font-semibold hover:bg-sky-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+        >
+          <Save className="w-3.5 h-3.5" />
+          {isLoading ? 'Saving...' : 'Save DOB'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function Profile() {
   const navigate = useNavigate();
   const authContext = useAuth();
@@ -18,11 +171,11 @@ export function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { LoaderComponent, showLoader, hideLoader } = Loader();
 
-  // State: Profile Picture Upload
+  // Profile Picture State
   const [uploading, setUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState(user?.profilePicture || null);
+  const [imagePreview, setImagePreview] = useState(user?.profilePicture || (user as any)?.image || null);
 
-  // Local Storage for Nickname (One-time editable local state)
+  // Local Storage for Nickname
   const [nickname, setNickname] = useState<string>(() => {
     return localStorage.getItem('profile_nickname') || '';
   });
@@ -33,20 +186,20 @@ export function Profile() {
   const [nicknameInput, setNicknameInput] = useState(nickname);
   const [nicknameError, setNicknameError] = useState('');
 
-  // Phone Number Editing State
-  const [isPhoneEdited, setIsPhoneEdited] = useState<boolean>(() => {
-    return localStorage.getItem('profile_phone_edited') === 'true';
-  });
+  // Phone Editing State
   const [isEditingPhone, setIsEditingPhone] = useState(false);
-  
-  // Extract raw 10 digits from existing phone
-  const rawInitialPhone = (user?.phone || '').replace(/\D/g, '').slice(-10);
+  const rawInitialPhone = String(user?.phone || (user as any)?.phone || '').replace(/\D/g, '').slice(-10);
   const [phoneInput, setPhoneInput] = useState(rawInitialPhone);
   const [phoneError, setPhoneError] = useState('');
 
-  // Address State - Backend preference object takes precedence if present
-  const [residentialAddress, setResidentialAddress] = useState(() => {
-    const pref = (user as any)?.preference;
+  // Date of Birth Editing State
+  const [isEditingDOB, setIsEditingDOB] = useState(false);
+  const [savingDOB, setSavingDOB] = useState(false);
+  const [dobError, setDobError] = useState('');
+
+  // Residential Address State (Strictly Backend Source of Truth)
+  const getPreferenceAddress = (usr: any) => {
+    const pref = usr?.preference;
     if (pref && (pref.country || pref.street_address || pref.state || pref.city)) {
       return {
         country: pref.country || '',
@@ -57,10 +210,10 @@ export function Profile() {
         postalCode: pref.postal_code || ''
       };
     }
-    const saved = localStorage.getItem('marketplace_delivery_location');
-    return saved ? JSON.parse(saved) : null;
-  });
+    return null;
+  };
 
+  const [residentialAddress, setResidentialAddress] = useState(() => getPreferenceAddress(user));
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [savingAddress, setSavingAddress] = useState(false);
   const [countries, setCountries] = useState<{ country: string; iso2: string }[]>([]);
@@ -84,51 +237,37 @@ export function Profile() {
 
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
 
-  // Synchronize state when user context updates
+  // Synchronize internal state when user context updates
   useEffect(() => {
-    const pref = (user as any)?.preference;
-    if (pref && (pref.country || pref.street_address || pref.state || pref.city)) {
-      const updated = {
-        country: pref.country || '',
-        state: pref.state || '',
-        city: pref.city || '',
-        addressLine: pref.street_address || '',
-        landmark: pref.landmark || '',
-        postalCode: pref.postal_code || ''
-      };
-      setResidentialAddress(updated);
-      setAddressForm(prev => ({
-        ...prev,
-        country: updated.country,
-        state: updated.state,
-        city: updated.city,
-        addressLine: updated.addressLine,
-        landmark: updated.landmark,
-        postalCode: updated.postalCode
-      }));
+    const updatedAddress = getPreferenceAddress(user);
+    if (updatedAddress) {
+      setResidentialAddress(updatedAddress);
+      setAddressForm(updatedAddress);
+    }
+    if ((user as any)?.image || user?.profilePicture) {
+      setImagePreview((user as any)?.image || user?.profilePicture);
+    }
+    const latestPhone = String(user?.phone || (user as any)?.phone || '').replace(/\D/g, '').slice(-10);
+    if (latestPhone) {
+      setPhoneInput(latestPhone);
     }
   }, [user]);
 
-  // Safely derive Dynamic User Identity Fields
+  // Derived User Fields
   const fullName = `${user?.firstName || (user as any)?.first_name || ''} ${user?.surname || (user as any)?.last_name || ''}`.trim() || 'Valued Member';
   const email = user?.email || 'Not Provided';
-  
-  // Dynamic UID safely pulled from user's referral_code with fallback
   const rawUid = (user as any)?.referral_code || (user as any)?.referralCode || (user as any)?.uid || (user as any)?.id || (user as any)?.user_id;
   const uid = rawUid ? String(rawUid) : 'BSM24001000';
-
-  // Dynamic Tier with Default Tier 1
   const tier = (user as any)?.tier || (user as any)?.tierLevel || (user as any)?.tier_level || 'Tier 1';
-  
   const verificationStatus = (user as any)?.verificationStatus || (user as any)?.verification_status || 'Verified';
   const gender = (user as any)?.gender || 'Not Specified';
   
-  // Date of Birth mapped from preference.date_of_birth if available
+  // Date of Birth mapped from backend preference
   const dateOfBirth = (user as any)?.preference?.date_of_birth || (user as any)?.dob || (user as any)?.dateOfBirth || (user as any)?.date_of_birth || 'Not Specified';
-  
-  // Dynamic Date Registered safely retrieved from Backend
-  const rawCreatedAt = (user as any)?.createdAt || (user as any)?.created_at || (user as any)?.registeredAt || (user as any)?.dateRegistered;
-  const memberSince = rawCreatedAt 
+
+  // Account creation timestamp strictly from backend
+  const rawCreatedAt = (user as any)?.created_at || (user as any)?.createdAt || (user as any)?.date_joined || (user as any)?.joined_at || (user as any)?.registered_at || (user as any)?.registeredAt;
+  const memberSince = rawCreatedAt && !isNaN(new Date(rawCreatedAt).getTime())
     ? new Date(rawCreatedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : 'Not Specified';
 
@@ -205,19 +344,21 @@ export function Profile() {
     fetchCities();
   }, [addressForm.state, addressForm.country]);
 
-  // Synchronize authenticated user state using existing AuthContext mechanisms
+  // Safe Context User Synchronization
   const synchronizeUser = async () => {
-    const auth = authContext as any;
-    if (typeof auth?.refreshUser === 'function') {
-      await auth.refreshUser();
-    } else if (typeof auth?.fetchUser === 'function') {
-      await auth.fetchUser();
-    } else {
-      window.location.reload();
+    try {
+      const auth = authContext as any;
+      if (typeof auth?.refreshUser === 'function') {
+        await auth.refreshUser();
+      } else if (typeof auth?.fetchUser === 'function') {
+        await auth.fetchUser();
+      }
+    } catch (err) {
+      console.error('User state synchronization failed:', err);
     }
   };
 
-  // Profile Image Upload Handlers
+  // Image Upload Handler
   const handleImageClick = () => {
     fileInputRef.current?.click();
   };
@@ -245,7 +386,7 @@ export function Profile() {
     }
   };
 
-  // Nickname Handlers (Local persistence with strict one-time edit & validation)
+  // Nickname Handlers (Local state with 1-time edit)
   const handleSaveNickname = () => {
     const trimmed = nicknameInput.trim();
     if (!trimmed) {
@@ -277,26 +418,52 @@ export function Profile() {
 
     showLoader();
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('phone', phoneInput);
-      
-      const response = await patchRequest(ENDPOINTS.user, formDataToSend);
+      const payload = { phone: phoneInput };
+      const response = await patchRequest(ENDPOINTS.user, payload);
       
       if (response) {
-        localStorage.setItem('profile_phone_edited', 'true');
-        setIsPhoneEdited(true);
         setIsEditingPhone(false);
         await synchronizeUser();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update phone:', error);
-      setPhoneError('Could not update phone number. Please try again.');
+      setPhoneError(error?.message || 'Could not update phone number. Please try again.');
     } finally {
       hideLoader();
     }
   };
 
-  // Address Validation and Handlers
+  // Date of Birth Save Handler
+  const handleSaveDOB = async (formattedDate: string) => {
+    setSavingDOB(true);
+    showLoader();
+    setDobError('');
+    try {
+      const payload = {
+        preference: {
+          ...((user as any)?.preference || {}),
+          date_of_birth: formattedDate
+        }
+      };
+
+      const response = await patchRequest(ENDPOINTS.user, payload);
+
+      if (response) {
+        setIsEditingDOB(false);
+        await synchronizeUser();
+      } else {
+        setDobError('Failed to save Date of Birth. Please try again.');
+      }
+    } catch (error: any) {
+      console.error('Failed to update Date of Birth:', error);
+      setDobError(error?.message || 'Could not save Date of Birth. Please try again.');
+    } finally {
+      setSavingDOB(false);
+      hideLoader();
+    }
+  };
+
+// Address Validation and Save Handlers
   const validateAddress = () => {
     const newErrors: Record<string, string> = {};
     if (!addressForm.country) newErrors.country = 'Country is required';
@@ -316,6 +483,7 @@ export function Profile() {
     try {
       const payload = {
         preference: {
+          ...((user as any)?.preference || {}),
           country: addressForm.country,
           state: addressForm.state,
           city: addressForm.city,
@@ -339,16 +507,12 @@ export function Profile() {
         };
 
         setResidentialAddress(newAddress);
-        localStorage.setItem('marketplace_delivery_location', JSON.stringify({
-          ...addressForm,
-          updatedAt: new Date().toISOString()
-        }));
         setIsEditingAddress(false);
         await synchronizeUser();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save address:', error);
-      setAddressErrors(prev => ({ ...prev, submit: 'Failed to update address. Please try again.' }));
+      setAddressErrors(prev => ({ ...prev, submit: error?.message || 'Failed to update address. Please try again.' }));
     } finally {
       setSavingAddress(false);
       hideLoader();
@@ -377,11 +541,10 @@ export function Profile() {
           </div>
         </header>
 
-        {/* ISOLATED SCROLLABLE CONTENT AREA */}
+        {/* SCROLLABLE CONTENT AREA */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden z-10">
           <div className="max-w-5xl mx-auto space-y-6">
             
-            {/* DESKTOP TWO-COLUMN LAYOUT CONTAINER */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
               {/* LEFT COLUMN: HERO CARD & ACCOUNT INFORMATION */}
@@ -393,9 +556,9 @@ export function Profile() {
                   
                   {/* Profile Picture */}
                   <div className="relative mt-4 mb-4">
-                    {imagePreview || user?.profilePicture ? (
+                    {imagePreview ? (
                       <img 
-                        src={imagePreview || user?.profilePicture} 
+                        src={imagePreview} 
                         alt={fullName} 
                         className="w-28 h-28 rounded-full object-cover border-4 border-white dark:border-slate-900 shadow-md"
                       />
@@ -447,7 +610,7 @@ export function Profile() {
                   </div>
                 </section>
 
-   {/* ACCOUNT INFORMATION SECTION */}
+                {/* ACCOUNT INFORMATION SECTION */}
                 <section className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
                     <ShieldCheck className="w-4 h-4 text-sky-500" />
@@ -499,7 +662,7 @@ export function Profile() {
                       </div>
                     </div>
 
-                    {/* Nickname (Editable once locally) */}
+                    {/* Nickname */}
                     <div className="p-4 transition-colors">
                       <div 
                         className="flex items-center justify-between cursor-pointer"
@@ -536,7 +699,6 @@ export function Profile() {
                         )}
                       </div>
 
-                      {/* Dropdown Expand Form */}
                       {isEditingNickname && !isNicknameEdited && (
                         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
                           <div>
@@ -587,15 +749,45 @@ export function Profile() {
                       </div>
                     </div>
 
-                    {/* Date of Birth */}
-                    <div className="p-4 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-slate-400 dark:text-slate-500">Date of Birth</p>
-                        <p className="font-medium text-slate-800 dark:text-slate-100 mt-0.5 flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          {dateOfBirth}
-                        </p>
+                    {/* Date of Birth Section with Custom App Date Picker */}
+                    <div className="p-4 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">Date of Birth</p>
+                          <p className="font-medium text-slate-800 dark:text-slate-100 mt-0.5 flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            {dateOfBirth}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditingDOB(!isEditingDOB);
+                            setDobError('');
+                          }}
+                          className="flex items-center gap-1 text-sky-500 font-medium text-xs hover:text-sky-600 transition-colors"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          <span>{isEditingDOB ? 'Cancel' : 'Edit'}</span>
+                          {isEditingDOB ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        </button>
                       </div>
+
+                      {/* DOB Date Picker Expansion */}
+                      {isEditingDOB && (
+                        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                          <DOBDatePicker
+                            value={dateOfBirth}
+                            onSave={handleSaveDOB}
+                            onCancel={() => {
+                              setIsEditingDOB(false);
+                              setDobError('');
+                            }}
+                            isLoading={savingDOB}
+                          />
+                          {dobError && <p className="text-xs text-red-500 font-medium">{dobError}</p>}
+                        </div>
+                      )}
                     </div>
 
                   </div>
@@ -610,7 +802,7 @@ export function Profile() {
 
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
                     
-                    {/* Mobile Number */}
+    {/* Mobile Number */}
                     <div className="p-4 transition-colors">
                       <div className="flex items-center justify-between">
                         <div>
@@ -619,25 +811,17 @@ export function Profile() {
                             {phoneInput ? `+234 ${phoneInput}` : 'Not Provided'}
                           </p>
                         </div>
-                        
-                        {!isPhoneEdited ? (
-                          <button
-                            onClick={() => setIsEditingPhone(!isEditingPhone)}
-                            className="flex items-center gap-1 text-sky-500 font-medium text-xs hover:text-sky-600 transition-colors"
-                          >
-                            <Edit3 className="w-3 h-3" />
-                            <span>{isEditingPhone ? 'Cancel' : 'Edit'}</span>
-                            {isEditingPhone ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                          </button>
-                        ) : (
-                          <span className="text-xs text-slate-400 dark:text-slate-500 italic">
-                            Verified
-                          </span>
-                        )}
+                        <button
+                          onClick={() => setIsEditingPhone(!isEditingPhone)}
+                          className="flex items-center gap-1 text-sky-500 font-medium text-xs hover:text-sky-600 transition-colors"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          <span>{isEditingPhone ? 'Cancel' : 'Edit'}</span>
+                          {isEditingPhone ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        </button>
                       </div>
 
-                      {/* Dropdown Expand Form */}
-                      {isEditingPhone && !isPhoneEdited && (
+                      {isEditingPhone && (
                         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
                           <div>
                             <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
@@ -659,9 +843,6 @@ export function Profile() {
                             {phoneError && (
                               <p className="text-xs text-red-500 mt-1.5">{phoneError}</p>
                             )}
-                            <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
-                              Note: Phone number can only be updated once.
-                            </p>
                           </div>
 
                           <div className="flex gap-2 pt-1">
@@ -732,7 +913,6 @@ export function Profile() {
                         </button>
                       </div>
                     ) : isEditingAddress ? (
-                      /* Dropdown Address Form */
                       <div className="space-y-4">
                         {/* Country */}
                         <div className="space-y-1">
@@ -754,7 +934,7 @@ export function Profile() {
                           {addressErrors.country && <p className="text-[10px] text-red-500 ml-1">{addressErrors.country}</p>}
                         </div>
 
-{/* State & City */}
+                        {/* State & City */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-1">
                             <label className="text-xs text-slate-500 dark:text-slate-400 font-medium ml-1">State</label>
@@ -839,7 +1019,7 @@ export function Profile() {
                           <button
                             onClick={handleSaveAddress}
                             disabled={savingAddress}
-                            className="flex-1 h-11 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+                            className="flex-1 h-11 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                           >
                             <Save className="w-4 h-4" />
                             {savingAddress ? 'Saving Address...' : 'Save Address'}
@@ -860,7 +1040,6 @@ export function Profile() {
                         </div>
                       </div>
                     ) : (
-                      /* Address Summary Card */
                       <div className="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-start gap-3">
                         <div className="p-2 bg-sky-500/10 text-sky-500 rounded-xl shrink-0 mt-0.5">
                           <MapPin className="w-4 h-4" />
@@ -893,7 +1072,6 @@ export function Profile() {
           </div>
         </main>
 
-        {/* FIXED MOBILE BOTTOM NAVIGATION */}
         <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <MobileBottomNavigation />
         </div>
