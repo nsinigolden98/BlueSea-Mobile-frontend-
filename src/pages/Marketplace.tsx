@@ -1,45 +1,12 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Sidebar, PinModal, Toast, TransactionModal, Loader } from '@/components/ui-custom';
 import { Input } from '@/components/ui/input';
-import { 
-  Search, 
-  Calendar, 
-  MapPin, 
-  Ticket, 
-  ChevronRight, 
-  MoreHorizontal, 
-  QrCode, 
-  Shield, 
-  Plus, 
-  CheckCircle2, 
-  ChevronLeft, 
-  History, 
-  Heart, 
-  Share2, 
-  Globe, 
-  Building2, 
-  Sparkles, 
-  Clock, 
-  Tag,
-  Check, 
-  Video, 
-  CalendarDays,
-  Star,
-  Menu,
-  Bookmark,
-  ExternalLink,
-  ShieldCheck,
-  Copy,
-  X,
-  ArrowRight
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Search, CalendarDays } from 'lucide-react';
 import { getRequest, postRequest, ENDPOINTS, API_BASE } from '@/types';
 import type { MarketplaceEvent } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
-// --- AFFILIATE UTILS ---
 import { 
   getAffiliateTracking,
   toggleSaveAffiliateEventId,
@@ -47,50 +14,16 @@ import {
   setAffiliateTracking
 } from '@/utils/affiliateStorage';
 
-// --- PROMOTIONAL PREVIEW COMPONENT IMPORTS ---
 import { PromotionalPreviewModal } from '@/components/marketplace/PromotionalPreviewModal';
 import type { MarketingAssetEvent } from '@/utils/canvasGenerator';
 
-// --- CATEGORIES CONSTANT ---
-const EVENT_CATEGORIES = [
-  'Music', 'Comedy', 'Conference', 'Technology', 'Business', 
-  'Church', 'Seminar', 'Workshop', 'Festival', 'Sports', 
-  'Education', 'Fashion', 'Networking', 'Health', 'Charity', 
-  'Government', 'Entertainment'
-] as const;
-
-interface ExtendedTicketType {
-  id: string;
-  name: string;
-  price: number | string;
-  quantity_available: number;
-  description?: string;
-  benefits?: string[];
-  is_refundable?: boolean;
-  is_transferable?: boolean;
-}
-
-interface ExtendedEvent extends MarketplaceEvent {
-  organizer_name?: string;
-  organizer_avatar?: string;
-  organizer_hosted_count?: number;
-  organizer_followers?: string;
-  organizer_rating?: number;
-  attendance_mode?: 'online' | 'physical' | 'hybrid';
-  venue_name?: string;
-  city?: string;
-  tags?: string[];
-  gallery?: string[];
-  affiliate_enabled?: boolean;
-  affiliate_rate?: string;
-  meeting_platform?: string;
-  join_instructions?: string;
-  timezone?: string;
-  internet_req?: string;
-  parking_info?: string;
-  arrival_time?: string;
-  dress_code?: string;
-}
+import { MarketplaceHeader } from '@/components/marketplace/MarketplaceHeader';
+import { MarketplaceCategories } from '@/components/marketplace/MarketplaceCategories';
+import { MarketplaceHero } from '@/components/marketplace/MarketplaceHero';
+import { MarketplaceEventCard, type ExtendedEvent } from '@/components/marketplace/MarketplaceEventCard';
+import { MarketplaceEventCollection } from '@/components/marketplace/MarketplaceEventCollection';
+import { MarketplaceEventDetails } from '@/components/marketplace/MarketplaceEventDetails';
+import { MarketplaceShareModal } from '@/components/marketplace/MarketplaceShareModal';
 
 interface AffiliateStatusResponse {
   id?: number;
@@ -102,21 +35,12 @@ interface AffiliateStatusResponse {
   detail?: string;
 }
 
-const VerifiedBadge = ({ className }: { className?: string }) => (
-  <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 text-[10px] font-bold uppercase tracking-wider", className)}>
-    <CheckCircle2 className="w-3 h-3" />
-    Verified
-  </span>
-);
-
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedValue(value), delay);
     return () => clearTimeout(handler);
   }, [value, delay]);
-
   return debouncedValue;
 }
 
@@ -130,7 +54,7 @@ export function Marketplace() {
   const mainViewportRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // --- GLOBAL UI STATE ---
+  // --- UI STATES ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -141,11 +65,9 @@ export function Marketplace() {
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [txMessage, setTxMessage] = useState('');
   
-  // Interactive UI States
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [followedOrganizers, setFollowedOrganizers] = useState<Record<string, boolean>>({});
 
-  // Share & Promotional Modal States
   const [shareModalEvent, setShareModalEvent] = useState<ExtendedEvent | null>(null);
   const [previewModalOpen, setPreviewModalOpen] = useState<boolean>(false);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
@@ -156,48 +78,36 @@ export function Marketplace() {
   const [savedAffiliateEvents, setSavedAffiliateEvents] = useState<string[]>([]);
   const [isVerifyingAffiliate, setIsVerifyingAffiliate] = useState<boolean>(false);
 
-  // Verification Helper for Backend Affiliate State
-  const checkBackendAffiliateStatus = useCallback(async (): Promise<{
-    registered: boolean;
-    approved: boolean;
-    status: string;
-    affiliateName?: string;
-    unauthenticated?: boolean;
-    error?: boolean;
-  }> => {
+  // --- EVENTS STATE ---
+  const [events, setEvents] = useState<ExtendedEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<ExtendedEvent | null>(null);
+  const [selectedTicketType, setSelectedTicketType] = useState<string>('');
+  const [quantity, setQuantity] = useState(1);
+  const [selectedAttendanceMode, setSelectedAttendanceMode] = useState<'online' | 'physical'>('physical');
+
+  const checkBackendAffiliateStatus = useCallback(async () => {
     try {
       const res: AffiliateStatusResponse = await getRequest(ENDPOINTS.affiliate_status);
       if (res && (res.id || res.status || res.is_approved !== undefined)) {
         const isApproved = res.is_approved === true || res.status === 'approved';
-        return {
-          registered: true,
-          approved: isApproved,
-          status: res.status || (isApproved ? 'approved' : 'pending'),
-          affiliateName: res.affiliate_name
-        };
+        return { registered: true, approved: isApproved, status: res.status || (isApproved ? 'approved' : 'pending'), affiliateName: res.affiliate_name };
       }
       return { registered: false, approved: false, status: 'none' };
     } catch (err: any) {
       const statusCode = err?.response?.status || err?.status;
-      if (statusCode === 401) {
-        return { registered: false, approved: false, status: 'unauthenticated', unauthenticated: true };
-      }
-      if (statusCode === 404) {
-        return { registered: false, approved: false, status: 'not_found' };
-      }
+      if (statusCode === 401) return { registered: false, approved: false, status: 'unauthenticated', unauthenticated: true };
+      if (statusCode === 404) return { registered: false, approved: false, status: 'not_found' };
       return { registered: false, approved: false, status: 'error', error: true };
     }
   }, []);
 
-  // Fetch initial Affiliate status & handle referral attribution
   useEffect(() => {
     const initAffiliateSystem = async () => {
       const res = await checkBackendAffiliateStatus();
       if (res.registered) {
         setAffiliateStatusState(res.approved ? 'verified' : res.status);
-        if (res.affiliateName) {
-          setAffiliateId(res.affiliateName);
-        }
+        if (res.affiliateName) setAffiliateId(res.affiliateName);
       } else {
         setAffiliateStatusState('unverified');
       }
@@ -210,94 +120,19 @@ export function Marketplace() {
     const eventParam = searchParams.get('event');
 
     if (referralParam) {
-      const recordAttribution = async () => {
-        try {
-          await postRequest(ENDPOINTS.affiliate_attribution, {
-            affiliate_name: referralParam,
-            event_id: eventParam || undefined
-          });
-        } catch (err) {
-          console.error('Attribution recording notice:', err);
-        }
-      };
+      postRequest(ENDPOINTS.affiliate_attribution, {
+        affiliate_name: referralParam,
+        event_id: eventParam || undefined
+      }).catch((err) => console.error('Attribution recording notice:', err));
 
-      recordAttribution();
-
-      setAffiliateTracking({
-        affiliate_id: referralParam,
-        event_id: eventParam || undefined,
-        timestamp: Date.now()
-      });
+      setAffiliateTracking({ affiliate_id: referralParam, event_id: eventParam || undefined, timestamp: Date.now() });
     }
   }, [searchParams, checkBackendAffiliateStatus]);
 
-  // Handle Specific Ticket/Event Affiliate Action (FLOW B)
-  const handleTicketAffiliateAction = async (targetEvent: ExtendedEvent, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (!targetEvent || !targetEvent.id) {
-      showToast('Invalid event configuration. Unable to initiate affiliate action.');
-      return;
-    }
-
-    if (isVerifyingAffiliate) return;
-    setIsVerifyingAffiliate(true);
-    showLoader();
-
-    try {
-      const res = await checkBackendAffiliateStatus();
-
-      if (res.unauthenticated) {
-        showToast('Please log in to access affiliate promotion links.');
-        navigate(`/login?redirect=/marketplace?event=${targetEvent.id}`);
-        return;
-      }
-
-      if (res.error) {
-        showToast('Failed to verify affiliate registration. Please try again.');
-        return;
-      }
-
-      if (!res.registered) {
-        showToast('You must register as an affiliate first.');
-        navigate('/affiliate');
-        return;
-      }
-
-      if (!res.approved) {
-        showToast('Your affiliate account is pending approval.');
-        return;
-      }
-
-      setShareModalEvent(targetEvent);
-      setPreviewModalOpen(true);
-    } finally {
-      setIsVerifyingAffiliate(false);
-      hideLoader();
-    }
-  };
-
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-
-    if (showMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showMenu]);
-
-  // Event System State
-  const [events, setEvents] = useState<ExtendedEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState<ExtendedEvent | null>(null);
-  const [selectedTicketType, setSelectedTicketType] = useState<string>('');
-  const [quantity, setQuantity] = useState(1);
-  const [selectedAttendanceMode, setSelectedAttendanceMode] = useState<'online' | 'physical'>('physical');
+    fetchEvents();
+    fetchVendorStatus();
+  }, []);
 
   useEffect(() => {
     if (mainViewportRef.current) {
@@ -311,16 +146,9 @@ export function Marketplace() {
       setQuantity(1);
     } else {
       const mode = selectedEvent.attendance_mode || 'physical';
-      if (mode === 'online') setSelectedAttendanceMode('online');
-      else setSelectedAttendanceMode('physical');
+      setSelectedAttendanceMode(mode === 'online' ? 'online' : 'physical');
     }
   }, [selectedEvent]);
-
-  useEffect(() => {
-    fetchEvents();
-    fetchVendorStatus();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const fetchEvents = async () => {
     try {
@@ -351,46 +179,15 @@ export function Marketplace() {
     }
   };
 
-  const isSoldOut = useMemo(() => {
-    if (!selectedEvent) return false;
-    if (typeof selectedEvent.total_tickets === 'number' && selectedEvent.total_tickets > 0) {
-      return (selectedEvent.tickets_sold ?? 0) >= selectedEvent.total_tickets;
-    }
-    return false;
-  }, [selectedEvent]);
-
-  const isEventEnded = useMemo(() => {
-    if (!selectedEvent || !selectedEvent.event_date) return false;
-    return new Date(selectedEvent.event_date) < new Date();
-  }, [selectedEvent]);
-
-  const handlePurchase = () => {
-    if (!selectedEvent || isSoldOut || isEventEnded) return;
-    if (!selectedEvent.is_free && !selectedTicketType) return;
-    
-    const trackingData = getAffiliateTracking();
-    if (trackingData && trackingData.affiliate_id) {
-      console.log(`Attaching Affiliate Referral ${trackingData.affiliate_id} to checkout session.`);
-    }
-
-    showPinModal();
-  };
-
   const now = useMemo(() => new Date(), []);
 
-  const activeEvents = useMemo(() => {
-    return events.filter(e => e.event_date && new Date(e.event_date) >= now);
-  }, [events, now]);
-
-  const pastEvents = useMemo(() => {
-    return events.filter(e => e.event_date && new Date(e.event_date) < now);
-  }, [events, now]);
+  const activeEvents = useMemo(() => events.filter(e => e.event_date && new Date(e.event_date) >= now), [events, now]);
+  const pastEvents = useMemo(() => events.filter(e => e.event_date && new Date(e.event_date) < now), [events, now]);
 
   const filteredEvents = useMemo(() => {
     return activeEvents.filter(event => {
       const query = debouncedSearch.toLowerCase().trim();
       const matchesCategory = activeCategory === 'All' || (event.category && event.category.toLowerCase() === activeCategory.toLowerCase());
-
       if (!query) return matchesCategory;
 
       const titleMatch = (event.event_title ?? '').toLowerCase().includes(query);
@@ -434,6 +231,85 @@ export function Marketplace() {
     if (prices.length === 0) return 'Price N/A';
     const minPrice = Math.min(...prices);
     return minPrice === 0 ? 'Free' : `₦${minPrice.toLocaleString()}`;
+  };
+
+  // --- PRE-CHECKOUT WALLET VALIDATION FLOW ---
+  const handlePurchase = async () => {
+    if (!selectedEvent) return;
+
+    let unitPrice = 0;
+    if (!selectedEvent.is_free) {
+      const tType = selectedEvent.ticket_types?.find(t => t.id === selectedTicketType);
+      if (tType) unitPrice = Number(tType.price) || 0;
+    }
+    const requiredTotal = unitPrice * quantity;
+
+    if (requiredTotal > 0) {
+      showLoader();
+      try {
+        const walletEndpoint = (ENDPOINTS as Record<string, any>).wallet || '/wallet/balance';
+        const walletRes = await getRequest(walletEndpoint);
+        const availableBalance = Number(walletRes?.balance ?? walletRes?.available_balance ?? walletRes?.amount ?? 0);
+
+        if (availableBalance < requiredTotal) {
+          hideLoader();
+          showToast(`Insufficient balance (₦${availableBalance.toLocaleString()}). Required: ₦${requiredTotal.toLocaleString()}. Please fund your wallet.`);
+          setTimeout(() => navigate('/wallet'), 1200);
+          return;
+        }
+      } catch (err) {
+        console.warn('Wallet pre-check notice:', err);
+      } finally {
+        hideLoader();
+      }
+    }
+
+    const trackingData = getAffiliateTracking();
+    if (trackingData?.affiliate_id) {
+      console.log(`Attaching Affiliate Referral ${trackingData.affiliate_id} to checkout session.`);
+    }
+
+    showPinModal();
+  };
+
+  const handleTicketAffiliateAction = async (targetEvent: ExtendedEvent, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!targetEvent || !targetEvent.id) {
+      showToast('Invalid event configuration. Unable to initiate affiliate action.');
+      return;
+    }
+
+    if (isVerifyingAffiliate) return;
+    setIsVerifyingAffiliate(true);
+    showLoader();
+
+    try {
+      const res = await checkBackendAffiliateStatus();
+      if (res.unauthenticated) {
+        showToast('Please log in to access affiliate promotion links.');
+        navigate(`/login?redirect=/marketplace?event=${targetEvent.id}`);
+        return;
+      }
+      if (res.error) {
+        showToast('Failed to verify affiliate registration. Please try again.');
+        return;
+      }
+      if (!res.registered) {
+        showToast('You must register as an affiliate first.');
+        navigate('/affiliate');
+        return;
+      }
+      if (!res.approved) {
+        showToast('Your affiliate account is pending approval.');
+        return;
+      }
+
+      setShareModalEvent(targetEvent);
+      setPreviewModalOpen(true);
+    } finally {
+      setIsVerifyingAffiliate(false);
+      hideLoader();
+    }
   };
 
   const toggleFavorite = (eventId: string, e?: React.MouseEvent) => {
@@ -488,801 +364,18 @@ export function Marketplace() {
         setTxStatus(false);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message]);
 
   const featuredEvent = useMemo(() => activeEvents[0] || events[0] || null, [activeEvents, events]);
 
-  const collections = useMemo(() => {
-    return {
-      trending: activeEvents.filter(e => (e.tickets_sold ?? 0) > 0),
-      upcoming: [...activeEvents].sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()),
-      online: activeEvents.filter(e => e.attendance_mode === 'online'),
-      physical: activeEvents.filter(e => e.attendance_mode === 'physical' || !e.attendance_mode),
-      free: activeEvents.filter(e => e.is_free || e.ticket_types?.some(t => Number(t.price) === 0)),
-      past: pastEvents
-    };
-  }, [activeEvents, pastEvents]);
-
-  const renderHeroSection = () => {
-    if (!featuredEvent) return null;
-    const heroImg = getEventImage(featuredEvent);
-
-    return (
-      <div className="relative rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-900 text-white shadow-lg">
-        <div className="h-48 sm:h-56 md:h-60 relative w-full overflow-hidden">
-          {heroImg ? (
-            <img 
-              src={heroImg} 
-              alt={featuredEvent.event_title} 
-              loading="lazy"
-              className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-700" 
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 flex items-center justify-center">
-              <Sparkles className="w-12 h-12 text-sky-500/30" />
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-transparent" />
-          
-          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-sky-500/90 text-white backdrop-blur-md shadow-md">
-                Featured Event
-              </span>
-              {featuredEvent.category && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-white/20 text-white backdrop-blur-md hidden sm:inline-block">
-                  {featuredEvent.category}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={(e) => toggleFavorite(featuredEvent.id, e)}
-                className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-              >
-                <Heart className={cn("w-3.5 h-3.5", favorites[featuredEvent.id] && "fill-red-500 text-red-500")} />
-              </button>
-              <button 
-                onClick={(e) => handleOpenShareModal(featuredEvent, e)}
-                className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          <div className="absolute bottom-0 inset-x-0 p-4 md:p-5 space-y-1.5 z-10">
-            {featuredEvent.organizer_name && (
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold text-sky-400 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  {featuredEvent.organizer_name}
-                </span>
-                {featuredEvent.is_approved && <VerifiedBadge />}
-              </div>
-            )}
-
-            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white leading-tight tracking-tight line-clamp-1">
-              {featuredEvent.event_title}
-            </h2>
-
-            <div className="flex flex-wrap items-center gap-3 text-[11px] sm:text-xs text-slate-300">
-              {featuredEvent.event_date && (
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-sky-400" /> {formatDate(featuredEvent.event_date)}
-                </span>
-              )}
-              {featuredEvent.event_location && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-sky-400" /> {featuredEvent.event_location}
-                </span>
-              )}
-            </div>
-
-            <div className="pt-1 flex items-center justify-between gap-4">
-              <div>
-                <span className="text-[9px] text-slate-400 uppercase tracking-wider block">Starting From</span>
-                <span className="text-base sm:text-lg md:text-xl font-black text-sky-400">{getStartingPrice(featuredEvent)}</span>
-              </div>
-
-              <button 
-                onClick={() => setSelectedEvent(featuredEvent)}
-                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs transition-all shadow-md shadow-sky-500/25 flex items-center gap-1.5"
-              >
-                Quick Buy <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderCategories = () => (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <button
-        onClick={() => setActiveCategory('All')}
-        className={cn(
-          "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0",
-          activeCategory === 'All' 
-            ? "bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-md" 
-            : "bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800 hover:bg-slate-50"
-        )}
-      >
-        All Categories
-      </button>
-      {EVENT_CATEGORIES.map((cat) => (
-        <button
-          key={cat}
-          onClick={() => setActiveCategory(cat)}
-          className={cn(
-            "px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all shrink-0",
-            activeCategory === cat 
-              ? "bg-sky-500 text-white font-bold shadow-md shadow-sky-500/20" 
-              : "bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800 hover:bg-slate-50"
-          )}
-        >
-          {cat}
-        </button>
-      ))}
-    </div>
-  );
-
-  const renderEventCard = (event: ExtendedEvent) => {
-    const cardImg = getEventImage(event);
-
-    return (
-      <div 
-        key={event.id} 
-        onClick={() => setSelectedEvent(event)} 
-        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col h-full w-full"
-      >
-        <div className="aspect-[16/10] bg-slate-200 dark:bg-slate-800 relative overflow-hidden shrink-0">
-          {cardImg ? (
-            <img 
-              src={cardImg} 
-              alt={event.event_title} 
-              loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
-              <Ticket className="w-10 h-10 text-slate-400 dark:text-slate-600" />
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-80" />
-          
-          <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-            {event.category ? (
-              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-900/80 backdrop-blur-md text-white border border-white/10 uppercase tracking-wider flex items-center gap-1">
-                <Tag className="w-3 h-3 text-sky-400" />
-                {event.category}
-              </span>
-            ) : <div />}
-            <div className="flex items-center gap-1.5">
-              <button 
-                onClick={(e) => handleTicketAffiliateAction(event, e)}
-                className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-                title="Promote as Affiliate"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-              </button>
-              {affiliateStatus === 'verified' && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); toggleSaveForAffiliatePromotion(event.id); }}
-                  className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-                  title="Save for Affiliate Promotion"
-                >
-                  <Bookmark className={cn("w-3.5 h-3.5", savedAffiliateEvents.includes(event.id) && "fill-sky-400 text-sky-400")} />
-                </button>
-              )}
-              <button 
-                onClick={(e) => toggleFavorite(event.id, e)}
-                className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-              >
-                <Heart className={cn("w-3.5 h-3.5", favorites[event.id] && "fill-red-500 text-red-500")} />
-              </button>
-              <button 
-                onClick={(e) => handleOpenShareModal(event, e)}
-                className="w-8 h-8 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs">
-            <span className="flex items-center gap-1 font-medium text-[11px] bg-slate-900/60 px-2 py-0.5 rounded-md backdrop-blur-sm">
-              {event.attendance_mode === 'online' ? <Video className="w-3 h-3 text-sky-400" /> : <Building2 className="w-3 h-3 text-sky-400" />}
-              <span className="capitalize">{event.attendance_mode || 'Physical'}</span>
-            </span>
-            {event.is_approved && <VerifiedBadge />}
-          </div>
-        </div>
-
-        <div className="p-4 flex flex-col flex-1 justify-between space-y-3">
-          <div className="space-y-1.5">
-            {event.organizer_name && (
-              <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-                <span>By {event.organizer_name}</span>
-              </p>
-            )}
-            <h3 className="font-bold text-slate-800 dark:text-white text-base line-clamp-1 group-hover:text-sky-500 transition-colors">
-              {event.event_title}
-            </h3>
-            <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400">
-              {event.event_date && (
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-                  <span>{formatDate(event.event_date)}</span>
-                </div>
-              )}
-              {event.event_location && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-                  <span className="line-clamp-1">{event.event_location}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <div>
-              <span className="text-[10px] text-slate-400 block uppercase">Starting at</span>
-              <span className="text-base font-bold text-sky-500">{getStartingPrice(event)}</span>
-            </div>
-
-            <button className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-500 hover:text-white text-slate-700 dark:text-slate-300 text-xs font-bold transition-all flex items-center gap-1">
-              Details
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderEventCollection = (title: string, items: ExtendedEvent[]) => {
-    if (!items || items.length === 0) return null;
-
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <span>{title}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-normal">
-              {items.length}
-            </span>
-          </h3>
-        </div>
-
-        <div className="flex items-stretch gap-4 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory scroll-smooth pb-3 pt-1 -mx-4 px-4 md:mx-0 md:px-0">
-          {items.map((event) => (
-            <div 
-              key={event.id} 
-              className="snap-start shrink-0 w-[84vw] sm:w-[320px] md:w-[340px] flex flex-col"
-            >
-              {renderEventCard(event)}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderEvents = () => {
-    if (loading) {
-      return (
-        <div className="py-20 flex flex-col items-center justify-center space-y-4">
-          <LoaderComponent />
-          <p className="text-xs text-slate-400 font-medium">Loading Marketplace...</p>
-        </div>
-      );
-    }
-
-    const isFilteredState = debouncedSearch !== '' || activeCategory !== 'All';
-
-    return (
-      <div className="space-y-6">
-        {!isFilteredState && renderHeroSection()}
-        {renderCategories()}
-
-        {isFilteredState ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between px-1">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Showing {filteredEvents.length} result{filteredEvents.length !== 1 ? 's' : ''}
-              </p>
-              <button 
-                onClick={() => { setActiveCategory('All'); setSearchQuery(''); }}
-                className="text-xs font-bold text-sky-500 hover:underline"
-              >
-                Clear Filters
-              </button>
-            </div>
-
-            {filteredEvents.length === 0 ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                  <CalendarDays className="w-8 h-8 text-slate-400" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">No Events Found</h3>
-                <p className="text-slate-500 text-sm max-w-md mx-auto">
-                  Try broadening your search criteria or selecting a different category.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredEvents.map((event) => renderEventCard(event))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {renderEventCollection('Trending Events', collections.trending)}
-            {renderEventCollection('Upcoming Events', collections.upcoming)}
-            {renderEventCollection('Online Events', collections.online)}
-            {renderEventCollection('Physical Events', collections.physical)}
-            {renderEventCollection('Free Events', collections.free)}
-            {renderEventCollection('Past Events', collections.past)}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderEventDetails = () => {
-    if (!selectedEvent) return null;
-
-    const ticketTypes: ExtendedTicketType[] = selectedEvent.ticket_types?.length 
-      ? selectedEvent.ticket_types 
-      : selectedEvent.is_free 
-        ? [{
-            id: 'free-pass',
-            name: 'Free Pass',
-            price: 0,
-            quantity_available: selectedEvent.total_tickets ? Math.max(0, selectedEvent.total_tickets - (selectedEvent.tickets_sold ?? 0)) : 1,
-            benefits: ['Full Event Access']
-          }]
-        : [];
-
-    const currentTicket = ticketTypes.find(t => t.id === selectedTicketType);
-    const unitPrice = currentTicket ? Number(currentTicket.price) : 0;
-    const totalPrice = unitPrice * quantity;
-    const isOnlineMode = selectedAttendanceMode === 'online';
-
-    const totalTickets = selectedEvent.total_tickets;
-    const ticketsSold = selectedEvent.tickets_sold ?? 0;
-    const hasValidTicketCount = typeof totalTickets === 'number' && totalTickets > 0;
-    const remainingTickets = hasValidTicketCount ? Math.max(0, totalTickets - ticketsSold) : null;
-    const progressPercent = hasValidTicketCount 
-      ? Math.min(100, Math.max(0, Math.round((ticketsSold / totalTickets) * 100))) 
-      : null;
-
-    const relatedEvents = activeEvents.filter(e => e.id !== selectedEvent.id && e.category === selectedEvent.category).slice(0, 3);
-    const detailHeroImg = getEventImage(selectedEvent);
-
-    return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-        <button 
-          onClick={() => setSelectedEvent(null)} 
-          className="flex items-center gap-2 text-sky-500 font-bold text-sm hover:underline"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back to Marketplace
-        </button>
-
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-xl">
-          <div className="aspect-[16/9] md:aspect-[21/9] relative bg-slate-900">
-            {detailHeroImg ? (
-              <img 
-                src={detailHeroImg} 
-                alt={selectedEvent.event_title} 
-                loading="lazy"
-                className="w-full h-full object-cover" 
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 flex items-center justify-center">
-                <Ticket className="w-16 h-16 text-slate-700" />
-              </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-            
-            <div className="absolute top-4 right-4 flex items-center gap-2">
-              <button 
-                onClick={(e) => handleTicketAffiliateAction(selectedEvent, e)}
-                className="w-10 h-10 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-                title="Promote as Affiliate"
-              >
-                <Sparkles className="w-5 h-5 text-sky-400" />
-              </button>
-              <button 
-                onClick={(e) => toggleFavorite(selectedEvent.id, e)}
-                className="w-10 h-10 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-              >
-                <Heart className={cn("w-5 h-5", favorites[selectedEvent.id] && "fill-red-500 text-red-500")} />
-              </button>
-              <button 
-                onClick={(e) => handleOpenShareModal(selectedEvent, e)}
-                className="w-10 h-10 rounded-full bg-slate-900/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-slate-900 transition-colors"
-              >
-                <Share2 className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between text-white">
-              <div className="flex items-center gap-2">
-                {selectedEvent.category && (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-sky-500 text-white uppercase tracking-wider">
-                    {selectedEvent.category}
-                  </span>
-                )}
-                {selectedEvent.is_approved && <VerifiedBadge />}
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 md:p-8 space-y-8">
-            <div>
-              <h1 className="text-2xl md:text-4xl font-black text-slate-800 dark:text-white leading-tight">
-                {selectedEvent.event_title}
-              </h1>
-              {selectedEvent.tags && selectedEvent.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {selectedEvent.tags.map((tag, idx) => (
-                    <span key={idx} className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {hasValidTicketCount && remainingTickets !== null && progressPercent !== null && (
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <span>Ticket Availability</span>
-                  <span className="text-sky-500">{remainingTickets} tickets remaining ({progressPercent}% claimed)</span>
-                </div>
-                <div className="w-full bg-slate-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-sky-500 h-full rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
-                </div>
-              </div>
-            )}
-
-            {selectedEvent.organizer_name && (
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-sky-500/10 text-sky-500 font-bold flex items-center justify-center text-lg border border-sky-500/20 shrink-0">
-                    {selectedEvent.organizer_name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="font-bold text-slate-800 dark:text-white text-sm md:text-base">
-                        {selectedEvent.organizer_name}
-                      </h4>
-                      {selectedEvent.is_approved && <VerifiedBadge />}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      {typeof selectedEvent.organizer_hosted_count === 'number' && (
-                        <span>{selectedEvent.organizer_hosted_count} Event{selectedEvent.organizer_hosted_count !== 1 ? 's' : ''}</span>
-                      )}
-                      {selectedEvent.organizer_followers && (
-                        <>
-                          {typeof selectedEvent.organizer_hosted_count === 'number' && <span>•</span>}
-                          <span>{selectedEvent.organizer_followers} Followers</span>
-                        </>
-                      )}
-                      {typeof selectedEvent.organizer_rating === 'number' && selectedEvent.organizer_rating > 0 && (
-                        <>
-                          {(typeof selectedEvent.organizer_hosted_count === 'number' || selectedEvent.organizer_followers) && <span>•</span>}
-                          <span className="flex items-center gap-0.5 text-amber-500 font-medium">
-                            <Star className="w-3 h-3 fill-current" /> {selectedEvent.organizer_rating}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => toggleFollowOrganizer(selectedEvent.organizer_name!)}
-                  className={cn(
-                    "px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0",
-                    followedOrganizers[selectedEvent.organizer_name!]
-                      ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white"
-                      : "bg-sky-500 text-white hover:bg-sky-600"
-                  )}
-                >
-                  {followedOrganizers[selectedEvent.organizer_name!] ? 'Following' : 'Follow'}
-                </button>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {selectedEvent.event_date && (
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
-                  <div>
-                    <h5 className="text-xs font-bold text-slate-400 uppercase">Date & Time</h5>
-                    <p className="text-sm font-bold text-slate-800 dark:text-white mt-0.5">
-                      {formatDate(selectedEvent.event_date)}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {formatTime(selectedEvent.event_date)} {selectedEvent.timezone ? `(${selectedEvent.timezone})` : ''}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {(selectedEvent.venue_name || selectedEvent.event_location) && (
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <h5 className="text-xs font-bold text-slate-400 uppercase">Venue & Location</h5>
-                    {selectedEvent.venue_name && (
-                      <p className="text-sm font-bold text-slate-800 dark:text-white mt-0.5">
-                        {selectedEvent.venue_name}
-                      </p>
-                    )}
-                    {selectedEvent.event_location && (
-                      <p className="text-xs text-slate-500">
-                        {selectedEvent.event_location} {selectedEvent.city ? `• ${selectedEvent.city}` : ''}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-bold text-slate-800 dark:text-white text-base">Attendance Mode</h3>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  disabled={selectedEvent.attendance_mode === 'online'}
-                  onClick={() => setSelectedAttendanceMode('physical')}
-                  className={cn(
-                    "p-4 rounded-2xl border-2 text-left transition-all flex items-center gap-3",
-                    selectedAttendanceMode === 'physical'
-                      ? "border-sky-500 bg-sky-50/50 dark:bg-sky-900/20"
-                      : "border-slate-200 dark:border-slate-800 opacity-60"
-                  )}
-                >
-                  <Building2 className="w-5 h-5 text-sky-500" />
-                  <div>
-                    <p className="text-sm font-bold text-slate-800 dark:text-white">Attend Physically</p>
-                    <p className="text-[10px] text-slate-500">In-person experience</p>
-                  </div>
-                </button>
-
-                <button
-                  disabled={selectedEvent.attendance_mode === 'physical'}
-                  onClick={() => setSelectedAttendanceMode('online')}
-                  className={cn(
-                    "p-4 rounded-2xl border-2 text-left transition-all flex items-center gap-3",
-                    selectedAttendanceMode === 'online'
-                      ? "border-sky-500 bg-sky-50/50 dark:bg-sky-900/20"
-                      : "border-slate-200 dark:border-slate-800 opacity-60"
-                  )}
-                >
-                  <Globe className="w-5 h-5 text-sky-500" />
-                  <div>
-                    <p className="text-sm font-bold text-slate-800 dark:text-white">Attend Online</p>
-                    <p className="text-[10px] text-slate-500">Stream from anywhere</p>
-                  </div>
-                </button>
-              </div>
-
-              {isOnlineMode && (selectedEvent.meeting_platform || selectedEvent.timezone || selectedEvent.internet_req) && (
-                <div className="p-4 rounded-2xl bg-sky-50/50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50 space-y-2 text-xs">
-                  {selectedEvent.meeting_platform && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Meeting Platform:</span>
-                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.meeting_platform}</span>
-                    </div>
-                  )}
-                  {selectedEvent.timezone && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Timezone:</span>
-                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.timezone}</span>
-                    </div>
-                  )}
-                  {selectedEvent.internet_req && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Internet Requirement:</span>
-                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.internet_req}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {!isOnlineMode && (selectedEvent.parking_info || selectedEvent.arrival_time || selectedEvent.dress_code) && (
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2 text-xs">
-                  {selectedEvent.parking_info && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Parking:</span>
-                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.parking_info}</span>
-                    </div>
-                  )}
-                  {selectedEvent.arrival_time && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Arrival Time:</span>
-                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.arrival_time}</span>
-                    </div>
-                  )}
-                  {selectedEvent.dress_code && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Dress Code:</span>
-                      <span className="font-bold text-slate-800 dark:text-white">{selectedEvent.dress_code}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {selectedEvent.event_location && selectedEvent.event_location.trim() !== '' && (
-              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-sky-500" />
-                  <div>
-                    <h5 className="text-xs font-bold text-slate-800 dark:text-white">Map Location</h5>
-                    <p className="text-[11px] text-slate-500">Open venue location in Google Maps</p>
-                  </div>
-                </div>
-                <a 
-                  href={`https://maps.google.com/?q=${encodeURIComponent(selectedEvent.event_location)}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="px-3.5 py-1.5 rounded-xl bg-sky-500 text-white font-bold text-xs flex items-center gap-1.5 hover:bg-sky-600 transition-colors"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" /> Google Maps
-                </a>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <h3 className="font-bold text-slate-800 dark:text-white text-base">About Event</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-                {selectedEvent.event_description || 'No detailed description provided for this event.'}
-              </p>
-            </div>
-
-            {selectedEvent.gallery && selectedEvent.gallery.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="font-bold text-slate-800 dark:text-white text-base">Event Gallery</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {selectedEvent.gallery.map((img, idx) => (
-                    <div key={idx} className="aspect-square rounded-2xl overflow-hidden bg-slate-800 border border-slate-700">
-                      <img 
-                        src={getImageUrl(img)} 
-                        alt={`Gallery ${idx + 1}`} 
-                        loading="lazy"
-                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" 
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-start gap-3 text-xs">
-              <ShieldCheck className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
-              <div>
-                <h5 className="font-bold text-slate-800 dark:text-white">Buyer Protection & Refund Policy</h5>
-                <p className="text-slate-500 mt-0.5">
-                  All tickets are cryptographically verified by BlueSea Mobile Marketplace.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-              <h3 className="font-bold text-slate-800 dark:text-white text-base">Select Ticket Type</h3>
-              {ticketTypes.length === 0 ? (
-                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 text-amber-800 dark:text-amber-300 text-xs font-medium">
-                  Ticket information is currently unavailable for this event.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {ticketTypes.map((ticket) => (
-                    <div
-                      key={ticket.id}
-                      onClick={() => setSelectedTicketType(ticket.id)}
-                      className={cn(
-                        'p-4 rounded-2xl border-2 cursor-pointer transition-all',
-                        selectedTicketType === ticket.id
-                          ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-900/20 shadow-md'
-                          : 'border-slate-200 dark:border-slate-800 hover:border-sky-300'
-                      )}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h4 className="font-bold text-slate-800 dark:text-white text-sm">{ticket.name}</h4>
-                          {ticket.description && (
-                            <p className="text-xs text-slate-500 mt-0.5">{ticket.description}</p>
-                          )}
-                        </div>
-                        <span className="text-lg font-black text-sky-500">
-                          {Number(ticket.price) === 0 ? 'Free' : `₦${Number(ticket.price).toLocaleString()}`}
-                        </span>
-                      </div>
-
-                      {ticket.benefits && ticket.benefits.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-2">
-                          {ticket.benefits.map((b, idx) => (
-                            <span key={idx} className="text-[10px] font-medium bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-1">
-                              <Check className="w-3 h-3 text-emerald-500" /> {b}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {ticketTypes.length > 0 && (
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-white">Buying for a group?</h4>
-                  <p className="text-xs text-slate-500">Adjust quantity for bulk ticket purchase</p>
-                </div>
-                <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                  <button 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))} 
-                    className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200"
-                  >
-                    -
-                  </button>
-                  <span className="text-sm font-bold w-4 text-center text-slate-800 dark:text-white">{quantity}</span>
-                  <button 
-                    onClick={() => setQuantity(quantity + 1)} 
-                    className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
-              <div>
-                <span className="text-xs text-slate-400 block">Total Amount</span>
-                <span className="text-2xl font-black text-sky-500">
-                  {ticketTypes.length === 0 ? 'N/A' : totalPrice === 0 ? 'Free' : `₦${totalPrice.toLocaleString()}`}
-                </span>
-              </div>
-
-              <button 
-                onClick={handlePurchase} 
-                disabled={isSoldOut || isEventEnded || ticketTypes.length === 0 || (!selectedTicketType && !selectedEvent.is_free)} 
-                className="flex-1 max-w-xs py-4 rounded-2xl bg-sky-500 text-white font-bold hover:bg-sky-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-sky-500/20"
-              >
-                {isSoldOut 
-                  ? 'Sold Out' 
-                  : isEventEnded 
-                    ? 'Event Ended' 
-                    : ticketTypes.length === 0 
-                      ? 'Tickets Unavailable' 
-                      : selectedEvent.is_free 
-                        ? 'Get Free Ticket' 
-                        : 'Proceed to Payment'}
-              </button>
-            </div>
-
-            {relatedEvents.length > 0 && (
-              <div className="pt-8 border-t border-slate-100 dark:border-slate-800 space-y-4">
-                <h3 className="font-bold text-slate-800 dark:text-white text-lg">Related Events in {selectedEvent.category}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {relatedEvents.map((item) => renderEventCard(item))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const collections = useMemo(() => ({
+    trending: activeEvents.filter(e => (e.tickets_sold ?? 0) > 0),
+    upcoming: [...activeEvents].sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()),
+    online: activeEvents.filter(e => e.attendance_mode === 'online'),
+    physical: activeEvents.filter(e => e.attendance_mode === 'physical' || !e.attendance_mode),
+    free: activeEvents.filter(e => e.is_free || e.ticket_types?.some(t => Number(t.price) === 0)),
+    past: pastEvents
+  }), [activeEvents, pastEvents]);
 
   const marketingAssetEvent: MarketingAssetEvent | null = shareModalEvent ? {
     id: shareModalEvent.id,
@@ -1305,126 +398,21 @@ export function Marketplace() {
     ticket_image: shareModalEvent.ticket_image ? getImageUrl(shareModalEvent.ticket_image) : undefined,
   } : null;
 
+  const isFilteredState = debouncedSearch !== '' || activeCategory !== 'All';
+
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden font-sans">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
-        <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-4 md:px-6 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 md:hidden hover:bg-slate-200"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="text-lg md:text-xl font-black text-slate-800 dark:text-white tracking-tight">BlueTickets</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Discover experiences worth attending</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => navigate('/affiliate')}
-              className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 text-xs font-bold transition-colors"
-            >
-              <Sparkles className="w-4 h-4 text-sky-500" />
-              Join Affiliate
-            </button>
-
-            {!vendorStatus ? (
-              <button 
-                onClick={() => navigate('/vendor-verification')}
-                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 text-xs font-bold transition-colors"
-              >
-                <Shield className="w-4 h-4" />
-                Become Organizer
-              </button>
-            ) : (
-              <button 
-                onClick={() => navigate('/event-manager')}
-                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500 text-white hover:bg-sky-600 text-xs font-bold transition-colors shadow-sm"
-              >
-                <Plus className="w-4 h-4" />
-                Create Event
-              </button>
-            )}
-
-            <button 
-              onClick={() => navigate('/my-tickets')}
-              className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors"
-            >
-              <Ticket className="w-4 h-4 text-sky-500" />
-              My Tickets
-            </button>
-
-            <div className="relative" ref={menuRef}>
-              <button 
-                onClick={() => setShowMenu((prev) => !prev)} 
-                className="p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition-colors flex items-center gap-1 font-bold text-xs"
-                aria-label="Toggle Navigation Menu"
-              >
-                <MoreHorizontal className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-              </button>
-              
-              {showMenu && (
-                <div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2 z-50">
-                  <button 
-                    onClick={() => { setShowMenu(false); navigate('/affiliate'); }} 
-                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
-                  >
-                    <Sparkles className="w-4 h-4 text-sky-500" /> 
-                    Join Affiliate
-                  </button>
-
-                  {!vendorStatus ? (
-                    <button 
-                      onClick={() => { navigate('/vendor-verification'); setShowMenu(false); }} 
-                      className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
-                    >
-                      <Shield className="w-4 h-4 text-sky-500" /> 
-                      Become Verified Organizer
-                    </button>
-                  ) : (
-                    <>
-                      <button 
-                        onClick={() => { navigate('/event-manager'); setShowMenu(false); }} 
-                        className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
-                      >
-                        <Plus className="w-4 h-4 text-sky-500" /> 
-                        Create Event
-                      </button>
-                      <button 
-                        onClick={() => { navigate('/scanner'); setShowMenu(false); }} 
-                        className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
-                      >
-                        <QrCode className="w-4 h-4 text-sky-500" /> 
-                        Ticket Scanner
-                      </button>
-                    </>
-                  )}
-
-                  <button 
-                    onClick={() => { navigate('/my-tickets'); setShowMenu(false); }} 
-                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
-                  >
-                    <Ticket className="w-4 h-4 text-sky-500" /> 
-                    My Tickets
-                  </button>
-
-                  <button 
-                    onClick={() => { navigate('/history'); setShowMenu(false); }} 
-                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-700/60 hover:text-sky-600 flex items-center gap-2.5 transition-colors"
-                  >
-                    <History className="w-4 h-4 text-sky-500" /> 
-                    Transaction History
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
+        <MarketplaceHeader 
+          vendorStatus={vendorStatus}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          showMenu={showMenu}
+          setShowMenu={setShowMenu}
+          menuRef={menuRef}
+        />
 
         <main 
           ref={mainViewportRef} 
@@ -1442,7 +430,208 @@ export function Marketplace() {
               />
             </div>
 
-            {selectedEvent ? renderEventDetails() : renderEvents()}
+            {selectedEvent ? (
+              <MarketplaceEventDetails 
+                selectedEvent={selectedEvent}
+                activeEvents={activeEvents}
+                selectedTicketType={selectedTicketType}
+                setSelectedTicketType={setSelectedTicketType}
+                quantity={quantity}
+                setQuantity={setQuantity}
+                selectedAttendanceMode={selectedAttendanceMode}
+                setSelectedAttendanceMode={setSelectedAttendanceMode}
+                favorites={favorites}
+                followedOrganizers={followedOrganizers}
+                onBack={() => setSelectedEvent(null)}
+                onPurchase={handlePurchase}
+                onTicketAffiliateAction={handleTicketAffiliateAction}
+                onToggleFavorite={toggleFavorite}
+                onToggleSaveAffiliate={toggleSaveForAffiliatePromotion}
+                onOpenShareModal={handleOpenShareModal}
+                onToggleFollowOrganizer={toggleFollowOrganizer}
+                savedAffiliateEvents={savedAffiliateEvents}
+                affiliateStatus={affiliateStatus}
+                getImageUrl={getImageUrl}
+                getEventImage={getEventImage}
+                formatDate={formatDate}
+                formatTime={formatTime}
+                getStartingPrice={getStartingPrice}
+                onSelectEvent={setSelectedEvent}
+              />
+            ) : loading ? (
+              <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                <LoaderComponent />
+                <p className="text-xs text-slate-400 font-medium">Loading Marketplace...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {!isFilteredState && (
+                  <MarketplaceHero 
+                    featuredEvent={featuredEvent}
+                    onSelect={setSelectedEvent}
+                    onToggleFavorite={toggleFavorite}
+                    onOpenShareModal={handleOpenShareModal}
+                    isFavorite={featuredEvent ? !!favorites[featuredEvent.id] : false}
+                    getEventImage={getEventImage}
+                    formatDate={formatDate}
+                    getStartingPrice={getStartingPrice}
+                  />
+                )}
+
+                <MarketplaceCategories 
+                  activeCategory={activeCategory}
+                  setActiveCategory={setActiveCategory}
+                />
+
+                {isFilteredState ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Showing {filteredEvents.length} result{filteredEvents.length !== 1 ? 's' : ''}
+                      </p>
+                      <button 
+                        onClick={() => { setActiveCategory('All'); setSearchQuery(''); }}
+                        className="text-xs font-bold text-sky-500 hover:underline cursor-pointer"
+                      >
+                        Clear Filters
+                      </button>
+                    </div>
+
+                    {filteredEvents.length === 0 ? (
+                      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-12 text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                          <CalendarDays className="w-8 h-8 text-slate-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">No Events Found</h3>
+                        <p className="text-slate-500 text-sm max-w-md mx-auto">
+                          Try broadening your search criteria or selecting a different category.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredEvents.map((event) => (
+                          <MarketplaceEventCard 
+                            key={event.id}
+                            event={event}
+                            onSelect={setSelectedEvent}
+                            onTicketAffiliateAction={handleTicketAffiliateAction}
+                            onToggleFavorite={toggleFavorite}
+                            onToggleSaveAffiliate={toggleSaveForAffiliatePromotion}
+                            onOpenShareModal={handleOpenShareModal}
+                            isFavorite={!!favorites[event.id]}
+                            isSavedAffiliate={savedAffiliateEvents.includes(event.id)}
+                            affiliateStatus={affiliateStatus}
+                            getImageUrl={getImageUrl}
+                            getEventImage={getEventImage}
+                            formatDate={formatDate}
+                            getStartingPrice={getStartingPrice}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-8">
+                    <MarketplaceEventCollection 
+                      title="Trending Events" 
+                      items={collections.trending} 
+                      onSelect={setSelectedEvent}
+                      onTicketAffiliateAction={handleTicketAffiliateAction}
+                      onToggleFavorite={toggleFavorite}
+                      onToggleSaveAffiliate={toggleSaveForAffiliatePromotion}
+                      onOpenShareModal={handleOpenShareModal}
+                      favorites={favorites}
+                      savedAffiliateEvents={savedAffiliateEvents}
+                      affiliateStatus={affiliateStatus}
+                      getImageUrl={getImageUrl}
+                      getEventImage={getEventImage}
+                      formatDate={formatDate}
+                      getStartingPrice={getStartingPrice}
+                    />
+                    <MarketplaceEventCollection 
+                      title="Upcoming Events" 
+                      items={collections.upcoming} 
+                      onSelect={setSelectedEvent}
+                      onTicketAffiliateAction={handleTicketAffiliateAction}
+                      onToggleFavorite={toggleFavorite}
+                      onToggleSaveAffiliate={toggleSaveForAffiliatePromotion}
+                      onOpenShareModal={handleOpenShareModal}
+                      favorites={favorites}
+                      savedAffiliateEvents={savedAffiliateEvents}
+                      affiliateStatus={affiliateStatus}
+                      getImageUrl={getImageUrl}
+                      getEventImage={getEventImage}
+                      formatDate={formatDate}
+                      getStartingPrice={getStartingPrice}
+                    />
+                    <MarketplaceEventCollection 
+                      title="Online Events" 
+                      items={collections.online} 
+                      onSelect={setSelectedEvent}
+                      onTicketAffiliateAction={handleTicketAffiliateAction}
+                      onToggleFavorite={toggleFavorite}
+                      onToggleSaveAffiliate={toggleSaveForAffiliatePromotion}
+                      onOpenShareModal={handleOpenShareModal}
+                      favorites={favorites}
+                      savedAffiliateEvents={savedAffiliateEvents}
+                      affiliateStatus={affiliateStatus}
+                      getImageUrl={getImageUrl}
+                      getEventImage={getEventImage}
+                      formatDate={formatDate}
+                      getStartingPrice={getStartingPrice}
+                    />
+                    <MarketplaceEventCollection 
+                      title="Physical Events" 
+                      items={collections.physical} 
+                      onSelect={setSelectedEvent}
+                      onTicketAffiliateAction={handleTicketAffiliateAction}
+                      onToggleFavorite={toggleFavorite}
+                      onToggleSaveAffiliate={toggleSaveForAffiliatePromotion}
+                      onOpenShareModal={handleOpenShareModal}
+                      favorites={favorites}
+                      savedAffiliateEvents={savedAffiliateEvents}
+                      affiliateStatus={affiliateStatus}
+                      getImageUrl={getImageUrl}
+                      getEventImage={getEventImage}
+                      formatDate={formatDate}
+                      getStartingPrice={getStartingPrice}
+                    />
+                    <MarketplaceEventCollection 
+                      title="Free Events" 
+                      items={collections.free} 
+                      onSelect={setSelectedEvent}
+                      onTicketAffiliateAction={handleTicketAffiliateAction}
+                      onToggleFavorite={toggleFavorite}
+                      onToggleSaveAffiliate={toggleSaveForAffiliatePromotion}
+                      onOpenShareModal={handleOpenShareModal}
+                      favorites={favorites}
+                      savedAffiliateEvents={savedAffiliateEvents}
+                      affiliateStatus={affiliateStatus}
+                      getImageUrl={getImageUrl}
+                      getEventImage={getEventImage}
+                      formatDate={formatDate}
+                      getStartingPrice={getStartingPrice}
+                    />
+                    <MarketplaceEventCollection 
+                      title="Past Events" 
+                      items={collections.past} 
+                      onSelect={setSelectedEvent}
+                      onTicketAffiliateAction={handleTicketAffiliateAction}
+                      onToggleFavorite={toggleFavorite}
+                      onToggleSaveAffiliate={toggleSaveForAffiliatePromotion}
+                      onOpenShareModal={handleOpenShareModal}
+                      favorites={favorites}
+                      savedAffiliateEvents={savedAffiliateEvents}
+                      affiliateStatus={affiliateStatus}
+                      getImageUrl={getImageUrl}
+                      getEventImage={getEventImage}
+                      formatDate={formatDate}
+                      getStartingPrice={getStartingPrice}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </main>
 
@@ -1451,128 +640,18 @@ export function Marketplace() {
         </div>
       </div>
 
-      {/* --- STANDARD SHARE MODAL WITH DYNAMIC AFFILIATE PROMPT --- */}
-      {shareModalEvent && !previewModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/70 z-50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative space-y-5">
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
-                  <Share2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 dark:text-white text-base">Share Event</h3>
-                  <p className="text-xs text-slate-500">Copy event link or build promo assets</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setShareModalEvent(null)}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      <MarketplaceShareModal 
+        shareModalEvent={shareModalEvent}
+        previewModalOpen={previewModalOpen}
+        affiliateId={affiliateId}
+        affiliateStatus={affiliateStatus}
+        copiedLink={copiedLink}
+        onClose={() => setShareModalEvent(null)}
+        onCopyEventLink={handleCopyEventLink}
+        onOpenPreviewModal={() => setPreviewModalOpen(true)}
+        getEventImage={getEventImage}
+      />
 
-            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-3">
-              {getEventImage(shareModalEvent) ? (
-                <img 
-                  src={getEventImage(shareModalEvent)} 
-                  alt={shareModalEvent.event_title} 
-                  className="w-12 h-12 rounded-xl object-cover shrink-0" 
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
-                  <Ticket className="w-6 h-6 text-slate-400" />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <h4 className="font-bold text-xs text-slate-800 dark:text-white truncate">
-                  {shareModalEvent.event_title}
-                </h4>
-                <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                  {shareModalEvent.event_location || 'Online Event'}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                Direct Event Link
-              </label>
-              <div className="flex items-center gap-2">
-                <input 
-                  type="text" 
-                  readOnly 
-                  value={`${window.location.origin}/marketplace?event=${shareModalEvent.id}${affiliateId ? `&ref=${affiliateId}` : ''}`}
-                  className="flex-1 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-600 dark:text-slate-300 truncate outline-none"
-                />
-                <button
-                  onClick={() => handleCopyEventLink(shareModalEvent.id)}
-                  className={cn(
-                    "px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shrink-0",
-                    copiedLink 
-                      ? "bg-emerald-500 text-white" 
-                      : "bg-sky-500 hover:bg-sky-600 text-white shadow-md shadow-sky-500/20"
-                  )}
-                >
-                  {copiedLink ? (
-                    <>
-                      <Check className="w-4 h-4" /> Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" /> Copy Link
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-500/10 via-sky-500/5 to-transparent border border-sky-500/20 space-y-3">
-              {affiliateStatus === 'verified' || affiliateStatus === 'approved' ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-sky-500" />
-                    <h5 className="text-xs font-bold text-sky-600 dark:text-sky-400">Verified Affiliate Access</h5>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300">
-                    Generate custom marketing flyers, posters, and track referral sales for this event.
-                  </p>
-                  <button
-                    onClick={() => setPreviewModalOpen(true)}
-                    className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2"
-                  >
-                    Open Promotional Preview & Assets <ArrowRight className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    <h5 className="text-xs font-bold text-slate-800 dark:text-white">Earn Commission on Ticket Sales!</h5>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Join our Affiliate Program to generate customized promotional flyers, custom banners, and earn cash for every attendee who registers through your link.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setShareModalEvent(null);
-                      navigate('/affiliate');
-                    }}
-                    className="w-full py-2.5 rounded-xl bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:bg-slate-900 dark:hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
-                  >
-                    Join Affiliate Program <ArrowRight className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* --- PROMOTIONAL ASSET PREVIEW WORKFLOW MODAL --- */}
       {marketingAssetEvent && (
         <PromotionalPreviewModal
           isOpen={previewModalOpen}
