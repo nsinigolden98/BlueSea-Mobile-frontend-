@@ -261,17 +261,17 @@ function AppRoutes() {
     AFFILIATE ROUTES (ALL SUB-ROUTES REGISTERED)
    ========================================= */}
 <Route path="/affiliate" element={<ProtectedRoute><AffiliateLayout /></ProtectedRoute>}>
-  <Route index element={<Navigate to="/affiliate/dashboard" replace />} />
-  <Route path="dashboard" element={<AffiliateDashboard />} />
-  <Route path="events" element={<AffiliateDashboard />} /> {/* Or your dedicated My Events page component */}
-  <Route path="analytics" element={<AffiliateDashboard />} />
-  <Route path="leaderboard" element={<AffiliateDashboard />} />
-  <Route path="achievements" element={<AffiliateDashboard />} />
-  <Route path="saved" element={<AffiliateDashboard />} />
-  <Route path="alerts" element={<AffiliateDashboard />} />
-  <Route path="settings" element={<AffiliateDashboard />} />
-  <Route path="register" element={<AffiliateRegistration />} />
-  <Route path="pending" element={<AffiliatePending />} />
+  <Route index element={<ProtectedRoute><Navigate to="/affiliate/dashboard" replace /></ProtectedRoute>} />
+  <Route path="dashboard" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+  <Route path="events" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} /> {/* Or your dedicated My Events page component */}
+  <Route path="analytics" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+  <Route path="leaderboard" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+  <Route path="achievements" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+  <Route path="saved" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+  <Route path="alerts" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+  <Route path="settings" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+  <Route path="register" element={<ProtectedRoute><AffiliateRegistration /></ProtectedRoute>} />
+  <Route path="pending" element={<ProtectedRoute><AffiliatePending /></ProtectedRoute>} />
 </Route>
         </Route>
 
