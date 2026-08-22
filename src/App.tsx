@@ -94,6 +94,22 @@ import {
   AcceptableUsePolicy,
 } from '@/pages/legal-center';
 
+//for Paylink
+import { 
+  PayLinkHome, 
+  CreatePayLink, 
+  PayLinkPayment, 
+  PayLinkDetails, 
+  ScanPay, 
+  MyQR, 
+  OpenPayLink, 
+  BusinessManager, 
+  ProductsManager, 
+  PayLinkHistory 
+} from '@/pages/paylink';
+
+
+
 /**
  * Global Layout Wrapper
  * Handles the persistent Header
@@ -227,6 +243,19 @@ function AppRoutes() {
           <Route path="/payroll-pro/employee/:employeeId" element={<ProtectedRoute><EmployeeProfile /></ProtectedRoute>} />
           <Route path="/payroll-pro/portal/:companyId" element={<ProtectedRoute><EmployeePortal /></ProtectedRoute>} />
           <Route path="/payroll-pro/payroll/:payrollId" element={<ProtectedRoute><PayrollDetail /></ProtectedRoute>} />
+
+
+          {/* SECURED PAYLINK ROUTES */}
+          <Route path="/paylink" element={<ProtectedRoute><PayLinkHome /></ProtectedRoute>} />
+          <Route path="/paylink/create" element={<ProtectedRoute><CreatePayLink /></ProtectedRoute>} />
+          <Route path="/paylink/pay/:id" element={<ProtectedRoute><PayLinkPayment /></ProtectedRoute>} />
+          <Route path="/paylink/details/:id" element={<ProtectedRoute><PayLinkDetails /></ProtectedRoute>} />
+          <Route path="/paylink/scan" element={<ProtectedRoute><ScanPay /></ProtectedRoute>} />
+          <Route path="/paylink/my-qr" element={<ProtectedRoute><MyQR /></ProtectedRoute>} />
+          <Route path="/paylink/open" element={<ProtectedRoute><OpenPayLink /></ProtectedRoute>} />
+          <Route path="/paylink/businesses" element={<ProtectedRoute><BusinessManager /></ProtectedRoute>} />
+          <Route path="/paylink/products" element={<ProtectedRoute><ProductsManager /></ProtectedRoute>} />
+          <Route path="/paylink/history" element={<ProtectedRoute><PayLinkHistory /></ProtectedRoute>} />
 
           {/* =========================================
     AFFILIATE ROUTES (ALL SUB-ROUTES REGISTERED)
