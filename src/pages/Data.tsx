@@ -104,10 +104,10 @@ export function Data() {
     sub_number: phoneNumber,
     target_amount: Number(selectedPlan?.price || 0),
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
-    plan: selectedPlan?.id, 
+    plan: selectedPlan?.description, 
     plan_type: selectedNetwork === '9mobile' ? 'etisalat': selectedNetwork.toLowerCase()
   } : {
-    plan: selectedPlan?.id,
+    plan: selectedPlan?.description,
     billersCode: phoneNumber,
     phone_number: phoneNumber,
   };
