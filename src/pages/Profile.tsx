@@ -13,7 +13,8 @@ import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavi
 
 export function Profile() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const authContext = useAuth();
+  const { user } = authContext;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { LoaderComponent, showLoader, hideLoader } = Loader();
 
@@ -21,12 +22,16 @@ export function Profile() {
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState(user?.profilePicture || null);
 
-  // Local Storage placeholder for Nickname
+  // Local Storage for Nickname (One-time editable local state)
   const [nickname, setNickname] = useState<string>(() => {
     return localStorage.getItem('profile_nickname') || '';
   });
+  const [isNicknameEdited, setIsNicknameEdited] = useState<boolean>(() => {
+    return localStorage.getItem('profile_nickname_edited') === 'true' || Boolean(localStorage.getItem('profile_nickname'));
+  });
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState(nickname);
+  const [nicknameError, setNicknameError] = useState('');
 
   // Phone Number Editing State
   const [isPhoneEdited, setIsPhoneEdited] = useState<boolean>(() => {
@@ -39,8 +44,19 @@ export function Profile() {
   const [phoneInput, setPhoneInput] = useState(rawInitialPhone);
   const [phoneError, setPhoneError] = useState('');
 
-  // Address State
+  // Address State - Backend preference object takes precedence if present
   const [residentialAddress, setResidentialAddress] = useState(() => {
+    const pref = (user as any)?.preference;
+    if (pref && (pref.country || pref.street_address || pref.state || pref.city)) {
+      return {
+        country: pref.country || '',
+        state: pref.state || '',
+        city: pref.city || '',
+        addressLine: pref.street_address || '',
+        landmark: pref.landmark || '',
+        postalCode: pref.postal_code || ''
+      };
+    }
     const saved = localStorage.getItem('marketplace_delivery_location');
     return saved ? JSON.parse(saved) : null;
   });
@@ -68,7 +84,32 @@ export function Profile() {
 
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
 
-  // Safely derive Dynamic User Identity Fields using (user as any) to bypass strict TS check for fallbacks
+  // Synchronize state when user context updates
+  useEffect(() => {
+    const pref = (user as any)?.preference;
+    if (pref && (pref.country || pref.street_address || pref.state || pref.city)) {
+      const updated = {
+        country: pref.country || '',
+        state: pref.state || '',
+        city: pref.city || '',
+        addressLine: pref.street_address || '',
+        landmark: pref.landmark || '',
+        postalCode: pref.postal_code || ''
+      };
+      setResidentialAddress(updated);
+      setAddressForm(prev => ({
+        ...prev,
+        country: updated.country,
+        state: updated.state,
+        city: updated.city,
+        addressLine: updated.addressLine,
+        landmark: updated.landmark,
+        postalCode: updated.postalCode
+      }));
+    }
+  }, [user]);
+
+  // Safely derive Dynamic User Identity Fields
   const fullName = `${user?.firstName || (user as any)?.first_name || ''} ${user?.surname || (user as any)?.last_name || ''}`.trim() || 'Valued Member';
   const email = user?.email || 'Not Provided';
   
@@ -81,7 +122,9 @@ export function Profile() {
   
   const verificationStatus = (user as any)?.verificationStatus || (user as any)?.verification_status || 'Verified';
   const gender = (user as any)?.gender || 'Not Specified';
-  const dateOfBirth = (user as any)?.dob || (user as any)?.dateOfBirth || (user as any)?.date_of_birth || 'Not Specified';
+  
+  // Date of Birth mapped from preference.date_of_birth if available
+  const dateOfBirth = (user as any)?.preference?.date_of_birth || (user as any)?.dob || (user as any)?.dateOfBirth || (user as any)?.date_of_birth || 'Not Specified';
   
   // Dynamic Date Registered safely retrieved from Backend
   const rawCreatedAt = (user as any)?.createdAt || (user as any)?.created_at || (user as any)?.registeredAt || (user as any)?.dateRegistered;
@@ -162,6 +205,18 @@ export function Profile() {
     fetchCities();
   }, [addressForm.state, addressForm.country]);
 
+  // Synchronize authenticated user state using existing AuthContext mechanisms
+  const synchronizeUser = async () => {
+    const auth = authContext as any;
+    if (typeof auth?.refreshUser === 'function') {
+      await auth.refreshUser();
+    } else if (typeof auth?.fetchUser === 'function') {
+      await auth.fetchUser();
+    } else {
+      window.location.reload();
+    }
+  };
+
   // Profile Image Upload Handlers
   const handleImageClick = () => {
     fileInputRef.current?.click();
@@ -180,7 +235,7 @@ export function Profile() {
 
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       if (response) {
-        window.location.reload();
+        await synchronizeUser();
       }
     } catch (error) {
       console.error('Failed to upload image:', error);
@@ -190,12 +245,19 @@ export function Profile() {
     }
   };
 
-  // Nickname Handlers
+  // Nickname Handlers (Local persistence with strict one-time edit & validation)
   const handleSaveNickname = () => {
     const trimmed = nicknameInput.trim();
+    if (!trimmed) {
+      setNicknameError('Nickname cannot be empty');
+      return;
+    }
     localStorage.setItem('profile_nickname', trimmed);
+    localStorage.setItem('profile_nickname_edited', 'true');
     setNickname(trimmed);
+    setIsNicknameEdited(true);
     setIsEditingNickname(false);
+    setNicknameError('');
   };
 
   // Phone Number Handlers
@@ -224,7 +286,7 @@ export function Profile() {
         localStorage.setItem('profile_phone_edited', 'true');
         setIsPhoneEdited(true);
         setIsEditingPhone(false);
-        window.location.reload();
+        await synchronizeUser();
       }
     } catch (error) {
       console.error('Failed to update phone:', error);
@@ -252,18 +314,41 @@ export function Profile() {
     showLoader();
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-
-      const dataToSave = {
-        ...addressForm,
-        updatedAt: new Date().toISOString()
+      const payload = {
+        preference: {
+          country: addressForm.country,
+          state: addressForm.state,
+          city: addressForm.city,
+          street_address: addressForm.addressLine,
+          landmark: addressForm.landmark,
+          postal_code: addressForm.postalCode
+        }
       };
 
-      localStorage.setItem('marketplace_delivery_location', JSON.stringify(dataToSave));
-      setResidentialAddress(dataToSave);
-      setIsEditingAddress(false);
+      const response = await patchRequest(ENDPOINTS.user, payload);
+
+      if (response) {
+        const pref = response.preference || payload.preference;
+        const newAddress = {
+          country: pref.country || addressForm.country,
+          state: pref.state || addressForm.state,
+          city: pref.city || addressForm.city,
+          addressLine: pref.street_address || addressForm.addressLine,
+          landmark: pref.landmark || addressForm.landmark,
+          postalCode: pref.postal_code || addressForm.postalCode
+        };
+
+        setResidentialAddress(newAddress);
+        localStorage.setItem('marketplace_delivery_location', JSON.stringify({
+          ...addressForm,
+          updatedAt: new Date().toISOString()
+        }));
+        setIsEditingAddress(false);
+        await synchronizeUser();
+      }
     } catch (error) {
       console.error('Failed to save address:', error);
+      setAddressErrors(prev => ({ ...prev, submit: 'Failed to update address. Please try again.' }));
     } finally {
       setSavingAddress(false);
       hideLoader();
@@ -292,7 +377,7 @@ export function Profile() {
           </div>
         </header>
 
-        {/* ISOLATED SCROLLABLE CONTENT AREA - Scrollbar removed on mobile screens */}
+        {/* ISOLATED SCROLLABLE CONTENT AREA */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden z-10">
           <div className="max-w-5xl mx-auto space-y-6">
             
@@ -362,7 +447,7 @@ export function Profile() {
                   </div>
                 </section>
 
-                {/* ACCOUNT INFORMATION SECTION */}
+   {/* ACCOUNT INFORMATION SECTION */}
                 <section className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
                     <ShieldCheck className="w-4 h-4 text-sky-500" />
@@ -414,13 +499,16 @@ export function Profile() {
                       </div>
                     </div>
 
-                    {/* Nickname (Editable) */}
+                    {/* Nickname (Editable once locally) */}
                     <div className="p-4 transition-colors">
                       <div 
                         className="flex items-center justify-between cursor-pointer"
                         onClick={() => {
-                          setIsEditingNickname(!isEditingNickname);
-                          setNicknameInput(nickname);
+                          if (!isNicknameEdited) {
+                            setIsEditingNickname(!isEditingNickname);
+                            setNicknameInput(nickname);
+                            setNicknameError('');
+                          }
                         }}
                       >
                         <div>
@@ -429,28 +517,45 @@ export function Profile() {
                             {nickname || <span className="text-slate-400 italic font-normal">Not Set</span>}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1 text-sky-500 font-medium text-xs">
-                          {isEditingNickname ? (
-                            <span>Cancel</span>
-                          ) : (
-                            <span className="flex items-center gap-1">
-                              <Edit3 className="w-3 h-3" />
-                              {nickname ? 'Edit' : 'Set'}
-                            </span>
-                          )}
-                          {isEditingNickname ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                        </div>
+                        {!isNicknameEdited ? (
+                          <div className="flex items-center gap-1 text-sky-500 font-medium text-xs">
+                            {isEditingNickname ? (
+                              <span>Cancel</span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <Edit3 className="w-3 h-3" />
+                                {nickname ? 'Edit' : 'Set'}
+                              </span>
+                            )}
+                            {isEditingNickname ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400 dark:text-slate-500 italic">
+                            Set
+                          </span>
+                        )}
                       </div>
 
                       {/* Dropdown Expand Form */}
-                      {isEditingNickname && (
+                      {isEditingNickname && !isNicknameEdited && (
                         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                          <Input
-                            placeholder="Enter preferred nickname"
-                            value={nicknameInput}
-                            onChange={(e) => setNicknameInput(e.target.value)}
-                            className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-                          />
+                          <div>
+                            <Input
+                              placeholder="Enter preferred nickname"
+                              value={nicknameInput}
+                              onChange={(e) => {
+                                setNicknameInput(e.target.value);
+                                if (nicknameError) setNicknameError('');
+                              }}
+                              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
+                            />
+                            {nicknameError && (
+                              <p className="text-xs text-red-500 mt-1">{nicknameError}</p>
+                            )}
+                            <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                              Note: Nickname can only be set once.
+                            </p>
+                          </div>
                           <div className="flex gap-2">
                             <button
                               onClick={handleSaveNickname}
@@ -460,7 +565,10 @@ export function Profile() {
                               Save Nickname
                             </button>
                             <button
-                              onClick={() => setIsEditingNickname(false)}
+                              onClick={() => {
+                                setIsEditingNickname(false);
+                                setNicknameError('');
+                              }}
                               className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
                             >
                               <X className="w-3.5 h-3.5" />
@@ -646,7 +754,7 @@ export function Profile() {
                           {addressErrors.country && <p className="text-[10px] text-red-500 ml-1">{addressErrors.country}</p>}
                         </div>
 
-                        {/* State & City */}
+{/* State & City */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-1">
                             <label className="text-xs text-slate-500 dark:text-slate-400 font-medium ml-1">State</label>
@@ -721,6 +829,10 @@ export function Profile() {
                             />
                           </div>
                         </div>
+
+                        {addressErrors.submit && (
+                          <p className="text-xs text-red-500 mt-1">{addressErrors.submit}</p>
+                        )}
 
                         {/* Actions */}
                         <div className="flex gap-3 pt-2">
