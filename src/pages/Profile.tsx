@@ -11,7 +11,7 @@ import { patchRequest, ENDPOINTS } from '@/types';
 import { Loader } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
-// CUSTOM DOB DATE PICKER COMPONENT
+// DOB DATE PICKER COMPONENT
 function DOBDatePicker({ 
   value, 
   onSave, 
@@ -62,19 +62,14 @@ function DOBDatePicker({
   };
 
   const handleSave = async () => {
-    if (!selectedDate) {
-      setError('Please select a valid date');
-      return;
-    }
-    if (selectedDate > today) {
-      setError('Date of birth cannot be in the future');
+    if (!selectedDate || selectedDate > today) {
+      setError('Please select a valid past date');
       return;
     }
     const year = selectedDate.getFullYear();
     const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
     const day = String(selectedDate.getDate()).padStart(2, '0');
-    const formatted = `${year}-${month}-${day}`;
-    await onSave(formatted);
+    await onSave(`${year}-${month}-${day}`);
   };
 
   return (
@@ -175,13 +170,9 @@ export function Profile() {
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState(user?.profilePicture || (user as any)?.image || null);
 
-  // Local Storage for Nickname
-  const [nickname, setNickname] = useState<string>(() => {
-    return localStorage.getItem('profile_nickname') || '';
-  });
-  const [isNicknameEdited, setIsNicknameEdited] = useState<boolean>(() => {
-    return localStorage.getItem('profile_nickname_edited') === 'true' || Boolean(localStorage.getItem('profile_nickname'));
-  });
+  // Nickname State
+  const [nickname, setNickname] = useState<string>(() => localStorage.getItem('profile_nickname') || '');
+  const [isNicknameEdited, setIsNicknameEdited] = useState<boolean>(() => Boolean(localStorage.getItem('profile_nickname')));
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState(nickname);
   const [nicknameError, setNicknameError] = useState('');
@@ -220,11 +211,7 @@ export function Profile() {
   const [states, setStates] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   
-  const [loadingLocations, setLoadingLocations] = useState({
-    countries: false,
-    states: false,
-    cities: false
-  });
+  const [loadingLocations, setLoadingLocations] = useState({ countries: false, states: false, cities: false });
 
   const [addressForm, setAddressForm] = useState({
     country: residentialAddress?.country || '',
@@ -237,7 +224,6 @@ export function Profile() {
 
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
 
-  // Synchronize internal state when user context updates
   useEffect(() => {
     const updatedAddress = getPreferenceAddress(user);
     if (updatedAddress) {
@@ -253,7 +239,7 @@ export function Profile() {
     }
   }, [user]);
 
-  // Derived User Fields
+  // Derived Fields
   const fullName = `${user?.firstName || (user as any)?.first_name || ''} ${user?.surname || (user as any)?.last_name || ''}`.trim() || 'Valued Member';
   const email = user?.email || 'Not Provided';
   const rawUid = (user as any)?.referral_code || (user as any)?.referralCode || (user as any)?.uid || (user as any)?.id || (user as any)?.user_id;
@@ -261,12 +247,9 @@ export function Profile() {
   const tier = (user as any)?.tier || (user as any)?.tierLevel || (user as any)?.tier_level || 'Tier 1';
   const verificationStatus = (user as any)?.verificationStatus || (user as any)?.verification_status || 'Verified';
   const gender = (user as any)?.gender || 'Not Specified';
-  
-  // Date of Birth mapped from backend preference
-  const dateOfBirth = (user as any)?.preference?.date_of_birth || (user as any)?.dob || (user as any)?.dateOfBirth || (user as any)?.date_of_birth || 'Not Specified';
+  const dateOfBirth = (user as any)?.preference?.date_of_birth || (user as any)?.dob || (user as any)?.dateOfBirth || 'Not Specified';
 
-  // Account creation timestamp strictly from backend
-  const rawCreatedAt = (user as any)?.created_at || (user as any)?.createdAt || (user as any)?.date_joined || (user as any)?.joined_at || (user as any)?.registered_at || (user as any)?.registeredAt;
+  const rawCreatedAt = (user as any)?.created_at || (user as any)?.createdAt || (user as any)?.date_joined;
   const memberSince = rawCreatedAt && !isNaN(new Date(rawCreatedAt).getTime())
     ? new Date(rawCreatedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : 'Not Specified';
@@ -305,9 +288,7 @@ export function Profile() {
           body: JSON.stringify({ country: addressForm.country })
         });
         const data = await response.json();
-        if (!data.error) {
-          setStates(data.data.states.map((s: any) => s.name));
-        }
+        if (!data.error) setStates(data.data.states.map((s: any) => s.name));
       } catch (error) {
         console.error('Failed to fetch states', error);
       } finally {
@@ -332,9 +313,7 @@ export function Profile() {
           body: JSON.stringify({ country: addressForm.country, state: addressForm.state })
         });
         const data = await response.json();
-        if (!data.error) {
-          setCities(data.data);
-        }
+        if (!data.error) setCities(data.data);
       } catch (error) {
         console.error('Failed to fetch cities', error);
       } finally {
@@ -344,23 +323,14 @@ export function Profile() {
     fetchCities();
   }, [addressForm.state, addressForm.country]);
 
-  // Safe Context User Synchronization
   const synchronizeUser = async () => {
     try {
       const auth = authContext as any;
-      if (typeof auth?.refreshUser === 'function') {
-        await auth.refreshUser();
-      } else if (typeof auth?.fetchUser === 'function') {
-        await auth.fetchUser();
-      }
+      if (typeof auth?.refreshUser === 'function') await auth.refreshUser();
+      else if (typeof auth?.fetchUser === 'function') await auth.fetchUser();
     } catch (err) {
       console.error('User state synchronization failed:', err);
     }
-  };
-
-  // Image Upload Handler
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -373,11 +343,8 @@ export function Profile() {
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('image', file);
-
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
-      if (response) {
-        await synchronizeUser();
-      }
+      if (response) await synchronizeUser();
     } catch (error) {
       console.error('Failed to upload image:', error);
     } finally {
@@ -386,7 +353,6 @@ export function Profile() {
     }
   };
 
-  // Nickname Handlers (Local state with 1-time edit)
   const handleSaveNickname = () => {
     const trimmed = nicknameInput.trim();
     if (!trimmed) {
@@ -394,20 +360,10 @@ export function Profile() {
       return;
     }
     localStorage.setItem('profile_nickname', trimmed);
-    localStorage.setItem('profile_nickname_edited', 'true');
     setNickname(trimmed);
     setIsNicknameEdited(true);
     setIsEditingNickname(false);
     setNicknameError('');
-  };
-
-  // Phone Number Handlers
-  const handlePhoneInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, '');
-    if (val.length <= 10) {
-      setPhoneInput(val);
-      setPhoneError('');
-    }
   };
 
   const handleSavePhone = async () => {
@@ -418,22 +374,18 @@ export function Profile() {
 
     showLoader();
     try {
-      const payload = { phone: phoneInput };
-      const response = await patchRequest(ENDPOINTS.user, payload);
-      
+      const response = await patchRequest(ENDPOINTS.user, { phone: phoneInput });
       if (response) {
         setIsEditingPhone(false);
         await synchronizeUser();
       }
     } catch (error: any) {
-      console.error('Failed to update phone:', error);
-      setPhoneError(error?.message || 'Could not update phone number. Please try again.');
+      setPhoneError(error?.message || 'Could not update phone number.');
     } finally {
       hideLoader();
     }
   };
 
-  // Date of Birth Save Handler
   const handleSaveDOB = async (formattedDate: string) => {
     setSavingDOB(true);
     showLoader();
@@ -445,25 +397,21 @@ export function Profile() {
           date_of_birth: formattedDate
         }
       };
-
       const response = await patchRequest(ENDPOINTS.user, payload);
-
       if (response) {
         setIsEditingDOB(false);
         await synchronizeUser();
       } else {
-        setDobError('Failed to save Date of Birth. Please try again.');
+        setDobError('Failed to save Date of Birth.');
       }
     } catch (error: any) {
-      console.error('Failed to update Date of Birth:', error);
-      setDobError(error?.message || 'Could not save Date of Birth. Please try again.');
+      setDobError(error?.message || 'Could not save Date of Birth.');
     } finally {
       setSavingDOB(false);
       hideLoader();
     }
   };
 
-// Address Validation and Save Handlers
   const validateAddress = () => {
     const newErrors: Record<string, string> = {};
     if (!addressForm.country) newErrors.country = 'Country is required';
@@ -476,7 +424,6 @@ export function Profile() {
 
   const handleSaveAddress = async () => {
     if (!validateAddress()) return;
-
     setSavingAddress(true);
     showLoader();
 
@@ -494,7 +441,6 @@ export function Profile() {
       };
 
       const response = await patchRequest(ENDPOINTS.user, payload);
-
       if (response) {
         const pref = response.preference || payload.preference;
         const newAddress = {
@@ -511,8 +457,7 @@ export function Profile() {
         await synchronizeUser();
       }
     } catch (error: any) {
-      console.error('Failed to save address:', error);
-      setAddressErrors(prev => ({ ...prev, submit: error?.message || 'Failed to update address. Please try again.' }));
+      setAddressErrors(prev => ({ ...prev, submit: error?.message || 'Failed to update address.' }));
     } finally {
       setSavingAddress(false);
       hideLoader();
@@ -525,7 +470,7 @@ export function Profile() {
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden font-sans">
       <div className="flex-1 flex flex-col h-full min-w-0 relative">
         
-        {/* FIXED APP HEADER */}
+        {/* HEADER */}
         <header className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
           <div className="max-w-5xl mx-auto flex items-center justify-between px-4 py-3.5">
             <div className="flex items-center gap-3">
@@ -541,20 +486,19 @@ export function Profile() {
           </div>
         </header>
 
-        {/* SCROLLABLE CONTENT AREA */}
+ {/* CONTENT */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden z-10">
           <div className="max-w-5xl mx-auto space-y-6">
             
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
-              {/* LEFT COLUMN: HERO CARD & ACCOUNT INFORMATION */}
+              {/* LEFT COLUMN */}
               <div className="lg:col-span-5 space-y-6">
                 
-                {/* PROFILE HERO CARD */}
+                {/* PROFILE HERO */}
                 <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
                   <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-r from-sky-500/10 via-blue-600/10 to-sky-500/10 dark:from-sky-500/20 dark:to-blue-600/20" />
                   
-                  {/* Profile Picture */}
                   <div className="relative mt-4 mb-4">
                     {imagePreview ? (
                       <img 
@@ -568,16 +512,12 @@ export function Profile() {
                       </div>
                     )}
                     <button 
-                      onClick={handleImageClick}
+                      onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
                       className="absolute bottom-1 right-1 p-2 bg-sky-500 hover:bg-sky-600 text-white rounded-full shadow-lg transition-transform active:scale-95 disabled:opacity-50"
                       title="Change Profile Picture"
                     >
-                      {uploading ? (
-                        <Upload className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Camera className="w-4 h-4" />
-                      )}
+                      {uploading ? <Upload className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
                     </button>
                     <input
                       ref={fileInputRef}
@@ -588,7 +528,6 @@ export function Profile() {
                     />
                   </div>
 
-                  {/* Name & UID */}
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
                     {fullName}
                   </h2>
@@ -597,7 +536,6 @@ export function Profile() {
                     UID: {uid}
                   </p>
 
-                  {/* Badges */}
                   <div className="flex items-center gap-2 mt-4">
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-800/50">
                       <Sparkles className="w-3 h-3 text-sky-500" />
@@ -610,7 +548,7 @@ export function Profile() {
                   </div>
                 </section>
 
-                {/* ACCOUNT INFORMATION SECTION */}
+                {/* ACCOUNT INFO */}
                 <section className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
                     <ShieldCheck className="w-4 h-4 text-sky-500" />
@@ -642,10 +580,10 @@ export function Profile() {
 
               </div>
 
-              {/* RIGHT COLUMN: PERSONAL INFO, CONTACT INFO & RESIDENTIAL ADDRESS */}
+              {/* RIGHT COLUMN */}
               <div className="lg:col-span-7 space-y-6">
                 
-                {/* SECTION 1: PERSONAL INFORMATION */}
+                {/* PERSONAL INFORMATION */}
                 <section className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
                   <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
                     <User className="w-4 h-4 text-sky-500" />
@@ -653,8 +591,6 @@ export function Profile() {
                   </div>
 
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    
-                    {/* Full Name */}
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400 dark:text-slate-500">Full Name</p>
@@ -682,20 +618,12 @@ export function Profile() {
                         </div>
                         {!isNicknameEdited ? (
                           <div className="flex items-center gap-1 text-sky-500 font-medium text-xs">
-                            {isEditingNickname ? (
-                              <span>Cancel</span>
-                            ) : (
-                              <span className="flex items-center gap-1">
-                                <Edit3 className="w-3 h-3" />
-                                {nickname ? 'Edit' : 'Set'}
-                              </span>
-                            )}
+                            <Edit3 className="w-3 h-3" />
+                            <span>{isEditingNickname ? 'Cancel' : (nickname ? 'Edit' : 'Set')}</span>
                             {isEditingNickname ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-400 dark:text-slate-500 italic">
-                            Set
-                          </span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500 italic">Set</span>
                         )}
                       </div>
 
@@ -711,9 +639,7 @@ export function Profile() {
                               }}
                               className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
                             />
-                            {nicknameError && (
-                              <p className="text-xs text-red-500 mt-1">{nicknameError}</p>
-                            )}
+                            {nicknameError && <p className="text-xs text-red-500 mt-1">{nicknameError}</p>}
                             <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
                               Note: Nickname can only be set once.
                             </p>
@@ -741,7 +667,6 @@ export function Profile() {
                       )}
                     </div>
 
-                    {/* Gender */}
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400 dark:text-slate-500">Gender</p>
@@ -749,7 +674,7 @@ export function Profile() {
                       </div>
                     </div>
 
-                    {/* Date of Birth Section with Custom App Date Picker */}
+                    {/* Date of Birth */}
                     <div className="p-4 transition-colors">
                       <div className="flex items-center justify-between">
                         <div>
@@ -773,7 +698,6 @@ export function Profile() {
                         </button>
                       </div>
 
-                      {/* DOB Date Picker Expansion */}
                       {isEditingDOB && (
                         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
                           <DOBDatePicker
@@ -793,7 +717,7 @@ export function Profile() {
                   </div>
                 </section>
 
-                {/* SECTION 2: CONTACT INFORMATION */}
+                {/* CONTACT INFORMATION */}
                 <section className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
                   <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
                     <Phone className="w-4 h-4 text-sky-500" />
@@ -801,8 +725,6 @@ export function Profile() {
                   </div>
 
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    
-    {/* Mobile Number */}
                     <div className="p-4 transition-colors">
                       <div className="flex items-center justify-between">
                         <div>
@@ -835,14 +757,18 @@ export function Profile() {
                                 type="tel"
                                 maxLength={10}
                                 value={phoneInput}
-                                onChange={handlePhoneInputChange}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(/\D/g, '');
+                                  if (val.length <= 10) {
+                                    setPhoneInput(val);
+                                    setPhoneError('');
+                                  }
+                                }}
                                 placeholder="8064709041"
                                 className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 flex-1"
                               />
                             </div>
-                            {phoneError && (
-                              <p className="text-xs text-red-500 mt-1.5">{phoneError}</p>
-                            )}
+                            {phoneError && <p className="text-xs text-red-500 mt-1.5">{phoneError}</p>}
                           </div>
 
                           <div className="flex gap-2 pt-1">
@@ -865,7 +791,6 @@ export function Profile() {
                       )}
                     </div>
 
-                    {/* Email Address */}
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <p className="text-xs text-slate-400 dark:text-slate-500">Email Address</p>
@@ -875,11 +800,10 @@ export function Profile() {
                         </p>
                       </div>
                     </div>
-
                   </div>
                 </section>
 
-                {/* SECTION 3: RESIDENTIAL ADDRESS */}
+  {/* RESIDENTIAL ADDRESS */}
                 <section className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
                   <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1010,11 +934,8 @@ export function Profile() {
                           </div>
                         </div>
 
-                        {addressErrors.submit && (
-                          <p className="text-xs text-red-500 mt-1">{addressErrors.submit}</p>
-                        )}
+                        {addressErrors.submit && <p className="text-xs text-red-500 mt-1">{addressErrors.submit}</p>}
 
-                        {/* Actions */}
                         <div className="flex gap-3 pt-2">
                           <button
                             onClick={handleSaveAddress}
@@ -1027,9 +948,7 @@ export function Profile() {
                           <button
                             onClick={() => {
                               setIsEditingAddress(false);
-                              setAddressForm(residentialAddress || {
-                                country: '', state: '', city: '', addressLine: '', landmark: '', postalCode: ''
-                              });
+                              if (residentialAddress) setAddressForm(residentialAddress);
                               setAddressErrors({});
                             }}
                             className="px-4 h-11 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
@@ -1040,23 +959,24 @@ export function Profile() {
                         </div>
                       </div>
                     ) : (
+                      /* OPTIONAL CHAINING FIXES TS18047 ERRORS BELOW */
                       <div className="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-start gap-3">
                         <div className="p-2 bg-sky-500/10 text-sky-500 rounded-xl shrink-0 mt-0.5">
                           <MapPin className="w-4 h-4" />
                         </div>
                         <div className="space-y-1 text-sm">
                           <p className="font-semibold text-slate-800 dark:text-slate-100 leading-snug">
-                            {residentialAddress.addressLine}
+                            {residentialAddress?.addressLine}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {residentialAddress.city}, {residentialAddress.state}
+                            {residentialAddress?.city}, {residentialAddress?.state}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {residentialAddress.country} {residentialAddress.postalCode && `• ${residentialAddress.postalCode}`}
+                            {residentialAddress?.country} {residentialAddress?.postalCode && `• ${residentialAddress?.postalCode}`}
                           </p>
-                          {residentialAddress.landmark && (
+                          {residentialAddress?.landmark && (
                             <p className="text-[11px] text-slate-400 dark:text-slate-500 italic pt-1">
-                              Landmark: {residentialAddress.landmark}
+                              Landmark: {residentialAddress?.landmark}
                             </p>
                           )}
                         </div>
