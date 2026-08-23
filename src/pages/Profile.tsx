@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { 
@@ -7,9 +7,36 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { patchRequest, ENDPOINTS } from '@/types';
+import { patchRequest, getRequest, ENDPOINTS } from '@/types';
 import { Loader } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
+
+interface UserPreference {
+  image?: string | null;
+  nickname?: string | null;
+  gender?: string | null;
+  date_of_birth?: string | null;
+  country?: string | null;
+  state?: string | null;
+  city?: string | null;
+  street_address?: string | null;
+  landmark?: string | null;
+  postal_code?: string | null;
+  updated_on?: string | null;
+}
+
+interface UserProfileData {
+  id?: number;
+  other_names?: string | null;
+  email?: string | null;
+  phone?: string | number | null;
+  surname?: string | null;
+  pin_is_set?: boolean;
+  image?: string | null;
+  referral_code?: string | null;
+  created_on?: string | null;
+  preference?: UserPreference;
+}
 
 export function Profile() {
   const navigate = useNavigate();
@@ -17,34 +44,25 @@ export function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { LoaderComponent, showLoader, hideLoader } = Loader();
 
+  // Primary Backend Profile Data State
+  const [profileData, setProfileData] = useState<UserProfileData | null>(null);
+
   // State: Profile Picture Upload
   const [uploading, setUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState(user?.profilePicture || null);
+  const [imagePreview, setImagePreview] = useState<string | null>(user?.profilePicture || null);
 
-  // Local Storage placeholder for Nickname
-  const [nickname, setNickname] = useState<string>(() => {
-    return localStorage.getItem('profile_nickname') || '';
-  });
+  // Nickname State
+  const [nickname, setNickname] = useState<string>('');
   const [isEditingNickname, setIsEditingNickname] = useState(false);
-  const [nicknameInput, setNicknameInput] = useState(nickname);
+  const [nicknameInput, setNicknameInput] = useState('');
 
   // Phone Number Editing State
-  const [isPhoneEdited, setIsPhoneEdited] = useState<boolean>(() => {
-    return localStorage.getItem('profile_phone_edited') === 'true';
-  });
+  const [isPhoneEdited, setIsPhoneEdited] = useState<boolean>(false);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
-  
-  // Extract raw 10 digits from existing phone
-  const rawInitialPhone = (user?.phone || '').replace(/\D/g, '').slice(-10);
-  const [phoneInput, setPhoneInput] = useState(rawInitialPhone);
+  const [phoneInput, setPhoneInput] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
   // Address State
-  const [residentialAddress, setResidentialAddress] = useState(() => {
-    const saved = localStorage.getItem('marketplace_delivery_location');
-    return saved ? JSON.parse(saved) : null;
-  });
-
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [savingAddress, setSavingAddress] = useState(false);
   const [countries, setCountries] = useState<{ country: string; iso2: string }[]>([]);
@@ -58,36 +76,99 @@ export function Profile() {
   });
 
   const [addressForm, setAddressForm] = useState({
-    country: residentialAddress?.country || '',
-    state: residentialAddress?.state || '',
-    city: residentialAddress?.city || '',
-    addressLine: residentialAddress?.addressLine || '',
-    landmark: residentialAddress?.landmark || '',
-    postalCode: residentialAddress?.postalCode || ''
+    country: '',
+    state: '',
+    city: '',
+    addressLine: '',
+    landmark: '',
+    postalCode: ''
   });
 
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
 
-  // Safely derive Dynamic User Identity Fields using (user as any) to bypass strict TS check for fallbacks
-  const fullName = `${user?.firstName || (user as any)?.first_name || ''} ${user?.surname || (user as any)?.last_name || ''}`.trim() || 'Valued Member';
-  const email = user?.email || 'Not Provided';
+  // Populate state helper when profile data is fetched or updated
+  const populateProfileState = useCallback((data: UserProfileData) => {
+    setProfileData(data);
+
+    // Profile Image
+    const activeImage = data.image || data.preference?.image || user?.profilePicture || null;
+    setImagePreview(activeImage);
+
+    // Nickname
+    const activeNickname = data.preference?.nickname || '';
+    setNickname(activeNickname);
+    setNicknameInput(activeNickname);
+
+    // Phone
+    if (data.phone) {
+      const rawPhone = String(data.phone).replace(/\D/g, '').slice(-10);
+      setPhoneInput(rawPhone);
+      setIsPhoneEdited(true);
+    } else {
+      const fallbackPhone = (user?.phone || '').replace(/\D/g, '').slice(-10);
+      setPhoneInput(fallbackPhone);
+      setIsPhoneEdited(false);
+    }
+
+    // Address
+    if (data.preference) {
+      setAddressForm({
+        country: data.preference.country || '',
+        state: data.preference.state || '',
+        city: data.preference.city || '',
+        addressLine: data.preference.street_address || '',
+        landmark: data.preference.landmark || '',
+        postalCode: data.preference.postal_code || ''
+      });
+    }
+  }, [user]);
+
+  // Fetch authenticated User Profile on Mount
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      showLoader();
+      try {
+        const response = await getRequest(ENDPOINTS.user);
+        if (response) {
+          populateProfileState(response);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+      } finally {
+        hideLoader();
+      }
+    };
+
+    fetchUserProfile();
+  }, [populateProfileState]);
+
+  // Derived Values from Backend with Auth Context Fallbacks
+  const fullName = profileData
+    ? `${profileData.other_names || ''} ${profileData.surname || ''}`.trim() || 'Valued Member'
+    : `${user?.firstName || (user as any)?.first_name || ''} ${user?.surname || (user as any)?.last_name || ''}`.trim() || 'Valued Member';
+
+  const email = profileData?.email || user?.email || 'Not Provided';
   
-  // Dynamic UID safely pulled from user's referral_code with fallback
-  const rawUid = (user as any)?.referral_code || (user as any)?.referralCode || (user as any)?.uid || (user as any)?.id || (user as any)?.user_id;
+  const rawUid = profileData?.referral_code || (user as any)?.referral_code || (user as any)?.referralCode || (user as any)?.uid || (user as any)?.id;
   const uid = rawUid ? String(rawUid) : 'BSM24001000';
 
-  // Dynamic Tier with Default Tier 1
   const tier = (user as any)?.tier || (user as any)?.tierLevel || (user as any)?.tier_level || 'Tier 1';
-  
   const verificationStatus = (user as any)?.verificationStatus || (user as any)?.verification_status || 'Verified';
-  const gender = (user as any)?.gender || 'Not Specified';
-  const dateOfBirth = (user as any)?.dob || (user as any)?.dateOfBirth || (user as any)?.date_of_birth || 'Not Specified';
   
-  // Dynamic Date Registered safely retrieved from Backend
-  const rawCreatedAt = (user as any)?.createdAt || (user as any)?.created_at || (user as any)?.registeredAt || (user as any)?.dateRegistered;
+  const gender = profileData?.preference?.gender || (user as any)?.gender || 'Not Specified';
+  const dateOfBirth = profileData?.preference?.date_of_birth || (user as any)?.dob || (user as any)?.dateOfBirth || 'Not Specified';
+  
+  const rawCreatedAt = profileData?.created_on || (user as any)?.createdAt || (user as any)?.created_at || (user as any)?.registeredAt;
   const memberSince = rawCreatedAt 
     ? new Date(rawCreatedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : 'Not Specified';
+
+  const hasResidentialAddress = Boolean(
+    profileData?.preference?.street_address || 
+    profileData?.preference?.city || 
+    profileData?.preference?.state || 
+    profileData?.preference?.country
+  );
 
   // Fetch Countries on Mount
   useEffect(() => {
@@ -180,7 +261,17 @@ export function Profile() {
 
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       if (response) {
-        window.location.reload();
+        const newImageUrl = response.image || response.preference?.image || URL.createObjectURL(file);
+        setImagePreview(newImageUrl);
+        setProfileData(prev => prev ? {
+          ...prev,
+          image: response.image || prev.image,
+          preference: {
+            ...prev.preference,
+            ...(response.preference || {}),
+            image: response.image || prev.preference?.image
+          }
+        } : null);
       }
     } catch (error) {
       console.error('Failed to upload image:', error);
@@ -191,11 +282,30 @@ export function Profile() {
   };
 
   // Nickname Handlers
-  const handleSaveNickname = () => {
+  const handleSaveNickname = async () => {
     const trimmed = nicknameInput.trim();
-    localStorage.setItem('profile_nickname', trimmed);
-    setNickname(trimmed);
-    setIsEditingNickname(false);
+    showLoader();
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('nickname', trimmed);
+
+      const response = await patchRequest(ENDPOINTS.user, formDataToSend);
+      if (response) {
+        setNickname(trimmed);
+        setProfileData(prev => prev ? {
+          ...prev,
+          preference: {
+            ...prev.preference,
+            nickname: trimmed
+          }
+        } : null);
+        setIsEditingNickname(false);
+      }
+    } catch (error) {
+      console.error('Failed to update nickname:', error);
+    } finally {
+      hideLoader();
+    }
   };
 
   // Phone Number Handlers
@@ -221,10 +331,12 @@ export function Profile() {
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       
       if (response) {
-        localStorage.setItem('profile_phone_edited', 'true');
+        setProfileData(prev => prev ? {
+          ...prev,
+          phone: response.phone || phoneInput
+        } : null);
         setIsPhoneEdited(true);
         setIsEditingPhone(false);
-        window.location.reload();
       }
     } catch (error) {
       console.error('Failed to update phone:', error);
@@ -252,16 +364,31 @@ export function Profile() {
     showLoader();
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
+      const formDataToSend = new FormData();
+      formDataToSend.append('country', addressForm.country);
+      formDataToSend.append('state', addressForm.state);
+      formDataToSend.append('city', addressForm.city);
+      formDataToSend.append('street_address', addressForm.addressLine);
+      if (addressForm.landmark) formDataToSend.append('landmark', addressForm.landmark);
+      if (addressForm.postalCode) formDataToSend.append('postal_code', addressForm.postalCode);
 
-      const dataToSave = {
-        ...addressForm,
-        updatedAt: new Date().toISOString()
-      };
-
-      localStorage.setItem('marketplace_delivery_location', JSON.stringify(dataToSave));
-      setResidentialAddress(dataToSave);
-      setIsEditingAddress(false);
+      const response = await patchRequest(ENDPOINTS.user, formDataToSend);
+      
+      if (response) {
+        setProfileData(prev => prev ? {
+          ...prev,
+          preference: {
+            ...prev.preference,
+            country: addressForm.country,
+            state: addressForm.state,
+            city: addressForm.city,
+            street_address: addressForm.addressLine,
+            landmark: addressForm.landmark,
+            postal_code: addressForm.postalCode
+          }
+        } : null);
+        setIsEditingAddress(false);
+      }
     } catch (error) {
       console.error('Failed to save address:', error);
     } finally {
@@ -292,7 +419,7 @@ export function Profile() {
           </div>
         </header>
 
-        {/* ISOLATED SCROLLABLE CONTENT AREA - Scrollbar removed on mobile screens */}
+        {/* ISOLATED SCROLLABLE CONTENT AREA */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden z-10">
           <div className="max-w-5xl mx-auto space-y-6">
             
@@ -308,9 +435,9 @@ export function Profile() {
                   
                   {/* Profile Picture */}
                   <div className="relative mt-4 mb-4">
-                    {imagePreview || user?.profilePicture ? (
+                    {imagePreview ? (
                       <img 
-                        src={imagePreview || user?.profilePicture} 
+                        src={imagePreview} 
                         alt={fullName} 
                         className="w-28 h-28 rounded-full object-cover border-4 border-white dark:border-slate-900 shadow-md"
                       />
@@ -597,7 +724,7 @@ export function Profile() {
                       <MapPin className="w-4 h-4 text-sky-500" />
                       <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Residential Address</h3>
                     </div>
-                    {residentialAddress && !isEditingAddress && (
+                    {hasResidentialAddress && !isEditingAddress && (
                       <button
                         onClick={() => setIsEditingAddress(true)}
                         className="flex items-center gap-1 text-sky-500 font-medium text-xs hover:text-sky-600 transition-colors"
@@ -610,7 +737,7 @@ export function Profile() {
                   </div>
 
                   <div className="p-5">
-                    {!residentialAddress && !isEditingAddress ? (
+                    {!hasResidentialAddress && !isEditingAddress ? (
                       <div className="py-6 text-center space-y-3">
                         <p className="text-xs text-slate-400 dark:text-slate-500">
                           No residential address provided yet.
@@ -735,8 +862,13 @@ export function Profile() {
                           <button
                             onClick={() => {
                               setIsEditingAddress(false);
-                              setAddressForm(residentialAddress || {
-                                country: '', state: '', city: '', addressLine: '', landmark: '', postalCode: ''
+                              setAddressForm({
+                                country: profileData?.preference?.country || '',
+                                state: profileData?.preference?.state || '',
+                                city: profileData?.preference?.city || '',
+                                addressLine: profileData?.preference?.street_address || '',
+                                landmark: profileData?.preference?.landmark || '',
+                                postalCode: profileData?.preference?.postal_code || ''
                               });
                               setAddressErrors({});
                             }}
@@ -755,17 +887,17 @@ export function Profile() {
                         </div>
                         <div className="space-y-1 text-sm">
                           <p className="font-semibold text-slate-800 dark:text-slate-100 leading-snug">
-                            {residentialAddress.addressLine}
+                            {profileData?.preference?.street_address}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {residentialAddress.city}, {residentialAddress.state}
+                            {profileData?.preference?.city}, {profileData?.preference?.state}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {residentialAddress.country} {residentialAddress.postalCode && `• ${residentialAddress.postalCode}`}
+                            {profileData?.preference?.country} {profileData?.preference?.postal_code && `• ${profileData.preference.postal_code}`}
                           </p>
-                          {residentialAddress.landmark && (
+                          {profileData?.preference?.landmark && (
                             <p className="text-[11px] text-slate-400 dark:text-slate-500 italic pt-1">
-                              Landmark: {residentialAddress.landmark}
+                              Landmark: {profileData.preference.landmark}
                             </p>
                           )}
                         </div>
