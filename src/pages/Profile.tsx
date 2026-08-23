@@ -85,9 +85,9 @@ export function Profile() {
   const [loadingProfile, setLoadingProfile] = useState<boolean>(true);
   const [profileError, setProfileError] = useState<string | null>(null);
 
-  // Profile Picture Upload
+  // Profile Picture Upload (Initializes from user context)
   const [uploading, setUploading] = useState<boolean>(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(user?.profilePicture || null);
 
   // Nickname State
   const [isEditingNickname, setIsEditingNickname] = useState<boolean>(false);
@@ -139,11 +139,18 @@ export function Profile() {
 
   const [addressFieldErrors, setAddressFieldErrors] = useState<Record<string, string>>({});
 
+  // Synchronize image when Auth Context updates
+  useEffect(() => {
+    if (user?.profilePicture && !imagePreview?.startsWith('blob:')) {
+      setImagePreview(user.profilePicture);
+    }
+  }, [user?.profilePicture]);
+
   // Helper to sync local edit states with latest profile data
   const populateFormStates = useCallback((data: UserProfileData) => {
     const pref = data.preference || {};
 
-    const activeImage = data.image || pref.image || user?.profilePicture || null;
+    const activeImage = user?.profilePicture || data.image || pref.image || null;
     setImagePreview(activeImage);
 
     setNicknameInput(pref.nickname || '');
@@ -196,7 +203,7 @@ export function Profile() {
   // Derived Values from Backend Profile Response
   const fullName = profileData
     ? `${profileData.other_names || ''} ${profileData.surname || ''}`.trim() || 'Valued Member'
-    : user?.firstName ? `${user.firstName} ${user.surname || ''}`.trim() : 'Valued Member';
+    : user?.firstName ? `${user.firstName} ${user?.surname || ''}`.trim() : 'Valued Member';
 
   const email = profileData?.email || user?.email || 'Not Provided';
   const referralCode = profileData?.referral_code || 'Not Available';
