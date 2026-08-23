@@ -163,11 +163,13 @@ export function Profile() {
     });
   }, [user]);
 
-  // Fetch Profile Data on Mount
-  const fetchUserProfile = useCallback(async () => {
-    setLoadingProfile(true);
+  // Fetch Profile Data on Mount & Refresh
+  const fetchUserProfile = useCallback(async (isSilentRefresh = false) => {
+    if (!isSilentRefresh) {
+      setLoadingProfile(true);
+      showLoader();
+    }
     setProfileError(null);
-    showLoader();
     try {
       const response = await getRequest(ENDPOINTS.user);
       if (response) {
@@ -180,8 +182,10 @@ export function Profile() {
       console.error('Failed to fetch user profile:', error);
       setProfileError('Unable to connect to the server. Please check your network.');
     } finally {
-      setLoadingProfile(false);
-      hideLoader();
+      if (!isSilentRefresh) {
+        setLoadingProfile(false);
+        hideLoader();
+      }
     }
   }, [populateFormStates, showLoader, hideLoader]);
 
@@ -301,8 +305,7 @@ export function Profile() {
 
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       if (response) {
-        setProfileData(response);
-        populateFormStates(response);
+        await fetchUserProfile(true);
       }
     } catch (error) {
       console.error('Failed to upload image:', error);
@@ -325,8 +328,7 @@ export function Profile() {
 
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       if (response) {
-        setProfileData(response);
-        populateFormStates(response);
+        await fetchUserProfile(true);
         setIsEditingNickname(false);
       } else {
         setNicknameError('Could not save nickname. Please try again.');
@@ -356,8 +358,7 @@ export function Profile() {
 
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       if (response) {
-        setProfileData(response);
-        populateFormStates(response);
+        await fetchUserProfile(true);
         setIsEditingGender(false);
       } else {
         setGenderError('Could not save gender selection.');
@@ -387,8 +388,7 @@ export function Profile() {
 
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       if (response) {
-        setProfileData(response);
-        populateFormStates(response);
+        await fetchUserProfile(true);
         setIsEditingDob(false);
       } else {
         setDobError('Could not save date of birth.');
@@ -427,8 +427,7 @@ export function Profile() {
 
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       if (response) {
-        setProfileData(response);
-        populateFormStates(response);
+        await fetchUserProfile(true);
         setIsEditingPhone(false);
       } else {
         setPhoneError('Could not update phone number.');
@@ -471,8 +470,7 @@ export function Profile() {
 
       const response = await patchRequest(ENDPOINTS.user, formDataToSend);
       if (response) {
-        setProfileData(response);
-        populateFormStates(response);
+        await fetchUserProfile(true);
         setIsEditingAddress(false);
       } else {
         setAddressError('Could not save residential address.');
@@ -537,7 +535,7 @@ export function Profile() {
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{profileError}</p>
                 </div>
                 <button
-                  onClick={fetchUserProfile}
+                  onClick={() => fetchUserProfile()}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
