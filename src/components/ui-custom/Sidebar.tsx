@@ -22,6 +22,7 @@ import {
   Briefcase,
   //Orbit,
   //ShieldCheck
+  ScanQrCode
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -45,6 +46,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Briefcase,
   //Orbit,
  // ShieldCheck
+ ScanQrCode
 };
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
