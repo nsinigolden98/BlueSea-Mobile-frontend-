@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar, Header } from '@/components/ui-custom';
 import { services, serviceCategories } from '@/data/services';
@@ -9,7 +9,7 @@ import {
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank, 
   CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheckIcon, FileText, 
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat, 
-  Grid3X3, ArrowLeftRight, Search, Clock, Star, QrCode, Headphones, ChevronRight, ScanQrCode
+  Grid3X3, ArrowLeftRight, Search, Clock, Star, QrCode, Headphones, ChevronRight, ScanQrCode, KeyRound
 } from 'lucide-react';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
  
@@ -23,7 +23,7 @@ const VALID_APP_ROUTES = new Set([
   '/scanner', '/scanner-assignments', '/my-tickets', '/vendor-verification', '/dstv', 
   '/gotv', '/startimes', '/showmax', '/waec-registration', '/waec-result', 
   '/jamb-registration', '/tv-subscription', '/auto-topup', '/support', '/checkout', 
-  '/messages',  '/products', '/history', '/identity-center',  '/paylink'
+  '/messages',  '/products', '/history', '/identity-center',  '/paylink', '/blueconnect'
 ]);
 
 // Centralized icon map to safely render string icons from the registry
@@ -32,7 +32,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank,
   CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheckIcon, FileText,
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat,
-  Grid3X3, ArrowLeftRight, QrCode, Headphones, ScanQrCode
+  Grid3X3, ArrowLeftRight, QrCode, Headphones, ScanQrCode, KeyRound
 };
 
 const Badge = ({ type }: { type: Service['badge'] }) => {
@@ -54,14 +54,20 @@ const Badge = ({ type }: { type: Service['badge'] }) => {
 export function Services() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [recentServiceIds, setRecentServiceIds] = useState<string[]>([]);
-  const navigate = useNavigate();
-
-  // Load recently used from localStorage on mount
-  useEffect(() => {
+  const [recentServiceIds, setRecentServiceIds] = useState<string[]>(() => {
     const saved = localStorage.getItem('@bluesea_recent_services');
-    if (saved) setRecentServiceIds(JSON.parse(saved));
-  }, []);
+    if (!saved) return [];
+
+    try {
+      const parsed: unknown = JSON.parse(saved);
+      return Array.isArray(parsed) && parsed.every(id => typeof id === 'string')
+        ? parsed
+        : [];
+    } catch {
+      return [];
+    }
+  });
+  const navigate = useNavigate();
 
   const handleNavigation = (service: Service) => {
     const newRecents = [service.id, ...recentServiceIds.filter(id => id !== service.id)].slice(0, 3);

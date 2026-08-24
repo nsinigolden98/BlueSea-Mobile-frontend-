@@ -44,6 +44,7 @@ export const services: Service[] = [
 
   // Finance
   { id: 'fi-1', name: 'PayLink', description: 'Recieve & Make Payment Slimlessly', icon: 'ScanQrCode', route: '/paylink', category: 'Finance' },
+  { id: 'fi-2', name: 'BlueConnect', description: 'securely recieve and make payment', icon: 'KeyRound', route: '/blueconnect', category: 'Finance' },
   //{ id: 'fi-1', name: 'Savings Vault', description: 'Earn interest on your funds', icon: 'PiggyBank', route: '/finance/savings', category: 'Finance', badge: 'Recommended' },
   //{ id: 'fi-2', name: 'Cards', description: 'Virtual & physical debit cards', icon: 'CreditCard', route: '/finance/cards', category: 'Finance' },
   //{ id: 'fi-3', name: 'Crypto', description: 'Trade & store digital assets', icon: 'Bitcoin', route: '/finance/crypto', category: 'Finance' },
