@@ -18,6 +18,7 @@ export function Support() {
   const [showNewTicket, setShowNewTicket] = useState(false);
   const [initialSubject, setInitialSubject] = useState('');
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
 
@@ -35,7 +36,7 @@ export function Support() {
       if (response && response.tickets) {
         setTickets(response.tickets);
       }
-    } catch (error) {
+    } catch {
       showToast('Failed to fetch support tickets');
     } finally {
       setLoading(false);
@@ -43,13 +44,22 @@ export function Support() {
   };
 
   const fetchTicketDetail = async (ticketId: number) => {
+    setIsLoadingConversation(true);
+    // Optimistically select local ticket summary if available for instant UI feedback
+    const localTicket = tickets.find((t) => t.id === ticketId);
+    if (localTicket) {
+      setSelectedTicket(localTicket);
+    }
+
     try {
       const response = await getRequest(ENDPOINTS.support_ticket_detail(String(ticketId)));
       if (response) {
         setSelectedTicket(response);
       }
-    } catch (error) {
+    } catch {
       showToast('Failed to fetch conversation details');
+    } finally {
+      setIsLoadingConversation(false);
     }
   };
 
@@ -62,7 +72,7 @@ export function Support() {
         setShowNewTicket(false);
         setInitialSubject('');
         await fetchTickets();
-        
+
         // If created ticket object or ID returned, open directly
         if (response.ticket && response.ticket.id) {
           fetchTicketDetail(response.ticket.id);
@@ -72,7 +82,7 @@ export function Support() {
       } else {
         showToast(response?.error || 'Failed to create support ticket');
       }
-    } catch (error) {
+    } catch {
       showToast('Error connecting to support backend');
     } finally {
       setIsSubmittingTicket(false);
@@ -91,7 +101,7 @@ export function Support() {
 
       if (response && response.success && response.message) {
         const newMsg: SupportMessage = response.message;
-        
+
         // Append backend-returned message object immediately
         setSelectedTicket((prev) => {
           if (!prev) return null;
@@ -116,7 +126,7 @@ export function Support() {
         showToast(response?.error || 'Failed to send message');
         return false;
       }
-    } catch (error) {
+    } catch {
       showToast('Failed to send message. Please check connection.');
       return false;
     } finally {
@@ -129,11 +139,13 @@ export function Support() {
     setShowNewTicket(true);
   };
 
+  const hasActiveConversation = Boolean(selectedTicket || isLoadingConversation);
+
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+      <div className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden">
         <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
           <Header
             title="Support Center"
@@ -142,18 +154,18 @@ export function Support() {
           />
         </div>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
-          <div className="max-w-6xl mx-auto h-full flex flex-col">
-            
+        <main className="flex-1 p-4 md:p-6 overflow-hidden z-10 flex flex-col min-h-0">
+          <div className="max-w-6xl mx-auto w-full h-full flex flex-col min-h-0">
+
             {/* DESKTOP TWO-PANE / RESPONSIVE VIEW ENGINE */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
-              
+
               {/* LEFT COLUMN: List / Forms / Intro */}
               <div
                 className={
-                  selectedTicket
-                    ? 'hidden lg:block lg:col-span-5 flex flex-col h-full overflow-y-auto pr-1'
-                    : 'col-span-1 lg:col-span-5 flex flex-col h-full overflow-y-auto pr-1'
+                  hasActiveConversation
+                    ? 'hidden lg:flex lg:col-span-5 flex-col h-full min-h-0 overflow-y-auto pr-1'
+                    : 'col-span-1 lg:col-span-12 flex flex-col h-full min-h-0 overflow-y-auto pr-1'
                 }
               >
                 {!showNewTicket && (
@@ -199,29 +211,23 @@ export function Support() {
               {/* RIGHT COLUMN: Active Conversation Workspace */}
               <div
                 className={
-                  selectedTicket
-                    ? 'col-span-1 lg:col-span-7 h-full flex flex-col'
-                    : 'hidden lg:flex lg:col-span-7 h-full items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 bg-white/50 dark:bg-slate-800/20'
+                  hasActiveConversation
+                    ? 'col-span-1 lg:col-span-7 h-full flex flex-col min-h-0'
+                    : 'hidden'
                 }
               >
-                {selectedTicket ? (
-                  <TicketConversation
-                    ticket={selectedTicket}
-                    isSending={isSendingMessage}
-                    onSendMessage={handleSendMessage}
-                    onBack={() => setSelectedTicket(null)}
-                    showBackButton={true}
-                    onStartNewTicket={() => {
-                      setSelectedTicket(null);
-                      setShowNewTicket(true);
-                    }}
-                  />
-                ) : (
-                  <div className="text-center text-slate-400 dark:text-slate-500">
-                    <p className="text-sm font-medium">Select a conversation to view messages</p>
-                    <p className="text-xs mt-1">Or start a new request to reach BlueSea Support.</p>
-                  </div>
-                )}
+                <TicketConversation
+                  ticket={selectedTicket}
+                  isLoading={isLoadingConversation}
+                  isSending={isSendingMessage}
+                  onSendMessage={handleSendMessage}
+                  onBack={() => setSelectedTicket(null)}
+                  showBackButton={true}
+                  onStartNewTicket={() => {
+                    setSelectedTicket(null);
+                    setShowNewTicket(true);
+                  }}
+                />
               </div>
 
             </div>
