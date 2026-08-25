@@ -44,7 +44,6 @@ export function Support() {
 
   const fetchTicketDetail = async (ticketId: number) => {
     setIsLoadingConversation(true);
-    // Optimistically select local ticket summary if available for instant UI feedback
     const localTicket = tickets.find((t) => t.id === ticketId);
     if (localTicket) {
       setSelectedTicket(localTicket);
@@ -65,26 +64,28 @@ export function Support() {
   const handleCreateTicket = async (payload: CreateTicketPayload) => {
     setIsSubmittingTicket(true);
     try {
-      // BACKEND CONTRACT MISSING: New ticket creation with images.
-      // We process the core request correctly as JSON, omitting payload.images for now.
-      const requestPayload = {
-        subject: payload.subject,
-        description: payload.description,
-        priority: payload.priority,
-      };
+      // Send payload as multipart/form-data to match backend requirements
+      const formData = new FormData();
+      formData.append('subject', payload.subject);
+      formData.append('description', payload.description);
+      formData.append('priority', payload.priority);
 
-      const response = await postRequest(ENDPOINTS.support_tickets, requestPayload);
-      if (response && response.success) {
+      if (payload.images && payload.images.length > 0) {
+        payload.images.forEach((file) => {
+          formData.append('images', file);
+        });
+      }
+
+      const response = await postRequest(ENDPOINTS.support_tickets, formData);
+      if (response && (response.success || response.id || response.ticket)) {
         showToast('Support conversation started successfully');
         setShowNewTicket(false);
         setInitialSubject('');
         await fetchTickets();
 
-        // If created ticket object or ID returned, open directly
-        if (response.ticket && response.ticket.id) {
-          fetchTicketDetail(response.ticket.id);
-        } else if (response.id) {
-          fetchTicketDetail(response.id);
+        const newId = response.ticket?.id || response.id;
+        if (newId) {
+          fetchTicketDetail(newId);
         }
       } else {
         showToast(response?.error || 'Failed to create support ticket');
@@ -101,13 +102,12 @@ export function Support() {
 
     setIsSendingMessage(true);
     try {
-      // Determine if we need a multipart request
       let requestData: any = { message: messageText.trim() };
       
       if (images.length > 0) {
         requestData = new FormData();
         requestData.append('message', messageText.trim());
-        images.forEach(img => {
+        images.forEach((img) => {
           requestData.append('images', img);
         });
       }
@@ -120,7 +120,6 @@ export function Support() {
       if (response && response.success && response.message) {
         const newMsg: SupportMessage = response.message;
 
-        // Append backend-returned message object immediately
         setSelectedTicket((prev) => {
           if (!prev) return null;
           return {
@@ -129,7 +128,6 @@ export function Support() {
           };
         });
 
-        // Also update latest timestamp/preview in parent ticket list
         setTickets((prevTickets) =>
           prevTickets.map((t) =>
             t.id === selectedTicket.id
@@ -175,10 +173,8 @@ export function Support() {
         <main className="flex-1 p-4 md:p-6 overflow-hidden z-10 flex flex-col min-h-0">
           <div className="max-w-6xl mx-auto w-full h-full flex flex-col min-h-0">
 
-            {/* DESKTOP TWO-PANE / RESPONSIVE VIEW ENGINE */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
 
-              {/* LEFT COLUMN: List / Forms / Intro */}
               <div
                 className={
                   hasActiveConversation
@@ -225,7 +221,6 @@ export function Support() {
                 </div>
               </div>
 
-              {/* RIGHT COLUMN: Active Conversation Workspace */}
               <div
                 className={
                   hasActiveConversation
