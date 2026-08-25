@@ -27,6 +27,7 @@ export interface CreateTicketPayload {
 
 export interface SendMessagePayload {
   message: string;
+  images?: File[];
 }
 
 export interface SendMessageResponse {

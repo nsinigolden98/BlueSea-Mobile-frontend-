@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { CreateTicketPayload } from './types';
 import { X, Send, Paperclip } from 'lucide-react';
 
@@ -18,43 +18,47 @@ export const TicketForm: React.FC<TicketFormProps> = ({
   const [subject, setSubject] = useState(initialSubject);
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');
-  const [error, setError] = useState<string | null>(null);
-  
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const urls = images.map(img => URL.createObjectURL(img));
-    setPreviewUrls(urls);
-    return () => urls.forEach(url => URL.revokeObjectURL(url));
-  }, [images]);
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    const nonImages = selectedFiles.filter((file) => !file.type.startsWith('image/'));
+    if (nonImages.length > 0) {
+      setError('Only image files (screenshots) are allowed.');
+      return;
+    }
+
+    if (images.length + selectedFiles.length > 3) {
+      setError('Maximum 3 screenshots allowed.');
+      return;
+    }
 
     setError(null);
+    const newPreviewUrls = selectedFiles.map((file) => URL.createObjectURL(file));
 
-    const validImages = files.filter(f => f.type.startsWith('image/'));
-    if (validImages.length !== files.length) {
-      setError('Only image files are allowed.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
-
-    if (images.length + validImages.length > 3) {
-      setError('You can attach a maximum of 3 screenshots.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
-
-    setImages(prev => [...prev, ...validImages]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setImages((prev) => [...prev, ...selectedFiles]);
+    setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
   };
 
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveImage = (index: number) => {
+    URL.revokeObjectURL(previewUrls[index]);
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
     setError(null);
   };
 
@@ -95,8 +99,15 @@ export const TicketForm: React.FC<TicketFormProps> = ({
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-xs text-red-600 dark:text-red-400">
-          {error}
+        <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-xs text-red-600 dark:text-red-400 flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -125,10 +136,10 @@ export const TicketForm: React.FC<TicketFormProps> = ({
             disabled={isSubmitting}
             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all disabled:opacity-60"
           >
-            <option value="low">Low - General inquiry</option>
-            <option value="medium">Medium - Normal assistance needed</option>
-            <option value="high">High - Important service impact</option>
-            <option value="urgent">Urgent - Critical transaction failure</option>
+            <option value="low">Low — General inquiry</option>
+            <option value="medium">Medium — Normal assistance needed</option>
+            <option value="high">High — Important service impact</option>
+            <option value="urgent">Urgent — Critical transaction failure</option>
           </select>
         </div>
 
@@ -146,26 +157,47 @@ export const TicketForm: React.FC<TicketFormProps> = ({
           />
         </div>
 
-        {/* Attachment Section */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Add screenshots
-            </label>
-            <span className="text-[10px] text-slate-500">You can attach up to 3 screenshots.</span>
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            Attachments <span className="text-slate-400 font-normal">(Optional, up to 3 screenshots)</span>
+          </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+            disabled={isSubmitting || images.length >= 3}
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            {images.length < 3 && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSubmitting}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-sky-500 dark:hover:border-sky-500 text-slate-600 dark:text-slate-400 text-xs font-medium hover:bg-sky-50/50 dark:hover:bg-sky-950/30 transition-all disabled:opacity-60"
+              >
+                <Paperclip className="w-4 h-4 text-sky-500" />
+                <span>Add screenshots</span>
+              </button>
+            )}
+            <span className="text-[11px] text-slate-400">
+              {images.length}/3 screenshots attached
+            </span>
           </div>
-          
+
           {previewUrls.length > 0 && (
-            <div className="flex flex-wrap gap-3 mb-3">
-              {previewUrls.map((url, i) => (
-                <div key={i} className="relative group shrink-0">
-                  <img src={url} alt={`Screenshot ${i + 1}`} className="w-16 h-16 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
+            <div className="flex flex-wrap gap-2 mt-3">
+              {previewUrls.map((url, idx) => (
+                <div key={url} className="relative group w-16 h-16 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900">
+                  <img src={url} alt={`Screenshot preview ${idx + 1}`} className="w-full h-full object-cover" />
                   <button
                     type="button"
-                    onClick={() => removeImage(i)}
+                    onClick={() => handleRemoveImage(idx)}
                     disabled={isSubmitting}
-                    className="absolute -top-2 -right-2 w-5 h-5 bg-white dark:bg-slate-700 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 hover:text-red-500 shadow-sm transition-colors"
-                    aria-label="Remove screenshot"
+                    aria-label={`Remove screenshot ${idx + 1}`}
+                    className="absolute top-1 right-1 p-1 bg-slate-900/70 hover:bg-red-600 text-white rounded-full transition-colors"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -173,28 +205,9 @@ export const TicketForm: React.FC<TicketFormProps> = ({
               ))}
             </div>
           )}
-
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/*"
-            multiple
-            className="hidden"
-            disabled={isSubmitting || images.length >= 3}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isSubmitting || images.length >= 3}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <Paperclip className="w-3.5 h-3.5" />
-            Attach Image
-          </button>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+        <div className="flex items-center justify-end gap-3 pt-2">
           <button
             type="button"
             onClick={onCancel}

@@ -45,7 +45,6 @@ export function Support() {
 
   const fetchTicketDetail = async (ticketId: number) => {
     setIsLoadingConversation(true);
-    // Optimistically select local ticket summary if available for instant UI feedback
     const localTicket = tickets.find((t) => t.id === ticketId);
     if (localTicket) {
       setSelectedTicket(localTicket);
@@ -66,14 +65,18 @@ export function Support() {
   const handleCreateTicket = async (payload: CreateTicketPayload) => {
     setIsSubmittingTicket(true);
     try {
-      const response = await postRequest(ENDPOINTS.support_tickets, payload);
+      const response = await postRequest(ENDPOINTS.support_tickets, {
+        subject: payload.subject,
+        description: payload.description,
+        priority: payload.priority,
+      });
+
       if (response && response.success) {
         showToast('Support conversation started successfully');
         setShowNewTicket(false);
         setInitialSubject('');
         await fetchTickets();
 
-        // If created ticket object or ID returned, open directly
         if (response.ticket && response.ticket.id) {
           fetchTicketDetail(response.ticket.id);
         } else if (response.id) {
@@ -89,20 +92,50 @@ export function Support() {
     }
   };
 
-  const handleSendMessage = async (messageText: string): Promise<boolean> => {
-    if (!selectedTicket || !messageText.trim()) return false;
+  const handleSendMessage = async (messageText: string, images?: File[]): Promise<boolean> => {
+    if (!selectedTicket || (!messageText.trim() && (!images || images.length === 0))) return false;
 
     setIsSendingMessage(true);
     try {
-      const response = await postRequest(
-        ENDPOINTS.support_ticket_detail(String(selectedTicket.id)),
-        { message: messageText.trim() }
-      );
+      let response: any;
+
+      if (!images || images.length === 0) {
+        // CASE A: NO ATTACHMENTS -> USE EXISTING JSON POSTREQUEST PATH EXACTLY
+        response = await postRequest(
+          ENDPOINTS.support_ticket_detail(String(selectedTicket.id)),
+          { message: messageText.trim() }
+        );
+      } else {
+        // CASE C: ATTACHMENTS PRESENT -> MULTIPART FORM DATA FOR THIS REQUEST ONLY
+        const formData = new FormData();
+        formData.append('message', messageText.trim());
+        images.forEach((file) => {
+          formData.append('images', file);
+        });
+
+        const token =
+          localStorage.getItem('token') ||
+          localStorage.getItem('access_token') ||
+          localStorage.getItem('jwt') ||
+          '';
+
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+        }
+
+        const res = await fetch(ENDPOINTS.support_ticket_detail(String(selectedTicket.id)), {
+          method: 'POST',
+          headers,
+          body: formData,
+        });
+
+        response = await res.json();
+      }
 
       if (response && response.success && response.message) {
         const newMsg: SupportMessage = response.message;
 
-        // Append backend-returned message object immediately
         setSelectedTicket((prev) => {
           if (!prev) return null;
           return {
@@ -111,7 +144,6 @@ export function Support() {
           };
         });
 
-        // Also update latest timestamp/preview in parent ticket list
         setTickets((prevTickets) =>
           prevTickets.map((t) =>
             t.id === selectedTicket.id
@@ -156,11 +188,7 @@ export function Support() {
 
         <main className="flex-1 p-4 md:p-6 overflow-hidden z-10 flex flex-col min-h-0">
           <div className="max-w-6xl mx-auto w-full h-full flex flex-col min-h-0">
-
-            {/* DESKTOP TWO-PANE / RESPONSIVE VIEW ENGINE */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
-
-              {/* LEFT COLUMN: List / Forms / Intro */}
               <div
                 className={
                   hasActiveConversation
@@ -171,7 +199,6 @@ export function Support() {
                 {!showNewTicket && (
                   <>
                     <SupportHero onStartConversation={() => setShowNewTicket(true)} />
-                    {/* <SupportAssistant /> */}
                     <SupportQuickActions onSelectCategory={handleQuickCategorySelect} />
                   </>
                 )}
@@ -208,7 +235,6 @@ export function Support() {
                 </div>
               </div>
 
-              {/* RIGHT COLUMN: Active Conversation Workspace */}
               <div
                 className={
                   hasActiveConversation
@@ -229,7 +255,6 @@ export function Support() {
                   }}
                 />
               </div>
-
             </div>
           </div>
         </main>

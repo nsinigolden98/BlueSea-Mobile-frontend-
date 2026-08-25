@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, type KeyboardEvent } from 'react';
+import React, { useState, useEffect, useRef, type KeyboardEvent } from 'react';
 import { Send, Lock, Plus, Paperclip, X } from 'lucide-react';
 
 interface MessageComposerProps {
@@ -17,14 +17,14 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [imageError, setImageError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const urls = images.map(img => URL.createObjectURL(img));
-    setPreviewUrls(urls);
-    return () => urls.forEach(url => URL.revokeObjectURL(url));
-  }, [images]);
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
 
   if (isClosed) {
     return (
@@ -49,45 +49,52 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     );
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
 
-    setImageError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
 
-    const validImages = files.filter(f => f.type.startsWith('image/'));
-    if (validImages.length !== files.length) {
-      setImageError('Only image files are allowed.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
+    const nonImages = selectedFiles.filter((file) => !file.type.startsWith('image/'));
+    if (nonImages.length > 0) {
+      setError('Only image files (screenshots) are allowed.');
       return;
     }
 
-    if (images.length + validImages.length > 3) {
-      setImageError('You can attach a maximum of 3 screenshots.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
+    if (images.length + selectedFiles.length > 3) {
+      setError('Maximum 3 screenshots allowed.');
       return;
     }
 
-    setImages(prev => [...prev, ...validImages]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setError(null);
+    const newUrls = selectedFiles.map((file) => URL.createObjectURL(file));
+
+    setImages((prev) => [...prev, ...selectedFiles]);
+    setPreviewUrls((prev) => [...prev, ...newUrls]);
   };
 
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-    setImageError(null);
+  const handleRemoveImage = (index: number) => {
+    URL.revokeObjectURL(previewUrls[index]);
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+    setError(null);
   };
 
   const handleSend = async () => {
     if ((!text.trim() && images.length === 0) || isSending) return;
-    
+
     const currentText = text;
-    const currentImages = [...images];
-    
+    const currentImages = images;
+
     const success = await onSendMessage(currentText, currentImages);
     if (success) {
       setText('');
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
       setImages([]);
-      setImageError(null);
+      setPreviewUrls([]);
+      setError(null);
     }
   };
 
@@ -98,25 +105,34 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     }
   };
 
+  const canSend = (text.trim().length > 0 || images.length > 0) && !isSending;
+
   return (
-    <div className="p-3 md:p-4 bg-white dark:bg-slate-800/90 border-t border-slate-100 dark:border-slate-800 flex flex-col">
-      {imageError && (
-        <div className="mb-2 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-xs text-red-600 dark:text-red-400">
-          {imageError}
+    <div className="p-3 md:p-4 bg-white dark:bg-slate-800/90 border-t border-slate-100 dark:border-slate-800">
+      {error && (
+        <div className="mb-2 p-2 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-xs text-red-600 dark:text-red-400 flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="text-red-500 hover:text-red-700 dark:hover:text-red-300 ml-2"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
       {previewUrls.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3 px-1">
-          {previewUrls.map((url, i) => (
-            <div key={i} className="relative group shrink-0">
-              <img src={url} alt={`Attachment ${i + 1}`} className="w-12 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
+        <div className="flex flex-wrap gap-2 mb-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+          {previewUrls.map((url, idx) => (
+            <div key={url} className="relative group w-14 h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <img src={url} alt={`Attachment preview ${idx + 1}`} className="w-full h-full object-cover" />
               <button
                 type="button"
-                onClick={() => removeImage(i)}
+                onClick={() => handleRemoveImage(idx)}
                 disabled={isSending}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white dark:bg-slate-700 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 hover:text-red-500 shadow-sm transition-colors"
-                aria-label="Remove screenshot"
+                aria-label={`Remove screenshot ${idx + 1}`}
+                className="absolute top-1 right-1 p-1 bg-slate-900/70 hover:bg-red-600 text-white rounded-full transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -127,11 +143,11 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
       <div className="flex items-end gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-sky-500/20 focus-within:border-sky-500 transition-all">
         <input
-          type="file"
           ref={fileInputRef}
-          onChange={handleFileChange}
+          type="file"
           accept="image/*"
           multiple
+          onChange={handleFileSelect}
           className="hidden"
           disabled={isSending || images.length >= 3}
         />
@@ -139,10 +155,11 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isSending || images.length >= 3}
-          className="p-2 text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 disabled:opacity-50 transition-colors shrink-0"
-          aria-label="Attach screenshot"
+          className="p-2 text-slate-400 hover:text-sky-500 dark:text-slate-500 dark:hover:text-sky-400 transition-colors disabled:opacity-40 shrink-0"
+          aria-label="Add screenshot attachment"
+          title={images.length >= 3 ? 'Maximum 3 screenshots reached' : 'Add screenshot'}
         >
-          <Paperclip className="w-4 h-4" />
+          <Paperclip className="w-5 h-5" />
         </button>
 
         <textarea
@@ -154,9 +171,10 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           disabled={isSending}
           className="flex-1 bg-transparent px-2 py-1.5 text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none resize-none max-h-32 min-h-[38px] disabled:opacity-60"
         />
+
         <button
           onClick={handleSend}
-          disabled={(!text.trim() && images.length === 0) || isSending}
+          disabled={!canSend}
           type="button"
           className="p-2.5 bg-sky-500 hover:bg-sky-600 active:bg-sky-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white rounded-xl transition-all shrink-0 focus:outline-none"
           aria-label="Send message"

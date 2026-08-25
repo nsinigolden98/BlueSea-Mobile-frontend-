@@ -59,7 +59,6 @@ export const TicketConversation: React.FC<TicketConversationProps> = ({
         onBack={onBack}
         showBackButton={showBackButton}
       />
-      
       <div className="flex-1 overflow-y-auto scrollbar-hide min-h-0 relative">
         {isLoading ? (
           <div className="p-4 md:p-6 space-y-4">
@@ -80,7 +79,6 @@ export const TicketConversation: React.FC<TicketConversationProps> = ({
           <MessageList ticket={ticket} />
         )}
       </div>
-
       <MessageComposer
         isClosed={isClosed}
         isSending={isSending}
