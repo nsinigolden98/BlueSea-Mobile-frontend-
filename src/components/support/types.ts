@@ -4,6 +4,7 @@ export interface SupportMessage {
   message: string;
   is_admin: boolean;
   created_at: string;
+  attachments?: string[];
 }
 
 export interface SupportTicket {
@@ -21,6 +22,7 @@ export interface CreateTicketPayload {
   subject: string;
   description: string;
   priority: string;
+  images?: File[];
 }
 
 export interface SendMessagePayload {

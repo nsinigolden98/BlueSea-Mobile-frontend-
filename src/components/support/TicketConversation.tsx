@@ -8,7 +8,7 @@ interface TicketConversationProps {
   ticket: SupportTicket | null;
   isLoading?: boolean;
   isSending: boolean;
-  onSendMessage: (messageText: string) => Promise<boolean>;
+  onSendMessage: (messageText: string, images?: File[]) => Promise<boolean>;
   onBack?: () => void;
   showBackButton?: boolean;
   onStartNewTicket?: () => void;
@@ -59,7 +59,7 @@ export const TicketConversation: React.FC<TicketConversationProps> = ({
         onBack={onBack}
         showBackButton={showBackButton}
       />
-
+      
       <div className="flex-1 overflow-y-auto scrollbar-hide min-h-0 relative">
         {isLoading ? (
           <div className="p-4 md:p-6 space-y-4">

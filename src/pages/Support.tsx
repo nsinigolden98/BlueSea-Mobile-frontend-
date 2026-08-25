@@ -4,7 +4,6 @@ import { postRequest, getRequest, ENDPOINTS } from '@/types';
 import type { SupportTicket, CreateTicketPayload, SupportMessage } from '@/components/support/types';
 import {
   SupportHero,
-  //SupportAssistant,
   SupportQuickActions,
   TicketList,
   TicketForm,
@@ -66,7 +65,15 @@ export function Support() {
   const handleCreateTicket = async (payload: CreateTicketPayload) => {
     setIsSubmittingTicket(true);
     try {
-      const response = await postRequest(ENDPOINTS.support_tickets, payload);
+      // BACKEND CONTRACT MISSING: New ticket creation with images.
+      // We process the core request correctly as JSON, omitting payload.images for now.
+      const requestPayload = {
+        subject: payload.subject,
+        description: payload.description,
+        priority: payload.priority,
+      };
+
+      const response = await postRequest(ENDPOINTS.support_tickets, requestPayload);
       if (response && response.success) {
         showToast('Support conversation started successfully');
         setShowNewTicket(false);
@@ -89,14 +96,25 @@ export function Support() {
     }
   };
 
-  const handleSendMessage = async (messageText: string): Promise<boolean> => {
-    if (!selectedTicket || !messageText.trim()) return false;
+  const handleSendMessage = async (messageText: string, images: File[] = []): Promise<boolean> => {
+    if (!selectedTicket || (!messageText.trim() && images.length === 0)) return false;
 
     setIsSendingMessage(true);
     try {
+      // Determine if we need a multipart request
+      let requestData: any = { message: messageText.trim() };
+      
+      if (images.length > 0) {
+        requestData = new FormData();
+        requestData.append('message', messageText.trim());
+        images.forEach(img => {
+          requestData.append('images', img);
+        });
+      }
+
       const response = await postRequest(
         ENDPOINTS.support_ticket_detail(String(selectedTicket.id)),
-        { message: messageText.trim() }
+        requestData
       );
 
       if (response && response.success && response.message) {
@@ -171,7 +189,6 @@ export function Support() {
                 {!showNewTicket && (
                   <>
                     <SupportHero onStartConversation={() => setShowNewTicket(true)} />
-                    {/* <SupportAssistant /> */}
                     <SupportQuickActions onSelectCategory={handleQuickCategorySelect} />
                   </>
                 )}

@@ -35,18 +35,42 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           </>
         )}
       </div>
-
+      
       <div
         className={cn(
-          'p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap break-words',
+          'p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap break-words w-full',
           isAdmin
             ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-xs border border-slate-200/60 dark:border-slate-700/60'
             : 'bg-sky-500 text-white rounded-tr-xs'
         )}
       >
         {message.message}
-      </div>
 
+        {/* Attachments rendering */}
+        {message.attachments && message.attachments.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {message.attachments.map((url, i) => (
+              <a
+                key={i}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block shrink-0"
+              >
+                <img
+                  src={url}
+                  alt="Attached screenshot"
+                  className={cn(
+                    "w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border hover:opacity-90 transition-opacity",
+                    isAdmin ? "border-slate-300 dark:border-slate-600" : "border-sky-400"
+                  )}
+                />
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+      
       <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 px-1">
         {formatSupportTimestamp(message.created_at)}
       </span>
