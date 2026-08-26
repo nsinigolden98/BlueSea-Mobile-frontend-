@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 import { Sidebar, Header, Toast, Loader } from '@/components/ui-custom';
 import { getRequest, ENDPOINTS } from '@/types';
 import type { SupportTicket, CreateTicketPayload, SupportMessage } from '@/components/support/types';
 import {
   SupportHero,
-  //SupportAssistant,
   SupportQuickActions,
   TicketList,
   TicketForm,
@@ -31,6 +32,8 @@ export function Support() {
       const response = await getRequest(ENDPOINTS.support_tickets);
       if (response && response.tickets) {
         setTickets(response.tickets);
+      } else if (Array.isArray(response)) {
+        setTickets(response);
       }
     } catch {
       showToast('Failed to fetch support tickets');
@@ -43,22 +46,33 @@ export function Support() {
     fetchTickets();
   }, [fetchTickets]);
 
-  const getAuthHeaders = (): Record<string, string> => {
-    const token =
-      localStorage.getItem('access_token') ||
-      localStorage.getItem('token') ||
-      localStorage.getItem('jwt') ||
-      localStorage.getItem('accessToken') ||
-      sessionStorage.getItem('access_token') ||
-      sessionStorage.getItem('token') ||
-      sessionStorage.getItem('jwt') ||
-      '';
+  /**
+   * Universal HTTP POST helper for FormData/Multipart requests.
+   * Leverages cookie authentication without hardcoding Content-Type headers.
+   */
+  const postMultipartRequest = async (url: string, formData: FormData) => {
+    const rawToken = Cookies.get('access_token') || Cookies.get('token') || '';
+    const authToken = rawToken.startsWith('Bearer ') ? rawToken : `Bearer ${rawToken}`;
 
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    try {
+      const response = await axios.post(url, formData, {
+        headers: {
+          ...(rawToken ? { Authorization: authToken } : {}),
+        },
+        withCredentials: true,
+      });
+      return { ok: true, status: response.status, data: response.data };
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
+        return {
+          ok: false,
+          status: error.response.status,
+          data: error.response.data,
+          statusText: error.response.statusText,
+        };
+      }
+      return { ok: false, status: 0, data: null, message: (error as Error)?.message || 'Network error' };
     }
-    return headers;
   };
 
   const fetchTicketDetail = async (ticketId: number) => {
@@ -86,7 +100,9 @@ export function Support() {
       const formData = new FormData();
       formData.append('subject', payload.subject);
       formData.append('description', payload.description);
-      formData.append('priority', payload.priority);
+      if (payload.priority) {
+        formData.append('priority', payload.priority);
+      }
 
       if (payload.images && payload.images.length > 0) {
         payload.images.forEach((file) => {
@@ -94,27 +110,33 @@ export function Support() {
         });
       }
 
-      const res = await fetch(ENDPOINTS.support_tickets, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: formData,
-      });
+      const res = await postMultipartRequest(ENDPOINTS.support_tickets, formData);
 
-      const response = await res.json();
-
-      if (res.ok && response && (response.success || response.id || response.ticket)) {
+      if (res.ok && res.data) {
         showToast('Support conversation started successfully');
         setShowNewTicket(false);
         setInitialSubject('');
         await fetchTickets();
 
-        if (response.ticket && response.ticket.id) {
-          fetchTicketDetail(response.ticket.id);
-        } else if (response.id) {
-          fetchTicketDetail(response.id);
+        const createdId = res.data.ticket?.id || res.data.id;
+        if (createdId) {
+          fetchTicketDetail(createdId);
         }
       } else {
-        showToast(response?.detail || response?.error || response?.message || 'Failed to create support ticket');
+        let errorMsg = 'Failed to create support ticket';
+        if (res.status === 401) {
+          errorMsg = 'Session expired. Please sign in again.';
+        } else if (res.status === 413) {
+          errorMsg = 'Attachment payload too large. Each file must be under 2 MB.';
+        } else if (res.status === 415) {
+          errorMsg = 'Unsupported file format provided.';
+        } else if (res.data) {
+          errorMsg =
+            typeof res.data === 'string'
+              ? res.data
+              : res.data.detail || res.data.error || res.data.message || errorMsg;
+        }
+        showToast(errorMsg);
       }
     } catch {
       showToast('Error connecting to support backend');
@@ -129,7 +151,9 @@ export function Support() {
     setIsSendingMessage(true);
     try {
       const formData = new FormData();
-      formData.append('message', messageText.trim());
+      if (messageText.trim()) {
+        formData.append('message', messageText.trim());
+      }
 
       if (images && images.length > 0) {
         images.forEach((file) => {
@@ -137,39 +161,51 @@ export function Support() {
         });
       }
 
-      const res = await fetch(ENDPOINTS.support_ticket_detail(String(selectedTicket.id)), {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: formData,
-      });
+      const res = await postMultipartRequest(
+        ENDPOINTS.support_ticket_detail(String(selectedTicket.id)),
+        formData
+      );
 
-      const response = await res.json();
+      if (res.ok && res.data) {
+        const newMsg: SupportMessage = res.data.message || (res.data.id ? res.data : null);
 
-      if (res.ok && response && response.success && response.message) {
-        const newMsg: SupportMessage = response.message;
+        if (newMsg) {
+          setSelectedTicket((prev) => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              messages: [...(prev.messages || []), newMsg],
+            };
+          });
 
-        setSelectedTicket((prev) => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            messages: [...(prev.messages || []), newMsg],
-          };
-        });
+          setTickets((prevTickets) =>
+            prevTickets.map((t) =>
+              t.id === selectedTicket.id
+                ? { ...t, updated_at: newMsg.created_at, messages: [...(t.messages || []), newMsg] }
+                : t
+            )
+          );
 
-        setTickets((prevTickets) =>
-          prevTickets.map((t) =>
-            t.id === selectedTicket.id
-              ? { ...t, updated_at: newMsg.created_at, messages: [...(t.messages || []), newMsg] }
-              : t
-          )
-        );
-
-        showToast('Message sent');
-        return true;
-      } else {
-        showToast(response?.detail || response?.error || response?.message || 'Failed to send message');
-        return false;
+          showToast('Message sent');
+          return true;
+        }
       }
+
+      let errorMsg = 'Failed to send message';
+      if (res.status === 401) {
+        errorMsg = 'Session expired. Please sign in again.';
+      } else if (res.status === 413) {
+        errorMsg = 'Attachment payload too large. Each file must be under 2 MB.';
+      } else if (res.status === 415) {
+        errorMsg = 'Unsupported file format provided.';
+      } else if (res.data) {
+        errorMsg =
+          typeof res.data === 'string'
+            ? res.data
+            : res.data.detail || res.data.error || res.data.message || errorMsg;
+      }
+      showToast(errorMsg);
+      return false;
     } catch {
       showToast('Failed to send message. Please check connection.');
       return false;

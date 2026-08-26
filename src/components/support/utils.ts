@@ -1,3 +1,49 @@
+export const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB per file limit
+
+export interface AttachmentValidationResult {
+  validFiles: File[];
+  errorMessage: string | null;
+}
+
+/**
+ * Pre-upload file validation utility for size and format constraints.
+ * Enforces a strict 2 MB per-file limit and allows image/* and video/* MIME types.
+ */
+export function validateAttachmentFiles(
+  incomingFiles: File[],
+  currentFileCount: number = 0,
+  maxFilesAllowed: number = 3
+): AttachmentValidationResult {
+  let errorMessage: string | null = null;
+  const validFiles: File[] = [];
+
+  if (currentFileCount + incomingFiles.length > maxFilesAllowed) {
+    return {
+      validFiles: [],
+      errorMessage: `Maximum ${maxFilesAllowed} attachments allowed per request.`,
+    };
+  }
+
+  for (const file of incomingFiles) {
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
+    if (!isImage && !isVideo) {
+      errorMessage = `${file.name} has an unsupported file format. Only images and videos are allowed.`;
+      continue;
+    }
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      errorMessage = `${file.name} is too large. Each image or video must be 2 MB or smaller.`;
+      continue;
+    }
+
+    validFiles.push(file);
+  }
+
+  return { validFiles, errorMessage };
+}
+
 export function formatSupportTimestamp(dateString: string): string {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -7,7 +53,6 @@ export function formatSupportTimestamp(dateString: string): string {
   if (diffInSeconds < 60) {
     return 'Just now';
   }
-  
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
     return `${diffInMinutes}m ago`;

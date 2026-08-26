@@ -2,7 +2,7 @@ import React from 'react';
 import type { SupportMessage } from './types';
 import { formatSupportTimestamp } from './utils';
 import { cn } from '@/lib/utils';
-import { ShieldCheck, User } from 'lucide-react';
+import { ShieldCheck, User, Video } from 'lucide-react';
 
 interface MessageBubbleProps {
   message: SupportMessage;
@@ -10,6 +10,10 @@ interface MessageBubbleProps {
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isAdmin = message.is_admin;
+
+  const isVideoUrl = (url: string) => {
+    return /\.(mp4|webm|ogg|mov|mkv)(\?.*)?$/i.test(url);
+  };
 
   return (
     <div
@@ -35,7 +39,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           </>
         )}
       </div>
-      
+
       <div
         className={cn(
           'p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap break-words w-full',
@@ -46,31 +50,46 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
       >
         {message.message}
 
-        {/* Attachments rendering */}
+        {/* Render attachments dynamically for images or videos */}
         {message.attachments && message.attachments.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
-            {message.attachments.map((url, i) => (
-              <a
-                key={i}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block shrink-0"
-              >
-                <img
-                  src={url}
-                  alt="Attached screenshot"
-                  className={cn(
-                    "w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border hover:opacity-90 transition-opacity",
-                    isAdmin ? "border-slate-300 dark:border-slate-600" : "border-sky-400"
+            {message.attachments.map((url, i) => {
+              const isVid = isVideoUrl(url);
+              return (
+                <a
+                  key={i}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block shrink-0 relative group"
+                >
+                  {isVid ? (
+                    <div
+                      className={cn(
+                        'w-16 h-16 sm:w-20 sm:h-20 rounded-lg border flex flex-col items-center justify-center bg-slate-900 text-sky-400 hover:opacity-90 transition-opacity',
+                        isAdmin ? 'border-slate-300 dark:border-slate-600' : 'border-sky-400'
+                      )}
+                    >
+                      <Video className="w-6 h-6" />
+                      <span className="text-[9px] mt-0.5 font-medium">Video</span>
+                    </div>
+                  ) : (
+                    <img
+                      src={url}
+                      alt="Attached media"
+                      className={cn(
+                        'w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border hover:opacity-90 transition-opacity',
+                        isAdmin ? 'border-slate-300 dark:border-slate-600' : 'border-sky-400'
+                      )}
+                    />
                   )}
-                />
-              </a>
-            ))}
+                </a>
+              );
+            })}
           </div>
         )}
       </div>
-      
+
       <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 px-1">
         {formatSupportTimestamp(message.created_at)}
       </span>

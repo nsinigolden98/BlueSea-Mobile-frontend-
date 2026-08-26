@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useRef, type KeyboardEvent } from 'react';
-import { Send, Lock, Plus, Paperclip, X } from 'lucide-react';
+import { validateAttachmentFiles } from './utils';
+import { Send, Lock, Plus, Paperclip, X, Video } from 'lucide-react';
 
 interface MessageComposerProps {
   isClosed: boolean;
   isSending: boolean;
   onSendMessage: (messageText: string, images?: File[]) => Promise<boolean>;
   onStartNewTicket?: () => void;
+}
+
+interface PreviewItem {
+  url: string;
+  isVideo: boolean;
 }
 
 export const MessageComposer: React.FC<MessageComposerProps> = ({
@@ -16,15 +22,15 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 }) => {
   const [text, setText] = useState('');
   const [images, setImages] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [previewItems, setPreviewItems] = useState<PreviewItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+      previewItems.forEach((item) => URL.revokeObjectURL(item.url));
     };
-  }, [previewUrls]);
+  }, [previewItems]);
 
   if (isClosed) {
     return (
@@ -57,43 +63,42 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
       fileInputRef.current.value = '';
     }
 
-    const nonImages = selectedFiles.filter((file) => !file.type.startsWith('image/'));
-    if (nonImages.length > 0) {
-      setError('Only image files (screenshots) are allowed.');
-      return;
+    const { validFiles, errorMessage } = validateAttachmentFiles(selectedFiles, images.length, 3);
+
+    if (errorMessage) {
+      setError(errorMessage);
+    } else {
+      setError(null);
     }
 
-    if (images.length + selectedFiles.length > 3) {
-      setError('Maximum 3 screenshots allowed.');
-      return;
+    if (validFiles.length > 0) {
+      const newPreviews = validFiles.map((file) => ({
+        url: URL.createObjectURL(file),
+        isVideo: file.type.startsWith('video/'),
+      }));
+
+      setImages((prev) => [...prev, ...validFiles]);
+      setPreviewItems((prev) => [...prev, ...newPreviews]);
     }
-
-    setError(null);
-    const newUrls = selectedFiles.map((file) => URL.createObjectURL(file));
-
-    setImages((prev) => [...prev, ...selectedFiles]);
-    setPreviewUrls((prev) => [...prev, ...newUrls]);
   };
 
   const handleRemoveImage = (index: number) => {
-    URL.revokeObjectURL(previewUrls[index]);
+    URL.revokeObjectURL(previewItems[index].url);
     setImages((prev) => prev.filter((_, i) => i !== index));
-    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+    setPreviewItems((prev) => prev.filter((_, i) => i !== index));
     setError(null);
   };
 
   const handleSend = async () => {
     if ((!text.trim() && images.length === 0) || isSending) return;
-
     const currentText = text;
     const currentImages = images;
-
     const success = await onSendMessage(currentText, currentImages);
     if (success) {
       setText('');
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+      previewItems.forEach((item) => URL.revokeObjectURL(item.url));
       setImages([]);
-      setPreviewUrls([]);
+      setPreviewItems([]);
       setError(null);
     }
   };
@@ -122,16 +127,22 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
         </div>
       )}
 
-      {previewUrls.length > 0 && (
+      {previewItems.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-          {previewUrls.map((url, idx) => (
-            <div key={url} className="relative group w-14 h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-              <img src={url} alt={`Attachment preview ${idx + 1}`} className="w-full h-full object-cover" />
+          {previewItems.map((item, idx) => (
+            <div key={item.url} className="relative group w-14 h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              {item.isVideo ? (
+                <div className="w-full h-full flex items-center justify-center bg-slate-900 text-sky-400">
+                  <Video className="w-5 h-5" />
+                </div>
+              ) : (
+                <img src={item.url} alt={`Attachment preview ${idx + 1}`} className="w-full h-full object-cover" />
+              )}
               <button
                 type="button"
                 onClick={() => handleRemoveImage(idx)}
                 disabled={isSending}
-                aria-label={`Remove screenshot ${idx + 1}`}
+                aria-label={`Remove attachment ${idx + 1}`}
                 className="absolute top-1 right-1 p-1 bg-slate-900/70 hover:bg-red-600 text-white rounded-full transition-colors"
               >
                 <X className="w-3 h-3" />
@@ -145,7 +156,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           multiple
           onChange={handleFileSelect}
           className="hidden"
@@ -156,12 +167,11 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           onClick={() => fileInputRef.current?.click()}
           disabled={isSending || images.length >= 3}
           className="p-2 text-slate-400 hover:text-sky-500 dark:text-slate-500 dark:hover:text-sky-400 transition-colors disabled:opacity-40 shrink-0"
-          aria-label="Add screenshot attachment"
-          title={images.length >= 3 ? 'Maximum 3 screenshots reached' : 'Add screenshot'}
+          aria-label="Add attachment"
+          title={images.length >= 3 ? 'Maximum 3 attachments reached' : 'Add attachment'}
         >
           <Paperclip className="w-5 h-5" />
         </button>
-
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -171,7 +181,6 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           disabled={isSending}
           className="flex-1 bg-transparent px-2 py-1.5 text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none resize-none max-h-32 min-h-[38px] disabled:opacity-60"
         />
-
         <button
           onClick={handleSend}
           disabled={!canSend}
