@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sidebar, Header, Toast, Loader } from '@/components/ui-custom';
 import { getRequest, ENDPOINTS } from '@/types';
 import type { SupportTicket, CreateTicketPayload, SupportMessage } from '@/components/support/types';
@@ -25,9 +25,23 @@ export function Support() {
   const { showToast, ToastComponent } = Toast();
   const { LoaderComponent } = Loader();
 
+  const fetchTickets = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await getRequest(ENDPOINTS.support_tickets);
+      if (response && response.tickets) {
+        setTickets(response.tickets);
+      }
+    } catch {
+      showToast('Failed to fetch support tickets');
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+
   useEffect(() => {
     fetchTickets();
-  }, []);
+  }, [fetchTickets]);
 
   const getAuthHeaders = (): Record<string, string> => {
     const token =
@@ -45,20 +59,6 @@ export function Support() {
       headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
     }
     return headers;
-  };
-
-  const fetchTickets = async () => {
-    try {
-      setLoading(true);
-      const response = await getRequest(ENDPOINTS.support_tickets);
-      if (response && response.tickets) {
-        setTickets(response.tickets);
-      }
-    } catch {
-      showToast('Failed to fetch support tickets');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const fetchTicketDetail = async (ticketId: number) => {
@@ -97,7 +97,6 @@ export function Support() {
       const res = await fetch(ENDPOINTS.support_tickets, {
         method: 'POST',
         headers: getAuthHeaders(),
-        credentials: 'include',
         body: formData,
       });
 
@@ -141,7 +140,6 @@ export function Support() {
       const res = await fetch(ENDPOINTS.support_ticket_detail(String(selectedTicket.id)), {
         method: 'POST',
         headers: getAuthHeaders(),
-        credentials: 'include',
         body: formData,
       });
 
