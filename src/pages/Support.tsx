@@ -48,7 +48,7 @@ export function Support() {
 
   /**
    * Universal HTTP POST helper for FormData/Multipart requests.
-   * Leverages cookie authentication without hardcoding Content-Type headers.
+   * Sends Authorization Bearer token header without relying on cross-origin cookies.
    */
   const postMultipartRequest = async (url: string, formData: FormData) => {
     const rawToken = Cookies.get('access_token') || Cookies.get('token') || '';
@@ -59,7 +59,6 @@ export function Support() {
         headers: {
           ...(rawToken ? { Authorization: authToken } : {}),
         },
-        withCredentials: true,
       });
       return { ok: true, status: response.status, data: response.data };
     } catch (error: unknown) {
@@ -113,7 +112,7 @@ export function Support() {
       const res = await postMultipartRequest(ENDPOINTS.support_tickets, formData);
 
       if (res.ok && res.data) {
-        showToast('Support conversation started successfully');
+        showToast(typeof res.data.message === 'string' ? res.data.message : 'Support conversation started successfully');
         setShowNewTicket(false);
         setInitialSubject('');
         await fetchTickets();
@@ -126,6 +125,8 @@ export function Support() {
         let errorMsg = 'Failed to create support ticket';
         if (res.status === 401) {
           errorMsg = 'Session expired. Please sign in again.';
+        } else if (res.status === 400) {
+          errorMsg = res.data?.message || res.data?.detail || 'Invalid form data submitted.';
         } else if (res.status === 413) {
           errorMsg = 'Attachment payload too large. Each file must be under 2 MB.';
         } else if (res.status === 415) {
@@ -167,7 +168,12 @@ export function Support() {
       );
 
       if (res.ok && res.data) {
-        const newMsg: SupportMessage = res.data.message || (res.data.id ? res.data : null);
+        const newMsg: SupportMessage | null =
+          typeof res.data.message === 'object' && res.data.message !== null
+            ? (res.data.message as SupportMessage)
+            : res.data.id
+            ? (res.data as SupportMessage)
+            : null;
 
         if (newMsg) {
           setSelectedTicket((prev) => {
@@ -194,6 +200,10 @@ export function Support() {
       let errorMsg = 'Failed to send message';
       if (res.status === 401) {
         errorMsg = 'Session expired. Please sign in again.';
+      } else if (res.status === 404) {
+        errorMsg = 'Ticket not found or access denied.';
+      } else if (res.status === 400) {
+        errorMsg = res.data?.message || res.data?.detail || 'Invalid message request.';
       } else if (res.status === 413) {
         errorMsg = 'Attachment payload too large. Each file must be under 2 MB.';
       } else if (res.status === 415) {
