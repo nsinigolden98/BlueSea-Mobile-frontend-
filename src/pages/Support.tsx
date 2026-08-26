@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar, Header, Toast, Loader } from '@/components/ui-custom';
-import { postRequest, getRequest, ENDPOINTS } from '@/types';
+import { getRequest, ENDPOINTS } from '@/types';
 import type { SupportTicket, CreateTicketPayload, SupportMessage } from '@/components/support/types';
 import {
   SupportHero,
@@ -10,15 +10,6 @@ import {
   TicketForm,
   TicketConversation,
 } from '@/components/support';
-
-type SupportApiResponse = {
-  success?: boolean;
-  id?: number;
-  detail?: string;
-  error?: string;
-  ticket?: SupportTicket;
-  message?: SupportMessage;
-};
 
 export function Support() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,6 +24,10 @@ export function Support() {
 
   const { showToast, ToastComponent } = Toast();
   const { LoaderComponent } = Loader();
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
 
   const getAuthHeaders = (): Record<string, string> => {
     const token =
@@ -52,7 +47,7 @@ export function Support() {
     return headers;
   };
 
-  const fetchTickets = useCallback(async () => {
+  const fetchTickets = async () => {
     try {
       setLoading(true);
       const response = await getRequest(ENDPOINTS.support_tickets);
@@ -64,11 +59,7 @@ export function Support() {
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
-
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+  };
 
   const fetchTicketDetail = async (ticketId: number) => {
     setIsLoadingConversation(true);
@@ -92,36 +83,27 @@ export function Support() {
   const handleCreateTicket = async (payload: CreateTicketPayload) => {
     setIsSubmittingTicket(true);
     try {
-      let response: SupportApiResponse;
+      const formData = new FormData();
+      formData.append('subject', payload.subject);
+      formData.append('description', payload.description);
+      formData.append('priority', payload.priority);
 
-      if (!payload.images || payload.images.length === 0) {
-        // CASE A: NO ATTACHMENTS -> USE EXISTING JSON POSTREQUEST PATH EXACTLY
-        response = await postRequest(ENDPOINTS.support_tickets, {
-          subject: payload.subject,
-          description: payload.description,
-          priority: payload.priority,
-        });
-      } else {
-        // CASE B: ATTACHMENTS PRESENT -> MULTIPART FORM DATA PER BACKEND SPEC
-        const formData = new FormData();
-        formData.append('subject', payload.subject);
-        formData.append('description', payload.description);
-        formData.append('priority', payload.priority);
+      if (payload.images && payload.images.length > 0) {
         payload.images.forEach((file) => {
           formData.append('images', file);
         });
-
-        const res = await fetch(ENDPOINTS.support_tickets, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          credentials: 'include',
-          body: formData,
-        });
-
-        response = await res.json();
       }
 
-      if (response && (response.success || response.id || response.ticket)) {
+      const res = await fetch(ENDPOINTS.support_tickets, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+        body: formData,
+      });
+
+      const response = await res.json();
+
+      if (res.ok && response && (response.success || response.id || response.ticket)) {
         showToast('Support conversation started successfully');
         setShowNewTicket(false);
         setInitialSubject('');
@@ -133,7 +115,7 @@ export function Support() {
           fetchTicketDetail(response.id);
         }
       } else {
-        showToast(response?.detail || response?.error || 'Failed to create support ticket');
+        showToast(response?.detail || response?.error || response?.message || 'Failed to create support ticket');
       }
     } catch {
       showToast('Error connecting to support backend');
@@ -147,33 +129,25 @@ export function Support() {
 
     setIsSendingMessage(true);
     try {
-      let response: SupportApiResponse;
+      const formData = new FormData();
+      formData.append('message', messageText.trim());
 
-      if (!images || images.length === 0) {
-        // CASE A: NO ATTACHMENTS -> USE EXISTING JSON POSTREQUEST PATH EXACTLY
-        response = await postRequest(
-          ENDPOINTS.support_ticket_detail(String(selectedTicket.id)),
-          { message: messageText.trim() }
-        );
-      } else {
-        // CASE C: ATTACHMENTS PRESENT -> MULTIPART FORM DATA FOR THIS REQUEST ONLY
-        const formData = new FormData();
-        formData.append('message', messageText.trim());
+      if (images && images.length > 0) {
         images.forEach((file) => {
           formData.append('images', file);
         });
-
-        const res = await fetch(ENDPOINTS.support_ticket_detail(String(selectedTicket.id)), {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          credentials: 'include',
-          body: formData,
-        });
-
-        response = await res.json();
       }
 
-      if (response && response.success && response.message) {
+      const res = await fetch(ENDPOINTS.support_ticket_detail(String(selectedTicket.id)), {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+        body: formData,
+      });
+
+      const response = await res.json();
+
+      if (res.ok && response && response.success && response.message) {
         const newMsg: SupportMessage = response.message;
 
         setSelectedTicket((prev) => {
@@ -195,7 +169,7 @@ export function Support() {
         showToast('Message sent');
         return true;
       } else {
-        showToast(response?.detail || response?.error || 'Failed to send message');
+        showToast(response?.detail || response?.error || response?.message || 'Failed to send message');
         return false;
       }
     } catch {
