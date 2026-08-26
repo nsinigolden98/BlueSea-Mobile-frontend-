@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sidebar, Header, Toast, Loader } from '@/components/ui-custom';
 import { postRequest, getRequest, ENDPOINTS } from '@/types';
 import type { SupportTicket, CreateTicketPayload, SupportMessage } from '@/components/support/types';
@@ -10,6 +10,15 @@ import {
   TicketForm,
   TicketConversation,
 } from '@/components/support';
+
+type SupportApiResponse = {
+  success?: boolean;
+  id?: number;
+  detail?: string;
+  error?: string;
+  ticket?: SupportTicket;
+  message?: SupportMessage;
+};
 
 export function Support() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -25,11 +34,25 @@ export function Support() {
   const { showToast, ToastComponent } = Toast();
   const { LoaderComponent } = Loader();
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
+  const getAuthHeaders = (): Record<string, string> => {
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      localStorage.getItem('jwt') ||
+      localStorage.getItem('accessToken') ||
+      sessionStorage.getItem('access_token') ||
+      sessionStorage.getItem('token') ||
+      sessionStorage.getItem('jwt') ||
+      '';
 
-  const fetchTickets = async () => {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    }
+    return headers;
+  };
+
+  const fetchTickets = useCallback(async () => {
     try {
       setLoading(true);
       const response = await getRequest(ENDPOINTS.support_tickets);
@@ -41,7 +64,11 @@ export function Support() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
 
   const fetchTicketDetail = async (ticketId: number) => {
     setIsLoadingConversation(true);
@@ -65,13 +92,36 @@ export function Support() {
   const handleCreateTicket = async (payload: CreateTicketPayload) => {
     setIsSubmittingTicket(true);
     try {
-      const response = await postRequest(ENDPOINTS.support_tickets, {
-        subject: payload.subject,
-        description: payload.description,
-        priority: payload.priority,
-      });
+      let response: SupportApiResponse;
 
-      if (response && response.success) {
+      if (!payload.images || payload.images.length === 0) {
+        // CASE A: NO ATTACHMENTS -> USE EXISTING JSON POSTREQUEST PATH EXACTLY
+        response = await postRequest(ENDPOINTS.support_tickets, {
+          subject: payload.subject,
+          description: payload.description,
+          priority: payload.priority,
+        });
+      } else {
+        // CASE B: ATTACHMENTS PRESENT -> MULTIPART FORM DATA PER BACKEND SPEC
+        const formData = new FormData();
+        formData.append('subject', payload.subject);
+        formData.append('description', payload.description);
+        formData.append('priority', payload.priority);
+        payload.images.forEach((file) => {
+          formData.append('images', file);
+        });
+
+        const res = await fetch(ENDPOINTS.support_tickets, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          credentials: 'include',
+          body: formData,
+        });
+
+        response = await res.json();
+      }
+
+      if (response && (response.success || response.id || response.ticket)) {
         showToast('Support conversation started successfully');
         setShowNewTicket(false);
         setInitialSubject('');
@@ -83,7 +133,7 @@ export function Support() {
           fetchTicketDetail(response.id);
         }
       } else {
-        showToast(response?.error || 'Failed to create support ticket');
+        showToast(response?.detail || response?.error || 'Failed to create support ticket');
       }
     } catch {
       showToast('Error connecting to support backend');
@@ -97,7 +147,7 @@ export function Support() {
 
     setIsSendingMessage(true);
     try {
-      let response: any;
+      let response: SupportApiResponse;
 
       if (!images || images.length === 0) {
         // CASE A: NO ATTACHMENTS -> USE EXISTING JSON POSTREQUEST PATH EXACTLY
@@ -113,20 +163,10 @@ export function Support() {
           formData.append('images', file);
         });
 
-        const token =
-          localStorage.getItem('token') ||
-          localStorage.getItem('access_token') ||
-          localStorage.getItem('jwt') ||
-          '';
-
-        const headers: Record<string, string> = {};
-        if (token) {
-          headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-        }
-
         const res = await fetch(ENDPOINTS.support_ticket_detail(String(selectedTicket.id)), {
           method: 'POST',
-          headers,
+          headers: getAuthHeaders(),
+          credentials: 'include',
           body: formData,
         });
 
@@ -155,7 +195,7 @@ export function Support() {
         showToast('Message sent');
         return true;
       } else {
-        showToast(response?.error || 'Failed to send message');
+        showToast(response?.detail || response?.error || 'Failed to send message');
         return false;
       }
     } catch {
