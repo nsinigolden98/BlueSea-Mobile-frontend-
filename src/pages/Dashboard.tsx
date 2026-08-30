@@ -6,7 +6,7 @@ import {
   QuickActions,
   TransactionList,
 } from '@/components/ui-custom';
-import { BlueConnectPreview } from '@/components/blueconnect';
+//import { BlueConnectPreview } from '@/components/blueconnect';
 import { DashboardHeader } from '@/components/ui-custom/DashboardHeader';
 import { TransactionsData } from '@/data';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
@@ -153,7 +153,7 @@ export function Dashboard() {
               className="cursor-pointer transition-transform active:scale-[0.98] w-full max-w-full overflow-hidden"
             >
               <div className="scale-[0.99] md:scale-100 origin-center">
-                <BlueConnectPreview />
+                {/* <BlueConnectPreview /> */}
               </div>
             </div>
 

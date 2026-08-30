@@ -13,7 +13,7 @@ import {
   PinModal, 
   TransactionModal 
 } from '@/components/ui-custom';
-import { BlueConnectPreview } from '@/components/blueconnect';
+//import { BlueConnectPreview } from '@/components/blueconnect';
 import { InternalTransferModal } from '@/components/wallet/InternalTransferModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -336,7 +336,7 @@ export function Wallet() {
               className="cursor-pointer transition-transform active:scale-[0.98] w-full max-w-full overflow-hidden"
             >
               <div className="scale-[0.99] md:scale-100 origin-center">
-                <BlueConnectPreview />
+                {/* <BlueConnectPreview /> */}
               </div>
             </div>
             

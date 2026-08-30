@@ -4,6 +4,7 @@ import { Loader } from '@/components/ui-custom';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { Capacitor } from '@capacitor/core';
+import { makeTransactionPin } from '@/lib/security/pinEncryption';
 
 interface PinComponentProps {
   type: string;
@@ -74,20 +75,18 @@ export function PinModal() {
   }, []);
 
   // Centralized Transaction & Verification Action Handler
-  const executeTransaction = async (type: string, value: any, pin: string) => {
-    const payload = { ...value, transaction_pin: pin };
+  const executeTransaction = async (type: string, value: any, rawPin: string) => {
+    if (!/^\d{4}$/.test(rawPin)) {
+      throw new Error('PIN must be exactly 4 digits');
+    }
+
+    const encryptedPin = makeTransactionPin(rawPin);
+    const payload = { ...value, transaction_pin: encryptedPin };
 
     const TRANSACTION_MAP: Record<string, () => Promise<any>> = {
       'verify-pin': async () => {
-        try {
-          const endpoint = (ENDPOINTS as any).verify_pin || '/auth/verify-pin';
-          return await postRequest(endpoint, payload);
-        } catch (e) {
-          if (pin && pin.length === 4) {
-            return { success: true, message: 'PIN verified successfully' };
-          }
-          throw e;
-        }
+        const endpoint = (ENDPOINTS as any).pin_verify || (ENDPOINTS as any).verify_pin || '/accounts/pin/verify/';
+        return await postRequest(endpoint, { pin: encryptedPin });
       },
       'airtime': () => postRequest(ENDPOINTS.buy_airtime, payload),
       'light': () => postRequest(ENDPOINTS.electricity, payload),
@@ -98,7 +97,7 @@ export function PinModal() {
       'marketplace': () => postRequest(ENDPOINTS.marketplace_purchase(value.event_id), {
         ticket_type: value.ticket_type,
         quantity: value.quantity,
-        transaction_pin: pin,
+        transaction_pin: encryptedPin,
       }),
       'dstv': () => postRequest(ENDPOINTS.dstv, payload),
       'gotv': () => postRequest(ENDPOINTS.gotv, payload),
@@ -108,7 +107,7 @@ export function PinModal() {
       'waec-result': () => postRequest(ENDPOINTS.waec_result, payload),
       'jamb': () => postRequest(ENDPOINTS.jamb_registration, payload),
       'auto-topup': () => postRequest(ENDPOINTS.auto_topup_create, payload),
-      'auto-topup-reactivate': () => postRequest(ENDPOINTS.auto_topup_reactivate(value.id?.toString()), { transaction_pin: pin }),
+      'auto-topup-reactivate': () => postRequest(ENDPOINTS.auto_topup_reactivate(value.id?.toString()), { transaction_pin: encryptedPin }),
       'group-airtime': () => postRequest(ENDPOINTS.create_group, payload),
       'group-data': () => postRequest(ENDPOINTS.create_group, payload),
       'group-gotv': () => postRequest(ENDPOINTS.create_group, payload),
@@ -118,8 +117,7 @@ export function PinModal() {
       'group-lightbill': () => postRequest(ENDPOINTS.create_group, payload),
       'add-scanner': () => postRequest(ENDPOINTS.marketplace_add_scanner(value.event_id), { user_email: value.user_email }),
       'withdrawal': () => postRequest(ENDPOINTS.withdrawal, payload),
-      'internal_transfer': () =>
-    postRequest(ENDPOINTS.internal_transfer, payload),
+      'internal_transfer': () => postRequest(ENDPOINTS.internal_transfer, payload),
       'event-withdraw': () => postRequest(ENDPOINTS.event_withdraw, payload),
     };
 
@@ -169,38 +167,9 @@ export function PinModal() {
           setIsProcessing(true);
           showLoader();
 
-          const bioSuccess = await performBiometricPrompt('Authenticate transaction payment');
-
-          if (bioSuccess) {
-            const savedPin = localStorage.getItem('transaction_pin') || localStorage.getItem('user_pin') || localStorage.getItem('saved_pin') || '0000';
-            try {
-              const response = await executeTransaction(type, value, savedPin);
-              hidePinModal();
-              hideLoader();
-              setMessage(response);
-              resetState();
-
-              const isSuccess = !!response && (
-                response.success === true ||
-                response.state === true ||
-                (!response.error && response.code === '00') ||
-                (!response.error && response.success !== false && response.state !== false)
-              );
-
-              if (isSuccess && onSuccess) onSuccess(response);
-              else if (!isSuccess && onError) onError(response);
-              else if (!isSuccess && onFailure) onFailure(response);
-            } catch (error) {
-              hidePinModal();
-              hideLoader();
-              resetState();
-              if (onError) onError(error);
-              else if (onFailure) onFailure(error);
-            }
-          } else {
-            hideLoader();
-            setIsProcessing(false);
-          }
+          await performBiometricPrompt('Authenticate transaction payment');
+          hideLoader();
+          setIsProcessing(false);
         };
 
         handleBiometricPayment();
@@ -252,13 +221,12 @@ export function PinModal() {
     }, [modalData.visible, handleKeyPress]);
 
     const makeTransaction = async () => {
-      if (pin.length !== 4) return;
+      if (pin.length !== 4 || isProcessing) return;
       
       setIsProcessing(true);
       showLoader();
       
       try {
-        localStorage.setItem('transaction_pin', pin);
         const response = await executeTransaction(type, value, pin);
         
         hidePinModal();
