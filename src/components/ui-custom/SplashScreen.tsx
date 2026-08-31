@@ -51,9 +51,13 @@ export const SplashScreen: React.FC = () => {
   useEffect(() => {
     let active = true;
 
+    // Determine target route based on environment (Native Mobile vs. Web)
+    const getUnauthRoute = () => {
+      return Capacitor.isNativePlatform() ? '/app-auth' : '/login';
+    };
+
     const handlePremiumStartup = async () => {
       // Phase 1: Pure Visual Presentation Gate
-      // The app remains completely responsive; no memory reads or context polling occurs.
       await new Promise((resolve) => setTimeout(resolve, 3000));
       
       if (!active) return;
@@ -64,7 +68,7 @@ export const SplashScreen: React.FC = () => {
 
       if (!token) {
         sessionStorage.removeItem('token');
-        triggerExitTransition('/login');
+        triggerExitTransition(getUnauthRoute());
         return;
       }
 
@@ -75,7 +79,6 @@ export const SplashScreen: React.FC = () => {
             if (!liveAuth.current.loading) {
               resolve(liveAuth.current.isAuthenticated);
             } else {
-              // Poll safely every 50ms until context completes token validation
               setTimeout(poll, 50);
             }
           };
@@ -100,14 +103,14 @@ export const SplashScreen: React.FC = () => {
             triggerExitTransition('/dashboard');
           } else {
             sessionStorage.removeItem('token');
-            triggerExitTransition('/login');
+            triggerExitTransition(getUnauthRoute());
           }
         } else {
           triggerExitTransition('/dashboard');
         }
       } else {
         sessionStorage.removeItem('token');
-        triggerExitTransition('/login');
+        triggerExitTransition(getUnauthRoute());
       }
     };
 
@@ -115,7 +118,6 @@ export const SplashScreen: React.FC = () => {
     const triggerExitTransition = (targetRoute: string) => {
       setIsExiting(true);
       
-      // Match the 400ms duration defined in the exit CSS keyframe below
       setTimeout(() => {
         if (active) {
           navigate(targetRoute, { replace: true });
@@ -136,11 +138,6 @@ export const SplashScreen: React.FC = () => {
         isExiting ? 'animate-premium-exit' : ''
       }`}
     >
-      {/* 
-        Tailwind performance injection:
-        Utilizes composite layers via transform/opacity to keep transitions 
-        pegged at 60 FPS even on low-tier mobile chipsets.
-      */}
       <style>{`
         @keyframes fadeInScale {
           0% { opacity: 0; transform: scale(0.9); }
@@ -165,10 +162,8 @@ export const SplashScreen: React.FC = () => {
         .animate-dot-3 { animation: riverFlow 1.4s ease-in-out infinite; animation-delay: 0.4s; }
       `}</style>
 
-      {/* Top spacer to balance the layout layout vertically */}
       <div className="h-10" />
 
-      {/* Main Brand Assembly */}
       <div className="flex flex-col items-center justify-center flex-1 animate-fade-in-scale">
         <div className="w-28 h-28 flex items-center justify-center bg-white rounded-full shadow-xl shadow-sky-900/30 mb-6 p-4">
           <img 
@@ -194,7 +189,6 @@ export const SplashScreen: React.FC = () => {
         </p>
       </div>
 
-      {/* Bottom Loading Progress Container */}
       <div className="flex flex-col items-center gap-3">
         <div className="flex items-center gap-1.5 text-white/85 font-medium text-xs tracking-wider uppercase">
           <span>{statusText}</span>
