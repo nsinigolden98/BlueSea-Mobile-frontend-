@@ -35,7 +35,7 @@ export function AppUsernamePage() {
 
       if (response?.status || response?.success || response?.state) {
         showToast('Username created successfully!');
-        navigate('/app-auth/create-pin', { state: { email, username } });
+        navigate('/app-auth/create-pin', { state: { email, username: username.trim() } });
       } else {
         showToast(response?.message || 'Failed to register username');
       }
@@ -44,6 +44,10 @@ export function AppUsernamePage() {
     } finally {
       hideLoader();
     }
+  };
+
+  const handleSkip = () => {
+    navigate('/app-auth/create-pin', { state: { email } });
   };
 
   return (
@@ -56,7 +60,7 @@ export function AppUsernamePage() {
           Choose a Username
         </h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm text-center mb-6">
-          This will be your unique identifier on BlueSea Mobile
+          This will be your unique identifier on BlueSea Mobile (Optional)
         </p>
 
         <form onSubmit={handleCreateUsername} className="space-y-4">
@@ -66,12 +70,22 @@ export function AppUsernamePage() {
             placeholder="e.g. john_doe"
             value={username}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-            required
           />
 
-          <AppAuthButton type="submit" className="w-full mt-6">
-            Create Account
-          </AppAuthButton>
+          <div className="space-y-3 pt-2">
+            <AppAuthButton type="submit" className="w-full">
+              Continue
+            </AppAuthButton>
+
+            <AppAuthButton
+              type="button"
+              variant="secondary"
+              onClick={handleSkip}
+              className="w-full"
+            >
+              Skip for now
+            </AppAuthButton>
+          </div>
         </form>
       </div>
     </AppAuthLayout>
