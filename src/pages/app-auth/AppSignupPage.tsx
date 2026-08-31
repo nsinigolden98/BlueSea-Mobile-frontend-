@@ -18,7 +18,8 @@ export const AppSignupPage: React.FC = () => {
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateEmailStep()) {
-      navigate('/app-auth/basic-details');
+      // Pass the email in location state so subsequent screens have context
+      navigate('/app-auth/basic-details', { state: { email: formData.email } });
     }
   };
 
@@ -26,16 +27,12 @@ export const AppSignupPage: React.FC = () => {
     try {
       setGoogleLoading(true);
       setAuthError(null);
-      const response: any = await googleLogin({ credential: idToken });
-      if (response && typeof response === 'object' && 'email' in response) {
-        navigate('/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      await googleLogin({ credential: idToken });
+      navigate('/dashboard');
     } catch (err: any) {
       setAuthError(err?.message || 'Google Sign-Up failed');
     } finally {
-      setGoogleLoading(false);
+      googleLoading && setGoogleLoading(false);
     }
   };
 
@@ -43,12 +40,8 @@ export const AppSignupPage: React.FC = () => {
     try {
       setGoogleLoading(true);
       setAuthError(null);
-      const response: any = await googleLogin(credentialResponse);
-      if (response && typeof response === 'object' && 'email' in response) {
-        navigate('/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      await googleLogin(credentialResponse);
+      navigate('/dashboard');
     } catch (err: any) {
       setAuthError('Google Sign-Up failed');
     } finally {
@@ -94,6 +87,7 @@ export const AppSignupPage: React.FC = () => {
             placeholder="yourname@gmail.com"
             value={formData.email}
             onChange={(e) => updateField('email', e.target.value)}
+            required
           />
 
           <p className="text-xs text-slate-400 mb-6 leading-relaxed">
@@ -110,6 +104,7 @@ export const AppSignupPage: React.FC = () => {
         <p className="text-xs text-slate-400">
           Already registered?{' '}
           <button
+            type="button"
             onClick={() => navigate('/app-auth/login')}
             className="text-[#00D1FF] font-semibold hover:underline"
           >
