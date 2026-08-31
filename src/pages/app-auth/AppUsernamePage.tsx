@@ -1,57 +1,82 @@
-import React from 'react';
-import { useNativeAuth } from '../../hooks/useNativeAuth';
-import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
-import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
-import { AppAuthInput } from '../../components/app-auth/AppAuthInput';
-import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { AppAuthLayout } from '@/pages/app-auth/AppAuthLayout';
+import { AppAuthInput } from '@/pages/app-auth/AppAuthInput';
+import { AppAuthButton } from '@/pages/app-auth/AppAuthButton';
+import { Toast, Loader } from '@/components/ui-custom';
+import { postRequest, ENDPOINTS } from '@/types';
 
-export const AppUsernamePage: React.FC = () => {
-  const { formData, updateField, error, loading, setLoading, validateUsernameStep, navigate } = useNativeAuth();
+export function AppUsernamePage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Retrieve passed state from previous registration steps
+  const email = location.state?.email || '';
+  const [username, setUsername] = useState('');
+  
+  const { showToast, ToastComponent } = Toast();
+  const { showLoader, hideLoader, LoaderComponent } = Loader();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleCreateUsername = async (e: React.FormEvent) => {
+    // 1. Prevent default browser form submission (prevents returning to splash screen)
     e.preventDefault();
-    if (!validateUsernameStep()) return;
+
+    if (!username.trim()) {
+      showToast('Please enter a valid username');
+      return;
+    }
+
+    showLoader();
 
     try {
-      setLoading(true);
-      // Executes POST /accounts/sign-up/ endpoint
-      // Navigates directly to full-screen email verification
-      navigate('/app-auth/email-verification');
+      const response = await postRequest(ENDPOINTS.createUsername || '/auth/username', {
+        email,
+        username: username.trim(),
+      });
+
+      if (response?.status || response?.success || response?.state) {
+        showToast('Username created successfully!');
+        // 2. Navigate FORWARD to PIN creation or Success step, NOT back to splash screen
+        navigate('/app-auth/create-pin', { state: { email, username } });
+      } else {
+        showToast(response?.message || 'Failed to register username');
+      }
     } catch (err: any) {
-      // Direct error handling from backend
+      showToast(err?.message || 'An error occurred while setting your username');
     } finally {
-      setLoading(false);
+      hideLoader();
     }
   };
 
   return (
     <AppAuthLayout>
-      <div>
-        <AppAuthHeader
-          title="Choose Username"
-          subtitle="Your unique identifier on BlueSea Mobile"
-          onBack={() => navigate('/app-auth/basic-details')}
-        />
+      <ToastComponent />
+      <LoaderComponent />
 
-        <form onSubmit={handleRegister}>
+      <div className="w-full max-w-md mx-auto p-6">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2 text-center">
+          Choose a Username
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400 text-sm text-center mb-6">
+          This will be your unique identifier on BlueSea Mobile
+        </p>
+
+        <form onSubmit={handleCreateUsername} className="space-y-4">
           <AppAuthInput
             label="Username"
-            prefixText="@"
-            placeholder="john_doe"
-            value={formData.username.replace(/^@/, '')}
-            onChange={(e) => updateField('username', `@${e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '')}`)}
-            error={error}
+            type="text"
+            placeholder="e.g. john_doe"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
           />
 
-          <p className="text-xs text-slate-400 mb-8 leading-relaxed">
-            Must be 4-30 characters long using lowercase letters, numbers, hyphens, or underscores.
-          </p>
-
-          <AppAuthButton type="submit" loading={loading}>
+          {/* Ensure form button type is set to submit */}
+          <AppAuthButton type="submit" className="w-full mt-6">
             Create Account
           </AppAuthButton>
         </form>
       </div>
     </AppAuthLayout>
   );
-};
+}
