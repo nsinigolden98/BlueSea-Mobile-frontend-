@@ -8,8 +8,16 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { RefreshProvider, PullToRefresh } from '@/components/refresh';
 
 // MOBILE APP AUTH IMPORTS
+import { AppAuthPage } from '@/pages/app-auth/AppAuthPage';
 import { AppLoginPage } from '@/pages/app-auth/AppLoginPage';
 import { AppSignupPage } from '@/pages/app-auth/AppSignupPage';
+import { AppBasicDetailsPage } from '@/pages/app-auth/AppBasicDetailsPage';
+import { AppEmailVerificationPage } from '@/pages/app-auth/AppEmailVerificationPage';
+import { AppOtpPage } from '@/pages/app-auth/AppOtpPage';
+import { AppCreatePinPage } from '@/pages/app-auth/AppCreatePinPage';
+import { AppForgotPasswordPage } from '@/pages/app-auth/AppForgotPasswordPage';
+import { AppUsernamePage } from '@/pages/app-auth/AppUsernamePage';
+import { AppAuthSuccessPage } from '@/pages/app-auth/AppAuthSuccessPage';
 
 import {
   AuthPage,
@@ -172,13 +180,16 @@ function AppRoutes() {
         <Route path="/signup" element={<PublicRoute><AuthPage /></PublicRoute>} />
 
         {/* NATIVE MOBILE AUTH ROUTES */}
-        <Route path="/app-auth" element={<PublicRoute><AppLoginPage /></PublicRoute>} />
+        <Route path="/app-auth" element={<PublicRoute><AppAuthPage /></PublicRoute>} />
         <Route path="/app-auth/login" element={<PublicRoute><AppLoginPage /></PublicRoute>} />
         <Route path="/app-auth/signup" element={<PublicRoute><AppSignupPage /></PublicRoute>} />
-        <Route path="/app-auth/basic-details" element={<PublicRoute><AppSignupPage /></PublicRoute>} />
-        <Route path="/app-auth/verify-otp" element={<PublicRoute><AppSignupPage /></PublicRoute>} />
-        <Route path="/app-auth/create-pin" element={<PublicRoute><AppSignupPage /></PublicRoute>} />
-        <Route path="/app-auth/forgot-password" element={<PublicRoute><AppLoginPage /></PublicRoute>} />
+        <Route path="/app-auth/basic-details" element={<PublicRoute><AppBasicDetailsPage /></PublicRoute>} />
+        <Route path="/app-auth/verify-email" element={<PublicRoute><AppEmailVerificationPage /></PublicRoute>} />
+        <Route path="/app-auth/verify-otp" element={<PublicRoute><AppOtpPage /></PublicRoute>} />
+        <Route path="/app-auth/create-pin" element={<PublicRoute><AppCreatePinPage /></PublicRoute>} />
+        <Route path="/app-auth/forgot-password" element={<PublicRoute><AppForgotPasswordPage /></PublicRoute>} />
+        <Route path="/app-auth/username" element={<PublicRoute><AppUsernamePage /></PublicRoute>} />
+        <Route path="/app-auth/success" element={<PublicRoute><AppAuthSuccessPage /></PublicRoute>} />
 
         {/* Public event sharing */}
         <Route path="/event/:eventId" element={<EventPublic />} />
