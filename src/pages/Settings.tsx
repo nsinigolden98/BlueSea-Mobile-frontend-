@@ -169,9 +169,21 @@ export function Settings() {
     }
   }, [legalExpanded]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  /**
+   * Safe Mobile & Web Logout Handler
+   * Clears active authentication context, detects native mobile runtime,
+   * routes to the designated mobile route (/app-auth/login) or web route (/login),
+   * and replaces history state to prevent back-button re-entry.
+   */
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      const targetRoute = isNative ? '/app-auth/login' : '/login';
+      navigate(targetRoute, { replace: true });
+    }
   };
 
   const getInitials = () => {

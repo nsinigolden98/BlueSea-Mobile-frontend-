@@ -175,6 +175,10 @@ function AppRoutes() {
         <Route path="/app-auth" element={<PublicRoute><AppLoginPage /></PublicRoute>} />
         <Route path="/app-auth/login" element={<PublicRoute><AppLoginPage /></PublicRoute>} />
         <Route path="/app-auth/signup" element={<PublicRoute><AppSignupPage /></PublicRoute>} />
+        <Route path="/app-auth/basic-details" element={<PublicRoute><AppSignupPage /></PublicRoute>} />
+        <Route path="/app-auth/verify-otp" element={<PublicRoute><AppSignupPage /></PublicRoute>} />
+        <Route path="/app-auth/create-pin" element={<PublicRoute><AppSignupPage /></PublicRoute>} />
+        <Route path="/app-auth/forgot-password" element={<PublicRoute><AppLoginPage /></PublicRoute>} />
 
         {/* Public event sharing */}
         <Route path="/event/:eventId" element={<EventPublic />} />
