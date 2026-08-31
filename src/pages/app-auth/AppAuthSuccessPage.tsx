@@ -2,9 +2,21 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
+import { useAuth } from '@/context/AuthContext';
 
 export const AppAuthSuccessPage: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const handleProceed = () => {
+    // If user token exists in AuthContext, go directly to Dashboard.
+    // Otherwise, navigate to Sign In so they can authenticate into their account.
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    } else {
+      navigate('/app-auth/login', { replace: true });
+    }
+  };
 
   return (
     <AppAuthLayout>
@@ -16,13 +28,13 @@ export const AppAuthSuccessPage: React.FC = () => {
         </div>
 
         <h1 className="text-2xl font-bold text-white mb-2">Account Ready!</h1>
-        <p className="text-sm text-slate-400 max-w-xs leading-relaxed">
+        <p className="text-sm text-slate-400 max-w-xs leading-relaxed mb-6">
           Your account setup and PIN security configuration are complete.
         </p>
       </div>
 
-      <AppAuthButton onClick={() => navigate('/dashboard')}>
-        Go to Dashboard
+      <AppAuthButton onClick={handleProceed}>
+        {isAuthenticated ? 'Go to Dashboard' : 'Proceed to Sign In'}
       </AppAuthButton>
     </AppAuthLayout>
   );
