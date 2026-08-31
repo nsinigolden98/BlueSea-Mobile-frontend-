@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useNativeAuth } from '../../hooks/useNativeAuth';
 import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
 import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
@@ -7,12 +8,17 @@ import { AppPasswordInput } from '../../components/app-auth/AppPasswordInput';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
 
 export const AppBasicDetailsPage: React.FC = () => {
-  const { formData, updateField, error, validateBasicDetailsStep, navigate } = useNativeAuth();
+  const { formData, updateField, error, validateBasicDetailsStep } = useNativeAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const email = location.state?.email || formData.email;
 
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateBasicDetailsStep()) {
-      navigate('/app-auth/username');
+      // Direct user to email OTP verification before username & PIN creation
+      navigate('/app-auth/verify-email', { state: { email } });
     }
   };
 
