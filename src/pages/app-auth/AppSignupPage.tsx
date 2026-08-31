@@ -18,6 +18,7 @@ export const AppSignupPage: React.FC = () => {
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateEmailStep()) {
+      // Pass the email in location state so subsequent screens have context
       navigate('/app-auth/basic-details', { state: { email: formData.email.trim() } });
     }
   };
@@ -26,11 +27,10 @@ export const AppSignupPage: React.FC = () => {
     try {
       setGoogleLoading(true);
       setAuthError(null);
-      // POST /accounts/auth/google/ -> { id_token }
-      await googleLogin({ id_token: idToken });
+      await googleLogin({ credential: idToken });
       navigate('/dashboard');
     } catch (err: any) {
-      setAuthError(err?.response?.data?.message || err?.message || 'Google Sign-Up failed');
+      setAuthError(err?.message || 'Google Sign-Up failed');
     } finally {
       setGoogleLoading(false);
     }
@@ -40,12 +40,10 @@ export const AppSignupPage: React.FC = () => {
     try {
       setGoogleLoading(true);
       setAuthError(null);
-      const token = credentialResponse?.credential || credentialResponse?.id_token;
-      // POST /accounts/auth/google/ -> { id_token }
-      await googleLogin({ id_token: token });
+      await googleLogin(credentialResponse);
       navigate('/dashboard');
     } catch (err: any) {
-      setAuthError(err?.response?.data?.message || 'Google Sign-Up failed');
+      setAuthError('Google Sign-Up failed');
     } finally {
       setGoogleLoading(false);
     }
