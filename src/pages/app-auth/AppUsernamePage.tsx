@@ -1,24 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { AppAuthLayout } from '@/pages/app-auth/AppAuthLayout';
-import { AppAuthInput } from '@/pages/app-auth/AppAuthInput';
-import { AppAuthButton } from '@/pages/app-auth/AppAuthButton';
+import { AppAuthLayout } from '@/components/app-auth/AppAuthLayout';
+import { AppAuthInput } from '@/components/app-auth/AppAuthInput';
+import { AppAuthButton } from '@/components/app-auth/AppAuthButton';
 import { Toast, Loader } from '@/components/ui-custom';
 import { postRequest, ENDPOINTS } from '@/types';
 
 export function AppUsernamePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Retrieve passed state from previous registration steps
+
   const email = location.state?.email || '';
   const [username, setUsername] = useState('');
-  
+
   const { showToast, ToastComponent } = Toast();
   const { showLoader, hideLoader, LoaderComponent } = Loader();
 
   const handleCreateUsername = async (e: React.FormEvent) => {
-    // 1. Prevent default browser form submission (prevents returning to splash screen)
     e.preventDefault();
 
     if (!username.trim()) {
@@ -29,14 +27,14 @@ export function AppUsernamePage() {
     showLoader();
 
     try {
-      const response = await postRequest(ENDPOINTS.createUsername || '/auth/username', {
+      const endpoint = (ENDPOINTS as Record<string, any>).createUsername || '/auth/username';
+      const response = await postRequest(endpoint, {
         email,
         username: username.trim(),
       });
 
       if (response?.status || response?.success || response?.state) {
         showToast('Username created successfully!');
-        // 2. Navigate FORWARD to PIN creation or Success step, NOT back to splash screen
         navigate('/app-auth/create-pin', { state: { email, username } });
       } else {
         showToast(response?.message || 'Failed to register username');
@@ -67,11 +65,10 @@ export function AppUsernamePage() {
             type="text"
             placeholder="e.g. john_doe"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
             required
           />
 
-          {/* Ensure form button type is set to submit */}
           <AppAuthButton type="submit" className="w-full mt-6">
             Create Account
           </AppAuthButton>
