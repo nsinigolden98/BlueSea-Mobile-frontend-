@@ -7,6 +7,10 @@ import { ThemeProvider } from '@/context/ThemeContext';
 // 1. IMPORT REFRESH PROVIDER & PULL TO REFRESH
 import { RefreshProvider, PullToRefresh } from '@/components/refresh';
 
+// MOBILE APP AUTH IMPORTS
+import { AppLoginPage } from '@/pages/app-auth/AppLoginPage';
+import { AppSignupPage } from '@/pages/app-auth/AppSignupPage';
+
 import {
   AuthPage,
   Dashboard,
@@ -162,25 +166,30 @@ function AppRoutes() {
     <Routes>
       {/* Wrap everything in the MainLayout to ensure Header logic is global */}
       <Route element={<MainLayout />}>
-{/* PUBLIC ROUTES */}
-<Route path="/" element={<RootRoute />} />
-<Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
-<Route path="/signup" element={<PublicRoute><AuthPage /></PublicRoute>} />
+        {/* PUBLIC ROUTES */}
+        <Route path="/" element={<RootRoute />} />
+        <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
+        <Route path="/signup" element={<PublicRoute><AuthPage /></PublicRoute>} />
 
-{/* Public event sharing */}
-<Route path="/event/:eventId" element={<EventPublic />} />
+        {/* NATIVE MOBILE AUTH ROUTES */}
+        <Route path="/app-auth" element={<PublicRoute><AppLoginPage /></PublicRoute>} />
+        <Route path="/app-auth/login" element={<PublicRoute><AppLoginPage /></PublicRoute>} />
+        <Route path="/app-auth/signup" element={<PublicRoute><AppSignupPage /></PublicRoute>} />
 
-{/* Public support */}
-<Route path="/support" element={<Support />} />
+        {/* Public event sharing */}
+        <Route path="/event/:eventId" element={<EventPublic />} />
 
-{/* Public legal pages */}
-<Route path="/legal/terms" element={<TermsAndConditions />} />
-<Route path="/legal/privacy" element={<PrivacyPolicy />} />
-<Route path="/legal/refund" element={<RefundPolicy />} />
-<Route path="/legal/security" element={<SecurityPolicy />} />
-<Route path="/legal/cookies" element={<CookiePolicy />} />
-<Route path="/legal/kyc" element={<KYCPolicy />} />
-<Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
+        {/* Public support */}
+        <Route path="/support" element={<Support />} />
+
+        {/* Public legal pages */}
+        <Route path="/legal/terms" element={<TermsAndConditions />} />
+        <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+        <Route path="/legal/refund" element={<RefundPolicy />} />
+        <Route path="/legal/security" element={<SecurityPolicy />} />
+        <Route path="/legal/cookies" element={<CookiePolicy />} />
+        <Route path="/legal/kyc" element={<KYCPolicy />} />
+        <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
 
         {/* =========================================
             3. AUTHENTICATED ROUTES (UNIVERSAL PULL-TO-REFRESH ENABLED)
@@ -258,21 +267,21 @@ function AppRoutes() {
           <Route path="/paylink/history" element={<ProtectedRoute><PayLinkHistory /></ProtectedRoute>} />
 
           {/* =========================================
-    AFFILIATE ROUTES (ALL SUB-ROUTES REGISTERED)
-   ========================================= */}
-<Route path="/affiliate" element={<ProtectedRoute><AffiliateLayout /></ProtectedRoute>}>
-  <Route index element={<ProtectedRoute><Navigate to="/affiliate/dashboard" replace /></ProtectedRoute>} />
-  <Route path="dashboard" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
-  <Route path="events" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} /> {/* Or your dedicated My Events page component */}
-  <Route path="analytics" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
-  <Route path="leaderboard" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
-  <Route path="achievements" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
-  <Route path="saved" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
-  <Route path="alerts" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
-  <Route path="settings" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
-  <Route path="register" element={<ProtectedRoute><AffiliateRegistration /></ProtectedRoute>} />
-  <Route path="pending" element={<ProtectedRoute><AffiliatePending /></ProtectedRoute>} />
-</Route>
+            AFFILIATE ROUTES (ALL SUB-ROUTES REGISTERED)
+           ========================================= */}
+          <Route path="/affiliate" element={<ProtectedRoute><AffiliateLayout /></ProtectedRoute>}>
+            <Route index element={<ProtectedRoute><Navigate to="/affiliate/dashboard" replace /></ProtectedRoute>} />
+            <Route path="dashboard" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+            <Route path="events" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} /> {/* Or your dedicated My Events page component */}
+            <Route path="analytics" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+            <Route path="leaderboard" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+            <Route path="achievements" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+            <Route path="saved" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+            <Route path="alerts" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+            <Route path="settings" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+            <Route path="register" element={<ProtectedRoute><AffiliateRegistration /></ProtectedRoute>} />
+            <Route path="pending" element={<ProtectedRoute><AffiliatePending /></ProtectedRoute>} />
+          </Route>
         </Route>
 
         {/* Fallback */}
@@ -311,4 +320,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
