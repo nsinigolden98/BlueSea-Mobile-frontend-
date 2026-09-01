@@ -1,41 +1,42 @@
 import React from 'react';
+import { CheckCircle, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
-import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
-import { useAuth } from '@/context/AuthContext';
 
 export const AppAuthSuccessPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-
-  const handleProceed = () => {
-    // If user token exists in AuthContext, go directly to Dashboard.
-    // Otherwise, navigate to Sign In so they can authenticate into their account.
-    if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
-    } else {
-      navigate('/app-auth/login', { replace: true });
-    }
-  };
 
   return (
-    <AppAuthLayout>
-      <div className="flex-1 flex flex-col justify-center items-center text-center my-auto">
-        <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mb-6 text-emerald-400">
-          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-          </svg>
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div />
+
+      <main className="my-auto max-w-md w-full mx-auto text-center space-y-6">
+        <div
+          className="w-24 h-24 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto text-emerald-400"
+        >
+          <CheckCircle className="w-12 h-12" />
         </div>
 
-        <h1 className="text-2xl font-bold text-white mb-2">Account Ready!</h1>
-        <p className="text-sm text-slate-400 max-w-xs leading-relaxed mb-6">
-          Your account setup and PIN security configuration are complete.
-        </p>
-      </div>
+        <div
+          className="space-y-2"
+        >
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">You're All Set!</h1>
+          <p className="text-slate-400 text-xs leading-relaxed max-w-xs mx-auto">
+            Your account is verified and ready. Start exploring BlueSea Mobile today.
+          </p>
+        </div>
 
-      <AppAuthButton onClick={handleProceed}>
-        {isAuthenticated ? 'Go to Dashboard' : 'Proceed to Sign In'}
-      </AppAuthButton>
-    </AppAuthLayout>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 text-sm"
+        >
+          <span>Go to Dashboard</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </main>
+
+      <div />
+    </div>
   );
 };

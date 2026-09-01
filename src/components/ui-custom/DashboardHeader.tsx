@@ -4,7 +4,7 @@ import { Bell, Headset } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getRequest, ENDPOINTS } from '@/types';
 import { cn } from '@/lib/utils';
-import { PayLinkHeaderButton } from './PayLinkHeaderButton';
+//import { PayLinkHeaderButton } from './PayLinkHeaderButton';
 
 export function DashboardHeader() {
   const navigate = useNavigate();
@@ -112,7 +112,7 @@ export function DashboardHeader() {
         <div className="flex items-center gap-2.5 flex-shrink-0">
           
           {/* PayLink Action (FIRST POSITION) */}
-          <PayLinkHeaderButton />
+          {/* <PayLinkHeaderButton /> */}
 
           {/* Support Icon Button */}
           <button

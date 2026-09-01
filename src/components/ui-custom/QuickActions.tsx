@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, Wifi, Lightbulb, Gift, Tv, Send } from 'lucide-react';
+import { Smartphone, Wifi, Lightbulb, 
+  //Gift,
+  Tv, Send } from 'lucide-react';
 import { InternalTransferModal } from '@/components/wallet/InternalTransferModal';
 
 interface QuickAction {
@@ -45,13 +47,13 @@ const actions: QuickAction[] = [
     path: '/light-bills',
     color: 'text-amber-500'
   },
-  {
+  /*{
     id: 'gift',
     label: 'Gift Cards',
     icon: Gift,
     path: '/gift-cards',
     color: 'text-pink-500'
-  },
+  },*/
   {
     id: 'tv',
     label: 'TV Subscription',

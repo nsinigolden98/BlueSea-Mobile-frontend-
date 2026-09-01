@@ -15,9 +15,9 @@ import { type Transaction } from '@/types';
 import {
   ChevronRight,
   Wallet,
-  Plane,
+  //Plane,
   Ticket,
-  Briefcase,
+  //Briefcase,
   LayoutGrid,
   Award
 } from 'lucide-react';
@@ -67,7 +67,7 @@ export function Dashboard() {
   }, [transactions]);
 
   const premiumServices = [
-    {
+   /* {
       label: 'Payroll Pro',
       icon: Briefcase,
       path: '/payroll-pro',
@@ -76,7 +76,7 @@ export function Dashboard() {
       label: 'Travel',
       icon: Plane,
       path: '/flights',
-    },
+    },*/
     {
       label: 'Scan Events',
       icon: Ticket,
