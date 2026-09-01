@@ -1,117 +1,148 @@
-import React from 'react';
-import { ArrowLeft, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
-import { useNativeAuth } from '@/hooks/useNativeAuth';
-import { postRequest } from '@/types';
-import { ENDPOINTS } from '@/types';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { useNativeAuth } from '../../hooks/useNativeAuth';
+import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
+import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
+import { AppAuthInput } from '../../components/app-auth/AppAuthInput';
+import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
+import { AppGoogleButton } from '../../components/app-auth/AppGoogleButton';
+import { postRequest, ENDPOINTS } from '@/types';
 
 export const AppSignupPage: React.FC = () => {
-  const {
-    formData,
-    loading,
-    error,
-    setLoading,
-    setError,
-    updateField,
-    validateEmailStep,
-    navigate,
-  } = useNativeAuth();
+  const { googleLogin } = useAuth();
+  const { formData, updateField, error, validateEmailStep } = useNativeAuth();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmailStep()) return;
 
     setLoading(true);
-    setError(null);
+    setAuthError(null);
 
     try {
-      const response = await postRequest(ENDPOINTS.sendOtp, { email: formData.email.trim() });
-      if (response && response.status !== false) {
-        navigate('/app-auth/basic-details', { state: { email: formData.email } });
+      const endpoint =
+        (ENDPOINTS as Record<string, any>).checkEmail ||
+        (ENDPOINTS as Record<string, any>).sendOtp ||
+        '/accounts/check-email/';
+
+      const response = await postRequest(endpoint, { email: formData.email.trim() });
+
+      if (response?.exists || response?.registered || response?.is_registered) {
+        setAuthError('This Gmail address is already registered. Please sign in or use Google.');
       } else {
-        setError(response?.message || 'Failed to send verification code. Please try again.');
+        // Email is available -> proceed to personal details step
+        navigate('/app-auth/basic-details', { state: { email: formData.email.trim() } });
       }
     } catch (err: any) {
-      setError(err?.message || 'Network error. Please try again.');
+      const apiMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message;
+      if (apiMsg && (apiMsg.toLowerCase().includes('exist') || apiMsg.toLowerCase().includes('registered'))) {
+        setAuthError('This Gmail address is already registered. Please sign in.');
+      } else {
+        // If check endpoint falls back, safely proceed with email in state
+        navigate('/app-auth/basic-details', { state: { email: formData.email.trim() } });
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const handleNativeGoogleAuth = async (idToken: string) => {
+    try {
+      setGoogleLoading(true);
+      setAuthError(null);
+      await googleLogin({ credential: idToken });
+      navigate('/dashboard');
+    } catch (err: any) {
+      setAuthError(err?.message || 'Google Sign-Up failed');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleWebGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setGoogleLoading(true);
+      setAuthError(null);
+      await googleLogin(credentialResponse);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setAuthError('Google Sign-Up failed');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-6 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+    <AppAuthLayout>
+      <div>
+        <AppAuthHeader
+          title="Create Account"
+          subtitle="Register with your Gmail address or Google Account"
+          onBack={() => navigate('/app-auth')}
+        />
 
-      <header className="flex items-center justify-between pt-4">
-        <button
-          onClick={() => navigate('/app-auth')}
-          className="p-2 bg-slate-900 border border-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-          <ShieldCheck className="w-4 h-4" />
-          <span>Step 1 of 4</span>
-        </div>
-      </header>
+        <AppGoogleButton
+          mode="signup"
+          text="Sign up with Google"
+          onGoogleAuth={handleNativeGoogleAuth}
+          onWebSuccess={handleWebGoogleSuccess}
+          loading={googleLoading}
+        />
 
-      <main className="my-auto max-w-md w-full mx-auto space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Create your account</h1>
-          <p className="text-slate-400 text-sm">
-            Enter your email address to begin your financial journey.
-          </p>
+        <div className="relative flex py-3 items-center mb-4">
+          <div className="flex-grow border-t border-slate-700/80"></div>
+          <span className="flex-shrink mx-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            Or sign up with email
+          </span>
+          <div className="flex-grow border-t border-slate-700/80"></div>
         </div>
 
-        {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-medium">
-            {error}
+        {(error || authError) && (
+          <div className="p-3 mb-4 text-xs rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+            {error || authError}
           </div>
         )}
 
-        <form onSubmit={handleNext} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => updateField('email', e.target.value)}
-                placeholder="name@example.com"
-                className="w-full bg-slate-900/90 border border-slate-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-                required
-              />
-            </div>
-          </div>
+        <form onSubmit={handleNext}>
+          <AppAuthInput
+            label="Gmail Address"
+            type="email"
+            placeholder="yourname@gmail.com"
+            value={formData.email}
+            onChange={(e) => {
+              updateField('email', e.target.value);
+              if (authError) setAuthError(null);
+            }}
+            required
+          />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 text-sm"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <span>Continue</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+          <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+            Note: BlueSea Mobile accepts only valid <span className="text-slate-200 font-semibold">@gmail.com</span> email addresses.
+          </p>
+
+          <AppAuthButton type="submit" loading={loading} disabled={loading || googleLoading}>
+            {loading ? 'Verifying Email...' : 'Continue'}
+          </AppAuthButton>
         </form>
-      </main>
+      </div>
 
-      <footer className="text-center text-xs text-slate-500 py-4">
-        Already have an account?{' '}
-        <button
-          onClick={() => navigate('/app-auth/login')}
-          className="text-blue-400 font-semibold hover:underline"
-        >
-          Sign In
-        </button>
-      </footer>
-    </div>
+      <div className="mt-8 text-center">
+        <p className="text-xs text-slate-400">
+          Already registered?{' '}
+          <button
+            type="button"
+            onClick={() => navigate('/app-auth/login')}
+            className="text-[#00D1FF] font-semibold hover:underline"
+          >
+            Sign In
+          </button>
+        </p>
+      </div>
+    </AppAuthLayout>
   );
 };

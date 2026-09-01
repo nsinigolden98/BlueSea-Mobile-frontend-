@@ -1,117 +1,61 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Mail, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { postRequest } from '@/types';
-import { ENDPOINTS } from '@/types';
+import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
+import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
+import { AppAuthInput } from '../../components/app-auth/AppAuthInput';
+import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
+import { validateGmail } from '../../utils/platform';
 
 export const AppForgotPasswordPage: React.FC = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
-      setError('Please enter your email address.');
+    setError(null);
+
+    if (!validateGmail(email)) {
+      setError('Only standard @gmail.com email addresses are allowed.');
       return;
     }
 
-    setLoading(true);
-    setError(null);
-
     try {
-      const response = await postRequest(ENDPOINTS.sendOtp, { email: email.trim() });
-      if (response && response.status !== false) {
-        setSent(true);
-      } else {
-        setError(response?.message || 'Failed to send reset code.');
-      }
+      setLoading(true);
+      // Calls POST /accounts/password/reset/request/
+      navigate('/app-auth/otp', { state: { email, type: 'password_reset' } });
     } catch (err: any) {
-      setError(err?.message || 'Network error.');
+      setError(err?.response?.data?.message || 'Password reset request failed.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between p-6 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+    <AppAuthLayout>
+      <div>
+        <AppAuthHeader
+          title="Reset Password"
+          subtitle="Enter your registered Gmail address to receive password reset instructions"
+          onBack={() => navigate('/app-auth/login')}
+        />
 
-      <header className="pt-4 flex items-center">
-        <button
-          onClick={() => navigate('/app-auth/login')}
-          className="p-2 bg-slate-900 border border-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-      </header>
+        <form onSubmit={handleResetRequest}>
+          <AppAuthInput
+            label="Gmail Address"
+            type="email"
+            placeholder="yourname@gmail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={error}
+          />
 
-      <main className="my-auto max-w-md w-full mx-auto space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-extrabold text-white">Reset Password</h1>
-          <p className="text-slate-400 text-xs">
-            Enter your email to receive a password reset OTP code.
-          </p>
-        </div>
-
-        {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-medium">
-            {error}
-          </div>
-        )}
-
-        {sent ? (
-          <div className="space-y-4 text-center">
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs">
-              Password reset OTP has been sent to <span className="font-semibold text-white">{email}</span>.
-            </div>
-            <button
-              onClick={() => navigate('/app-auth/verify-otp', { state: { email } })}
-              className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 text-sm"
-            >
-              <span>Enter Reset Code</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full bg-slate-900/90 border border-slate-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-                  required
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 text-sm"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>Send Reset Code</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-        )}
-      </main>
-
-      <div />
-    </div>
+          <AppAuthButton type="submit" loading={loading}>
+            Send Reset OTP
+          </AppAuthButton>
+        </form>
+      </div>
+    </AppAuthLayout>
   );
 };

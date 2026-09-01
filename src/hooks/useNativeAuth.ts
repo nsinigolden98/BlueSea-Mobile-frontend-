@@ -13,7 +13,6 @@ export interface NativeSignUpState {
   username: string;
   otp: string;
   pin: string;
-  confirmPin: string;
 }
 
 const initialSignUpState: NativeSignUpState = {
@@ -27,7 +26,6 @@ const initialSignUpState: NativeSignUpState = {
   username: '',
   otp: '',
   pin: '',
-  confirmPin: '',
 };
 
 export const useNativeAuth = () => {
@@ -42,11 +40,11 @@ export const useNativeAuth = () => {
   }, []);
 
   const validateEmailStep = (): boolean => {
-    if (!formData.email.trim()) {
+    if (!formData.email) {
       setError('Email address is required.');
       return false;
     }
-    if (!validateGmail(formData.email.trim())) {
+    if (!validateGmail(formData.email)) {
       setError('Only standard @gmail.com email addresses are allowed.');
       return false;
     }
@@ -63,20 +61,8 @@ export const useNativeAuth = () => {
       return false;
     }
     const cleanPhone = normalizePhoneNumber(formData.phone);
-    if (cleanPhone.length !== 10 && cleanPhone.length !== 11) {
-      setError('Please enter a valid Nigerian phone number.');
-      return false;
-    }
-    if (!formData.password) {
-      setError('Password is required.');
-      return false;
-    }
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long.');
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
+    if (cleanPhone.length !== 10) {
+      setError('Please enter a valid 10-digit Nigerian phone number.');
       return false;
     }
     return true;
@@ -94,18 +80,6 @@ export const useNativeAuth = () => {
     return true;
   };
 
-  const validatePinStep = (): boolean => {
-    if (!formData.pin || formData.pin.length !== 4 || !/^\d{4}$/.test(formData.pin)) {
-      setError('PIN must be exactly 4 numeric digits.');
-      return false;
-    }
-    if (formData.pin !== formData.confirmPin) {
-      setError('PINs do not match.');
-      return false;
-    }
-    return true;
-  };
-
   return {
     formData,
     loading,
@@ -116,7 +90,6 @@ export const useNativeAuth = () => {
     validateEmailStep,
     validateBasicDetailsStep,
     validateUsernameStep,
-    validatePinStep,
     navigate,
   };
 };

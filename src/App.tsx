@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, Outlet } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+// import { Header } from '@/components/ui-custom/Header';
 
-// REFRESH PROVIDER & PULL TO REFRESH
+// 1. IMPORT REFRESH PROVIDER & PULL TO REFRESH
 import { RefreshProvider, PullToRefresh } from '@/components/refresh';
 
 // MOBILE APP AUTH IMPORTS
@@ -43,6 +44,7 @@ import {
   GOTV,
   Startimes,
   ShowMax,
+  // Rewards, // Replaced by Vault modular system
   WAECRegistration,
   WAECResult,
   JAMBRegistration,
@@ -59,6 +61,7 @@ import {
   BlueSphere,
 } from '@/pages';
 
+// IMPORT BLUECONNECT PAGE
 import { BlueConnectPage } from '@/components/blueconnect';
 
 import IdentityCenter from '@/pages/IdentityCenter';
@@ -103,7 +106,7 @@ import {
   AcceptableUsePolicy,
 } from '@/pages/legal-center';
 
-// PAYLINK IMPORTS
+//for Paylink
 import { 
   PayLinkHome, 
   CreatePayLink, 
@@ -117,9 +120,20 @@ import {
   PayLinkHistory 
 } from '@/pages/paylink';
 
+
+
+/**
+ * Global Layout Wrapper
+ * Handles the persistent Header
+ */
 function MainLayout() {
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Persistent Header
+      <Header title="BlueSea Mobile" />
+      */}
+
+      {/* Page Content */}
       <main className="flex-1">
         <Outlet /> 
       </main>
@@ -127,6 +141,10 @@ function MainLayout() {
   );
 }
 
+/**
+ * 2. AUTHENTICATED LAYOUT WRAPPER
+ * Wraps protected pages in the Universal Pull-to-Refresh System.
+ */
 function AuthenticatedLayout() {
   return (
     <RefreshProvider>
@@ -154,8 +172,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
+      {/* Wrap everything in the MainLayout to ensure Header logic is global */}
       <Route element={<MainLayout />}>
-        {/* PUBLIC WEB AUTH ROUTES */}
+        {/* PUBLIC ROUTES */}
         <Route path="/" element={<RootRoute />} />
         <Route path="/login" element={<PublicRoute><AuthPage /></PublicRoute>} />
         <Route path="/signup" element={<PublicRoute><AuthPage /></PublicRoute>} />
@@ -165,14 +184,12 @@ function AppRoutes() {
         <Route path="/app-auth/login" element={<PublicRoute><AppLoginPage /></PublicRoute>} />
         <Route path="/app-auth/signup" element={<PublicRoute><AppSignupPage /></PublicRoute>} />
         <Route path="/app-auth/basic-details" element={<PublicRoute><AppBasicDetailsPage /></PublicRoute>} />
+        <Route path="/app-auth/verify-email" element={<PublicRoute><AppEmailVerificationPage /></PublicRoute>} />
+        <Route path="/app-auth/verify-otp" element={<PublicRoute><AppOtpPage /></PublicRoute>} />
+        <Route path="/app-auth/create-pin" element={<PublicRoute><AppCreatePinPage /></PublicRoute>} />
         <Route path="/app-auth/forgot-password" element={<PublicRoute><AppForgotPasswordPage /></PublicRoute>} />
-        
-        {/* NATIVE ONBOARDING ROUTES (ACCESSIBLE DURING SESSION ESTABLISHMENT) */}
-        <Route path="/app-auth/verify-email" element={<AppEmailVerificationPage />} />
-        <Route path="/app-auth/verify-otp" element={<AppOtpPage />} />
-        <Route path="/app-auth/username" element={<AppUsernamePage />} />
-        <Route path="/app-auth/create-pin" element={<AppCreatePinPage />} />
-        <Route path="/app-auth/success" element={<AppAuthSuccessPage />} />
+        <Route path="/app-auth/username" element={<PublicRoute><AppUsernamePage /></PublicRoute>} />
+        <Route path="/app-auth/success" element={<PublicRoute><AppAuthSuccessPage /></PublicRoute>} />
 
         {/* Public event sharing */}
         <Route path="/event/:eventId" element={<EventPublic />} />
@@ -189,7 +206,9 @@ function AppRoutes() {
         <Route path="/legal/kyc" element={<KYCPolicy />} />
         <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
 
-        {/* AUTHENTICATED APPLICATION ROUTES */}
+        {/* =========================================
+            3. AUTHENTICATED ROUTES (UNIVERSAL PULL-TO-REFRESH ENABLED)
+           ========================================= */}
         <Route element={<AuthenticatedLayout />}>
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/blueconnect" element={<ProtectedRoute><BlueConnectPage /></ProtectedRoute>} />
@@ -204,6 +223,7 @@ function AppRoutes() {
           <Route path="/light-bills" element={<ProtectedRoute><LightBills /></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
           
+          {/* VAULT / REWARDS ROUTES */}
           <Route path="/rewards" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
           <Route path="/vault" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
 
@@ -229,6 +249,7 @@ function AppRoutes() {
           <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
           <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
           
+          {/* SECURED WITH PROTECTED ROUTE */}
           <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
           <Route path="/gift-cards" element={<ProtectedRoute><GiftCards /></ProtectedRoute>} />
           <Route path="/flights" element={<ProtectedRoute><Flights /></ProtectedRoute>} />
@@ -236,6 +257,7 @@ function AppRoutes() {
           <Route path="/betting" element={<ProtectedRoute><Betting /></ProtectedRoute>} />
           <Route path="/identity-center" element={<ProtectedRoute><IdentityCenter /></ProtectedRoute>} />
 
+          {/* SECURED PAYROLL PRO ROUTES */}
           <Route path="/payroll-pro" element={<ProtectedRoute><PayrollProHome /></ProtectedRoute>} />
           <Route path="/payroll-pro/create-company" element={<ProtectedRoute><CreateCompany /></ProtectedRoute>} />
           <Route path="/payroll-pro/company/:companyId" element={<ProtectedRoute><CompanyWorkspace /></ProtectedRoute>} />
@@ -246,6 +268,8 @@ function AppRoutes() {
           <Route path="/payroll-pro/portal/:companyId" element={<ProtectedRoute><EmployeePortal /></ProtectedRoute>} />
           <Route path="/payroll-pro/payroll/:payrollId" element={<ProtectedRoute><PayrollDetail /></ProtectedRoute>} />
 
+
+          {/* SECURED PAYLINK ROUTES */}
           <Route path="/paylink" element={<ProtectedRoute><PayLinkHome /></ProtectedRoute>} />
           <Route path="/paylink/create" element={<ProtectedRoute><CreatePayLink /></ProtectedRoute>} />
           <Route path="/paylink/pay/:id" element={<ProtectedRoute><PayLinkPayment /></ProtectedRoute>} />
@@ -257,10 +281,13 @@ function AppRoutes() {
           <Route path="/paylink/products" element={<ProtectedRoute><ProductsManager /></ProtectedRoute>} />
           <Route path="/paylink/history" element={<ProtectedRoute><PayLinkHistory /></ProtectedRoute>} />
 
+          {/* =========================================
+            AFFILIATE ROUTES (ALL SUB-ROUTES REGISTERED)
+           ========================================= */}
           <Route path="/affiliate" element={<ProtectedRoute><AffiliateLayout /></ProtectedRoute>}>
             <Route index element={<ProtectedRoute><Navigate to="/affiliate/dashboard" replace /></ProtectedRoute>} />
             <Route path="dashboard" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
-            <Route path="events" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
+            <Route path="events" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} /> {/* Or your dedicated My Events page component */}
             <Route path="analytics" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
             <Route path="leaderboard" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
             <Route path="achievements" element={<ProtectedRoute><AffiliateDashboard /></ProtectedRoute>} />
@@ -272,6 +299,7 @@ function AppRoutes() {
           </Route>
         </Route>
 
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
       </Route>
     </Routes>
