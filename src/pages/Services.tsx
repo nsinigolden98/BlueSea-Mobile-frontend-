@@ -12,7 +12,7 @@ import {
   Grid3X3, ArrowLeftRight, Search, Clock, Star, QrCode, Headphones, ChevronRight, ScanQrCode, KeyRound
 } from 'lucide-react';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
- 
+  
 
 // Registry of validated routes extracted from AppRoutes
 const VALID_APP_ROUTES = new Set([
@@ -95,6 +95,7 @@ export function Services() {
     return (
       <button
         key={service.id}
+        title={service.description}
         onClick={() => {
           if (!isRouteValid) {
             console.warn(`[BlueSea Route Guard] Blocked navigation. Route "${service.route}" for service "${service.name}" does not exist in App Routes.`);
@@ -113,16 +114,22 @@ export function Services() {
         <Badge type={service.badge} />
         
         <div className={cn(
-          'rounded-lg bg-sky-50 dark:bg-sky-955 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shrink-0',
+          'rounded-lg bg-sky-50 dark:bg-slate-800 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shrink-0',
           'w-7 h-7 sm:w-10 sm:h-10'
         )}>
           <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-sky-600 dark:text-sky-400" />
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-[10px] xs:text-xs sm:text-base text-slate-900 dark:text-white truncate">
+          <h3 className="font-semibold text-[10px] xs:text-xs sm:text-sm md:text-base text-slate-900 dark:text-white truncate sm:whitespace-normal sm:line-clamp-1">
             {service.name}
           </h3>
+          <p 
+            title={service.description}
+            className="hidden sm:block text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5"
+          >
+            {service.description}
+          </p>
         </div>
 
         <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300 dark:text-slate-600 group-hover:text-sky-500 transition-colors shrink-0" />

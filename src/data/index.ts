@@ -9,10 +9,10 @@ export const navItems: NavItem[] = [
   { id: 'services', label: 'Services', icon: 'Globe', path: '/services' },
  //  { id: 'campaigns', label: 'Discover & Earn', icon: 'HandCoins', path: '/campaigns' },
   { id: 'rewards', label: 'Rewards', icon: 'Gift', path: '/rewards' },
- { id: 'PayLink', label: 'PayLink', icon: 'ScanQrCode', path: '/paylink' },
+ //{ id: 'PayLink', label: 'PayLink', icon: 'ScanQrCode', path: '/paylink' },
 //   { id: 'bluespere', label: 'BlueSpere', icon: 'Orbit', path: '/bluesphere' },
   { id: 'more-services', label: 'More Services', icon: 'Grid3X3', path: '/more-services' },
-  { id: 'payroll-pro', label: 'Payroll Pro', icon: 'Briefcase', path: '/payroll-pro' },
+ // { id: 'payroll-pro', label: 'Payroll Pro', icon: 'Briefcase', path: '/payroll-pro' },
     { id: 'scanner', label: 'Scanner', icon: 'QrCode', path: '/scanner-assignments' },
   { id: 'support', label: 'Support', icon: 'Headphones', path: '/support' },
 ];
@@ -510,10 +510,11 @@ function parsePlanDetails(planName: string) {
   return { volume, validity, type };
 }
 
-function processPlans(network: string, rawDict: any): DataPlan[] {
+function processPlans(network: string, rawDict: Record<string, (string | number)[]>): DataPlan[] {
   const processed: DataPlan[] = [];
   for (const name in rawDict) {
       const [id, price] = rawDict[name];
+  if (typeof id !== 'string' || typeof price !== 'number') continue;
       const details = parsePlanDetails(name);
       
       processed.push({

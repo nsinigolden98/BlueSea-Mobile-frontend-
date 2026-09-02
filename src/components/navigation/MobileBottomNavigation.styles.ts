@@ -1,5 +1,3 @@
-// /src/components/navigation/MobileBottomNavigation.styles.ts
-
 /**
  * Styling configurations for BlueSea Mobile Bottom Navigation.
  * Follows the existing design system guidelines, color palette, and layout requirements.
@@ -8,8 +6,8 @@ export const navStyles = {
   // Mobile-only block layout that naturally flows with page content
   wrapper: "md:hidden w-full bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80 transition-colors duration-300 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_12px_rgba(0,0,0,0.02)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.12)]",
   
-  // Grid layout split into 5 equal segments to fit all primary pages on one row
-  container: "grid grid-cols-5 h-[74px] w-full items-center px-1",
+  // Dynamic layout auto-allocating equal width to any number of rendered items
+  container: "grid grid-flow-col auto-cols-fr h-[74px] w-full items-center px-1",
   
   // Navigation links - provides vertical centering & satisfies the 44px minimum target
   link: "flex flex-col items-center justify-center h-full w-full gap-1.5 transition-all duration-300 select-none relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
