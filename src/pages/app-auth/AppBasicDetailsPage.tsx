@@ -6,7 +6,7 @@ import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
 import { AppAuthInput } from '../../components/app-auth/AppAuthInput';
 import { AppPasswordInput } from '../../components/app-auth/AppPasswordInput';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
-import { postRequest, ENDPOINTS } from '@/types';
+import { postRequest, ENDPOINTS, setCookie } from '@/types';
 
 export const AppBasicDetailsPage: React.FC = () => {
   const { formData, updateField, error: hookError } = useNativeAuth();
@@ -29,8 +29,10 @@ export const AppBasicDetailsPage: React.FC = () => {
   const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const normalizedEmail = email?.trim().toLowerCase();
+
     // 1. Strict Client-side Validation
-    if (!email) {
+    if (!normalizedEmail) {
       setLocalError('Email address is missing. Please start registration again.');
       return;
     }
@@ -55,33 +57,46 @@ export const AppBasicDetailsPage: React.FC = () => {
     setLoading(true);
 
     try {
-      // 2. Call backend registration endpoint to save account data & send OTP to email
-      const endpoint =
-        (ENDPOINTS as Record<string, any>).signup ||
-        (ENDPOINTS as Record<string, any>).register ||
-        '/accounts/register/';
+      if (formData.referralCode?.trim()) {
+        setCookie('ref', formData.referralCode.trim());
+      }
+
+      const formattedPhone = formData.phone.startsWith('0')
+        ? formData.phone
+        : `0${formData.phone}`;
 
       const payload = {
-        email: email.trim(),
-        first_name: formData.firstName.trim(),
-        last_name: formData.surname.trim(),
-        phone_number: `+234${formData.phone}`,
+        email: normalizedEmail,
+        other_names: formData.firstName.trim(),
+        surname: formData.surname.trim(),
+        phone: formattedPhone,
         password: formData.password,
-        referral_code: formData.referralCode?.trim() || undefined,
       };
 
-      const response = await postRequest(endpoint, payload);
+      const response = await postRequest(ENDPOINTS.signup, payload);
 
-      if (response?.status || response?.success || response?.state || response?.token) {
+      if (response?.state !== false) {
         // Navigate to Email Verification after OTP dispatch
-        navigate('/app-auth/verify-email', { state: { email } });
+        navigate('/app-auth/verify-email', { state: { email: normalizedEmail } });
       } else {
-        setLocalError(response?.message || 'Failed to submit registration details.');
+        const emailErr = response?.errors?.email?.[0];
+        if (emailErr && emailErr.includes('already exists')) {
+          // If email exists, re-trigger OTP send and move to verification
+          await postRequest(ENDPOINTS.sendOtp, { email: normalizedEmail });
+          navigate('/app-auth/verify-email', { state: { email: normalizedEmail } });
+        } else {
+          setLocalError(response?.message || 'Failed to submit registration details.');
+        }
       }
     } catch (err: any) {
       const apiMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message;
       if (apiMsg?.toLowerCase().includes('exist')) {
-        setLocalError('An account with this email or phone number already exists. Please Sign In.');
+        try {
+          await postRequest(ENDPOINTS.sendOtp, { email: normalizedEmail });
+          navigate('/app-auth/verify-email', { state: { email: normalizedEmail } });
+        } catch (_) {
+          setLocalError('An account with this email or phone number already exists. Please Sign In.');
+        }
       } else {
         setLocalError(apiMsg || 'Unable to complete registration. Please try again.');
       }

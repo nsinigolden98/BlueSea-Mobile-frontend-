@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
 import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
 import { AppOtpInput } from '../../components/app-auth/AppOtpInput';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
-import { postRequest, ENDPOINTS } from '@/types';
+import { postRequest, ENDPOINTS, setCookie } from '@/types';
 
 export const AppEmailVerificationPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { refreshUser } = useAuth();
   const email = location.state?.email || '';
 
   const [otp, setOtp] = useState('');
@@ -29,32 +31,52 @@ export const AppEmailVerificationPage: React.FC = () => {
       setError(null);
       setMessage(null);
 
-      const endpoint = (ENDPOINTS as Record<string, any>).verifyOtp || '/accounts/verify-email/';
-      const response = await postRequest(endpoint, { email, otp: codeToVerify });
+      const response = await postRequest(ENDPOINTS.verifyOtp, {
+        email: email.trim(),
+        otp: codeToVerify.trim(),
+      });
 
-      if (response?.status || response?.success || response?.state) {
+      if (response?.state !== false) {
+        const accessToken = response?.access_token || response?.data?.access_token || response?.access;
+        const refreshToken = response?.refresh_token || response?.data?.refresh_token || response?.refresh;
+
+        if (accessToken) {
+          setCookie('access_token', accessToken);
+          if (refreshToken) setCookie('refresh_token', refreshToken);
+          await refreshUser();
+        }
+
         // Proceed to Username creation step
-        navigate('/app-auth/username', { state: { email } });
+        navigate('/app-auth/username', { state: { email: email.trim() } });
       } else {
         setError(response?.message || 'Invalid or expired OTP code.');
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Invalid or expired OTP code.');
+      setError(
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'Invalid or expired OTP code.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleResendOtp = async () => {
+    if (!email) return;
     try {
       setResending(true);
       setError(null);
       setMessage(null);
 
-      const endpoint = (ENDPOINTS as Record<string, any>).sendOtp || '/accounts/resend-otp/';
-      await postRequest(endpoint, { email });
+      const response = await postRequest(ENDPOINTS.sendOtp, { email: email.trim() });
 
-      setMessage('A new OTP code has been sent to your email.');
+      if (response?.state !== false) {
+        setMessage('A new OTP code has been sent to your email.');
+      } else {
+        setError(response?.message || 'Failed to resend OTP.');
+      }
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || 'Failed to resend OTP.');
     } finally {

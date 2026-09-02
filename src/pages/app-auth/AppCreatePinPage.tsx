@@ -4,6 +4,7 @@ import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
 import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
 import { AppPinInput } from '../../components/app-auth/AppPinInput';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
+import { postRequest, ENDPOINTS } from '@/types';
 
 export const AppCreatePinPage: React.FC = () => {
   const [step, setStep] = useState<'create' | 'confirm'>('create');
@@ -45,14 +46,26 @@ export const AppCreatePinPage: React.FC = () => {
 
     try {
       setLoading(true);
-      // API call to encrypt and save PIN goes here
-      
-      // Pass registration details to success page
-      navigate('/app-auth/success', { 
-        state: { ...location.state, pinSet: true } 
-      });
+      const response = await postRequest(ENDPOINTS.pin_set, { pin });
+
+      if (response?.state !== false) {
+        // Pass registration details to success page
+        navigate('/app-auth/success', { 
+          state: { ...location.state, pinSet: true } 
+        });
+      } else {
+        setError(response?.message || 'Failed to set transaction PIN.');
+        setStep('create');
+        setFirstPin('');
+        setCurrentPin('');
+      }
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to set transaction PIN.');
+      setError(
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'Failed to set transaction PIN.'
+      );
       setStep('create');
       setFirstPin('');
       setCurrentPin('');
@@ -89,7 +102,7 @@ export const AppCreatePinPage: React.FC = () => {
 
         {loading && (
           <div className="text-center text-xs text-[#00D1FF] font-medium py-2">
-            Encrypting and setting PIN...
+            Setting transaction PIN...
           </div>
         )}
 
@@ -97,6 +110,7 @@ export const AppCreatePinPage: React.FC = () => {
           <AppAuthButton
             onClick={() => handlePinSubmit()}
             disabled={currentPin.length < 4 || loading}
+            loading={loading}
           >
             {step === 'create' ? 'Continue' : 'Confirm & Save PIN'}
           </AppAuthButton>

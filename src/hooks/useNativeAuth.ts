@@ -39,12 +39,18 @@ export const useNativeAuth = () => {
     setError(null);
   }, []);
 
+  const resetForm = useCallback(() => {
+    setFormData(initialSignUpState);
+    setError(null);
+  }, []);
+
   const validateEmailStep = (): boolean => {
-    if (!formData.email) {
+    const cleanEmail = formData.email.trim().toLowerCase();
+    if (!cleanEmail) {
       setError('Email address is required.');
       return false;
     }
-    if (!validateGmail(formData.email)) {
+    if (!validateGmail(cleanEmail)) {
       setError('Only standard @gmail.com email addresses are allowed.');
       return false;
     }
@@ -62,16 +68,23 @@ export const useNativeAuth = () => {
     }
     const cleanPhone = normalizePhoneNumber(formData.phone);
     if (cleanPhone.length !== 10) {
-      setError('Please enter a valid 10-digit Nigerian phone number.');
+      setError('Please enter a valid 10-digit phone number.');
+      return false;
+    }
+    if (!formData.password || formData.password.length < 8) {
+      setError('Password is required and must be at least 8 characters long.');
       return false;
     }
     return true;
   };
 
   const validateUsernameStep = (): boolean => {
-    const formattedUsername = formData.username.startsWith('@')
-      ? formData.username
-      : `@${formData.username}`;
+    if (!formData.username.trim()) {
+      return true; // Optional step
+    }
+
+    const trimmed = formData.username.trim().toLowerCase();
+    const formattedUsername = trimmed.startsWith('@') ? trimmed : `@${trimmed}`;
 
     if (!validateUsername(formattedUsername)) {
       setError('Username must start with @, be 4-30 characters long, and contain only lowercase letters, numbers, underscores, or hyphens.');
@@ -87,6 +100,7 @@ export const useNativeAuth = () => {
     setLoading,
     setError,
     updateField,
+    resetForm,
     validateEmailStep,
     validateBasicDetailsStep,
     validateUsernameStep,

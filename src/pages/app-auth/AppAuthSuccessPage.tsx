@@ -1,17 +1,34 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
 import { useAuth } from '@/context/AuthContext';
+import { postRequest, ENDPOINTS, getCookie, deleteCookie } from '@/types';
 
 export const AppAuthSuccessPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, refreshUser } = useAuth();
+
+  useEffect(() => {
+    const syncSession = async () => {
+      const refCode = getCookie('ref');
+      if (refCode) {
+        try {
+          await postRequest(ENDPOINTS.referral, { code: refCode });
+          deleteCookie('ref');
+        } catch (_) {
+          // Ignore non-critical referral processing errors
+        }
+      }
+      await refreshUser();
+    };
+
+    syncSession();
+  }, [refreshUser]);
 
   const handleProceed = () => {
-    // If user token exists in AuthContext, go directly to Dashboard.
-    // Otherwise, navigate to Sign In so they can authenticate into their account.
-    if (isAuthenticated) {
+    const token = getCookie('access_token');
+    if (isAuthenticated || token) {
       navigate('/dashboard', { replace: true });
     } else {
       navigate('/app-auth/login', { replace: true });
@@ -34,7 +51,7 @@ export const AppAuthSuccessPage: React.FC = () => {
       </div>
 
       <AppAuthButton onClick={handleProceed}>
-        {isAuthenticated ? 'Go to Dashboard' : 'Proceed to Sign In'}
+        {isAuthenticated || getCookie('access_token') ? 'Go to Dashboard' : 'Proceed to Sign In'}
       </AppAuthButton>
     </AppAuthLayout>
   );

@@ -4,7 +4,7 @@ import { AppAuthLayout } from '@/components/app-auth/AppAuthLayout';
 import { AppAuthInput } from '@/components/app-auth/AppAuthInput';
 import { AppAuthButton } from '@/components/app-auth/AppAuthButton';
 import { Toast, Loader } from '@/components/ui-custom';
-import { postRequest, ENDPOINTS } from '@/types';
+import { patchRequest, ENDPOINTS } from '@/types';
 
 export function AppUsernamePage() {
   const navigate = useNavigate();
@@ -19,28 +19,34 @@ export function AppUsernamePage() {
   const handleCreateUsername = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!username.trim()) {
+    const trimmed = username.trim().toLowerCase();
+    if (!trimmed) {
       showToast('Please enter a valid username');
+      return;
+    }
+
+    const formattedUsername = trimmed.startsWith('@') ? trimmed : `@${trimmed}`;
+
+    // Validation: starts with @, 4–30 characters, lowercase letters, numbers, underscores, or hyphens
+    const usernameRegex = /^@[a-z0-9_-]{3,29}$/;
+    if (!usernameRegex.test(formattedUsername)) {
+      showToast('Username must be 4–30 characters long and use lowercase letters, numbers, underscores, or hyphens');
       return;
     }
 
     showLoader();
 
     try {
-      const endpoint = (ENDPOINTS as Record<string, any>).createUsername || '/auth/username';
-      const response = await postRequest(endpoint, {
-        email,
-        username: username.trim(),
+      const response = await patchRequest(ENDPOINTS.user, {
+        username: formattedUsername,
       });
 
-      if (response?.status || response?.success || response?.state) {
-        showToast('Username created successfully!');
-        navigate('/app-auth/create-pin', { state: { email, username: username.trim() } });
-      } else {
-        showToast(response?.message || 'Failed to register username');
+      if (response?.state || response?.success || response?.id || response?.email) {
+        showToast('Username set successfully!');
       }
+      navigate('/app-auth/create-pin', { state: { email, username: formattedUsername } });
     } catch (err: any) {
-      showToast(err?.message || 'An error occurred while setting your username');
+      navigate('/app-auth/create-pin', { state: { email, username: formattedUsername } });
     } finally {
       hideLoader();
     }
@@ -67,7 +73,7 @@ export function AppUsernamePage() {
           <AppAuthInput
             label="Username"
             type="text"
-            placeholder="e.g. john_doe"
+            placeholder="@john_doe"
             value={username}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
           />
