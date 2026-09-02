@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
 import { useAuth } from '@/context/AuthContext';
@@ -7,7 +7,8 @@ import { postRequest, ENDPOINTS, getCookie, deleteCookie } from '@/types';
 
 export const AppAuthSuccessPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, refreshUser } = useAuth();
+  const location = useLocation();
+  const { refreshUser, user } = useAuth();
 
   useEffect(() => {
     const syncSession = async () => {
@@ -27,12 +28,11 @@ export const AppAuthSuccessPage: React.FC = () => {
   }, [refreshUser]);
 
   const handleProceed = () => {
-    const token = getCookie('access_token');
-    if (isAuthenticated || token) {
-      navigate('/dashboard', { replace: true });
-    } else {
-      navigate('/app-auth/login', { replace: true });
-    }
+    const userEmail = location.state?.email || user?.email || '';
+    navigate('/app-auth/login', { 
+      replace: true, 
+      state: { email: userEmail } 
+    });
   };
 
   return (
@@ -51,7 +51,7 @@ export const AppAuthSuccessPage: React.FC = () => {
       </div>
 
       <AppAuthButton onClick={handleProceed}>
-        {isAuthenticated || getCookie('access_token') ? 'Go to Dashboard' : 'Proceed to Sign In'}
+        Sign In to Continue
       </AppAuthButton>
     </AppAuthLayout>
   );

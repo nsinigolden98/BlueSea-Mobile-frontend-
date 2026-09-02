@@ -22,6 +22,7 @@ export const AppCreatePinPage: React.FC = () => {
 
   const handlePinSubmit = async (pinToSubmit?: string) => {
     const pin = pinToSubmit || currentPin;
+
     if (pin.length < 4) {
       setError('Please enter a complete 4-digit PIN.');
       return;
@@ -29,6 +30,7 @@ export const AppCreatePinPage: React.FC = () => {
 
     setError(null);
 
+    // Step 1: Store initial PIN entry and prompt for confirmation
     if (step === 'create') {
       setFirstPin(pin);
       setCurrentPin('');
@@ -36,6 +38,7 @@ export const AppCreatePinPage: React.FC = () => {
       return;
     }
 
+    // Step 2: Validate PIN match
     if (pin !== firstPin) {
       setError('PINs do not match. Please try again.');
       setStep('create');
@@ -46,10 +49,14 @@ export const AppCreatePinPage: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await postRequest(ENDPOINTS.pin_set, { pin });
 
-      if (response?.state !== false) {
-        // Pass registration details to success page
+      // Backend expects both pin and confirm_pin parameters
+      const response = await postRequest(ENDPOINTS.pin_set, {
+        pin: firstPin,
+        confirm_pin: pin,
+      });
+
+      if (response?.state !== false && response?.status !== false) {
         navigate('/app-auth/success', { 
           state: { ...location.state, pinSet: true } 
         });
@@ -88,7 +95,6 @@ export const AppCreatePinPage: React.FC = () => {
             showBack={false}
           />
 
-          {/* Key prop forces component to remount and clear inputs on step change */}
           <AppPinInput
             key={step + (error ? '-err' : '')}
             length={4}

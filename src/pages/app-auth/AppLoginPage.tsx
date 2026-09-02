@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
 import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
@@ -11,24 +11,29 @@ import { validateGmail } from '../../utils/platform';
 
 export const AppLoginPage: React.FC = () => {
   const { login, googleLogin } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const navigate = useNavigate();
+
+  // Pre-fill email address if forwarded via location state from success screen
+  useEffect(() => {
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    }
+  }, [location.state]);
 
   const handleNativeGoogleAuth = async (idToken: string) => {
     try {
       setGoogleLoading(true);
       setError(null);
-      const response: any = await googleLogin({ credential: idToken });
-      if (response && typeof response === 'object' && 'email' in response) {
-        navigate('/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      await googleLogin({ credential: idToken });
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err?.message || 'Google Sign-In failed');
     } finally {
@@ -40,12 +45,8 @@ export const AppLoginPage: React.FC = () => {
     try {
       setGoogleLoading(true);
       setError(null);
-      const response: any = await googleLogin(credentialResponse);
-      if (response && typeof response === 'object' && 'email' in response) {
-        navigate('/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      await googleLogin(credentialResponse);
+      navigate('/dashboard');
     } catch (err: any) {
       setError('Google Sign-In failed');
     } finally {
