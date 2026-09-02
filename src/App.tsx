@@ -120,6 +120,8 @@ import {
   PayLinkHistory 
 } from '@/pages/paylink';
 
+import { Withdraw } from '@/pages/Withdraw';
+
 
 
 /**
@@ -226,6 +228,10 @@ function AppRoutes() {
           {/* VAULT / REWARDS ROUTES */}
           <Route path="/rewards" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
           <Route path="/vault" element={<ProtectedRoute><Rewards /></ProtectedRoute>} />
+          
+          
+            {/* Standalone Production Withdrawal Page */}
+      <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
 
           <Route path="/transaction-history" element={<ProtectedRoute><TransactionFilterPage /></ProtectedRoute>} />
           <Route path="/airtime-buyback" element={<ProtectedRoute><AirtimeBuyback /></ProtectedRoute>} />

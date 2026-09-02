@@ -1,17 +1,12 @@
-// src/pages/Wallet.tsx
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { 
   Sidebar, 
   Header, 
-  Toast, 
   TransactionList, 
   LoadingSpinner, 
-  BalanceCard, 
-  PinModal, 
-  TransactionModal 
+  BalanceCard 
 } from '@/components/ui-custom';
 //import { BlueConnectPreview } from '@/components/blueconnect';
 import { InternalTransferModal } from '@/components/wallet/InternalTransferModal';
@@ -21,7 +16,6 @@ import { Label } from '@/components/ui/label';
 import { postRequest, ENDPOINTS } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { useAuth } from '@/context/AuthContext';
-import { NIGERIAN_BANKS } from '@/data';
 import { openMobilePaystackCheckout } from '@/services/paystackCheckout';
 
 import { 
@@ -29,9 +23,7 @@ import {
   Send, 
   X, 
   ChevronRight, 
-  Search, 
-  CreditCard, 
-  CheckCircle2, 
+  CreditCard 
 } from 'lucide-react';
 
 export function Wallet() {
@@ -58,75 +50,10 @@ export function Wallet() {
   // --- Internal Transfer Modal Toggle ---
   const [transferOpen, setTransferOpen] = useState(false);
 
-  // --- Withdraw State ---
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [selectedBank, setSelectedBank] = useState('');
-  const [bankSearch, setBankSearch] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [accountName, setAccountName] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [verifyingAccount, setVerifyingAccount] = useState(false);
-  const [accountVerified, setAccountVerified] = useState(false);
-  const [withdrawing, setWithdrawing] = useState(false);
-  
-  // Withdrawal PIN Modal & Toast Hooks
-  const { showPinModal, PinComponent, message } = PinModal();
-  const { ToastComponent, showToast } = Toast();
-
-  const [pinValue, setPinValue] = useState<any>({});
-  const [isOpen, setIsOpen] = useState(false);
-  const [txStatus, setTxStatus] = useState<boolean | null>(null);
-  const [toastMessage, setToastMessage] = useState('');
-
   // --- Saved Card States ---
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [savedCard, setSavedCard] = useState<{ name: string; number: string; expiry: string } | null>(null);
   const [newCard, setNewCard] = useState({ name: '', number: '', expiry: '', cvv: '' });
-
-  // Safe balance parsing
-  const rawBalance = user?.balance;
-  const balance = typeof rawBalance === 'string'
-    ? Number(rawBalance.replace(/[^0-9.-]+/g, '')) || 0
-    : typeof rawBalance === 'number'
-    ? rawBalance
-    : 0;
-
-  const resetWithdrawState = () => {
-    setShowWithdrawModal(false);
-    setSelectedBank('');
-    setBankSearch('');
-    setAccountNumber('');
-    setAccountName('');
-    setWithdrawAmount('');
-    setAccountVerified(false);
-    setVerifyingAccount(false);
-    setWithdrawing(false);
-  };
-
-  useEffect(() => {
-    if (message) {
-      setIsOpen(true);
-      const msg = message as Record<string, any>;
-      const isSuccess = Boolean(
-        msg?.success === true ||
-        msg?.state === true ||
-        (!msg?.error && msg?.code === '00') ||
-        msg?.status === 'success' ||
-        msg?.status === true
-      );
-
-      if (isSuccess) {
-        showToast(msg?.message || 'Transaction successful');
-        setToastMessage(msg?.message || 'Transaction successful');
-        setTxStatus(true);
-        resetWithdrawState();
-      } else {
-        setToastMessage(msg?.message || 'Transaction failed');
-        setWithdrawing(false);
-        setTxStatus(false);
-      }
-    }
-  }, [message, showToast]);
 
   const handleRequestAccount = () => {
     setAccountLoading(true);
@@ -196,46 +123,6 @@ export function Wallet() {
     setProcessing(false);
   };
 
-  const handleVerifyAccount = async () => {
-    if (!selectedBank || !accountNumber || accountNumber.length !== 10) return;
-    setVerifyingAccount(true);
-    setAccountName('');
-    setAccountVerified(false);
-    try {
-      const payload = {
-        account_number: accountNumber,
-        bank_code: selectedBank,
-      };
-      const response = await postRequest(ENDPOINTS.verify_account_name, payload);
-      if (response.success) {
-        setAccountName(response.account_name);
-        setAccountVerified(true);
-      } else {
-        showToast(response.message || 'Failed to verify account');
-      }
-    } catch (error) {
-      console.error('Verify failed:', error);
-    } finally {
-      setVerifyingAccount(false);
-    }
-  };
-
-  const handleConfirmWithdraw = () => {
-    if (!accountVerified || !withdrawAmount) {
-      showToast('Missing Fields');
-      return;
-    }
-    setWithdrawing(true);
-    setPinValue({
-      account_name: accountName,
-      account_number: accountNumber,
-      bank_code: selectedBank,
-      bank_name: NIGERIAN_BANKS.find(b => b.code === selectedBank)?.name || '',
-      amount: withdrawAmount,
-    });
-    showPinModal();
-  };
-
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
       <style dangerouslySetInnerHTML={{ __html: `
@@ -276,12 +163,12 @@ export function Wallet() {
               <BalanceCard
                 showActions={true}
                 onDeposit={handleDeposit}
-                onWithdraw={() => setShowWithdrawModal(true)}
+                onWithdraw={() => navigate('/withdraw')}
                 className="h-full border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden"
               />
             </div>
 
-            {/* 2. DEDICATED ACCOUNT CARD (COMPRESSED & ELEGANT) */}
+            {/* 2. DEDICATED ACCOUNT CARD */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-4 shadow-sm transition-all hover:shadow-md">
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2">
@@ -494,110 +381,7 @@ export function Wallet() {
         </div>
       )}
 
-      {/* Withdraw Modal */}
-      {showWithdrawModal && (
-        <div className="fixed inset-0 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-xl flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Withdraw</h3>
-              <button onClick={resetWithdrawState} className="p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all active:scale-90">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-5">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Account Number</Label>
-                <Input
-                  type="text"
-                  inputMode='numeric'
-                  placeholder="0000000000"
-                  className="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl h-14 focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white font-black text-lg text-center"
-                  value={accountNumber}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                    setAccountNumber(val);
-                    setAccountVerified(false);
-                    setAccountName('');
-                  }}
-                  maxLength={10}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Bank</Label>
-                <div className="relative group">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
-                  <Input
-                    type="text"
-                    placeholder="Search bank name..."
-                    value={bankSearch}
-                    onChange={(e) => setBankSearch(e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-800 border-none rounded-t-2xl h-12 text-xs font-bold pl-11 focus:ring-sky-500"
-                  />
-                </div>
-                <select
-                  value={selectedBank}
-                  onChange={(e) => {
-                    setSelectedBank(e.target.value);
-                    setAccountVerified(false);
-                    setAccountName('');
-                    setBankSearch('');
-                  }}
-                  className="w-full h-14 px-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-white/5 rounded-b-2xl text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 outline-none font-black text-sm appearance-none cursor-pointer"
-                >
-                  <option value="">Choose your bank</option>
-                  {NIGERIAN_BANKS.filter(b => 
-                    bankSearch === '' || b.name.toLowerCase().includes(bankSearch.toLowerCase())
-                  ).map((bank) => (
-                    <option key={bank.code} value={bank.code}>{bank.name}</option>
-                  ))}
-                </select>
-              </div>
-              {selectedBank && accountNumber.length === 10 && (
-                <Button onClick={handleVerifyAccount} disabled={verifyingAccount} className="w-full bg-sky-500/10 text-sky-500 hover:bg-sky-500 hover:text-white font-black h-12 rounded-2xl border border-sky-500/20 transition-all text-[10px] uppercase tracking-widest">
-                  {verifyingAccount ? 'Verifying Account...' : 'Verify Details'}
-                </Button>
-              )}
-              {accountVerified && (
-                <div className="p-4 bg-green-500/5 border border-green-500/20 rounded-2xl flex items-center gap-3 animate-in fade-in zoom-in-95">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                 <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">{accountName}</p>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Amount to Withdraw</Label>
-                <div className="relative group">
-                   <Input
-                    type="number"
-                    placeholder="0.00"
-                    className="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl h-16 text-3xl font-black focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white pl-10"
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                  />
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300 group-focus-within:text-sky-500">₦</span>
-                </div>
-                <div className="flex justify-between px-2">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Available: ₦{balance.toLocaleString()}</p>
-                  <button 
-                    onClick={() => setWithdrawAmount(balance.toString())}
-                    className="text-[10px] text-sky-500 font-black uppercase tracking-widest hover:underline"
-                  >
-                    Withdraw All
-                  </button>
-                </div>
-              </div>
-              <Button
-                onClick={handleConfirmWithdraw}
-                disabled={withdrawing || !accountVerified || !withdrawAmount || Number(withdrawAmount) > balance}
-                className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-[1.5rem] h-14 font-black text-xs uppercase tracking-widest shadow-xl shadow-sky-500/20 active:scale-95 mt-6 transition-all"
-              >
-                {withdrawing ? 'Processing...' : 'Confirm Withdrawal'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Deposit Modal */}
+{/* Deposit Modal */}
       {depositModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl bg-slate-950/40">
           <div className="absolute inset-0" onClick={() => !processing && setDepositModalOpen(false)} />
@@ -648,19 +432,6 @@ export function Wallet() {
         </div>
       )}
 
-      {/* FEEDBACK OVERLAYS */}
-      {isOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
-          <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
-        </div>
-      )}
-      <ToastComponent />
-      
-      {/* Withdrawal PIN Verification Modal */}
-      <PinComponent 
-        type="withdrawal" 
-        value={pinValue} 
-      />
     </div>
   );
 }
