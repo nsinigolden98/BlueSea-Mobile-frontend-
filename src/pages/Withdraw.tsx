@@ -27,7 +27,8 @@ import {
   ShieldCheck, 
   History, 
   UserCheck,
-  ChevronRight
+  ChevronRight,
+  Info
 } from 'lucide-react';
 
 interface TransactionRecord {
@@ -87,6 +88,29 @@ export function Withdraw() {
     ? rawBalance
     : 0;
 
+  // Service charge and balance check computations
+  const numericAmount = Number(withdrawAmount) || 0;
+  const serviceCharge = numericAmount >= 10000 ? 15 : 0;
+  const totalDeduction = numericAmount + serviceCharge;
+  const isOverBalance = numericAmount > 0 && totalDeduction > balance;
+
+  // Handler for "Withdraw All" with Service Charge Safety Guard
+  const handleWithdrawAll = () => {
+    if (balance <= 0) {
+      setWithdrawAmount('0');
+      return;
+    }
+    let maxAmount = balance;
+    if (balance >= 10015) {
+      maxAmount = balance - 15;
+    } else if (balance >= 10000) {
+      maxAmount = 9999;
+    } else {
+      maxAmount = balance;
+    }
+    setWithdrawAmount(maxAmount.toString());
+  };
+
   // Reset form state after successful execution
   const resetFormState = useCallback(() => {
     setSelectedBank('');
@@ -110,7 +134,6 @@ export function Withdraw() {
         ? response 
         : response?.results || response?.data || [];
 
-      // Filter withdrawal transactions if records contain identifiable fields
       const withdrawalsOnly = records.filter((tx: TransactionRecord) => {
         const typeStr = (tx.type || tx.transaction_type || tx.category || '').toLowerCase();
         const descStr = (tx.description || '').toLowerCase();
@@ -118,19 +141,22 @@ export function Withdraw() {
       });
 
       setHistory(withdrawalsOnly.length > 0 ? withdrawalsOnly : records);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching withdrawal history:', err);
-      setHistoryError('Unable to load transaction history');
-    } finally {
+      const errText = err?.message || err?.data?.message || 'Unable to load transaction history';
+      setHistoryError(errText);
+      showToast(errText);
+    } font-medium...
+    finally {
       setHistoryLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
 
-  // Automatic Account Verification with Race-Condition and Invalidation Guard
+  // Automatic Account Verification
   const verifyAccount = useCallback(async (num: string, bankCode: string) => {
     setVerifyingAccount(true);
     setVerificationError(null);
@@ -144,21 +170,25 @@ export function Withdraw() {
       };
       const response = await postRequest(ENDPOINTS.verify_account_name, payload);
       
-      if (response && response.success) {
+      if (response && (response.success || response.status === 'success' || response.account_name)) {
         setAccountName(response.account_name);
         setAccountVerified(true);
       } else {
-        setVerificationError(response?.message || 'Unable to verify account details');
+        const errDetail = response?.message || response?.error || 'Unable to verify account details';
+        setVerificationError(errDetail);
         setAccountVerified(false);
+        showToast(errDetail);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Account verification error:', err);
-      setVerificationError('Verification failed due to a network error. Click to retry.');
+      const errMsg = err?.message || err?.data?.message || 'Verification failed due to a network error.';
+      setVerificationError(errMsg);
       setAccountVerified(false);
+      showToast(errMsg);
     } finally {
       setVerifyingAccount(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     if (accountNumber.length === 10 && selectedBank) {
@@ -174,7 +204,7 @@ export function Withdraw() {
     }
   }, [accountNumber, selectedBank, verifyAccount]);
 
-  // PIN Modal Response Handlers
+  // PIN Modal Response & Error Capture
   useEffect(() => {
     if (message) {
       setIsOpen(true);
@@ -187,14 +217,17 @@ export function Withdraw() {
         msg?.status === true
       );
 
+      const serverMessage = msg?.message || msg?.error || msg?.data?.message || (isSuccess ? 'Withdrawal request successful' : 'Withdrawal failed');
+
       if (isSuccess) {
-        showToast(msg?.message || 'Withdrawal request successful');
-        setToastMessage(msg?.message || 'Withdrawal request successful');
+        showToast(serverMessage);
+        setToastMessage(serverMessage);
         setTxStatus(true);
         resetFormState();
         fetchHistory();
       } else {
-        setToastMessage(msg?.message || 'Withdrawal transaction failed');
+        showToast(serverMessage);
+        setToastMessage(serverMessage);
         setSubmitting(false);
         setTxStatus(false);
       }
@@ -202,7 +235,6 @@ export function Withdraw() {
   }, [message, showToast, resetFormState, fetchHistory]);
 
   const handleInitiateWithdrawal = () => {
-    const numericAmount = Number(withdrawAmount);
     if (!accountVerified || !selectedBank || accountNumber.length !== 10) {
       showToast('Please specify a verified bank account');
       return;
@@ -211,8 +243,12 @@ export function Withdraw() {
       showToast('Please enter a valid amount');
       return;
     }
-    if (numericAmount > balance) {
-      showToast('Insufficient wallet balance');
+    if (isOverBalance) {
+      showToast(
+        serviceCharge > 0 
+          ? `Insufficient balance. Amount + ₦15 service charge exceeds your available balance.`
+          : 'Insufficient wallet balance'
+      );
       return;
     }
 
@@ -223,6 +259,7 @@ export function Withdraw() {
       bank_code: selectedBank,
       bank_name: NIGERIAN_BANKS.find(b => b.code === selectedBank)?.name || '',
       amount: withdrawAmount,
+      service_charge: serviceCharge,
     });
     showPinModal();
   };
@@ -230,9 +267,8 @@ export function Withdraw() {
   const isFormValid = 
     accountVerified && 
     !verifyingAccount && 
-    withdrawAmount !== '' && 
-    Number(withdrawAmount) > 0 && 
-    Number(withdrawAmount) <= balance;
+    numericAmount > 0 && 
+    !isOverBalance;
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
@@ -260,7 +296,7 @@ export function Withdraw() {
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-5xl mx-auto space-y-6">
             
-            {/* NAVIGATION / BREADCRUMB HEADER */}
+            {/* BREADCRUMB HEADER */}
             <div className="flex items-center justify-between">
               <button
                 onClick={() => navigate('/wallet')}
@@ -275,13 +311,12 @@ export function Withdraw() {
               </div>
             </div>
 
-            {/* DESKTOP/MOBILE RESPONSIVE GRID */}
+            {/* RESPONSIVE GRID */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               
-              {/* LEFT SECTION: WITHDRAWAL FORM & BENEFICIARIES (7 COLS ON DESKTOP) */}
+              {/* LEFT SECTION: WITHDRAWAL FORM */}
               <div className="lg:col-span-7 space-y-6">
                 
-                {/* WITHDRAWAL CARD */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-5 md:p-7 shadow-sm space-y-6">
                   <div>
                     <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
@@ -313,7 +348,7 @@ export function Withdraw() {
                       />
                     </div>
 
-                    {/* BANK SELECTOR WITH SEARCH */}
+                    {/* BANK SELECTOR */}
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-1">
                         Select Destination Bank
@@ -347,7 +382,7 @@ export function Withdraw() {
                       </div>
                     </div>
 
-                    {/* AUTOMATIC VERIFICATION UI FEEDBACK */}
+                    {/* ACCOUNT VERIFICATION FEEDBACK */}
                     {verifyingAccount && (
                       <div className="p-4 bg-sky-500/5 border border-sky-500/10 rounded-2xl flex items-center gap-3">
                         <LoadingSpinner size="sm" />
@@ -401,7 +436,7 @@ export function Withdraw() {
                         </Label>
                         <button 
                           type="button"
-                          onClick={() => setWithdrawAmount(balance.toString())}
+                          onClick={handleWithdrawAll}
                           className="text-[10px] text-sky-500 font-bold uppercase tracking-wider hover:underline cursor-pointer"
                         >
                           Withdraw All
@@ -426,15 +461,44 @@ export function Withdraw() {
                         <span className="text-[10px] text-slate-400 font-medium">
                           Available: ₦{balance.toLocaleString()}
                         </span>
-                        {Number(withdrawAmount) > balance && (
-                          <span className="text-[10px] text-rose-500 font-bold">
-                            Exceeds available balance
-                          </span>
-                        )}
                       </div>
+
+                      {/* 15 NAIRA SERVICE CHARGE UI NOTICE */}
+                      {numericAmount >= 10000 && !isOverBalance && (
+                        <div className="p-3.5 bg-sky-500/10 border border-sky-500/20 rounded-2xl flex items-center justify-between text-sky-700 dark:text-sky-300 animate-in fade-in">
+                          <div className="flex items-center gap-2">
+                            <Info className="w-4 h-4 text-sky-500 shrink-0" />
+                            <span className="text-xs font-bold">₦15 Service Charge Applies</span>
+                          </div>
+                          <span className="text-xs font-black">
+                            Total Debit: ₦{totalDeduction.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+
+{/* INSUFFICIENT BALANCE INLINE UI ERROR */}
+                      {isOverBalance && (
+                        <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-start gap-2 text-rose-600 dark:text-rose-400 animate-in fade-in">
+                          <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                          <div className="text-xs font-bold leading-tight">
+                            {serviceCharge > 0 ? (
+                              <>
+                                Amount exceeds available balance including service charge.
+                                <br />
+                                <span className="font-normal text-[11px] opacity-90">
+                                  Required: ₦{numericAmount.toLocaleString()} + ₦15 charge = <strong>₦{totalDeduction.toLocaleString()}</strong> (Available: ₦{balance.toLocaleString()})
+                                </span>
+                              </>
+                            ) : (
+                              `Entered amount (₦${numericAmount.toLocaleString()}) exceeds your available balance of ₦${balance.toLocaleString()}`
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                     </div>
 
-                    {/* MAIN WITHDRAW CTA */}
+                    {/* MAIN CTA BUTTON */}
                     <Button
                       type="button"
                       onClick={handleInitiateWithdrawal}
@@ -443,16 +507,17 @@ export function Withdraw() {
                     >
                       {submitting ? (
                         <LoadingSpinner size="sm" />
-                      ) : Number(withdrawAmount) > 0 ? (
-                        `Withdraw ₦${Number(withdrawAmount).toLocaleString()}`
+                      ) : numericAmount > 0 ? (
+                        `Withdraw ₦${numericAmount.toLocaleString()}${serviceCharge > 0 ? ' (+₦15 Fee)' : ''}`
                       ) : (
                         'Withdraw Funds'
                       )}
                     </Button>
+
                   </div>
                 </div>
 
-  {/* SAVED BENEFICIARIES / FAVORITES (FUTURE-READY STATE) */}
+                {/* SAVED BENEFICIARIES */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-5 md:p-6 shadow-sm space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -485,15 +550,13 @@ export function Withdraw() {
 
               </div>
 
-              {/* RIGHT SECTION: BALANCE & WITHDRAWAL HISTORY (5 COLS ON DESKTOP) */}
+              {/* RIGHT SECTION: BALANCE & WITHDRAWAL HISTORY */}
               <div className="lg:col-span-5 space-y-6">
                 
-                {/* WALLET BALANCE SUMMARY CARD */}
                 <div className="border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-sm">
                   <BalanceCard showActions={false} className="h-full" />
                 </div>
 
-                {/* WITHDRAWAL TRANSACTION HISTORY */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-5 md:p-6 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <div className="flex items-center gap-2">
@@ -563,14 +626,13 @@ export function Withdraw() {
           </div>
         </main>
 
-        {/* MOBILE BOTTOM NAVIGATION LAYER */}
         <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <MobileBottomNavigation />
         </div>
 
       </div>
 
-      {/* FEEDBACK & MODAL OVERLAYS */}
+      {/* FEEDBACK OVERLAYS */}
       {isOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/60">
           <TransactionModal 
@@ -582,7 +644,6 @@ export function Withdraw() {
       )}
       <ToastComponent />
 
-      {/* EXISTING REUSED SECURITY PIN MODAL */}
       <PinComponent 
         type="withdrawal" 
         value={pinValue} 
