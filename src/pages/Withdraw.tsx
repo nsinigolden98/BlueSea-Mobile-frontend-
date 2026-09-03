@@ -146,8 +146,7 @@ export function Withdraw() {
       const errText = err?.message || err?.data?.message || 'Unable to load transaction history';
       setHistoryError(errText);
       showToast(errText);
-    } font-medium...
-    finally {
+    } finally {
       setHistoryLoading(false);
     }
   }, [showToast]);
@@ -476,7 +475,7 @@ export function Withdraw() {
                         </div>
                       )}
 
-{/* INSUFFICIENT BALANCE INLINE UI ERROR */}
+                      {/* INSUFFICIENT BALANCE INLINE UI ERROR */}
                       {isOverBalance && (
                         <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-start gap-2 text-rose-600 dark:text-rose-400 animate-in fade-in">
                           <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
