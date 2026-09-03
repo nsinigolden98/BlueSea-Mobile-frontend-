@@ -1,12 +1,6 @@
-// src/components/dashboard/QuickActions.tsx
-
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, Wifi, Lightbulb, 
-  //Gift,
-  Tv, Send } from 'lucide-react';
-import { InternalTransferModal } from '@/components/wallet/InternalTransferModal';
+import { Smartphone, Wifi, Lightbulb, Tv } from 'lucide-react';
 
 interface QuickAction {
   id: string;
@@ -14,53 +8,37 @@ interface QuickAction {
   icon: React.ComponentType<{ className?: string }>;
   path: string;
   color: string;
-  isSpecial?: boolean;
 }
- 
+
 const actions: QuickAction[] = [
-  {
-    id: 'internal_transfer',
-    label: 'Internal Transfer',
-    icon: Send,
-    path: '',
-    color: 'text-white',
-    isSpecial: true
-  },
   {
     id: 'airtime',
     label: 'Airtime',
     icon: Smartphone,
     path: '/airtime',
-    color: 'text-sky-500'
+    color: 'text-sky-500 dark:text-sky-400',
   },
   {
     id: 'data',
     label: 'Data',
     icon: Wifi,
     path: '/data',
-    color: 'text-emerald-500'
+    color: 'text-emerald-500 dark:text-emerald-400',
   },
   {
     id: 'electricity',
-    label: 'Electricity Bills',
+    label: 'Electricity',
     icon: Lightbulb,
     path: '/light-bills',
-    color: 'text-amber-500'
+    color: 'text-amber-500 dark:text-amber-400',
   },
-  /*{
-    id: 'gift',
-    label: 'Gift Cards',
-    icon: Gift,
-    path: '/gift-cards',
-    color: 'text-pink-500'
-  },*/
   {
     id: 'tv',
     label: 'TV Subscription',
     icon: Tv,
     path: '/tv-subscription',
-    color: 'text-indigo-500'
-  }
+    color: 'text-indigo-500 dark:text-indigo-400',
+  },
 ];
 
 interface QuickActionsProps {
@@ -69,53 +47,27 @@ interface QuickActionsProps {
 
 export function QuickActions({ className }: QuickActionsProps) {
   const navigate = useNavigate();
-  const [transferOpen, setTransferOpen] = useState(false);
 
   return (
-    <>
+    <div className={cn("flex items-center gap-3 md:gap-4", className)}>
       {actions.map((action) => {
         const Icon = action.icon;
-        const isTransfer = action.id === 'internal_transfer';
         return (
           <button
             key={action.id}
-            onClick={() => {
-              if (isTransfer) {
-                setTransferOpen(true);
-              } else {
-                navigate(action.path);
-              }
-            }}
-            className={cn(
-              "group flex flex-col items-center gap-2 min-w-[72px]", 
-              className
-            )}
+            type="button"
+            onClick={() => navigate(action.path)}
+            className="group flex flex-col items-center gap-1.5 min-w-[64px] cursor-pointer focus:outline-none"
           >
-            {isTransfer ? (
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 border border-sky-400/40 shadow-md shadow-sky-500/25 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:shadow-sky-500/40 hover:-translate-y-0.5">
-                <Icon className="w-6 h-6 text-white" />
-              </div>
-            ) : (
-              <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 flex items-center justify-center transition-all duration-200 hover:border-sky-500/30 dark:hover:border-sky-400/30 hover:-translate-y-0.5">
-                <Icon className={cn("w-6 h-6", action.color)} />
-              </div>
-            )}
-            <span className={cn(
-              "text-[10px] font-semibold text-center leading-tight",
-              isTransfer 
-                ? "text-sky-600 dark:text-sky-400 font-bold" 
-                : "text-slate-700 dark:text-slate-300"
-            )}>
+            <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center justify-center transition-all duration-200 group-hover:border-sky-500/40 dark:group-hover:border-sky-400/40 group-hover:shadow-xs group-hover:-translate-y-0.5">
+              <Icon className={cn("w-5 h-5 transition-transform group-hover:scale-105", action.color)} />
+            </div>
+            <span className="text-[10px] md:text-[11px] font-semibold text-slate-700 dark:text-slate-300 text-center leading-tight truncate max-w-[68px]">
               {action.label}
             </span>
           </button>
         );
       })}
-
-      <InternalTransferModal 
-        isOpen={transferOpen} 
-        onClose={() => setTransferOpen(false)} 
-      />
-    </>
+    </div>
   );
 }
