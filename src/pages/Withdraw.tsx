@@ -109,7 +109,7 @@ export function Withdraw() {
 
   // Service charge and balance safety calculations
   const numericAmount = Number(withdrawAmount) || 0;
-  const serviceCharge = numericAmount >= 10000 ? 15 : 0;
+  const serviceCharge = numericAmount >= 10000 ? 50 : 0;
   const totalDeduction = numericAmount + serviceCharge;
   const isOverBalance = numericAmount > 0 && totalDeduction > balance;
 
@@ -148,8 +148,8 @@ export function Withdraw() {
       return;
     }
     let maxAmount = balance;
-    if (balance >= 10015) {
-      maxAmount = balance - 15;
+    if (balance >= 10050) {
+      maxAmount = balance - 50;
     } else if (balance >= 10000) {
       maxAmount = 9999;
     } else {
@@ -269,7 +269,7 @@ export function Withdraw() {
     if (isOverBalance) {
       showToast(
         serviceCharge > 0 
-          ? 'Insufficient balance. Amount + ₦15 service charge exceeds your available balance.'
+          ? 'Insufficient balance. Amount + ₦50 service charge exceeds your available balance.'
           : 'Insufficient wallet balance'
       );
       return;
@@ -571,7 +571,7 @@ export function Withdraw() {
                     <div className="p-3.5 bg-sky-500/10 border border-sky-500/20 rounded-2xl flex items-center justify-between text-sky-700 dark:text-sky-300 animate-in fade-in">
                       <div className="flex items-center gap-2">
                         <Info className="w-4 h-4 text-sky-500 shrink-0" />
-                        <span className="text-xs font-bold">₦15 Service Charge Applies</span>
+                        <span className="text-xs font-bold">₦50 Service Charge Applies</span>
                       </div>
                       <span className="text-xs font-black">
                         Total Debit: ₦{totalDeduction.toLocaleString()}
@@ -589,7 +589,7 @@ export function Withdraw() {
                             Amount exceeds available balance including service charge.
                             <br />
                             <span className="font-normal text-[11px] opacity-90">
-                              Required: ₦{numericAmount.toLocaleString()} + ₦15 charge = <strong>₦{totalDeduction.toLocaleString()}</strong> (Available: ₦{balance.toLocaleString()})
+                              Required: ₦{numericAmount.toLocaleString()} + ₦50 charge = <strong>₦{totalDeduction.toLocaleString()}</strong> (Available: ₦{balance.toLocaleString()})
                             </span>
                           </>
                         ) : (
@@ -611,7 +611,7 @@ export function Withdraw() {
                   {submitting ? (
                     <LoadingSpinner size="sm" />
                   ) : numericAmount > 0 ? (
-                    `Withdraw ₦${numericAmount.toLocaleString()}${serviceCharge > 0 ? ' (+₦15 Fee)' : ''}`
+                    `Withdraw ₦${numericAmount.toLocaleString()}${serviceCharge > 0 ? ' (+₦50 Fee)' : ''}`
                   ) : (
                     'Withdraw Funds'
                   )}
