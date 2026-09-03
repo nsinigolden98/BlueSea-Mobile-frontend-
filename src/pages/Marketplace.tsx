@@ -6,6 +6,7 @@ import { Search, CalendarDays } from 'lucide-react';
 import { getRequest, postRequest, ENDPOINTS, API_BASE } from '@/types';
 import type { MarketplaceEvent } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
+import { useAuth } from '@/context/AuthContext';
 
 import { 
   getAffiliateTracking,
@@ -47,6 +48,7 @@ function useDebounce<T>(value: T, delay: number): T {
 export function Marketplace() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const { PinComponent, showPinModal, message } = PinModal();
   const { showToast, ToastComponent } = Toast();
   const { showLoader, hideLoader, LoaderComponent } = Loader();
@@ -245,22 +247,15 @@ export function Marketplace() {
     const requiredTotal = unitPrice * quantity;
 
     if (requiredTotal > 0) {
-      showLoader();
-      try {
-        const walletEndpoint = (ENDPOINTS as Record<string, any>).wallet || '/wallet/balance';
-        const walletRes = await getRequest(walletEndpoint);
-        const availableBalance = Number(walletRes?.balance ?? walletRes?.available_balance ?? walletRes?.amount ?? 0);
+      const rawBalance = user?.balance;
+      const availableBalance = typeof rawBalance === 'number'
+        ? rawBalance
+        : parseFloat(String(rawBalance || 0).replace(/[^0-9.-]+/g, '')) || 0;
 
-        if (availableBalance < requiredTotal) {
-          hideLoader();
-          showToast(`Insufficient balance (₦${availableBalance.toLocaleString()}). Required: ₦${requiredTotal.toLocaleString()}. Please fund your wallet.`);
-          setTimeout(() => navigate('/wallet'), 1200);
-          return;
-        }
-      } catch (err) {
-        console.warn('Wallet pre-check notice:', err);
-      } finally {
-        hideLoader();
+      if (availableBalance < requiredTotal) {
+        showToast(`Insufficient balance (₦${availableBalance.toLocaleString()}). Required: ₦${requiredTotal.toLocaleString()}. Please fund your wallet.`);
+        setTimeout(() => navigate('/wallet'), 1200);
+        return;
       }
     }
 
