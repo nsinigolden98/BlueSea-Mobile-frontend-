@@ -379,8 +379,8 @@ export function Marketplace() {
   };
 
   const handleCopyEventLink = async (eventId: string) => {
-    const affiliateParam = affiliateId ? `&ref=${affiliateId}` : '';
-    const link = `${window.location.origin}/marketplace?event=${eventId}${affiliateParam}`;
+   // const affiliateParam = affiliateId ? `&ref=${affiliateId}` : '';
+    const link = `${window.location.origin}/marketplace?event=${eventId}`;
     try {
       await navigator.clipboard.writeText(link);
       setCopiedLink(true);
