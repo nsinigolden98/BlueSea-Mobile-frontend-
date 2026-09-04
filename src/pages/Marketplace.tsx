@@ -21,10 +21,14 @@ import type { MarketingAssetEvent } from '@/utils/canvasGenerator';
 import { MarketplaceHeader } from '@/components/marketplace/MarketplaceHeader';
 import { MarketplaceCategories } from '@/components/marketplace/MarketplaceCategories';
 import { MarketplaceHero } from '@/components/marketplace/MarketplaceHero';
-import { MarketplaceEventCard, type ExtendedEvent } from '@/components/marketplace/MarketplaceEventCard';
+import { MarketplaceEventCard, type ExtendedEvent as BaseExtendedEvent } from '@/components/marketplace/MarketplaceEventCard';
 import { MarketplaceEventCollection } from '@/components/marketplace/MarketplaceEventCollection';
 import { MarketplaceEventDetails } from '@/components/marketplace/MarketplaceEventDetails';
 import { MarketplaceShareModal } from '@/components/marketplace/MarketplaceShareModal';
+
+export type ExtendedEvent = BaseExtendedEvent & {
+  event_mode?: 'offline' | 'online' | 'hybrid' | string;
+};
 
 interface AffiliateStatusResponse {
   id?: number;
@@ -131,10 +135,54 @@ export function Marketplace() {
     }
   }, [searchParams, checkBackendAffiliateStatus]);
 
+  const fetchEvents = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await getRequest(ENDPOINTS.marketplace_events);
+      if (Array.isArray(data)) {
+        setEvents(data);
+        const eventId = searchParams.get('event');
+        if (eventId) {
+          const foundEvent = data.find((e: ExtendedEvent) => String(e.id) === String(eventId));
+          if (foundEvent) {
+            setSelectedEvent(foundEvent);
+          } else {
+            try {
+              const detailEndpoint = ENDPOINTS.marketplace_event_detail 
+                ? ENDPOINTS.marketplace_event_detail(eventId)
+                : `${API_BASE}/marketplace/events/${eventId}/`;
+              const detailData = await getRequest(detailEndpoint);
+              if (detailData && detailData.id) {
+                setSelectedEvent(detailData);
+              }
+            } catch (detailErr) {
+              console.error('Failed to fetch specific event detail:', detailErr);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch marketplace events:', err);
+      showToast('Failed to load marketplace events. Please reload.');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchParams, showToast]);
+
+  const fetchVendorStatus = useCallback(async () => {
+    try {
+      const response = await getRequest(ENDPOINTS.vendor_status);
+      setVendorStatus(response?.vendor?.is_verified || false);
+    } catch (err) {
+      console.error('Vendor status error:', err);
+      setVendorStatus(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchEvents();
     fetchVendorStatus();
-  }, []);
+  }, [fetchEvents, fetchVendorStatus]);
 
   useEffect(() => {
     if (mainViewportRef.current) {
@@ -147,44 +195,32 @@ export function Marketplace() {
       setSelectedTicketType('');
       setQuantity(1);
     } else {
-      const mode = selectedEvent.attendance_mode || 'physical';
+      const mode = selectedEvent.event_mode || selectedEvent.attendance_mode || 'offline';
       setSelectedAttendanceMode(mode === 'online' ? 'online' : 'physical');
     }
   }, [selectedEvent]);
 
-  const fetchEvents = async () => {
-    try {
-      const data = await getRequest(ENDPOINTS.marketplace_events);
-      if (Array.isArray(data)) {
-        setEvents(data);
-        const eventId = searchParams.get('event');
-        if (eventId) {
-          const foundEvent = data.find((e: ExtendedEvent) => e.id === eventId);
-          if (foundEvent) setSelectedEvent(foundEvent);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch marketplace events:', err);
-      showToast('Failed to load marketplace events. Please reload.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchVendorStatus = async () => {
-    try {
-      const response = await getRequest(ENDPOINTS.vendor_status);
-      setVendorStatus(response?.vendor?.is_verified || false);
-    } catch (err) {
-      console.error('Vendor status error:', err);
-      setVendorStatus(false);
-    }
-  };
-
   const now = useMemo(() => new Date(), []);
 
-  const activeEvents = useMemo(() => events.filter(e => e.event_date && new Date(e.event_date) >= now), [events, now]);
-  const pastEvents = useMemo(() => events.filter(e => e.event_date && new Date(e.event_date) < now), [events, now]);
+  const parseEventDate = (dateStr: string) => {
+    if (!dateStr) return null;
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const activeEvents = useMemo(() => {
+    return events.filter(e => {
+      const d = parseEventDate(e.event_date);
+      return d ? d >= now : true;
+    });
+  }, [events, now]);
+
+  const pastEvents = useMemo(() => {
+    return events.filter(e => {
+      const d = parseEventDate(e.event_date);
+      return d ? d < now : false;
+    });
+  }, [events, now]);
 
   const filteredEvents = useMemo(() => {
     return activeEvents.filter(event => {
@@ -194,7 +230,7 @@ export function Marketplace() {
 
       const titleMatch = (event.event_title ?? '').toLowerCase().includes(query);
       const catMatch = (event.category ?? '').toLowerCase().includes(query);
-      const organizerMatch = event.organizer_name ? event.organizer_name.toLowerCase().includes(query) : false;
+      const organizerMatch = (event.hosted_by || event.organizer_name || '').toLowerCase().includes(query);
       const locationMatch = (event.event_location ?? '').toLowerCase().includes(query);
       const venueMatch = (event.venue_name ?? '').toLowerCase().includes(query);
       const cityMatch = (event.city ?? '').toLowerCase().includes(query);
@@ -206,8 +242,10 @@ export function Marketplace() {
 
   const getImageUrl = (path: string | undefined) => {
     if (!path) return '';
-    if (path.startsWith('http')) return path;
-    return `${API_BASE}${path}`;
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    const baseUrl = API_BASE ? API_BASE.replace(/\/+$/, '') : '';
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${cleanPath}`;
   };
 
   const getEventImage = (event: MarketplaceEvent) => {
@@ -218,12 +256,16 @@ export function Marketplace() {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const d = parseEventDate(dateString);
+    if (!d) return dateString;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   const formatTime = (dateString: string) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const d = parseEventDate(dateString);
+    if (!d) return dateString;
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
   const getStartingPrice = (event: ExtendedEvent) => {
@@ -235,14 +277,19 @@ export function Marketplace() {
     return minPrice === 0 ? 'Free' : `₦${minPrice.toLocaleString()}`;
   };
 
-  // --- PRE-CHECKOUT WALLET VALIDATION FLOW ---
   const handlePurchase = async () => {
     if (!selectedEvent) return;
 
     let unitPrice = 0;
     if (!selectedEvent.is_free) {
-      const tType = selectedEvent.ticket_types?.find(t => t.id === selectedTicketType);
-      if (tType) unitPrice = Number(tType.price) || 0;
+      if (selectedEvent.ticket_types && selectedEvent.ticket_types.length > 0) {
+        const tType = selectedEvent.ticket_types.find(t => String(t.id) === String(selectedTicketType));
+        if (!tType) {
+          showToast('Please select a ticket type.');
+          return;
+        }
+        unitPrice = Number(tType.price) || 0;
+      }
     }
     const requiredTotal = unitPrice * quantity;
 
@@ -359,39 +406,44 @@ export function Marketplace() {
         setTxStatus(false);
       }
     }
-  }, [message]);
+  }, [message, showToast]);
 
   const featuredEvent = useMemo(() => activeEvents[0] || events[0] || null, [activeEvents, events]);
 
   const collections = useMemo(() => ({
     trending: activeEvents.filter(e => (e.tickets_sold ?? 0) > 0),
-    upcoming: [...activeEvents].sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()),
-    online: activeEvents.filter(e => e.attendance_mode === 'online'),
-    physical: activeEvents.filter(e => e.attendance_mode === 'physical' || !e.attendance_mode),
+    upcoming: [...activeEvents].sort((a, b) => {
+      const dA = parseEventDate(a.event_date);
+      const dB = parseEventDate(b.event_date);
+      return (dA ? dA.getTime() : 0) - (dB ? dB.getTime() : 0);
+    }),
+    online: activeEvents.filter(e => e.event_mode === 'online' || e.event_mode === 'hybrid' || e.attendance_mode === 'online'),
+    physical: activeEvents.filter(e => e.event_mode === 'offline' || e.event_mode === 'hybrid' || e.attendance_mode === 'physical' || !e.event_mode),
     free: activeEvents.filter(e => e.is_free || e.ticket_types?.some(t => Number(t.price) === 0)),
     past: pastEvents
   }), [activeEvents, pastEvents]);
 
-  const marketingAssetEvent: MarketingAssetEvent | null = shareModalEvent ? {
+  const marketingAssetEvent: MarketingAssetEvent | null = shareModalEvent ? ({
     id: shareModalEvent.id,
     event_title: shareModalEvent.event_title,
-    subtitle: shareModalEvent.organizer_name ? `Hosted by ${shareModalEvent.organizer_name}` : undefined,
-    organizer_name: shareModalEvent.organizer_name,
+    subtitle: shareModalEvent.hosted_by ? `Hosted by ${shareModalEvent.hosted_by}` : (shareModalEvent.organizer_name ? `Hosted by ${shareModalEvent.organizer_name}` : undefined),
+    organizer_name: shareModalEvent.hosted_by || shareModalEvent.organizer_name,
     is_verified_organizer: shareModalEvent.is_approved,
     event_date: shareModalEvent.event_date,
     event_time: formatTime(shareModalEvent.event_date),
     event_location: shareModalEvent.event_location,
-    venue_name: shareModalEvent.venue_name,
+    venue_name: shareModalEvent.venue_name || shareModalEvent.event_location,
     city: shareModalEvent.city,
     category: shareModalEvent.category,
     is_free: shareModalEvent.is_free,
     starting_price: shareModalEvent.ticket_types?.[0]?.price,
-    attendance_mode: shareModalEvent.attendance_mode,
+    event_mode: shareModalEvent.event_mode || shareModalEvent.attendance_mode,
+    attendance_mode: shareModalEvent.attendance_mode || (shareModalEvent.event_mode === 'online' ? 'online' : 'physical'),
     tags: shareModalEvent.tags,
     resolved_image: getEventImage(shareModalEvent),
     event_banner: getEventImage(shareModalEvent),
     ticket_image: shareModalEvent.ticket_image ? getImageUrl(shareModalEvent.ticket_image) : undefined,
-  } : null;
+  } as unknown as MarketingAssetEvent) : null;
 
   const isFilteredState = debouncedSearch !== '' || activeCategory !== 'All';
 
@@ -576,7 +628,7 @@ export function Marketplace() {
                       getStartingPrice={getStartingPrice}
                     />
                     <MarketplaceEventCollection 
-                      title="Physical Events" 
+                      title="Physical & Hybrid Events" 
                       items={collections.physical} 
                       onSelect={setSelectedEvent}
                       onTicketAffiliateAction={handleTicketAffiliateAction}
@@ -662,9 +714,11 @@ export function Marketplace() {
         type="marketplace" 
         value={{ 
           event_id: selectedEvent?.id, 
-          ticket_type: selectedEvent?.ticket_types?.find(t => t.id === selectedTicketType)?.name || (selectedEvent?.is_free ? 'Free Pass' : 'Ticket Purchase'), 
+          ticket_type_id: selectedTicketType || undefined,
+          ticket_type: selectedEvent?.ticket_types?.find(t => String(t.id) === String(selectedTicketType))?.name || (selectedEvent?.is_free ? 'Free Pass' : 'Ticket Purchase'), 
           quantity: quantity,
-          attendance_mode: selectedAttendanceMode
+          attendance_mode: selectedAttendanceMode,
+          event_mode: selectedEvent?.event_mode || 'offline'
         }} 
       />
       <ToastComponent />

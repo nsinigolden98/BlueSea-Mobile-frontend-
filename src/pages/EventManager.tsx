@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, MapPin, Plus, Loader2, ChevronRight, X, Trash2, ArrowLeft} from 'lucide-react';
+import { Calendar, MapPin, Plus, Loader2, ChevronRight, X, Trash2, ArrowLeft, Check, Link } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRequest, postRequest, postFileRequest, ENDPOINTS, API_BASE, type MarketplaceEvent, type CreateEventPayload, type VendorStatus } from '@/types';
 import { useNavigate } from 'react-router-dom';
@@ -15,27 +15,40 @@ interface TicketTypeForm {
   quantity_available: string;
 }
 
-const CATEGORIES = ['Music', 'Conference', 'Sports', 'Networking', 'Workshop', 'Party', 'Others'];
+interface LocalCreateEventFormData extends Partial<CreateEventPayload> {
+  event_mode?: 'offline' | 'online' | 'hybrid';
+  meeting_link?: string;
+}
 
+const CATEGORIES = ['Music', 'Conference', 'Sports', 'Networking', 'Workshop', 'Party', 'Others'] as const;
+
+const EVENT_MODES = [
+  { value: 'offline', label: 'Offline', description: 'In-person physical event' },
+  { value: 'online', label: 'Online', description: 'Virtual online event' },
+  { value: 'hybrid', label: 'Hybrid', description: 'Both in-person and virtual' },
+] as const;
 
 export function EventManager() {
   const navigate = useNavigate();
   const [myEvents, setMyEvents] = useState<MarketplaceEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showModePicker, setShowModePicker] = useState(false);
   const [isFree, setIsFree] = useState(true);
   const [ticketTypes, setTicketTypes] = useState<TicketTypeForm[]>([
     { name: '', price: '', quantity_available: '' }
   ]);
   const [vendorStatus, setVendorStatus] = useState<VendorStatus | null>(null);
-  void vendorStatus; // Keep for future use
   const { showToast, ToastComponent } = Toast();
   const { showLoader, hideLoader, LoaderComponent } = Loader();
-  const [formData, setFormData] = useState<Partial<CreateEventPayload>>({
+  const [formData, setFormData] = useState<LocalCreateEventFormData>({
     event_title: '',
     event_description: '',
     event_date: '',
+    event_mode: 'offline',
     event_location: '',
+    meeting_link: '',
     hosted_by: '',
     category: 'Music',
     is_free: true,
@@ -95,11 +108,10 @@ export function EventManager() {
     try {
       const response = await getRequest(ENDPOINTS.vendor_tickets);
       if (response) {
-        console.log(response)
-        setMyEvents(response.data);
+        setMyEvents(response.data || []);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       showToast('Failed to fetch events');
     } finally {
       setLoading(false);
@@ -111,16 +123,18 @@ export function EventManager() {
       const response = await getRequest(ENDPOINTS.vendor_status);
       if (response?.vendor) {
         setVendorStatus(response.vendor);
+      } else if (response) {
+        setVendorStatus(response as VendorStatus);
       } else {
         setVendorStatus(null);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       setVendorStatus(null);
     }
   };
 
-  const handleInputChange = (field: keyof CreateEventPayload, value: string | boolean | File) => {
+  const handleInputChange = (field: keyof LocalCreateEventFormData, value: string | boolean | File | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -138,49 +152,139 @@ export function EventManager() {
     setTicketTypes(updated);
   };
 
+  const isValidMeetingLink = (link: string) => {
+    if (!link || !link.trim()) return false;
+    try {
+      const formatted = link.startsWith('http://') || link.startsWith('https://') ? link : `https://${link}`;
+      new URL(formatted);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleCreateEvent = async () => {
-    if (!formData.event_title || !formData.event_date || !formData.event_location) {
-      showToast('Please fill in all required fields');
+    if (!formData.event_title?.trim()) {
+      showToast('Event title is required');
       return;
     }
 
-    if (isFree && !formData.quantity) {
-      showToast('Please enter the number of participants for free events');
+    if (!formData.hosted_by?.trim()) {
+      showToast('Hosted by is required');
       return;
     }
 
-    if (!isFree && ticketTypes.length === 0) {
-      showToast('Please add at least one ticket type');
+    if (!formData.category) {
+      showToast('Please select an event category');
       return;
+    }
+
+    const currentMode = formData.event_mode || 'offline';
+
+    if (currentMode === 'offline' || currentMode === 'hybrid') {
+      if (!formData.event_location?.trim()) {
+        showToast(currentMode === 'hybrid' ? 'Location and meeting link are required for hybrid events' : 'Location is required for offline events');
+        return;
+      }
+    }
+
+    if (currentMode === 'online' || currentMode === 'hybrid') {
+      if (!formData.meeting_link?.trim()) {
+        showToast(currentMode === 'hybrid' ? 'Location and meeting link are required for hybrid events' : 'Meeting link is required for online events');
+        return;
+      }
+      if (!isValidMeetingLink(formData.meeting_link)) {
+        showToast('Please enter a valid URL for the meeting link');
+        return;
+      }
+    }
+
+    if (!formData.event_date) {
+      showToast('Event date is required');
+      return;
+    }
+
+    if (!formData.event_banner) {
+      showToast('Event banner image is required');
+      return;
+    }
+
+    if (isFree) {
+      const qty = Number(formData.quantity);
+      if (!formData.quantity || isNaN(qty) || qty <= 0 || !Number.isInteger(qty)) {
+        showToast('Please enter a valid participant quantity');
+        return;
+      }
+    } else {
+      if (ticketTypes.length === 0) {
+        showToast('Please add at least one ticket type');
+        return;
+      }
+
+      for (let i = 0; i < ticketTypes.length; i++) {
+        const tt = ticketTypes[i];
+        if (!tt.name.trim()) {
+          showToast('Please complete all ticket information');
+          return;
+        }
+        const priceNum = Number(tt.price);
+        if (tt.price === '' || isNaN(priceNum) || priceNum < 0) {
+          showToast('Please complete all ticket information');
+          return;
+        }
+        const qtyNum = Number(tt.quantity_available);
+        if (tt.quantity_available === '' || isNaN(qtyNum) || qtyNum <= 0 || !Number.isInteger(qtyNum)) {
+          showToast('Please complete all ticket information');
+          return;
+        }
+      }
     }
 
     try {
       showLoader();
-      const payload = {
-        ...formData,
-        quantity: isFree ? Number(formData.quantity) : undefined,
+      const vendorId = vendorStatus?.id || (vendorStatus as unknown as Record<string, string>)?.vendor_id;
+
+      const formattedMeetingLink = formData.meeting_link?.trim()
+        ? (formData.meeting_link.trim().startsWith('http://') || formData.meeting_link.trim().startsWith('https://')
+            ? formData.meeting_link.trim()
+            : `https://${formData.meeting_link.trim()}`)
+        : undefined;
+
+      const payload: Record<string, unknown> = {
+        ...(vendorId ? { vendor: vendorId } : {}),
+        event_title: formData.event_title.trim(),
+        event_description: formData.event_description?.trim() || '',
         event_date: new Date(formData.event_date as string).toISOString(),
-        ticket_types: isFree ? [] : ticketTypes.map(tt => ({
-          name: tt.name,
-          price: Number(tt.price) || 0,
-          quantity_available: Number(tt.quantity_available) || 0,
-          initial_quantity: Number(tt.quantity_available) || 0,
-        })),
+        event_mode: currentMode,
+        hosted_by: formData.hosted_by.trim(),
+        category: formData.category,
+        is_free: isFree,
+        quantity: isFree ? Number(formData.quantity) : undefined,
+        ticket_types: isFree
+          ? []
+          : ticketTypes.map(tt => ({
+              name: tt.name.trim(),
+              price: Number(tt.price),
+              quantity_available: Number(tt.quantity_available),
+              initial_quantity: Number(tt.quantity_available),
+            })),
       };
-      // console.log(payload)
-      // Check if we have files to upload
+
+      if (currentMode === 'offline' || currentMode === 'hybrid') {
+        payload.event_location = formData.event_location?.trim();
+      }
+
+      if (currentMode === 'online' || currentMode === 'hybrid') {
+        payload.meeting_link = formattedMeetingLink;
+      }
+
       const hasFiles = formData.event_banner || formData.ticket_image;
 
       if (hasFiles) {
-        // Use FormData for file uploads
         const formDataObj = new FormData();
-        
-        // Add regular fields
         Object.entries(payload).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && key !== 'event_banner' && key !== 'ticket_image') {
-            if (typeof value === 'object' && !Array.isArray(value)) {
-              formDataObj.append(key, JSON.stringify(value));
-            } else if (Array.isArray(value)) {
+          if (value !== undefined && value !== null) {
+            if (typeof value === 'object') {
               formDataObj.append(key, JSON.stringify(value));
             } else {
               formDataObj.append(key, String(value));
@@ -188,7 +292,6 @@ export function EventManager() {
           }
         });
 
-        // Add files
         if (formData.event_banner) {
           formDataObj.append('event_banner', formData.event_banner as File);
         }
@@ -199,33 +302,34 @@ export function EventManager() {
         const response = await postFileRequest(ENDPOINTS.create_events, formDataObj);
         console.log('Create event response:', response);
         hideLoader();
-        
+
         if (response?.id || response?.success) {
           showToast('Event created successfully!');
           setShowModal(false);
           fetchMyEvents();
           resetForm();
         } else {
-          showToast(response?.error || 'Failed to create event');
+          showToast(response?.error || response?.message || 'Failed to create event');
         }
       } else {
         const response = await postRequest(ENDPOINTS.create_events, payload);
         console.log('Create event response:', response);
         hideLoader();
-        
-        if (response?.state || response?.success) {
+
+        if (response?.id || response?.success) {
           showToast('Event created successfully!');
           setShowModal(false);
           fetchMyEvents();
           resetForm();
         } else {
-          showToast(response?.error || 'Failed to create event');
+          showToast(response?.error || response?.message || 'Failed to create event');
         }
       }
-    } catch (err) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(err);
       hideLoader();
-      showToast('Failed to create event');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create event';
+      showToast(errorMessage);
     }
   };
 
@@ -234,7 +338,9 @@ export function EventManager() {
       event_title: '',
       event_description: '',
       event_date: '',
+      event_mode: 'offline',
       event_location: '',
+      meeting_link: '',
       hosted_by: '',
       category: 'Music',
       is_free: true,
@@ -266,6 +372,8 @@ export function EventManager() {
       .then(() => showToast('Link copied to clipboard'))
       .catch(() => showToast('Failed to copy link'));
   };
+
+  const currentMode = formData.event_mode || 'offline';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
@@ -350,7 +458,7 @@ export function EventManager() {
                               </span>
                               <span className="flex items-center gap-1">
                                 <MapPin className="w-3 h-3" />
-                                {event.event_location}
+                                {event.event_location || 'Online'}
                               </span>
                             </div>
                           </div>
@@ -383,6 +491,7 @@ export function EventManager() {
                             className="h-9 px-4 text-xs font-medium shrink-0"
                             onClick={(e) => handleCopyLink(e, event)}
                           >
+                            <Link className="w-3.5 h-3.5 mr-1.5" />
                             Copy Link
                           </Button>
                         </div>
@@ -399,7 +508,7 @@ export function EventManager() {
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-h-[90vh] overflow-y-auto max-w-2xl">
-            <div className="sticky top-0 bg-white dark:bg-slate-900 p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="sticky top-0 bg-white dark:bg-slate-900 p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between z-10">
               <h2 className="text-xl font-semibold text-slate-800 dark:text-white">Create Event</h2>
               <button 
                 onClick={() => {
@@ -432,33 +541,59 @@ export function EventManager() {
               </div>
 
               <div className="space-y-2">
-                <Label>Category</Label>
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => handleInputChange('category', cat)}
-                      className={cn(
-                        "px-3 py-1 rounded-full text-sm font-medium transition-all",
-                        formData.category === cat
-                          ? 'bg-sky-500 text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                      )}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
+                <Label>Category *</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryPicker(true)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                >
+                  <span className="text-slate-800 dark:text-white font-medium">
+                    {formData.category || 'Select Category'}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
               </div>
 
               <div className="space-y-2">
-                <Label>Location *</Label>
-                <Input
-                  value={formData.event_location}
-                  onChange={(e) => handleInputChange('event_location', e.target.value)}
-                  placeholder="Enter location"
-                />
+                <Label>Event Mode *</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowModePicker(true)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                >
+                  <span className="text-slate-800 dark:text-white font-medium">
+                    {EVENT_MODES.find(m => m.value === currentMode)?.label || 'Offline'}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
               </div>
+
+              {(currentMode === 'offline' || currentMode === 'hybrid') && (
+                <div className="space-y-2">
+                  <Label>Location *</Label>
+                  <Input
+                    value={formData.event_location}
+                    onChange={(e) => handleInputChange('event_location', e.target.value)}
+                    placeholder="Enter physical venue or address"
+                  />
+                </div>
+              )}
+
+              {(currentMode === 'online' || currentMode === 'hybrid') && (
+                <div className="space-y-2">
+                  <Label>Meeting Link *</Label>
+                  <div className="relative">
+                    <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      type="url"
+                      value={formData.meeting_link || ''}
+                      onChange={(e) => handleInputChange('meeting_link', e.target.value)}
+                      placeholder="https://zoom.us/j/..."
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Date *</Label>
@@ -470,7 +605,7 @@ export function EventManager() {
               </div>
 
               <div className="space-y-2">
-                <Label>Event Banner</Label>
+                <Label>Event Banner *</Label>
                 <div className="flex items-center gap-4">
                   <div className="w-24 h-24 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
                     {bannerPreview ? (
@@ -570,6 +705,7 @@ export function EventManager() {
                     <div key={index} className="p-4 border border-slate-100 dark:border-slate-800 rounded-xl space-y-3 relative">
                       {ticketTypes.length > 1 && (
                         <button
+                          type="button"
                           onClick={() => removeTicketType(index)}
                           className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 transition-colors"
                         >
@@ -578,7 +714,7 @@ export function EventManager() {
                       )}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="space-y-1">
-                          <Label className="text-xs">Name</Label>
+                          <Label className="text-xs">Name *</Label>
                           <Input
                             placeholder="Regular"
                             value={ticket.name}
@@ -586,7 +722,7 @@ export function EventManager() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Price (₦)</Label>
+                          <Label className="text-xs">Price (₦) *</Label>
                           <Input
                             type="number"
                             placeholder="0"
@@ -595,7 +731,7 @@ export function EventManager() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">Quantity</Label>
+                          <Label className="text-xs">Quantity *</Label>
                           <Input
                             type="number"
                             placeholder="100"
@@ -632,6 +768,85 @@ export function EventManager() {
         </div>
       )}
 
+      {showCategoryPicker && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-2xl sm:rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-semibold text-slate-800 dark:text-white">Select Category</h3>
+              <button 
+                type="button"
+                onClick={() => setShowCategoryPicker(false)} 
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-1 max-h-60 overflow-y-auto">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    handleInputChange('category', cat);
+                    setShowCategoryPicker(false);
+                  }}
+                  className={cn(
+                    "w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center justify-between transition-colors",
+                    formData.category === cat
+                      ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 font-semibold'
+                      : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                  )}
+                >
+                  <span>{cat}</span>
+                  {formData.category === cat && <Check className="w-4 h-4 text-sky-500" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModePicker && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-2xl sm:rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-semibold text-slate-800 dark:text-white">Select Event Mode</h3>
+              <button 
+                type="button"
+                onClick={() => setShowModePicker(false)} 
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-1">
+              {EVENT_MODES.map((mode) => (
+                <button
+                  key={mode.value}
+                  type="button"
+                  onClick={() => {
+                    handleInputChange('event_mode', mode.value);
+                    setShowModePicker(false);
+                  }}
+                  className={cn(
+                    "w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center justify-between transition-colors",
+                    currentMode === mode.value
+                      ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 font-semibold'
+                      : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                  )}
+                >
+                  <div>
+                    <div className="text-slate-800 dark:text-white">{mode.label}</div>
+                    <div className="text-xs text-slate-400 font-normal">{mode.description}</div>
+                  </div>
+                  {currentMode === mode.value && <Check className="w-4 h-4 text-sky-500" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedEventForDashboard && (
         <EventDashboard 
           event={selectedEventForDashboard} 
@@ -644,5 +859,3 @@ export function EventManager() {
     </div>
   );
 }
-
-

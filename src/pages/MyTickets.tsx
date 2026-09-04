@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PinModal, Toast, TransactionModal } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Ticket, Loader2, ChevronRight, Share2, X, ArrowLeft } from 'lucide-react';
+import { Calendar, MapPin, Ticket, Loader2, ChevronRight, Share2, X, ArrowLeft, Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getRequest, postRequest, ENDPOINTS, type MyTicket } from '@/types';
+import { getRequest, ENDPOINTS, type MyTicket } from '@/types';
 import QRCode from 'react-qr-code';
 import { useNavigate } from 'react-router-dom';
 
-type TicketStatus = 'all' | 'upcoming' | 'used' | 'expired' | 'transferred' | 'canceled';
+type TicketStatus = 'all' | 'upcoming' | 'used' | 'expired' | 'transferred';
 
 export function MyTickets() {
   const navigate = useNavigate();
@@ -17,64 +17,107 @@ export function MyTickets() {
   const [selectedTicket, setSelectedTicket] = useState<MyTicket | null>(null);
   const [transferEmail, setTransferEmail] = useState('');
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
   const { PinComponent, showPinModal, message } = PinModal();
   const { showToast, ToastComponent } = Toast();
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [txMessage, setTxMessage] = useState('');
 
+  const fetchTickets = useCallback(async () => {
+    try {
+      const data = await getRequest(ENDPOINTS.marketplace_my_tickets);
+      if (data && Array.isArray(data)) {
+        setTickets(data);
+      } else if (data && Array.isArray(data.results)) {
+        setTickets(data.results);
+      }
+    } catch {
+      showToast('Failed to fetch tickets');
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+
   useEffect(() => {
     fetchTickets();
-  }, []);
+  }, [fetchTickets]);
 
   useEffect(() => {
     if (message) {
       setIsOpen(true);
       if (message?.success || message?.code === '000') {
-        showToast(message?.response_description || 'Action completed successfully!');
-        setTxMessage(message?.response_description || 'Action completed successfully!');
+        const successMsg = message?.response_description || 'Ticket transferred successfully!';
+        showToast(successMsg);
+        setTxMessage(successMsg);
         setTxStatus(true);
-        fetchTickets();
+        setShowTransferModal(false);
+        setShowDetailModal(false);
         setTransferEmail('');
+        fetchTickets();
       } else {
-        showToast(message?.error || message?.response_description || 'Action failed');
-        setTxMessage(message?.error || message?.response_description || 'Action failed');
+        const errorMsg = message?.error || message?.response_description || 'Transfer failed';
+        showToast(errorMsg);
+        setTxMessage(errorMsg);
         setTxStatus(false);
       }
     }
-  }, [message]);
+  }, [message, fetchTickets, showToast]);
 
-  const fetchTickets = async () => {
-    try {
-      const data = await getRequest(ENDPOINTS.marketplace_my_tickets);
-      if (data) {
-        setTickets(data);
-        console.log(data)
-      }
-    } catch (err) {
-      showToast('Failed to fetch tickets');
-    } finally {
-      setLoading(false);
+  const getTicketStatusInfo = (ticket: MyTicket) => {
+    if (ticket.status === 'transferred') {
+      return {
+        label: 'Transferred',
+        badgeClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+        textClass: 'text-blue-500',
+        isTransferable: false,
+      };
     }
+    if (ticket.status === 'used') {
+      return {
+        label: 'Used',
+        badgeClass: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
+        textClass: 'text-slate-500',
+        isTransferable: false,
+      };
+    }
+    const eventTime = new Date(ticket.event_date).getTime();
+    const now = new Date().getTime();
+    if (eventTime < now) {
+      return {
+        label: 'Expired',
+        badgeClass: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+        textClass: 'text-red-500',
+        isTransferable: false,
+      };
+    }
+    return {
+      label: 'Upcoming',
+      badgeClass: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
+      textClass: 'text-green-500',
+      isTransferable: true,
+    };
   };
 
-  const filterTickets = (tickets: MyTicket[]): MyTicket[] => {
-    const now = new Date();
+  const filterTickets = (ticketsList: MyTicket[]): MyTicket[] => {
+    const now = new Date().getTime();
     
-    return tickets.filter(ticket => {
-      const eventDate = new Date(ticket.event_date);
-      
+    return ticketsList.filter(ticket => {
+      const eventTime = new Date(ticket.event_date).getTime();
+      const isExpired = eventTime < now && ticket.status !== 'used' && ticket.status !== 'transferred';
+
       switch (activeFilter) {
         case 'upcoming':
-          return eventDate > now ;
+          return ticket.status !== 'transferred' && ticket.status !== 'used' && !isExpired;
         case 'used':
           return ticket.status === 'used';
         case 'expired':
-          return eventDate < now && ticket.status !== 'used';
+          return isExpired;
         case 'transferred':
           return ticket.status === 'transferred';
-        case 'canceled':
-          return ticket.status === 'canceled';
         default:
           return true;
       }
@@ -83,34 +126,35 @@ export function MyTickets() {
 
   const filteredTickets = filterTickets(tickets);
 
-  const handleTransfer = (ticket: MyTicket) => {
-    setSelectedTicket(ticket);
-    showPinModal();
-  };
-
-  const handleCancel = async () => {
-    if (!selectedTicket) return;
-
+  const handleCopyId = async (id: string) => {
     try {
-      const response = await postRequest(
-        ENDPOINTS.marketplace_ticket_cancel(selectedTicket.id),
-        {}
-      );
-      
-      if (response?.success || response?.code === '000') {
-        showToast('Ticket cancelled successfully');
-        fetchTickets();
-        setShowDetailModal(false);
-      } else {
-        showToast(response?.error || 'Failed to cancel ticket');
-      }
-    } catch (err) {
-      showToast('Failed to cancel ticket');
+      await navigator.clipboard.writeText(id);
+      setCopied(true);
+      showToast('Ticket ID copied');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      showToast('Failed to copy Ticket ID');
     }
   };
 
+  const handleOpenTransferModal = (ticket: MyTicket) => {
+    setSelectedTicket(ticket);
+    setTransferEmail('');
+    setShowTransferModal(true);
+  };
+
+  const handleProceedTransfer = () => {
+    if (!transferEmail || !/^\S+@\S+\.\S+$/.test(transferEmail.trim())) {
+      showToast('Please enter a valid recipient email address');
+      return;
+    }
+    showPinModal();
+  };
+
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric',
@@ -124,8 +168,11 @@ export function MyTickets() {
     { label: 'Used', value: 'used' },
     { label: 'Expired', value: 'expired' },
     { label: 'Transferred', value: 'transferred' },
-    { label: 'Canceled', value: 'canceled' },
   ];
+
+  const getTicketImage = (ticket: any): string | null => {
+    return ticket.event_image || ticket.event_banner || ticket.image || ticket.banner || ticket.event?.banner || ticket.event?.image || null;
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
@@ -182,78 +229,75 @@ export function MyTickets() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {filteredTickets.map((ticket) => (
-                  <div 
-                    key={ticket.id}
-                    onClick={() => {
-                      setSelectedTicket(ticket);
-                      setShowDetailModal(true);
-                    }}
-                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 cursor-pointer hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex gap-4">
-                      <div className="w-20 h-20 bg-slate-200 dark:bg-slate-800 rounded-xl flex-shrink-0 overflow-hidden">
-                       <QRCode 
-                      value={ticket.qr_code} 
-                      size={100}
-                      level="H"
-                    />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-semibold text-slate-800 dark:text-white mb-1 line-clamp-1">
-                              {ticket.event_title}
-                            </h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">
-                              {ticket.ticket_type?.name || 'Free Entry'}
-                            </p>
-                            <div className="flex items-center gap-3 mt-2 text-xs text-slate-500 dark:text-slate-400">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3" />
-                                {formatDate(ticket.event_date)}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {ticket.event_location}
-                              </span>
+                {filteredTickets.map((ticket) => {
+                  const statusInfo = getTicketStatusInfo(ticket);
+                  const imageUrl = getTicketImage(ticket);
+
+                  return (
+                    <div 
+                      key={ticket.id}
+                      onClick={() => {
+                        setSelectedTicket(ticket);
+                        setShowDetailModal(true);
+                      }}
+                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 cursor-pointer hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex gap-4">
+                        <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-xl flex-shrink-0 overflow-hidden relative">
+                          {imageUrl && !imageErrors[ticket.id] ? (
+                            <img
+                              src={imageUrl}
+                              alt={ticket.event_title}
+                              className="w-full h-full object-cover"
+                              onError={() => setImageErrors(prev => ({ ...prev, [ticket.id]: true }))}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                              <Ticket className="w-8 h-8 text-sky-500" />
                             </div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-slate-400" />
+                          )}
                         </div>
-                        <div className="mt-2 flex items-center gap-2">
-                          {(() => {
-                          console.log(ticket)
-                            const eventDate = new Date(ticket.event_date).getTime();
-                            const now = new Date().getTime();  
-                            const isExpired = eventDate < now ;
-                            return (
-                              <>
-                                <span className={cn(
-                                  "px-2 py-1 rounded-full text-xs font-medium",
-                                  isExpired ? 'bg-red-100 dark:bg-red-900/30 text-red-600' :
-                                  ticket.status === 'valid' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
-                                  ticket.status === 'used' ? 'bg-slate-100 dark:bg-slate-800 text-slate-500' :
-                                  ticket.status === 'transferred' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' :
-                                  'bg-red-100 dark:bg-red-900/30 text-red-600'
-                                )}>
-                                  {isExpired ? 'expired' : 'upcoming'}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-semibold text-slate-800 dark:text-white mb-1 line-clamp-1">
+                                {ticket.event_title}
+                              </h3>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">
+                                {ticket.ticket_type?.name || 'Standard Entry'}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {formatDate(ticket.event_date)}
                                 </span>
-                                
-                              </>
-                            );
-                          })()}
+                                {ticket.event_location && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    {ticket.event_location}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-slate-400" />
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-medium", statusInfo.badgeClass)}>
+                              {statusInfo.label}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         </main>
       </div>
 
+      {/* TICKET DETAIL MODAL */}
       {showDetailModal && selectedTicket && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden">
@@ -267,10 +311,11 @@ export function MyTickets() {
               </button>
             </div>
             
-            <div className="p-4 space-y-4">
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 text-center">
+            <div className="p-4 space-y-5">
+              {/* Image & QR Banner */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 text-center border border-slate-100 dark:border-slate-800">
                 {selectedTicket.qr_code ? (
-                  <div className="inline-block p-2 bg-white rounded-lg">
+                  <div className="inline-block p-3 bg-white rounded-xl shadow-sm">
                     <QRCode 
                       value={selectedTicket.qr_code} 
                       size={160}
@@ -278,81 +323,85 @@ export function MyTickets() {
                     />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 mx-auto mb-2 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto mb-2 bg-sky-100 dark:bg-sky-900/30 rounded-full flex items-center justify-center">
                     <Ticket className="w-8 h-8 text-sky-500" />
                   </div>
                 )}
-                <p className="font-mono text-sm text-slate-500 mt-2">{selectedTicket.qr_code}</p>
+                <p className="text-xs text-slate-400 mt-2">Scan QR code at event entrance</p>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between">
+              {/* Unique Ticket ID with Copy */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-slate-400 font-medium">Ticket ID</p>
+                  <p className="font-mono text-sm font-semibold text-slate-800 dark:text-white truncate">
+                    {selectedTicket.id}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleCopyId(selectedTicket.id)}
+                  className="flex items-center gap-1.5 text-xs h-8 px-2.5 shrink-0"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                </Button>
+              </div>
+
+              {/* Details List */}
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/50">
                   <span className="text-slate-500 dark:text-slate-400">Event</span>
-                  <span className="font-medium text-slate-800 dark:text-white">
+                  <span className="font-medium text-slate-800 dark:text-white text-right max-w-[60%] truncate">
                     {selectedTicket.event_title}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/50">
                   <span className="text-slate-500 dark:text-slate-400">Ticket Type</span>
                   <span className="font-medium text-slate-800 dark:text-white">
-                    {selectedTicket.ticket_type?.name || 'Free Entry'}
+                    {selectedTicket.ticket_type?.name || 'Standard Entry'}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/50">
                   <span className="text-slate-500 dark:text-slate-400">Date</span>
                   <span className="font-medium text-slate-800 dark:text-white">
                     {formatDate(selectedTicket.event_date)}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Location</span>
-                  <span className="font-medium text-slate-800 dark:text-white">
-                    {selectedTicket.event_location}
-                  </span>
-                </div>
-                <div className="flex justify-between">
+                {selectedTicket.event_location && (
+                  <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/50">
+                    <span className="text-slate-500 dark:text-slate-400">Location</span>
+                    <span className="font-medium text-slate-800 dark:text-white text-right max-w-[60%] truncate">
+                      {selectedTicket.event_location}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800/50">
                   <span className="text-slate-500 dark:text-slate-400">Status</span>
-                  {(() => {
-                    const eventDate = new Date(selectedTicket.event_date).getTime();
-                    const now = new Date().getTime();
-                    const isExpired = eventDate < now ;
-                    return (
-                      <span className={cn(
-                        "font-medium",
-                        isExpired ? 'text-red-500' :
-                        selectedTicket.status === 'valid' ? 'text-green-500' :
-                        selectedTicket.status === 'used' ? 'text-slate-500' :
-                        selectedTicket.status === 'transferred' ? 'text-blue-500' :
-                        'text-red-500'
-                      )}>
-                        {isExpired ? 'expired' : selectedTicket.status}
-                      </span>
-                    );
-                  })()}
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Purchased</span>
-                  <span className="font-medium text-slate-800 dark:text-white">
-                    {formatDate(selectedTicket.created_at)}
+                  <span className={cn("font-medium", getTicketStatusInfo(selectedTicket).textClass)}>
+                    {getTicketStatusInfo(selectedTicket).label}
                   </span>
                 </div>
+                {selectedTicket.created_at && (
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500 dark:text-slate-400">Purchased On</span>
+                    <span className="font-medium text-slate-800 dark:text-white">
+                      {formatDate(selectedTicket.created_at)}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {selectedTicket.status === 'valid' && (
-                <div className="flex gap-2 pt-4">
+              {/* Actions */}
+              {getTicketStatusInfo(selectedTicket).isTransferable && (
+                <div className="pt-2">
                   <Button 
-                    onClick={() => handleTransfer(selectedTicket)}
-                    className="flex-1 bg-sky-500 hover:bg-sky-600"
+                    onClick={() => handleOpenTransferModal(selectedTicket)}
+                    className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-2.5 rounded-xl flex items-center justify-center gap-2"
                   >
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Transfer
-                  </Button>
-                  <Button 
-                    onClick={handleCancel}
-                    variant="destructive"
-                    className="flex-1"
-                  >
-                    Cancel
+                    <Share2 className="w-4 h-4" />
+                    Transfer Ticket
                   </Button>
                 </div>
               )}
@@ -361,10 +410,87 @@ export function MyTickets() {
         </div>
       )}
 
-      <PinComponent type="marketplace_transfer" value={{ ticket_id: selectedTicket?.id, recipient_email: transferEmail }} />
+      {/* TRANSFER TICKET MODAL */}
+      {showTransferModal && selectedTicket && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Transfer Ticket</h3>
+              <button 
+                onClick={() => setShowTransferModal(false)}
+                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Event:</span>
+                <span className="font-medium text-slate-700 dark:text-slate-200 truncate max-w-[200px]">
+                  {selectedTicket.event_title}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Ticket Type:</span>
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  {selectedTicket.ticket_type?.name || 'Standard Entry'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Ticket ID:</span>
+                <span className="font-mono font-medium text-slate-700 dark:text-slate-200 truncate max-w-[180px]">
+                  {selectedTicket.id}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                Recipient's BlueSimo Email
+              </label>
+              <input 
+                type="email"
+                value={transferEmail}
+                onChange={(e) => setTransferEmail(e.target.value)}
+                placeholder="Enter member email"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+              <p className="text-xs text-slate-400">
+                Enter the email address of the BlueSimo member you want to transfer this ticket to.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowTransferModal(false)}
+                className="flex-1 rounded-xl"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleProceedTransfer}
+                className="flex-1 bg-sky-500 hover:bg-sky-600 text-white rounded-xl"
+              >
+                Continue
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <PinComponent 
+        type="marketplace_transfer" 
+        value={{ ticket_id: selectedTicket?.id, recipient_email: transferEmail }} 
+      />
       <ToastComponent />
       {isOpen && (
-        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={txMessage} />
+        <TransactionModal 
+          isSuccess={txStatus} 
+          onClose={() => setIsOpen(false)} 
+          toastMessage={txMessage} 
+        />
       )}
     </div>
   );
