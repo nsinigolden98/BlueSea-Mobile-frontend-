@@ -715,7 +715,9 @@ export function Marketplace() {
         value={{ 
           event_id: selectedEvent?.id, 
           ticket_type_id: selectedTicketType || undefined,
-          ticket_type: selectedEvent?.ticket_types?.find(t => String(t.id) === String(selectedTicketType))?.name || (selectedEvent?.is_free ? 'Free Pass' : 'Ticket Purchase'), 
+          ticket_type: selectedEvent?.is_free 
+            ? "" 
+            : (selectedEvent?.ticket_types?.find(t => String(t.id) === String(selectedTicketType))?.name || ''), 
           quantity: quantity,
           attendance_mode: selectedAttendanceMode,
           event_mode: selectedEvent?.event_mode || 'offline'
