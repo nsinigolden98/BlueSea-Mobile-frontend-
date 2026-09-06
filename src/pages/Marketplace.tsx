@@ -97,7 +97,7 @@ export function Marketplace() {
       const res: AffiliateStatusResponse = await getRequest(ENDPOINTS.affiliate_status);
       if (res && (res.id || res.status || res.is_approved !== undefined)) {
         const isApproved = res.is_approved === true || res.status === 'approved';
-        return { registered: true, approved: isApproved, status: res.status || (isApproved ? 'approved' : 'pending'), affiliateName: res.affiliate_name };J
+        return { registered: true, approved: isApproved, status: res.status || (isApproved ? 'approved' : 'pending'), affiliateName: res.affiliate_name };
       }
       return { registered: false, approved: false, status: 'none' };
     } catch (err: any) {
