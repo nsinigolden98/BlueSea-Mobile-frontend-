@@ -316,6 +316,7 @@ export const ENDPOINTS = {
   set_transaction_pin_email:`${API_BASE}/accounts/transaction/pin/new/`,
   balance: `${API_BASE}/wallet/balance/`,
   fund: `${API_BASE}/transactions/fund-wallet/`,
+  requestVirtualAccount: `${API_BASE}/transactions/virtual-account/`,
   webhook: `${API_BASE}/transactions/webhook/paystack/`,
   history: `${API_BASE}/transactions/history/`,
   // withdraw: `${API_BASE}/transactions/withdraw/`,

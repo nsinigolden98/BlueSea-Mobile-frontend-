@@ -24,11 +24,11 @@ import {
 } from 'lucide-react';
 
 export function Wallet() {
-  const { user } = useAuth();
+  const { user, loading, isLoading } = useAuth() as { user: any; loading?: boolean; isLoading?: boolean };
   const navigate = useNavigate();
 
   // Type assertion for optional backend user properties
-  const userData = user as (Record<string, any> & typeof user) | null;
+  const userData = user as Record<string, any> | null;
 
   // --- Layout State ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,6 +43,15 @@ export function Wallet() {
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [savedCard, setSavedCard] = useState<{ name: string; number: string; expiry: string } | null>(null);
   const [newCard, setNewCard] = useState({ name: '', number: '', expiry: '', cvv: '' });
+
+  // Safe loading check utilizing LoadingSpinner
+  if (loading || isLoading) {
+    return (
+      <div className="h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
@@ -292,7 +301,11 @@ export function Wallet() {
                 <Button 
                   onClick={() => {
                     if (newCard.number && newCard.name) {
-                      setSavedCard({...newCard});
+                      setSavedCard({
+                        name: newCard.name,
+                        number: newCard.number,
+                        expiry: newCard.expiry,
+                      });
                       setNewCard({ name: '', number: '', expiry: '', cvv: '' });
                     }
                   }}
