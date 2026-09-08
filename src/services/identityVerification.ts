@@ -38,10 +38,10 @@ export const DEFAULT_TIER_LIMITS: TierLimit[] = [
   {
     tier: 'Tier 3 (Address)',
     maxWalletBalance: 'Unlimited',
-    dailyDeposit: '₦5,000,000',
-    singleDeposit: '₦1,000,000',
-    dailyWithdrawal: '₦1,000,000',
-    dailyTransfer: '₦5,000,000',
+    dailyDeposit: 'Unlimited',
+    singleDeposit: '₦5,000,000',
+    dailyWithdrawal: 'Unlimited',
+    dailyTransfer: 'Unlimited',
     ticketPaymentLimit: 'Unlimited',
   },
 ];
