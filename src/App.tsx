@@ -121,7 +121,7 @@ import {
 } from '@/pages/paylink';
 
 import { Withdraw } from '@/pages/Withdraw';
-
+import { Deposit } from '@/pages/Deposit';
 
 
 /**
@@ -232,6 +232,11 @@ function AppRoutes() {
           
             {/* Standalone Production Withdrawal Page */}
       <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
+      
+      // Inside your Router / AppRoutes definition:
+<Route path="/deposit"  element={
+    <ProtectedRoute> <Deposit />
+    </ProtectedRoute> } />
 
           <Route path="/transaction-history" element={<ProtectedRoute><TransactionFilterPage /></ProtectedRoute>} />
           <Route path="/airtime-buyback" element={<ProtectedRoute><AirtimeBuyback /></ProtectedRoute>} />

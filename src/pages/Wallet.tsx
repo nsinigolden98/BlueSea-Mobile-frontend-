@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Capacitor } from '@capacitor/core';
 import { 
   Sidebar, 
   Header, 
@@ -8,15 +7,13 @@ import {
   LoadingSpinner, 
   BalanceCard 
 } from '@/components/ui-custom';
-//import { BlueConnectPreview } from '@/components/blueconnect';
 import { InternalTransferModal } from '@/components/wallet/InternalTransferModal';
+import { DedicatedVirtualAccountModal } from '@/components/wallet/DedicatedVirtualAccountModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { postRequest, ENDPOINTS } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { useAuth } from '@/context/AuthContext';
-import { openMobilePaystackCheckout } from '@/services/paystackCheckout';
 
 import { 
   Landmark, 
@@ -36,16 +33,8 @@ export function Wallet() {
   // --- Layout State ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // --- Account State ---
-  const [accountLoading, setAccountLoading] = useState(false);
-  const [accountRequested, setAccountRequested] = useState(false);
-
-  // --- Deposit State ---
-  const [depositModalOpen, setDepositModalOpen] = useState(false);
-  const [depositAmount, setDepositAmount] = useState('');
-  const [depositError, setDepositError] = useState('');
-  const [depositing, setDepositing] = useState(false);
-  const [processing, setProcessing] = useState(false);
+  // --- Shared Virtual Account Modal State ---
+  const [virtualAccountModalOpen, setVirtualAccountModalOpen] = useState(false);
 
   // --- Internal Transfer Modal Toggle ---
   const [transferOpen, setTransferOpen] = useState(false);
@@ -54,74 +43,6 @@ export function Wallet() {
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [savedCard, setSavedCard] = useState<{ name: string; number: string; expiry: string } | null>(null);
   const [newCard, setNewCard] = useState({ name: '', number: '', expiry: '', cvv: '' });
-
-  const handleRequestAccount = () => {
-    setAccountLoading(true);
-    setTimeout(() => {
-      setAccountLoading(false);
-      setAccountRequested(true);
-    }, 1500);
-  };
-
-  const handleDeposit = () => {
-    setDepositModalOpen(true);
-    setDepositAmount('');
-    setDepositError('');
-  };
-
-  const handleFund = async () => {
-    const amount = Number(depositAmount.replace(/,/g, ''));
-    if (amount < 100) {
-      setDepositError('Amount must be more than ₦100.00');
-      return;
-    }
-    setDepositing(true);
-    setDepositError('');
-    setProcessing(true);
-    try {
-      const response = await postRequest(ENDPOINTS.fund, { amount });
-      if (response.success && response.authorization_url) {
-        if (Capacitor.isNativePlatform()) {
-          setProcessing(false);
-          setDepositing(false);
-          setDepositModalOpen(false);
-
-          await openMobilePaystackCheckout(response.authorization_url);
-
-          // Safely attempt user state refresh if supported by AuthContext
-          const authCtx = user as any;
-          const refreshFn = authCtx?.refreshUser || authCtx?.checkAuth || authCtx?.fetchUserData;
-          if (typeof refreshFn === 'function') {
-            try {
-              await refreshFn();
-            } catch (err) {
-              console.error('Error refreshing user state after checkout:', err);
-            }
-          }
-        } else {
-          setProcessing(false);
-          window.location.href = response.authorization_url;
-        }
-      } else {
-        setProcessing(false);
-        setDepositing(false);
-        setDepositError('Wallet funding error. Please try again.');
-      }
-    } catch (error) {
-      console.log(error);
-      setProcessing(false);
-      setDepositing(false);
-      setDepositError('Wallet funding error. Please try again.');
-    }
-  };
-
-  const handleCancelDeposit = () => {
-    setDepositModalOpen(false);
-    setDepositAmount('');
-    setDepositError('');
-    setDepositing(false);
-    setProcessing(false);
-  };
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
@@ -162,7 +83,7 @@ export function Wallet() {
               </div>
               <BalanceCard
                 showActions={true}
-                onDeposit={handleDeposit}
+                onDeposit={() => navigate('/deposit')}
                 onWithdraw={() => navigate('/withdraw')}
                 className="h-full border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden"
               />
@@ -180,16 +101,14 @@ export function Wallet() {
                 <span className="text-[10px] font-bold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-full">Automated</span>
               </div>
               
-              {accountRequested ? (
-                <div className="text-center p-3 bg-sky-500/5 border border-sky-500/10 rounded-xl animate-pulse">
-                  <p className="text-sky-500 font-bold text-xs">Account Coming Soon</p>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-wider">Processing Request</p>
-                </div>
-              ) : (userData?.account_number || userData?.bank_name) ? (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-white/5">
+              {(userData?.account_number || userData?.bank_name) ? (
+                <div 
+                  onClick={() => setVirtualAccountModalOpen(true)}
+                  className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-white/5 cursor-pointer hover:border-sky-500/30 transition-all"
+                >
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Bank Name</p>
-                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{userData?.bank_name || 'Wema Bank'}</p>
+                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{userData?.bank_name || '—'}</p>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
@@ -207,11 +126,10 @@ export function Wallet() {
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Generate dedicated account details for instant automated funding</p>
                   </div>
                   <Button 
-                    onClick={handleRequestAccount}
-                    disabled={accountLoading}
-                    className="shrink-0 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-9 px-4 text-[11px] font-bold border border-slate-200 dark:border-white/10 shadow-xs transition-all active:scale-[0.98]"
+                    onClick={() => setVirtualAccountModalOpen(true)}
+                    className="shrink-0 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-9 px-4 text-[11px] font-bold border border-slate-200 dark:border-white/10 shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                   >
-                   {accountLoading ? <LoadingSpinner size="sm" /> : 'Request Account'}
+                   View Account
                   </Button>
                 </div>
               )}
@@ -223,7 +141,7 @@ export function Wallet() {
               className="cursor-pointer transition-transform active:scale-[0.98] w-full max-w-full overflow-hidden"
             >
               <div className="scale-[0.99] md:scale-100 origin-center">
-                {/* <BlueConnectPreview /> */}
+                {/* Preview component */}
               </div>
             </div>
             
@@ -271,6 +189,13 @@ export function Wallet() {
           <MobileBottomNavigation />
         </div>
       </div>
+
+      {/* --- SHARED DEDICATED VIRTUAL ACCOUNT MODAL --- */}
+      <DedicatedVirtualAccountModal
+        isOpen={virtualAccountModalOpen}
+        onClose={() => setVirtualAccountModalOpen(false)}
+        userData={userData}
+      />
 
       {/* --- REUSABLE INTERNAL TRANSFER MODAL --- */}
       <InternalTransferModal 
@@ -376,57 +301,6 @@ export function Wallet() {
                   Link Card
                 </Button>
               </div>
-            )}
-          </div>
-        </div>
-      )}
-
-{/* Deposit Modal */}
-      {depositModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl bg-slate-950/40">
-          <div className="absolute inset-0" onClick={() => !processing && setDepositModalOpen(false)} />
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[3rem] p-10 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
-            {processing ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-6">
-                <LoadingSpinner size="lg" text="Connecting to Secure Gateway..." />
-              </div>
-            ) : (
-              <>
-                <header className="mb-10 text-center">
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Add Funds</h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Instant Wallet Funding</p>
-                </header>
-                <div className="space-y-8">
-                  <div className="relative group">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 absolute left-8 top-4 z-10">Amount to Fund</label>
-                    <span className="absolute left-8 bottom-6 text-3xl font-black text-slate-300 group-focus-within:text-sky-500 transition-colors">₦</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={depositAmount}
-                      onChange={(e) => {
-                        setDepositAmount(e.target.value.replace(/\D/g, ''));
-                        setDepositError('');
-                      }}
-                      placeholder="0.00"
-                      className="w-full pl-16 pr-8 pt-12 pb-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none text-4xl font-black text-slate-900 dark:text-white shadow-inner"
-                    />
-                    {depositError && <p className="mt-3 text-xs text-red-500 font-black px-6 animate-bounce">{depositError}</p>}
-                  </div>
-                  <div className="flex flex-col gap-4 pt-4">
-                    <Button 
-                      className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-[1.5rem] h-16 text-lg font-black shadow-xl shadow-sky-500/20 active:scale-95 transition-all"
-                      onClick={handleFund}
-                      disabled={depositing || !depositAmount}
-                    >
-                      {depositing ? <LoadingSpinner size="sm" /> : 'Proceed to Checkout'}
-                    </Button>
-                    {!depositing && (
-                      <button onClick={handleCancelDeposit} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[10px] font-black uppercase tracking-[0.3em] py-3 transition-colors">Cancel</button>
-                    )}
-                  </div>
-                </div>
-              </>
             )}
           </div>
         </div>
