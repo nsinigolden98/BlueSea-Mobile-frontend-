@@ -28,7 +28,7 @@ export function Deposit() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const userData = user as (Record<string, any> & typeof user) | null;
+  const userData = user as any;
 
   // Layout State
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -440,7 +440,7 @@ export function Deposit() {
           </div>
         </main>
 
-<div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+   <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
           <MobileBottomNavigation />
         </div>
       </div>
