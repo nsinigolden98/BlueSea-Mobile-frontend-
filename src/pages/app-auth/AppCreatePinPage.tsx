@@ -6,8 +6,8 @@ import { AppPinInput } from '../../components/app-auth/AppPinInput';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
 import { postRequest, ENDPOINTS } from '@/types';
 import { useAuth } from '@/context/AuthContext';
-import { makeTransactionPin } from '@/lib/security/pinEncryption';
 import { clearDashboardReadinessCache } from '@/components/ui-custom/DashboardAccessGuard';
+import { makeTransactionPin } from '@/lib/security/pinEncryption';
 
 export const AppCreatePinPage: React.FC = () => {
   const [step, setStep] = useState<'create' | 'confirm'>('create');
@@ -15,24 +15,29 @@ export const AppCreatePinPage: React.FC = () => {
   const [currentPin, setCurrentPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
 
   const handlePinChange = (pin: string) => {
     setCurrentPin(pin);
-    if (error) setError(null);
+
+    if (error) {
+      setError(null);
+    }
   };
 
   const handlePinSubmit = async (pinToSubmit?: string) => {
     const pin = pinToSubmit || currentPin;
 
-    if (pin.length < 4) {
+    if (!/^\d{4}$/.test(pin)) {
       setError('Please enter a complete 4-digit PIN.');
       return;
     }
 
     setError(null);
 
+    // STEP 1: First PIN entry
     if (step === 'create') {
       setFirstPin(pin);
       setCurrentPin('');
@@ -40,6 +45,7 @@ export const AppCreatePinPage: React.FC = () => {
       return;
     }
 
+    // STEP 2: Confirm PIN
     if (pin !== firstPin) {
       setError('PINs do not match. Please try again.');
       setStep('create');
@@ -49,87 +55,164 @@ export const AppCreatePinPage: React.FC = () => {
     }
 
     try {
-  setLoading(true);
+      setLoading(true);
 
-  const encryptedPin = makeTransactionPin(firstPin);
-  const encryptedConfirmPin = makeTransactionPin(pin);
+      /*
+       * Use the exact same PIN encryption mechanism already
+       * used by the existing PIN modal.
+       */
+      const encryptedPin = makeTransactionPin(firstPin);
+      const encryptedConfirmPin = makeTransactionPin(pin);
 
-  const response = await postRequest(ENDPOINTS.pin_set, {
-    pin: encryptedPin,
-    confirm_pin: encryptedConfirmPin,
-  });
+      const response = await postRequest(ENDPOINTS.pin_set, {
+        pin: encryptedPin,
+        confirm_pin: encryptedConfirmPin,
+      });
 
-  if (
-    response?.state === false ||
-    response?.status === false ||
-    response?.success === false
-  ) {
-    setError(response?.message || 'Failed to set transaction PIN.');
-    setStep('create');
-    setFirstPin('');
-    setCurrentPin('');
-    return;
-  }
+      /*
+       * IMPORTANT:
+       *
+       * The backend can return:
+       *
+       * {
+       *   message: "Transaction pin is already set",
+       *   state: false
+       * }
+       *
+       * This is NOT a real failure when the user's profile
+       * confirms pin_is_set === true.
+       */
+      const message =
+        typeof response?.message === 'string'
+          ? response.message.trim().toLowerCase()
+          : '';
 
-  await refreshUser();
-  clearDashboardReadinessCache();
-  navigate('/dashboard', { replace: true });
-} catch (err: any) {
-  setError(
-    err?.response?.data?.message ||
-    err?.response?.data?.error ||
-    err?.message ||
-    'Failed to set transaction PIN.'
-  );
-  setStep('create');
-  setFirstPin('');
-  setCurrentPin('');
-} finally {
-  setLoading(false);
-}
+      const pinAlreadySet =
+        message === 'transaction pin is already set';
+
+      if (pinAlreadySet) {
+        /*
+         * Do not ask the user to create another PIN.
+         *
+         * Refresh the actual backend profile and verify that
+         * the backend says the PIN exists.
+         */
+        const refreshedUser = await refreshUser();
+
+        /*
+         * refreshUser updates AuthContext, but we also use
+         * the current backend response/state to determine
+         * whether we can safely continue.
+         *
+         * If refreshUser does not return the user object,
+         * the existing authenticated state will still be
+         * refreshed. The dashboard guard will perform its
+         * authoritative readiness check.
+         */
+        clearDashboardReadinessCache();
+
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+
+      /*
+       * A normal state:false / status:false / success:false
+       * response is still a genuine failure.
+       */
+      if (
+        response?.state === false ||
+        response?.status === false ||
+        response?.success === false
+      ) {
+        setError(
+          response?.message || 'Failed to set transaction PIN.'
+        );
+
+        setStep('create');
+        setFirstPin('');
+        setCurrentPin('');
+        return;
+      }
+
+      /*
+       * PIN was successfully created.
+       *
+       * Refresh the authenticated user so pin_is_set becomes
+       * true in the frontend state before entering dashboard.
+       */
+      await refreshUser();
+
+      /*
+       * The previous readiness result may have said
+       * pin_is_set === false, so invalidate it.
+       */
+      clearDashboardReadinessCache();
+
+      navigate('/dashboard', { replace: true });
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'Failed to set transaction PIN.';
+
+      /*
+       * Some API wrappers may throw when the backend returns
+       * the "already set" response instead of returning it.
+       *
+       * Handle that case as well.
+       */
+      if (
+        typeof errorMessage === 'string' &&
+        errorMessage.trim().toLowerCase() ===
+          'transaction pin is already set'
+      ) {
+        await refreshUser();
+        clearDashboardReadinessCache();
+        navigate('/dashboard', { replace: true });
+        return;
+      }
+
+      setError(errorMessage);
+      setStep('create');
+      setFirstPin('');
+      setCurrentPin('');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <AppAuthLayout>
-      <div className="flex-1 flex flex-col justify-between">
-        <div>
-          <AppAuthHeader
-            title={step === 'create' ? 'Create Transaction PIN' : 'Confirm Transaction PIN'}
-            subtitle={
-              step === 'create'
-                ? 'Set a secure 4-digit PIN for authorizing transactions'
-                : 'Re-enter your 4-digit PIN to confirm'
-            }
-            showBack={false}
-          />
+      <AppAuthHeader
+        title="Create Transaction PIN"
+        subtitle={
+          step === 'create'
+            ? 'Create a 4-digit PIN to secure your transactions.'
+            : 'Confirm your 4-digit transaction PIN.'
+        }
+      />
 
-          <AppPinInput
-            key={step + (error ? '-err' : '')}
-            length={4}
-            onComplete={(pin) => {
-              handlePinChange(pin);
-              handlePinSubmit(pin);
-            }}
-            error={error}
-          />
-        </div>
+      <AppPinInput
+        value={currentPin}
+        onChange={handlePinChange}
+        onComplete={handlePinSubmit}
+        disabled={loading}
+      />
 
-        {loading && (
-          <div className="text-center text-xs text-[#00D1FF] font-medium py-2">
-            Setting transaction PIN...
-          </div>
-        )}
+      {error && (
+        <p className="mt-3 text-sm text-red-500 text-center">
+          {error}
+        </p>
+      )}
 
-        <div className="mt-8 space-y-3">
-          <AppAuthButton
-            onClick={() => handlePinSubmit()}
-            disabled={currentPin.length < 4 || loading}
-            loading={loading}
-          >
-            {step === 'create' ? 'Continue' : 'Confirm & Save PIN'}
-          </AppAuthButton>
-        </div>
-      </div>
+      <AppAuthButton
+        onClick={() => handlePinSubmit()}
+        loading={loading}
+        disabled={currentPin.length !== 4}
+      >
+        {step === 'create' ? 'Continue' : 'Create PIN'}
+      </AppAuthButton>
     </AppAuthLayout>
   );
 };
