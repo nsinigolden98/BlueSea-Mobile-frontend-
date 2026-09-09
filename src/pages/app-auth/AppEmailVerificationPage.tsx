@@ -46,8 +46,8 @@ export const AppEmailVerificationPage: React.FC = () => {
           await refreshUser();
         }
 
-        // Proceed to Username creation step
-        navigate('/app-auth/username', { state: { email: email.trim() } });
+        // Email verification is complete; continue to the signup success page.
+        navigate('/app-auth/success', { state: { email: email.trim() }, replace: true });
       } else {
         setError(response?.message || 'Invalid or expired OTP code.');
       }

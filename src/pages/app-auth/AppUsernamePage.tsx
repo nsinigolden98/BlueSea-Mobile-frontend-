@@ -5,10 +5,13 @@ import { AppAuthInput } from '@/components/app-auth/AppAuthInput';
 import { AppAuthButton } from '@/components/app-auth/AppAuthButton';
 import { Toast, Loader } from '@/components/ui-custom';
 import { patchRequest, ENDPOINTS } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import { clearDashboardReadinessCache } from '@/components/ui-custom/DashboardAccessGuard';
 
 export function AppUsernamePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { refreshUser } = useAuth();
 
   const email = location.state?.email || '';
   const [username, setUsername] = useState('');
@@ -27,7 +30,6 @@ export function AppUsernamePage() {
 
     const formattedUsername = trimmed.startsWith('@') ? trimmed : `@${trimmed}`;
 
-    // Validation: starts with @, 4–30 characters, lowercase letters, numbers, underscores, or hyphens
     const usernameRegex = /^@[a-z0-9_-]{3,29}$/;
     if (!usernameRegex.test(formattedUsername)) {
       showToast('Username must be 4–30 characters long and use lowercase letters, numbers, underscores, or hyphens');
@@ -38,22 +40,27 @@ export function AppUsernamePage() {
 
     try {
       const response = await patchRequest(ENDPOINTS.user, {
-        username: formattedUsername,
+        nickname: formattedUsername,
       });
 
-      if (response?.state || response?.success || response?.id || response?.email) {
-        showToast('Username set successfully!');
+      if (response?.state === false || response?.success === false) {
+        throw new Error(response?.message || 'Failed to set username.');
       }
-      navigate('/app-auth/create-pin', { state: { email, username: formattedUsername } });
+
+      await refreshUser();
+      clearDashboardReadinessCache();
+      showToast('Username set successfully!');
+      navigate('/app-auth/create-pin', { state: { email, username: formattedUsername }, replace: true });
     } catch (err: any) {
-      navigate('/app-auth/create-pin', { state: { email, username: formattedUsername } });
+      showToast(
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'Failed to set username. Please try again.'
+      );
     } finally {
       hideLoader();
     }
-  };
-
-  const handleSkip = () => {
-    navigate('/app-auth/create-pin', { state: { email } });
   };
 
   return (
@@ -66,7 +73,7 @@ export function AppUsernamePage() {
           Choose a Username
         </h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm text-center mb-6">
-          This will be your unique identifier on BlueSea Mobile (Optional)
+          Choose a username to complete your account setup.
         </p>
 
         <form onSubmit={handleCreateUsername} className="space-y-4">
@@ -78,20 +85,9 @@ export function AppUsernamePage() {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
           />
 
-          <div className="space-y-3 pt-2">
-            <AppAuthButton type="submit" className="w-full">
-              Continue
-            </AppAuthButton>
-
-            <AppAuthButton
-              type="button"
-              variant="secondary"
-              onClick={handleSkip}
-              className="w-full"
-            >
-              Skip for now
-            </AppAuthButton>
-          </div>
+          <AppAuthButton type="submit" className="w-full">
+            Continue
+          </AppAuthButton>
         </form>
       </div>
     </AppAuthLayout>

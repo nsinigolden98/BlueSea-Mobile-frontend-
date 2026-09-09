@@ -44,7 +44,7 @@ export const AppOtpPage: React.FC = () => {
           await refreshUser();
         }
 
-        navigate('/app-auth/username', { state: { email: email.trim() } });
+        navigate('/app-auth/success', { state: { email: email.trim() }, replace: true });
       } else {
         setError(response?.message || 'Invalid or expired OTP code.');
       }

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
 import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
 import { AppPinInput } from '../../components/app-auth/AppPinInput';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
 import { postRequest, ENDPOINTS } from '@/types';
+import { useAuth } from '@/context/AuthContext';
+import { clearDashboardReadinessCache } from '@/components/ui-custom/DashboardAccessGuard';
 
 export const AppCreatePinPage: React.FC = () => {
   const [step, setStep] = useState<'create' | 'confirm'>('create');
@@ -13,7 +15,7 @@ export const AppCreatePinPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
+  const { refreshUser } = useAuth();
 
   const handlePinChange = (pin: string) => {
     setCurrentPin(pin);
@@ -30,7 +32,6 @@ export const AppCreatePinPage: React.FC = () => {
 
     setError(null);
 
-    // Step 1: Store initial PIN entry and prompt for confirmation
     if (step === 'create') {
       setFirstPin(pin);
       setCurrentPin('');
@@ -38,7 +39,6 @@ export const AppCreatePinPage: React.FC = () => {
       return;
     }
 
-    // Step 2: Validate PIN match
     if (pin !== firstPin) {
       setError('PINs do not match. Please try again.');
       setStep('create');
@@ -50,22 +50,22 @@ export const AppCreatePinPage: React.FC = () => {
     try {
       setLoading(true);
 
-      // Backend expects both pin and confirm_pin parameters
       const response = await postRequest(ENDPOINTS.pin_set, {
         pin: firstPin,
         confirm_pin: pin,
       });
 
-      if (response?.state !== false && response?.status !== false) {
-        navigate('/app-auth/success', { 
-          state: { ...location.state, pinSet: true } 
-        });
-      } else {
+      if (response?.state === false || response?.status === false || response?.success === false) {
         setError(response?.message || 'Failed to set transaction PIN.');
         setStep('create');
         setFirstPin('');
         setCurrentPin('');
+        return;
       }
+
+      await refreshUser();
+      clearDashboardReadinessCache();
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||

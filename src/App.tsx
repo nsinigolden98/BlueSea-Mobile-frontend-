@@ -71,6 +71,7 @@ import RootRoute from './components/ui-custom/RootRoute';
 import './App.css';
 import { useAuth } from '@/context/AuthContext';
 import { AuthLoader } from '@/components/ui-custom';
+import { DashboardAccessGuard } from '@/components/ui-custom/DashboardAccessGuard';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
@@ -188,9 +189,9 @@ function AppRoutes() {
         <Route path="/app-auth/basic-details" element={<PublicRoute><AppBasicDetailsPage /></PublicRoute>} />
         <Route path="/app-auth/verify-email" element={<PublicRoute><AppEmailVerificationPage /></PublicRoute>} />
         <Route path="/app-auth/verify-otp" element={<PublicRoute><AppOtpPage /></PublicRoute>} />
-        <Route path="/app-auth/create-pin" element={<PublicRoute><AppCreatePinPage /></PublicRoute>} />
+        <Route path="/app-auth/create-pin" element={<ProtectedRoute><AppCreatePinPage /></ProtectedRoute>} />
         <Route path="/app-auth/forgot-password" element={<PublicRoute><AppForgotPasswordPage /></PublicRoute>} />
-        <Route path="/app-auth/username" element={<PublicRoute><AppUsernamePage /></PublicRoute>} />
+        <Route path="/app-auth/username" element={<ProtectedRoute><AppUsernamePage /></ProtectedRoute>} />
         <Route path="/app-auth/success" element={<PublicRoute><AppAuthSuccessPage /></PublicRoute>} />
 
         {/* Public event sharing */}
@@ -212,7 +213,7 @@ function AppRoutes() {
             3. AUTHENTICATED ROUTES (UNIVERSAL PULL-TO-REFRESH ENABLED)
            ========================================= */}
         <Route element={<AuthenticatedLayout />}>
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardAccessGuard><Dashboard /></DashboardAccessGuard></ProtectedRoute>} />
           <Route path="/blueconnect" element={<ProtectedRoute><BlueConnectPage /></ProtectedRoute>} />
           <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
           <Route path="/airtime" element={<ProtectedRoute><Airtime /></ProtectedRoute>} />
