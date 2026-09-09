@@ -9,16 +9,22 @@ type DashboardReadiness = {
   pinSet: boolean;
 };
 
-// The readiness result is intentionally kept in memory.
-// It is checked again when the app/website is opened fresh, but normal
-// Dashboard -> other page -> Dashboard navigation does not cause another API call.
 const readinessCache = new Map<string, DashboardReadiness>();
+
+// This key is intentionally session-scoped. It only remembers that the user
+// skipped the optional username during the current authenticated login session.
+// The backend remains the source of truth for the actual username/PIN state.
+const USERNAME_SKIP_KEY = 'bluesea_username_skipped_token';
 
 export function clearDashboardReadinessCache() {
   readinessCache.clear();
 }
 
-export function DashboardAccessGuard({ children }: { children: React.ReactNode }) {
+export function DashboardAccessGuard({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { isAuthenticated, loading } = useAuth();
   const [readiness, setReadiness] = useState<DashboardReadiness | null>(null);
   const [checking, setChecking] = useState(true);
@@ -31,7 +37,10 @@ export function DashboardAccessGuard({ children }: { children: React.ReactNode }
       if (loading) return;
 
       if (!isAuthenticated) {
-        if (!cancelled) setChecking(false);
+        if (!cancelled) {
+          setReadiness(null);
+          setChecking(false);
+        }
         return;
       }
 
@@ -46,6 +55,7 @@ export function DashboardAccessGuard({ children }: { children: React.ReactNode }
       }
 
       const cached = readinessCache.get(accessToken);
+
       if (cached) {
         if (!cancelled) {
           setReadiness(cached);
@@ -58,8 +68,10 @@ export function DashboardAccessGuard({ children }: { children: React.ReactNode }
         const profile = await getRequest(ENDPOINTS.user);
 
         const nickname = profile?.preference?.nickname;
+
         const result: DashboardReadiness = {
-          nicknameSet: typeof nickname === 'string' && nickname.trim().length > 0,
+          nicknameSet:
+            typeof nickname === 'string' && nickname.trim().length > 0,
           pinSet: profile?.pin_is_set === true,
         };
 
@@ -68,9 +80,14 @@ export function DashboardAccessGuard({ children }: { children: React.ReactNode }
         if (!cancelled) {
           setReadiness(result);
           setChecking(false);
+          setError(false);
         }
       } catch (requestError) {
-        console.error('Failed to check dashboard account readiness:', requestError);
+        console.error(
+          'Failed to check dashboard account readiness:',
+          requestError
+        );
+
         if (!cancelled) {
           setChecking(false);
           setError(true);
@@ -97,13 +114,46 @@ export function DashboardAccessGuard({ children }: { children: React.ReactNode }
     return <Navigate to="/login" replace />;
   }
 
-  if (!readiness.nicknameSet) {
-    return <Navigate to="/app-auth/username" replace />;
-  }
+  const accessToken = getCookie('access_token') || '';
+  const usernameWasSkipped =
+    !!accessToken &&
+    sessionStorage.getItem(USERNAME_SKIP_KEY) === accessToken;
 
+  /*
+   * PIN is mandatory.
+   *
+   * If PIN is missing, always send the user to PIN setup.
+   * Username skip never bypasses the PIN requirement.
+   */
   if (!readiness.pinSet) {
     return <Navigate to="/app-auth/create-pin" replace />;
   }
 
-  return <>{children}</>;
+  /*
+   * PIN exists.
+   *
+   * If username exists, the account is fully ready.
+   */
+  if (readiness.nicknameSet) {
+    return <>{children}</>;
+  }
+
+  /*
+   * Username is optional.
+   *
+   * If the user skipped username during this authenticated session,
+   * allow Dashboard access because the mandatory PIN is already set.
+   *
+   * sessionStorage is intentionally used here so the skip does NOT become
+   * a permanent account-completion flag. A new login/session can check again.
+   */
+  if (usernameWasSkipped) {
+    return <>{children}</>;
+  }
+
+  /*
+   * Username is missing and has not been skipped in this session.
+   * Send the user through the optional username step.
+   */
+  return <Navigate to="/app-auth/username" replace />;
 }
