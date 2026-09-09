@@ -6,6 +6,7 @@ import { AppPinInput } from '../../components/app-auth/AppPinInput';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
 import { postRequest, ENDPOINTS } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { makeTransactionPin } from '@/lib/security/pinEncryption';
 import { clearDashboardReadinessCache } from '@/components/ui-custom/DashboardAccessGuard';
 
 export const AppCreatePinPage: React.FC = () => {
@@ -48,37 +49,44 @@ export const AppCreatePinPage: React.FC = () => {
     }
 
     try {
-      setLoading(true);
+  setLoading(true);
 
-      const response = await postRequest(ENDPOINTS.pin_set, {
-        pin: firstPin,
-        confirm_pin: pin,
-      });
+  const encryptedPin = makeTransactionPin(firstPin);
+  const encryptedConfirmPin = makeTransactionPin(pin);
 
-      if (response?.state === false || response?.status === false || response?.success === false) {
-        setError(response?.message || 'Failed to set transaction PIN.');
-        setStep('create');
-        setFirstPin('');
-        setCurrentPin('');
-        return;
-      }
+  const response = await postRequest(ENDPOINTS.pin_set, {
+    pin: encryptedPin,
+    confirm_pin: encryptedConfirmPin,
+  });
 
-      await refreshUser();
-      clearDashboardReadinessCache();
-      navigate('/dashboard', { replace: true });
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
-        'Failed to set transaction PIN.'
-      );
-      setStep('create');
-      setFirstPin('');
-      setCurrentPin('');
-    } finally {
-      setLoading(false);
-    }
+  if (
+    response?.state === false ||
+    response?.status === false ||
+    response?.success === false
+  ) {
+    setError(response?.message || 'Failed to set transaction PIN.');
+    setStep('create');
+    setFirstPin('');
+    setCurrentPin('');
+    return;
+  }
+
+  await refreshUser();
+  clearDashboardReadinessCache();
+  navigate('/dashboard', { replace: true });
+} catch (err: any) {
+  setError(
+    err?.response?.data?.message ||
+    err?.response?.data?.error ||
+    err?.message ||
+    'Failed to set transaction PIN.'
+  );
+  setStep('create');
+  setFirstPin('');
+  setCurrentPin('');
+} finally {
+  setLoading(false);
+}
   };
 
   return (
