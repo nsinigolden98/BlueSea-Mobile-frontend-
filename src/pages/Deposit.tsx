@@ -359,7 +359,7 @@ export function Deposit() {
                       Complete your identity verification before requesting a dedicated virtual account.
                     </p>
                     <Button
-                      onClick={() => navigate('/identity-verification')}
+                      onClick={() => navigate('/identity-center')}
                       className="w-full bg-amber-500 hover:bg-amber-600 text-white h-11 rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <span>Complete Verification</span>
