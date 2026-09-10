@@ -117,6 +117,7 @@ export function Deposit() {
 
     // DVA creation requires the encrypted BVN and the customer's bank details.
     // Those details are collected only in the real backend flow in Identity Center.
+    setAccountLoading(true);
     navigate('/identity-center');
   };
 
@@ -367,7 +368,14 @@ export function Deposit() {
                   disabled={accountLoading}
                   className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-sm font-black shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  {accountLoading ? <LoadingSpinner size="sm" text="Processing..." /> : hasVirtualAccount ? 'View Account Details' : 'Request Dedicated Account'}
+                  {accountLoading ? (
+                    <LoadingSpinner size="sm" text="Opening Identity Center..." />
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <span>{hasVirtualAccount ? 'View Account Details' : 'Request Dedicated Account'}</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </span>
+                  )}
                 </Button>
               </div>
             )}
