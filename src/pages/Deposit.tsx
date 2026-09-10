@@ -45,14 +45,7 @@ export function Deposit() {
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [accountLoading, setAccountLoading] = useState(false);
 
-  // KYC verification check
-  const isKycComplete = Boolean(
-    userData?.is_verified ||
-    userData?.kyc_status === 'verified' ||
-    userData?.kyc_status === 'approved' ||
-    userData?.bvn
-  );
-
+  // Dedicated account state is backend-authoritative. Raw BVN presence is never treated as verification.
   const hasVirtualAccount = Boolean(userData?.account_number);
 
   // Calculation Utilities
@@ -117,33 +110,14 @@ export function Deposit() {
   };
 
   const handleVirtualAccountAction = async () => {
-    if (!isKycComplete) {
-      navigate('/identity-verification');
-      return;
-    }
-
     if (hasVirtualAccount) {
       setAccountModalOpen(true);
       return;
     }
 
-    // Request account using real backend endpoint if available
-    setAccountLoading(true);
-    try {
-      if (ENDPOINTS.requestVirtualAccount) {
-        await postRequest(ENDPOINTS.requestVirtualAccount, {});
-      }
-      const authCtx = user as any;
-      const refreshFn = authCtx?.refreshUser || authCtx?.checkAuth || authCtx?.fetchUserData;
-      if (typeof refreshFn === 'function') {
-        await refreshFn();
-      }
-    } catch (err) {
-      console.error('Account request failed:', err);
-    } finally {
-      setAccountLoading(false);
-      setAccountModalOpen(true);
-    }
+    // DVA creation requires the encrypted BVN and the customer's bank details.
+    // Those details are collected only in the real backend flow in Identity Center.
+    navigate('/identity-center');
   };
 
   return (
@@ -338,45 +312,28 @@ export function Deposit() {
             {selectedMethod === 'virtual_account' && (
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
                 <div>
-                  <h2 className="text-base font-black text-slate-900 dark:text-white">
-                    Dedicated Virtual Account
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Transfer money directly from any banking app
-                  </p>
+                  <h2 className="text-base font-black text-slate-900 dark:text-white">Dedicated Virtual Account</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Transfer money directly from any banking app</p>
                 </div>
 
-                {/* KYC / Eligibility Status Card */}
-                {!isKycComplete ? (
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 space-y-3">
+                {!hasVirtualAccount && (
+                  <div className="bg-sky-500/5 border border-sky-500/10 rounded-2xl p-4 space-y-3">
                     <div className="flex items-center gap-3">
-                      <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
-                      <h3 className="text-xs font-black text-slate-800 dark:text-slate-100">
-                        Identity Verification Required
-                      </h3>
+                      <ShieldAlert className="w-5 h-5 text-sky-500 shrink-0" />
+                      <h3 className="text-xs font-black text-slate-800 dark:text-slate-100">Dedicated Account Setup</h3>
                     </div>
                     <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                      Complete your identity verification before requesting a dedicated virtual account.
+                      Your Dedicated Virtual Account is created through the backend BVN verification flow. BVN verification is the required identity step for DVA setup.
                     </p>
-                    <Button
-                      onClick={() => navigate('/identity-center')}
-                      className="w-full bg-amber-500 hover:bg-amber-600 text-white h-11 rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <span>Complete Verification</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
                   </div>
-                ) : (
+                )}
+
+                {hasVirtualAccount && (
                   <>
-                    {/* Sample Calculator Preview */}
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">
-                        Estimated Transfer Calculator
-                      </label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Estimated Transfer Calculator</label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-black text-slate-400">
-                          ₦
-                        </span>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-black text-slate-400">₦</span>
                         <input
                           type="text"
                           inputMode="numeric"
@@ -390,51 +347,28 @@ export function Deposit() {
 
                     {numericAmount > 0 && (
                       <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 space-y-3">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-500 dark:text-slate-400 font-medium">
-                            Transfer amount
-                          </span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {formatNaira(numericAmount)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-500 dark:text-slate-400 font-medium">
-                            Processing fee (1.0%)
-                          </span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {formatNaira(virtualFee)}
-                          </span>
-                        </div>
-                        <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex justify-between items-center text-sm font-black">
-                          <span className="text-slate-900 dark:text-white">Total required transfer</span>
-                          <span className="text-sky-500">{formatNaira(virtualTotal)}</span>
-                        </div>
+                        <div className="flex justify-between items-center text-xs"><span className="text-slate-500 dark:text-slate-400 font-medium">Transfer amount</span><span className="font-bold text-slate-800 dark:text-slate-200">{formatNaira(numericAmount)}</span></div>
+                        <div className="flex justify-between items-center text-xs"><span className="text-slate-500 dark:text-slate-400 font-medium">Processing fee (1.0%)</span><span className="font-bold text-slate-800 dark:text-slate-200">{formatNaira(virtualFee)}</span></div>
+                        <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex justify-between items-center text-sm font-black"><span className="text-slate-900 dark:text-white">Total required transfer</span><span className="text-sky-500">{formatNaira(virtualTotal)}</span></div>
                       </div>
                     )}
-
-                    <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
-                      <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                        A 1% processing fee will be added to your deposit amount when the transfer is processed.
-                      </p>
-                    </div>
-
-                    <Button
-                      onClick={handleVirtualAccountAction}
-                      disabled={accountLoading}
-                      className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-sm font-black shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all cursor-pointer"
-                    >
-                      {accountLoading ? (
-                        <LoadingSpinner size="sm" text="Processing..." />
-                      ) : hasVirtualAccount ? (
-                        'View Account Details'
-                      ) : (
-                        'Request Dedicated Account'
-                      )}
-                    </Button>
                   </>
                 )}
+
+                <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    A 1% processing fee will be added to your deposit amount when the transfer is processed.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handleVirtualAccountAction}
+                  disabled={accountLoading}
+                  className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-sm font-black shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  {accountLoading ? <LoadingSpinner size="sm" text="Processing..." /> : hasVirtualAccount ? 'View Account Details' : 'Request Dedicated Account'}
+                </Button>
               </div>
             )}
           </div>

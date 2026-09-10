@@ -317,6 +317,7 @@ export const ENDPOINTS = {
   balance: `${API_BASE}/wallet/balance/`,
   fund: `${API_BASE}/transactions/fund-wallet/`,
   requestVirtualAccount: `${API_BASE}/transactions/virtual-account/`,
+  dvaAssign: `${API_BASE}/accounts/dva/assign/`,
   webhook: `${API_BASE}/transactions/webhook/paystack/`,
   history: `${API_BASE}/transactions/history/`,
   // withdraw: `${API_BASE}/transactions/withdraw/`,

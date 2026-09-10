@@ -30,6 +30,15 @@ export interface FinancialIdentityPayload {
   accountNumber: string;
 }
 
+export interface DvaAssignPayload {
+  first_name: string;
+  last_name: string;
+  account_number: string;
+  bank_code: string;
+  bvn: string;
+  phone?: string;
+}
+
 export interface VerificationHistoryItem {
   id: string;
   type: 'Phone Verification' | 'Financial Identity' | 'Residential Address';
