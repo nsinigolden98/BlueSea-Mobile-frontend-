@@ -277,18 +277,30 @@ export function Marketplace() {
     return minPrice === 0 ? 'Free' : `₦${minPrice.toLocaleString()}`;
   };
 
+  // Ticket selection logic for checkout payload
+  const selectedTicket = useMemo(() => {
+    if (!selectedEvent?.ticket_types) return null;
+    return selectedEvent.ticket_types.find(t => String(t.id) === String(selectedTicketType)) || null;
+  }, [selectedEvent, selectedTicketType]);
+
+  const isFreeTransaction = useMemo(() => {
+    if (!selectedEvent) return false;
+    if (selectedEvent.is_free) return true;
+    if (selectedTicket && Number(selectedTicket.price) === 0) return true;
+    return false;
+  }, [selectedEvent, selectedTicket]);
+
   const handlePurchase = async () => {
     if (!selectedEvent) return;
 
     let unitPrice = 0;
-    if (!selectedEvent.is_free) {
+    if (!isFreeTransaction) {
       if (selectedEvent.ticket_types && selectedEvent.ticket_types.length > 0) {
-        const tType = selectedEvent.ticket_types.find(t => String(t.id) === String(selectedTicketType));
-        if (!tType) {
+        if (!selectedTicket) {
           showToast('Please select a ticket type.');
           return;
         }
-        unitPrice = Number(tType.price) || 0;
+        unitPrice = Number(selectedTicket.price) || 0;
       }
     }
     const requiredTotal = unitPrice * quantity;
@@ -379,7 +391,6 @@ export function Marketplace() {
   };
 
   const handleCopyEventLink = async (eventId: string) => {
-   // const affiliateParam = affiliateId ? `&ref=${affiliateId}` : '';
     const link = `${window.location.origin}/marketplace?event=${eventId}`;
     try {
       await navigator.clipboard.writeText(link);
@@ -714,11 +725,11 @@ export function Marketplace() {
         type="marketplace" 
         value={{ 
           event_id: selectedEvent?.id, 
-          ticket_type_id: selectedTicketType || undefined,
-          ticket_type: selectedEvent?.is_free 
-            ? "" 
-            : (selectedEvent?.ticket_types?.find(t => String(t.id) === String(selectedTicketType))?.name || ''), 
+          ticket_type: isFreeTransaction ? null : (selectedTicket?.name || selectedTicketType || null), 
+          ticket_type_id: isFreeTransaction ? undefined : (selectedTicketType || undefined),
           quantity: quantity,
+          attendees: Array.isArray((selectedEvent as any)?.attendees) ? (selectedEvent as any).attendees : [],
+          affiliate_username: getAffiliateTracking()?.affiliate_id || null,
           attendance_mode: selectedAttendanceMode,
           event_mode: selectedEvent?.event_mode || 'offline'
         }} 
