@@ -318,6 +318,7 @@ export const ENDPOINTS = {
   fund: `${API_BASE}/transactions/fund-wallet/`,
   requestVirtualAccount: `${API_BASE}/transactions/virtual-account/`,
   dvaAssign: `${API_BASE}/accounts/dva/assign/`,
+  checkUserVerification: (email: string) => `${API_BASE}/user_preference/check/${encodeURIComponent(email)}/`,
   webhook: `${API_BASE}/transactions/webhook/paystack/`,
   history: `${API_BASE}/transactions/history/`,
   // withdraw: `${API_BASE}/transactions/withdraw/`,

@@ -95,36 +95,15 @@ export function Deposit() {
   // the fresh user/preference request is loading or if it has no DVA fields.
   const accountData = backendUserData || userData;
 
-  // A Dedicated Virtual Account exists only when the backend profile actually
-  // returns an account number for this authenticated user. Raw BVN is never
-  // treated as proof of DVA creation.
-  const hasVirtualAccount = Boolean(accountData?.account_number);
-
-  // If the backend exposes a verification status/message on the user preference
-  // response, use it as-is. No verification state is invented on the client.
-  const backendVerificationStatus = String(
-    accountData?.verification_status ??
-    accountData?.verificationStatus ??
-    accountData?.dva_status ??
-    accountData?.dvaStatus ??
-    accountData?.status ??
-    ''
-  ).toLowerCase();
+  // The backend profile is the source of truth. DVA data lives under
+  // has_DVA/dva_account, so an existing account must be shown without
+  // requiring another verification check.
+  const dvaAccount = accountData?.dva_account ?? null;
+  const hasVirtualAccount = accountData?.has_DVA === true && Boolean(dvaAccount?.account_number);
 
   const backendVerificationMessage =
-    accountData?.verification_message ||
-    accountData?.verificationMessage ||
-    accountData?.dva_message ||
-    accountData?.dvaMessage ||
     accountData?.message ||
-    '';
-
-  const isVerificationPending = !hasVirtualAccount && (
-    backendVerificationStatus === 'pending' ||
-    backendVerificationStatus === 'processing' ||
-    backendVerificationStatus === 'in_progress' ||
-    backendVerificationStatus === 'in-progress'
-  );
+    'Your verification has been checked, but the backend has not returned a Dedicated Virtual Account yet.';
 
 
   // Calculation Utilities
@@ -190,31 +169,64 @@ export function Deposit() {
 
   const handleVirtualAccountAction = async () => {
     setDepositError('');
-
-    if (hasVirtualAccount) {
-      setAccountModalOpen(true);
-      return;
-    }
-
     setAccountLoading(true);
-    try {
-      const freshUser = await refreshBackendProfile();
 
-      // If the backend now has the account, stay here and show it. This is
-      // important when Paystack has completed DVA provisioning after the page
-      // was first opened.
-      if (freshUser?.account_number) {
+    try {
+      // Always refresh the authenticated profile first. If a stakeholder has
+      // already assigned the DVA, this immediately gives us the account and we
+      // do NOT call the verification endpoint.
+      const freshUser = await refreshBackendProfile();
+      const freshDva = freshUser?.dva_account;
+      const freshHasDva = freshUser?.has_DVA === true && Boolean(freshDva?.account_number);
+
+      if (freshHasDva) {
         setAccountModalOpen(true);
         return;
       }
+
+      // No DVA exists in the current-user response. Only now perform the
+      // documented verification check for the authenticated user's email.
+      const email = String(freshUser?.email || userData?.email || '').trim();
+      if (!email) {
+        setDepositError('Your account email is not available. Please refresh your profile and try again.');
+        return;
+      }
+
+      const verificationResponse = await getRequest(ENDPOINTS.checkUserVerification(email));
+      const verification = verificationResponse?.data && typeof verificationResponse.data === 'object'
+        ? verificationResponse.data
+        : verificationResponse;
+
+      if (verification?.state === true) {
+        // Verification is already satisfied. Retrieve the user profile one more
+        // time because the stakeholder-created DVA is exposed there, not in the
+        // verification endpoint response.
+        const latestUser = await refreshBackendProfile();
+        const latestDva = latestUser?.dva_account;
+        const latestHasDva = latestUser?.has_DVA === true && Boolean(latestDva?.account_number);
+
+        if (latestHasDva) {
+          setAccountModalOpen(true);
+          return;
+        }
+
+        // Do not invent a DVA creation call or pretend a pending state exists.
+        // The backend simply has not returned the assigned account yet.
+        setDepositError(
+          'Your verification is complete, but your Dedicated Virtual Account details are not available yet. Please refresh and try again.'
+        );
+        return;
+      }
+
+      // Verification is not satisfied, so send the user to the existing
+      // Identity Center/BVN flow.
+      navigate('/identity-center');
+    } catch (error: any) {
+      console.error('Dedicated Virtual Account lookup failed:', error);
+      setDepositError(error?.message || 'Unable to check your Dedicated Virtual Account right now. Please try again.');
     } finally {
       setAccountLoading(false);
     }
-
-    // No DVA exists in the latest backend response. The documented creation
-    // request is submitted from Identity Center, so do not invent another DVA
-    // creation endpoint here.
-    navigate('/identity-center');
   };
 
   const handleRefreshAccount = useCallback(async () => {
@@ -418,22 +430,15 @@ export function Deposit() {
                 </div>
 
                 {!hasVirtualAccount && (
-                  <div className={`rounded-2xl p-5 space-y-3 ${
-                    isVerificationPending
-                      ? 'bg-amber-500/10 border border-amber-500/20'
-                      : 'bg-sky-500/5 border border-sky-500/10'
-                  }`}>
+                  <div className="bg-sky-500/5 border border-sky-500/10 rounded-2xl p-5 space-y-3">
                     <div className="flex items-center gap-3">
-                      <ShieldAlert className={`w-5 h-5 shrink-0 ${isVerificationPending ? 'text-amber-500' : 'text-sky-500'}`} />
+                      <ShieldAlert className="w-5 h-5 text-sky-500 shrink-0" />
                       <h3 className="text-xs font-black text-slate-800 dark:text-slate-100">
-                        {isVerificationPending ? 'Dedicated Account Pending' : 'Dedicated Account Setup'}
+                        Dedicated Account Setup
                       </h3>
                     </div>
                     <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                      {backendVerificationMessage ||
-                        (isVerificationPending
-                          ? 'Your BVN verification is still being processed. Refresh this status to check for the account assigned to you.'
-                          : 'Your Dedicated Virtual Account is created through the backend BVN verification flow.')}
+                      {backendVerificationMessage}
                     </p>
                   </div>
                 )}
@@ -445,22 +450,22 @@ export function Deposit() {
                         <div>
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Dedicated Account</p>
                           <p className="text-sm font-black text-slate-900 dark:text-white mt-1">
-                            {accountData?.bank_name || 'Dedicated Virtual Account'}
+                            {dvaAccount?.bank_name || 'Dedicated Virtual Account'}
                           </p>
                         </div>
                         <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                       </div>
-                      {accountData?.account_name || accountData?.name || (accountData?.first_name && accountData?.last_name) ? (
+                      {dvaAccount?.account_name ? (
                         <div>
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Account Name</p>
                           <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-1">
-                            {accountData?.account_name || accountData?.name || `${accountData?.first_name || ''} ${accountData?.last_name || ''}`.trim()}
+                            {dvaAccount?.account_name}
                           </p>
                         </div>
                       ) : null}
                       <div>
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Account Number</p>
-                        <p className="text-xl font-black text-sky-500 tracking-wider mt-1">{accountData?.account_number}</p>
+                        <p className="text-xl font-black text-sky-500 tracking-wider mt-1">{dvaAccount?.account_number}</p>
                       </div>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400">This account belongs to your authenticated BlueSea profile.</p>
                     </div>
@@ -503,7 +508,7 @@ export function Deposit() {
 
                 <div className="space-y-2">
                   <Button
-                    onClick={hasVirtualAccount || isVerificationPending ? handleRefreshAccount : handleVirtualAccountAction}
+                    onClick={hasVirtualAccount ? handleRefreshAccount : handleVirtualAccountAction}
                     disabled={accountLoading || profileLoading}
                     className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-sm font-black shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all cursor-pointer"
                   >
@@ -511,7 +516,7 @@ export function Deposit() {
                       <LoadingSpinner size="sm" text="Refreshing account details..." />
                     ) : (
                       <span className="flex items-center justify-center gap-2">
-                        <span>{hasVirtualAccount ? 'Refresh Account Details' : isVerificationPending ? 'Refresh Verification Status' : 'Open Identity Center'}</span>
+                        <span>{hasVirtualAccount ? 'Refresh Account Details' : 'Get Dedicated Virtual Account'}</span>
                         <ChevronRight className="w-4 h-4" />
                       </span>
                     )}
@@ -540,7 +545,7 @@ export function Deposit() {
       <DedicatedVirtualAccountModal
         isOpen={accountModalOpen}
         onClose={() => setAccountModalOpen(false)}
-        userData={accountData}
+        userData={dvaAccount}
         onRefreshAccount={handleRefreshAccount}
       />
     </div>

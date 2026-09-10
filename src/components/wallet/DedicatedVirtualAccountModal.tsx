@@ -1,21 +1,17 @@
 import { useState } from 'react';
-import { Landmark, Copy, Check, X, ShieldAlert, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Landmark, Copy, Check, X } from 'lucide-react';
 
 interface DedicatedVirtualAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
   userData: {
-    bank_name?: string;
-    account_number?: string;
+    account_number?: string | number;
     account_name?: string;
-    name?: string;
-    first_name?: string;
-    last_name?: string;
-    kyc_status?: string;
-    is_verified?: boolean;
-    bvn?: string;
+    bank_name?: string;
+    bank_slug?: string;
+    bank_id?: number;
+    customer_code?: string;
+    active?: boolean;
   } | null;
   onRefreshAccount?: () => Promise<void> | void;
 }
@@ -25,23 +21,14 @@ export function DedicatedVirtualAccountModal({
   onClose,
   userData,
 }: DedicatedVirtualAccountModalProps) {
-  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
-  const bankName = userData?.bank_name;
-  const accountNumber = userData?.account_number;
-  const personName = [userData?.first_name, userData?.last_name].filter(Boolean).join(' ').trim();
-  const backendAccountName = userData?.account_name || userData?.name;
-  const accountName = backendAccountName || (personName ? `G Lucid Apex Limited ${personName}` : 'G Lucid Apex Limited');
+  const bankName = userData?.bank_name || userData?.bank_slug || 'Wema Bank';
+  const accountNumber = userData?.account_number ? String(userData.account_number) : '';
+  const accountName = userData?.account_name || '';
 
-  const isKycComplete = Boolean(
-    userData?.is_verified ||
-    userData?.kyc_status === 'verified' ||
-    userData?.kyc_status === 'approved' ||
-    userData?.bvn
-  );
 
   const handleCopy = async () => {
     if (!accountNumber) return;
@@ -83,55 +70,29 @@ export function DedicatedVirtualAccountModal({
         </div>
 
         {/* Content Body */}
-        {!isKycComplete ? (
-          <div className="space-y-6 text-center py-4">
-            <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mx-auto">
-              <ShieldAlert className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="text-sm font-black text-slate-800 dark:text-slate-100">
-                Identity Verification Required
-              </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                Complete your identity verification before requesting a dedicated virtual account for instant wallet funding.
-              </p>
-            </div>
-            <Button
-              onClick={() => {
-                onClose();
-                navigate('/identity-center');
-              }}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white h-12 rounded-2xl text-xs font-bold tracking-wide shadow-lg shadow-sky-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              <span>Complete Verification</span>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        ) : accountNumber ? (
+        {accountNumber ? (
           <div className="space-y-5">
             <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-white/5 rounded-2xl p-4 space-y-4">
-              {bankName && (
-                <div>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Bank Name
-                  </span>
-                  <p className="text-sm font-black text-slate-900 dark:text-white mt-0.5">
-                    {bankName}
-                  </p>
-                </div>
-              )}
+              <div>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Bank Name
+                </span>
+                <p className="text-sm font-black text-slate-900 dark:text-white mt-0.5">
+                  {bankName}
+                </p>
+              </div>
 
               <div>
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                   Account Number
                 </span>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-xl font-black text-sky-500 tracking-wider">
+                <div className="flex items-center justify-between mt-1 gap-3">
+                  <p className="text-xl font-black text-sky-500 tracking-wider break-all">
                     {accountNumber}
                   </p>
                   <button
                     onClick={handleCopy}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer"
+                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer"
                   >
                     {copied ? (
                       <>
@@ -169,10 +130,10 @@ export function DedicatedVirtualAccountModal({
         ) : (
           <div className="text-center py-6 space-y-3">
             <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-              Your account request is currently being processed.
+              Dedicated Virtual Account details are not available yet.
             </p>
             <p className="text-[11px] text-slate-400">
-              Details will appear here automatically once ready.
+              Close this window and refresh your account details after the backend assigns the account.
             </p>
           </div>
         )}
