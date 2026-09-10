@@ -130,13 +130,13 @@ export function Deposit() {
   // Calculation Utilities
   const numericAmount = Number(rawAmount.replace(/\D/g, '')) || 0;
   
-  // Paystack: 1.5% fee on top
-  const paystackFee = Math.round(numericAmount * 0.015 * 100) / 100;
-  const paystackTotal = numericAmount + paystackFee;
+  // Paystack Checkout: no fee.
+  const paystackFee = 0;
+  const paystackTotal = numericAmount;
 
-  // Dedicated Virtual Account funding has no frontend fee.
-  // The backend is the source of truth for any applicable wallet-credit rules.
-  const virtualTotal = numericAmount;
+  // Dedicated Virtual Account: 1% processing fee.
+  const virtualFee = Math.round(numericAmount * 0.01 * 100) / 100;
+  const virtualTotal = numericAmount + virtualFee;
 
   const formatNaira = (val: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -287,7 +287,7 @@ export function Deposit() {
                   Card, Bank Transfer, USSD
                 </p>
                 <span className="inline-block mt-3 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
-                  Fee: 1.5%
+                  No fee
                 </span>
               </div>
 
@@ -315,7 +315,7 @@ export function Deposit() {
                   Direct Bank Transfer
                 </p>
                 <span className="inline-block mt-3 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
-                  No fee
+                  Fee: 1%
                 </span>
               </div>
             </div>
@@ -373,7 +373,7 @@ export function Deposit() {
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-slate-500 dark:text-slate-400 font-medium">
-                        Processing fee (1.5%)
+                        Processing fee
                       </span>
                       <span className="font-bold text-slate-800 dark:text-slate-200">
                         {formatNaira(paystackFee)}
@@ -390,7 +390,7 @@ export function Deposit() {
                 <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
                   <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    A 1.5% processing fee will be added to your deposit amount before payment is completed. Your wallet will be credited with exact requested amount of <strong>{formatNaira(numericAmount)}</strong>.
+                    No processing fee is charged for Paystack Checkout. Your wallet will be credited with the exact requested amount of <strong>{formatNaira(numericAmount)}</strong>.
                   </p>
                 </div>
 
@@ -483,7 +483,7 @@ export function Deposit() {
                     {numericAmount > 0 && (
                       <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 space-y-3">
                         <div className="flex justify-between items-center text-xs"><span className="text-slate-500 dark:text-slate-400 font-medium">Transfer amount</span><span className="font-bold text-slate-800 dark:text-slate-200">{formatNaira(numericAmount)}</span></div>
-                        <div className="flex justify-between items-center text-xs"><span className="text-slate-500 dark:text-slate-400 font-medium">Processing fee</span><span className="font-bold text-slate-800 dark:text-slate-200">No fee</span></div>
+                        <div className="flex justify-between items-center text-xs"><span className="text-slate-500 dark:text-slate-400 font-medium">Processing fee (1%)</span><span className="font-bold text-slate-800 dark:text-slate-200">{formatNaira(virtualFee)}</span></div>
                         <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex justify-between items-center text-sm font-black"><span className="text-slate-900 dark:text-white">Total required transfer</span><span className="text-sky-500">{formatNaira(virtualTotal)}</span></div>
                       </div>
                     )}
@@ -493,7 +493,7 @@ export function Deposit() {
                 <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
                   <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    No deposit fee is charged for transfers to your Dedicated Virtual Account.
+                    A 1% processing fee is applied to transfers to your Dedicated Virtual Account.
                   </p>
                 </div>
 
