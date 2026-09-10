@@ -95,7 +95,7 @@ export function DedicatedVirtualAccountModal({
             <Button
               onClick={() => {
                 onClose();
-                navigate('/identity-verification');
+                navigate('/identity-center');
               }}
               className="w-full bg-sky-500 hover:bg-sky-600 text-white h-12 rounded-2xl text-xs font-bold tracking-wide shadow-lg shadow-sky-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
