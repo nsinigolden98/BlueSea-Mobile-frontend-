@@ -11,6 +11,8 @@ interface DedicatedVirtualAccountModalProps {
     account_number?: string;
     account_name?: string;
     name?: string;
+    first_name?: string;
+    last_name?: string;
     kyc_status?: string;
     is_verified?: boolean;
     bvn?: string;
