@@ -250,3 +250,9 @@ export const paymentsWS = (
     close: () => socket.close(),
   };
 };
+function onCloseCode(code: number) {
+  if (code !== 1000 && code !== 4401) {
+    console.warn(`Payment WebSocket closed unexpectedly (code ${code}).`);
+  }
+}
+
