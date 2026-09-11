@@ -198,6 +198,8 @@ export function createWalletWebSocket(
       }
     },
     (code: number) => {
+      onCloseCode?.(code);
+
       if (code === 4401) {
         console.warn(
           'Wallet WebSocket authentication expired (4401). Waiting for the existing auth/token-refresh flow.',
