@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Building2, Lock, RefreshCw } from 'lucide-react';
@@ -27,6 +28,7 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
   const [loadingBanks, setLoadingBanks] = useState<boolean>(false);
 
   const [bvn, setBvn] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
   const [selectedBankCode, setSelectedBankCode] = useState<string>('');
   const [accountNumber, setAccountNumber] = useState<string>('');
   const [consent, setConsent] = useState<boolean>(false);
@@ -89,6 +91,24 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
     }
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 11);
+
+    setPhone(value);
+
+    if (errors.phone) {
+      setErrors((previous) => {
+        const next = { ...previous };
+        delete next.phone;
+        return next;
+      });
+    }
+
+    if (submitError) {
+      setSubmitError('');
+    }
+  };
+
   const handleAccountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 10);
 
@@ -128,6 +148,10 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
 
     if (bvn.length !== 11) {
       validationErrors.bvn = 'BVN must be exactly 11 digits.';
+    }
+
+    if (phone.length < 10 || phone.length > 11) {
+      validationErrors.phone = 'Phone number must be 10 to 11 digits.';
     }
 
     if (!selectedBankCode) {
@@ -175,9 +199,10 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
        * account_number: string
        * bank_code: string
        * bvn: encrypted BVN
+       * phone: string
        *
-       * account_number must remain a string because it is a 10-digit
-       * Nigerian account number and must not be converted to a number.
+       * account_number remains a string because it is a 10-digit
+       * Nigerian account number.
        */
       const nameParts = userFullName
         .trim()
@@ -199,6 +224,7 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
         account_number: accountNumber,
         bank_code: String(selectedBankCode),
         bvn: encryptedBvn,
+        phone,
       };
 
       /*
@@ -213,9 +239,6 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
       );
 
       /*
-       * postRequest returns response.data on success and the backend's
-       * error body when Axios receives an HTTP error.
-       *
        * Do not treat an error response as a successful submission.
        */
       if (
@@ -232,13 +255,8 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
       }
 
       /*
-       * The assign endpoint's documented response does not contain the
-       * generated DVA account object.
-       *
-       * Therefore, do NOT manufacture an account number, account name,
-       * bank name, or DVA status here.
-       *
-       * Re-read the authenticated user preference/profile from the backend.
+       * The assignment response does not document the generated DVA object.
+       * Re-read the authenticated profile instead of inventing DVA details.
        */
       const profileResponse = await getRequest(
         `${API_BASE}/user_preference/user/`,
@@ -251,15 +269,12 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
           : profileResponse;
 
       /*
-       * Tell Identity Center to refresh its backend-derived state.
-       * The Identity Center remains the source of truth for verification
-       * status and DVA information.
+       * Let Identity Center refresh its backend-derived verification state.
        */
       onSubmitted();
 
       /*
-       * The backend profile may already contain the DVA after assignment.
-       * We still do not invent or locally construct DVA information.
+       * DVA information remains sourced exclusively from the backend.
        */
       if (
         profile?.has_DVA === true &&
@@ -285,18 +300,8 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
   };
 
   const handleReturnToIdentityCenter = () => {
-    /*
-     * Refresh the backend-derived state before leaving the modal.
-     */
     onSubmitted();
-
     onClose();
-
-    /*
-     * Explicitly navigate to Identity Center.
-     * This fixes the previous behavior where the modal closed/reloaded
-     * but did not actually route to the Identity Center.
-     */
     navigate('/identity-center');
   };
 
@@ -308,6 +313,11 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
   const maskedAcc = accountNumber
     ? `*******${accountNumber.slice(-4)}`
     : '';
+
+  const maskedPhone =
+    phone.length >= 4
+      ? `*******${phone.slice(-4)}`
+      : phone;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-4">
@@ -372,6 +382,32 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
                 {errors.bvn && (
                   <p className="text-[11px] text-red-500">
                     {errors.bvn}
+                  </p>
+                )}
+              </div>
+
+              {/* Phone Number */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Phone Number
+                </label>
+
+                <Input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={11}
+                  pattern="[0-9]{10,11}"
+                  placeholder="Enter 10-11 digit phone number"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  disabled={submitting}
+                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 font-mono"
+                />
+
+                {errors.phone && (
+                  <p className="text-[11px] text-red-500">
+                    {errors.phone}
                   </p>
                 )}
               </div>
@@ -470,6 +506,16 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
 
                   <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
                     {maskedBvn}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800 gap-4">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Phone Number
+                  </span>
+
+                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+                    {maskedPhone}
                   </span>
                 </div>
 
