@@ -36,13 +36,13 @@ export type WalletMessage =
   | PaymentUpdate
   | { type: 'pong' };
 
-type CloseHandler = (code: number) => void;
+type CloseHandler = (code: number, reason: string, wasClean: boolean) => void;
 
 class ReconnectWS {
   private ws?: WebSocket;
-  private ping?: number;
+  private pingTimer?: number;
+  private reconnectTimer?: number;
   private retries = 0;
-
   private readonly urlFactory: () => string;
   private readonly onMsg: (message: WalletMessage) => void;
   private readonly onCloseCode?: CloseHandler;
@@ -63,6 +63,13 @@ class ReconnectWS {
     if (this.closedByUser) return;
 
     const url = this.urlFactory();
+    const tokenQueryPresent = url.includes('token=');
+
+    if (!tokenQueryPresent) {
+      console.error('Wallet WebSocket was not opened because the access token is missing.');
+      this.scheduleReconnect();
+      return;
+    }
 
     try {
       this.ws = new WebSocket(url);
@@ -74,19 +81,18 @@ class ReconnectWS {
 
     this.ws.onopen = () => {
       this.retries = 0;
+      this.clearReconnectTimer();
+      this.clearPing();
 
-      if (this.ping !== undefined) {
-        window.clearInterval(this.ping);
-      }
+      console.info('Wallet WebSocket connected.');
 
-      this.ping = window.setInterval(() => {
+      this.pingTimer = window.setInterval(() => {
         if (this.ws?.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify({ type: 'ping' }));
         }
       }, 25_000);
 
-      // The backend explicitly supports balance_request. This is a
-      // request/response initialization event, not polling.
+      // Backend-supported initialization request; this is not polling.
       this.send({ type: 'balance_request' });
     };
 
@@ -99,15 +105,30 @@ class ReconnectWS {
       }
     };
 
-    this.ws.onerror = (error) => {
-      console.error('Wallet WebSocket error:', error);
+    this.ws.onerror = (event: Event) => {
+      // Browsers intentionally expose very little information on WebSocket
+      // error events. The useful server-side diagnostic is emitted by onclose.
+      console.error('Wallet WebSocket error:', event);
     };
 
     this.ws.onclose = (event: CloseEvent) => {
       this.clearPing();
-      this.onCloseCode?.(event.code);
+      this.onCloseCode?.(event.code, event.reason, event.wasClean);
 
-      if (this.closedByUser || event.code === 1000 || event.code === 4401) {
+      console.warn('Wallet WebSocket closed:', {
+        code: event.code,
+        reason: event.reason || '(no reason supplied)',
+        wasClean: event.wasClean,
+      });
+
+      if (this.closedByUser || event.code === 1000) {
+        return;
+      }
+
+      // 4401 means the server rejected the JWT. Do not reconnect endlessly
+      // with the same expired token. AuthContext can recreate this service
+      // after the existing auth flow obtains a valid token.
+      if (event.code === 4401) {
         return;
       }
 
@@ -116,22 +137,30 @@ class ReconnectWS {
   }
 
   private scheduleReconnect() {
-    if (this.closedByUser) return;
+    if (this.closedByUser || this.reconnectTimer !== undefined) return;
 
     const delay = Math.min(1_000 * 2 ** this.retries, 30_000);
     this.retries += 1;
 
-    window.setTimeout(() => {
-      if (!this.closedByUser) {
-        this.connect();
-      }
+    console.warn(`Wallet WebSocket reconnect scheduled in ${delay}ms.`);
+
+    this.reconnectTimer = window.setTimeout(() => {
+      this.reconnectTimer = undefined;
+      if (!this.closedByUser) this.connect();
     }, delay);
   }
 
   private clearPing() {
-    if (this.ping !== undefined) {
-      window.clearInterval(this.ping);
-      this.ping = undefined;
+    if (this.pingTimer !== undefined) {
+      window.clearInterval(this.pingTimer);
+      this.pingTimer = undefined;
+    }
+  }
+
+  private clearReconnectTimer() {
+    if (this.reconnectTimer !== undefined) {
+      window.clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = undefined;
     }
   }
 
@@ -144,9 +173,10 @@ class ReconnectWS {
   close() {
     this.closedByUser = true;
     this.clearPing();
+    this.clearReconnectTimer();
 
     if (this.ws && this.ws.readyState !== WebSocket.CLOSED) {
-      this.ws.close(1000);
+      this.ws.close(1000, 'Client closed wallet WebSocket');
     }
   }
 }
@@ -183,13 +213,12 @@ function toWebSocketBase(base: string): string {
 export function createWalletWebSocket(
   base: string,
   onUpdate: (data: BalanceUpdate | WalletConnected) => void,
-  onCloseCode?: (code: number) => void,
+  onCloseCode?: (code: number, reason?: string, wasClean?: boolean) => void,
 ) {
   const socket = new ReconnectWS(
     () => {
       const token = getCookie('access_token');
       const wsBase = toWebSocketBase(base);
-
       return `${wsBase}/ws/wallet/?token=${encodeURIComponent(token)}`;
     },
     (message) => {
@@ -197,8 +226,8 @@ export function createWalletWebSocket(
         onUpdate(message);
       }
     },
-    (code: number) => {
-      onCloseCode?.(code);
+    (code: number, reason: string, wasClean: boolean) => {
+      onCloseCode?.(code, reason, wasClean);
 
       if (code === 4401) {
         console.warn(
@@ -215,7 +244,6 @@ export function createWalletWebSocket(
   };
 }
 
-// Backward-compatible alias for existing imports.
 export const walletWS = createWalletWebSocket;
 
 export const paymentsWS = (
@@ -227,23 +255,15 @@ export const paymentsWS = (
     () => {
       const token = getCookie('access_token');
       const wsBase = toWebSocketBase(base);
-
-      return `${wsBase}/ws/payments/${encodeURIComponent(
-        referenceId,
-      )}/?token=${encodeURIComponent(token)}`;
+      return `${wsBase}/ws/payments/${encodeURIComponent(referenceId)}/?token=${encodeURIComponent(token)}`;
     },
     (message) => {
       if (message.type === 'payment_update') {
         onUpdate(message);
       }
     },
-    (code) => {
-      onCloseCode?.(code);
-      if (code === 4401) {
-        console.warn(
-          'Payment WebSocket authentication expired (4401). Waiting for the existing auth/token-refresh flow.',
-        );
-      }
+    (code: number, reason: string, wasClean: boolean) => {
+      console.warn('Payment WebSocket closed:', { code, reason, wasClean });
     },
   );
 
@@ -252,9 +272,3 @@ export const paymentsWS = (
     close: () => socket.close(),
   };
 };
-function onCloseCode(code: number) {
-  if (code !== 1000 && code !== 4401) {
-    console.warn(`Payment WebSocket closed unexpectedly (code ${code}).`);
-  }
-}
-
