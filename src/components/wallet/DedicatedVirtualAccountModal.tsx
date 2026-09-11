@@ -18,7 +18,10 @@ export function DedicatedVirtualAccountModal({
 
   if (!isOpen) return null;
 
-  const accountNumber = userData?.account_number != null ? String(userData.account_number) : '';
+  // These values must come from the backend-assigned DVA object.
+  // Do not fall back to the authenticated user's name or phone number.
+  const accountNumber =
+    userData?.account_number != null ? String(userData.account_number) : '';
   const accountName = userData?.account_name || '';
   const bankName = userData?.bank_name || '';
 
@@ -55,6 +58,7 @@ export function DedicatedVirtualAccountModal({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close"
             className="p-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-all cursor-pointer"
@@ -84,6 +88,7 @@ export function DedicatedVirtualAccountModal({
                     {accountNumber}
                   </p>
                   <button
+                    type="button"
                     onClick={handleCopy}
                     className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer"
                   >

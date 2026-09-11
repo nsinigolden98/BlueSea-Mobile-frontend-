@@ -37,6 +37,20 @@ export function Wallet() {
 
   // --- Shared Virtual Account Modal State ---
   const [virtualAccountModalOpen, setVirtualAccountModalOpen] = useState(false);
+  const [copiedDvaAccount, setCopiedDvaAccount] = useState(false);
+
+  const handleCopyDvaAccount = async () => {
+    const number = dvaAccount?.account_number;
+    if (!number) return;
+
+    try {
+      await navigator.clipboard.writeText(String(number));
+      setCopiedDvaAccount(true);
+      window.setTimeout(() => setCopiedDvaAccount(false), 2500);
+    } catch (error) {
+      console.error('Failed to copy DVA account number:', error);
+    }
+  };
 
   // --- Internal Transfer Modal Toggle ---
   const [transferOpen, setTransferOpen] = useState(false);
@@ -123,7 +137,21 @@ export function Wallet() {
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
-                    <p className="text-xs font-black text-sky-500 tracking-wider mt-0.5 truncate">{dvaAccount?.account_number || '—'}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-xs font-black text-sky-500 tracking-wider truncate">{dvaAccount?.account_number || '—'}</p>
+                      {dvaAccount?.account_number && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleCopyDvaAccount();
+                          }}
+                          className="shrink-0 px-2 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 text-[9px] font-bold transition-all active:scale-95"
+                        >
+                          {copiedDvaAccount ? 'Copied' : 'Copy'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Name</p>
