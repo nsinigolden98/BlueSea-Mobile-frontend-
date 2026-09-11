@@ -53,9 +53,9 @@ export function Deposit() {
     userData?.bvn
   );
 
-  // Dedicated account details are supplied by the authenticated user's backend profile.
-  // Never use the user's personal account fields for DVA display.
-  const dvaAccount = userData?.has_DVA === true ? userData?.dva_account ?? null : null;
+  // The backend is the source of truth for the assigned dedicated account.
+  // GET /user_preference/user/ returns it under dva_account when has_DVA is true.
+  const dvaAccount = userData?.has_DVA === true ? userData?.dva_account : null;
   const hasVirtualAccount = Boolean(dvaAccount?.account_number);
 
   // Calculation Utilities
@@ -130,19 +130,19 @@ export function Deposit() {
       return;
     }
 
-    // Request account using real backend endpoint if available
+    // The assigned DVA is read from GET /user_preference/user/ under dva_account.
+    // There is no documented client-side DVA creation endpoint in this frontend
+    // contract, so never call or invent one here. Refresh the authenticated profile
+    // through the existing auth flow, then display whatever the backend actually returned.
     setAccountLoading(true);
     try {
-      if (ENDPOINTS.requestVirtualAccount) {
-        await postRequest(ENDPOINTS.requestVirtualAccount, {});
-      }
       const authCtx = user as any;
       const refreshFn = authCtx?.refreshUser || authCtx?.checkAuth || authCtx?.fetchUserData;
       if (typeof refreshFn === 'function') {
         await refreshFn();
       }
     } catch (err) {
-      console.error('Account request failed:', err);
+      console.error('Failed to refresh dedicated account details:', err);
     } finally {
       setAccountLoading(false);
       setAccountModalOpen(true);
