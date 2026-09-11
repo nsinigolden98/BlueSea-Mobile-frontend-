@@ -8,8 +8,8 @@ interface DedicatedVirtualAccountModalProps {
     bank_name?: string;
     bank_slug?: string;
     bank_id?: number;
-    account_number?: string | number;
-    account_name?: string;
+    dva_account_number?: string | number;
+    dva_account_name?: string;
     customer_code?: string;
     active?: boolean;
   } | null;
@@ -26,8 +26,8 @@ export function DedicatedVirtualAccountModal({
   if (!isOpen) return null;
 
   const bankName = userData?.bank_name;
-  const accountNumber = userData?.account_number != null ? String(userData.account_number) : '';
-  const accountName = userData?.account_name || '';
+  const accountNumber = userData?.dva_account_number != null ? String(userData.dva_account_number) : '';
+  const accountName = userData?.dva_account_name || '';
 
   const handleCopy = async () => {
     if (!accountNumber) return;

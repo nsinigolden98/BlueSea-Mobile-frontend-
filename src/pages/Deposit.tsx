@@ -41,11 +41,12 @@ export function Deposit() {
 
   // Account Modal & Request State
   const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [accountLoading, setAccountLoading] = useState(false);
 
 
   // DVA details come only from the authenticated backend profile.
   const dvaAccount = userData?.has_DVA === true ? userData?.dva_account ?? null : null;
-  const hasVirtualAccount = Boolean(dvaAccount?.account_number);
+  const hasVirtualAccount = Boolean(dvaAccount?.dva_account_number);
 
   // Calculation Utilities
   const numericAmount = Number(rawAmount.replace(/\D/g, '')) || 0;
@@ -374,9 +375,12 @@ export function Deposit() {
 
                     <Button
                       onClick={handleVirtualAccountAction}
+                      disabled={accountLoading}
                       className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-sm font-black shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all cursor-pointer"
                     >
-                      {hasVirtualAccount ? (
+                      {accountLoading ? (
+                        <LoadingSpinner size="sm" text="Processing..." />
+                      ) : hasVirtualAccount ? (
                         'View Account Details'
                       ) : (
                         'Request Dedicated Account'

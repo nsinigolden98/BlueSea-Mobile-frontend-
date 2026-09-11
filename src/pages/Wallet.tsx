@@ -47,7 +47,7 @@ export function Wallet() {
 
   const handleCopyDvaAccount = async (event: React.MouseEvent) => {
     event.stopPropagation();
-    const accountNumber = dvaAccount?.account_number;
+    const accountNumber = dvaAccount?.dva_account_number;
     if (accountNumber == null) return;
 
     try {
@@ -130,7 +130,7 @@ export function Wallet() {
                 <span className="text-[10px] font-bold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-full">Automated</span>
               </div>
               
-              {(dvaAccount?.account_number) ? (
+              {Boolean(dvaAccount?.dva_account_number) ? (
                 <div 
                   onClick={() => setVirtualAccountModalOpen(true)}
                   className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-white/5 cursor-pointer hover:border-sky-500/30 transition-all"
@@ -142,7 +142,7 @@ export function Wallet() {
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs font-black text-sky-500 tracking-wider truncate">{dvaAccount?.account_number}</p>
+                      <p className="text-xs font-black text-sky-500 tracking-wider truncate">{dvaAccount?.dva_account_number}</p>
                       <button
                         type="button"
                         onClick={handleCopyDvaAccount}
@@ -159,7 +159,7 @@ export function Wallet() {
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Name</p>
-                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{dvaAccount?.account_name || '—'}</p>
+                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{dvaAccount?.dva_account_name || '—'}</p>
                   </div>
                 </div>
               ) : (
