@@ -2,10 +2,34 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
   
 // User Types
+export interface DvaAccount {
+  account_number: string | number;
+  account_name: string;
+  bank_name: string;
+  bank_slug?: string;
+  bank_id?: number;
+  customer_code?: string;
+  active: boolean;
+}
+
+export interface UserPreference {
+  image?: string;
+  nickname?: string;
+  gender?: 'male' | 'female' | 'others' | '' | null;
+  date_of_birth?: string | null;
+  country?: string;
+  state?: string;
+  city?: string;
+  street_address?: string;
+  landmark?: string;
+  postal_code?: string;
+  updated_on?: string;
+}
+
 export interface User {
-  id?: string; 
+  id?: string | number;
   email: string;
-   firstName: string;
+  firstName: string;
   surname: string;
   phone: string;
   profilePicture?: string;
@@ -16,6 +40,9 @@ export interface User {
   bluePoints?: number;
   transactions?: Transaction[];
   referral_code: string;
+  has_DVA?: boolean;
+  dva_account?: DvaAccount | null;
+  preference?: UserPreference;
 }
  
 // Transaction Types
@@ -315,13 +342,11 @@ export const ENDPOINTS = {
   verify_transaction_pin_email:`${API_BASE}/account/transaction/pin/verify-otp/`,
   set_transaction_pin_email:`${API_BASE}/accounts/transaction/pin/new/`,
   balance: `${API_BASE}/wallet/balance/`,
-  fund: `${API_BASE}/transactions/fund-wallet/`,
-  requestVirtualAccount: `${API_BASE}/transactions/virtual-account/`,
   dvaAssign: `${API_BASE}/accounts/dva/assign/`,
   checkUserVerification: (email: string) => `${API_BASE}/user_preference/check/${encodeURIComponent(email)}/`,
+  fund: `${API_BASE}/transactions/fund-wallet/`,
   webhook: `${API_BASE}/transactions/webhook/paystack/`,
   history: `${API_BASE}/transactions/history/`,
-  // withdraw: `${API_BASE}/transactions/withdraw/`,
   user: `${API_BASE}/user_preference/user/`,
   pin_set: `${API_BASE}/accounts/pin/set/`,
   pin_verify: `${API_BASE}/accounts/pin/verify/`,
@@ -448,22 +473,15 @@ export const TOKEN:string = getCookie('access_token') || ''
 // GET REQUEST
 export async function getRequest(url: string, options?: { method?: string }) {
   try {
-    const response = await axios.get(url, 
-      options?.method ? {
-        method: options.method,
-        headers: {
-          "Authorization": `Bearer ${TOKEN}`,
-          "Content-Type": "application/json",
-          "Accept": 'application/json'
-        }
-      } : {
-        headers: {
-          "Authorization": `Bearer ${TOKEN}`,
-          "Content-Type": "application/json",
-          "Accept": 'application/json'
-        }
+    const token = getCookie('access_token') || '';
+    const response = await axios.get(url, {
+      ...(options?.method ? { method: options.method } : {}),
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "Accept": 'application/json'
       }
-    );
+    });
     return response.data
   } catch (error) {
     console.log(error)
@@ -474,15 +492,14 @@ export async function getRequest(url: string, options?: { method?: string }) {
 // POST REQUEST
 export async function postRequest(url: string, payload: object) {
   try {
-    const response = await axios.post(url,payload,
-      {
-        headers: {
-          "Authorization": `Bearer ${TOKEN}`,
-          "Content-Type": "application/json",
-          "Accept": 'application/json'
-        }
-
-      });
+    const token = getCookie('access_token') || '';
+    const response = await axios.post(url, payload, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "Accept": 'application/json'
+      }
+    });
     return response.data
   } catch (error: any) {
     console.log(error)
@@ -495,7 +512,7 @@ export async function postFileRequest(url: string,payload: object) {
     const response = await axios.post(url,payload,
       {
         headers: {
-          "Authorization": `Bearer ${TOKEN}`,
+          "Authorization": `Bearer ${getCookie('access_token') || ''}`,
         },
       });
     return response.data
@@ -511,7 +528,7 @@ export async function putRequest(url: string, payload: object) {
     const response = await axios.put(url,payload,
       {
         headers: {
-          "Authorization": `Bearer ${TOKEN}`,
+          "Authorization": `Bearer ${getCookie('access_token') || ''}`,
           "Content-Type": "application/json",
           "Accept": 'application/json'
         }
@@ -530,7 +547,7 @@ export async function patchRequest(url: string, payload: object) {
     const response = await axios.patch(url,payload,
       {
         headers: {
-          "Authorization": `Bearer ${TOKEN}`,
+          "Authorization": `Bearer ${getCookie('access_token') || ''}`,
           // "Content-Type": "multipart/formdata",
           // "Accept": 'application/json'
         }
@@ -549,7 +566,7 @@ export async function deleteRequest(url: string) {
     const response = await axios.delete(url,
       {
         headers: {
-          "Authorization": `Bearer ${TOKEN}`,
+          "Authorization": `Bearer ${getCookie('access_token') || ''}`,
           "Content-Type": "application/json",
           "Accept": 'application/json'
         }

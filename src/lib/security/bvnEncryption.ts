@@ -1,19 +1,34 @@
-import forge from 'node-forge';
-
 import publicKeyPem from './pin_public_key.pem?raw';
 
-/**
- * Encrypts a BVN for the backend DVA assignment request.
- * The backend expects RSA-OAEP using SHA-256 for both OAEP and MGF1,
- * with the encrypted bytes returned as base64.
- */
-export function encryptBvn(bvn: string): string {
-  const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+function pemToArrayBuffer(pem: string): ArrayBuffer {
+  const base64 = pem
+    .replace(/-----BEGIN PUBLIC KEY-----/g, '')
+    .replace(/-----END PUBLIC KEY-----/g, '')
+    .replace(/\s/g, '');
 
-  const encrypted = publicKey.encrypt(bvn, 'RSA-OAEP', {
-    md: forge.md.sha256.create(),
-    mgf1: { md: forge.md.sha256.create() },
-  });
+  const binary = window.atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
 
-  return forge.util.encode64(encrypted);
+export async function encryptBvn(bvn: string): Promise<string> {
+  const key = await window.crypto.subtle.importKey(
+    'spki',
+    pemToArrayBuffer(publicKeyPem),
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    false,
+    ['encrypt'],
+  );
+
+  const encrypted = await window.crypto.subtle.encrypt(
+    { name: 'RSA-OAEP' },
+    key,
+    new TextEncoder().encode(bvn),
+  );
+
+  const bytes = new Uint8Array(encrypted);
+  let binary = '';
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return window.btoa(binary);
 }

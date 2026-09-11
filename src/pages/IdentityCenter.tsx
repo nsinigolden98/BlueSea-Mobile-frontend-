@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { 
-  ArrowLeft, ShieldCheck, Building2, MapPin, CheckCircle2, Clock, 
-  AlertTriangle, Info, Edit3, RefreshCw, ShieldAlert
+  ArrowLeft, ShieldCheck, Phone, Building2, MapPin, CheckCircle2, Clock, 
+  AlertTriangle, Info, Edit3, ShieldAlert
 } from 'lucide-react';
 import { getRequest, ENDPOINTS } from '@/types';
 import { Loader } from '@/components/ui-custom';
@@ -11,6 +11,7 @@ import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavi
 
 import type { VerificationStatusType } from '@/types/identity';
 import { DEFAULT_TIER_LIMITS } from '@/services/identityVerification';
+import { PhoneVerificationModal } from '@/components/identity/PhoneVerificationModal';
 import { FinancialIdentityModal } from '@/components/identity/FinancialIdentityModal';
 import { WhyVerifySheet } from '@/components/identity/WhyVerifySheet';
 
@@ -28,19 +29,20 @@ interface ProfileData {
 
 export function IdentityCenter() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { LoaderComponent, showLoader, hideLoader } = Loader();
 
   // Profile data fetch
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [, setLoadingProfile] = useState<boolean>(true);
 
-  // Backend-authoritative DVA/BVN status. No localStorage or simulated financial verification state.
+  // Verification state. Financial verification is derived from the backend-supported DVA state.
+  const [phoneStatus, setPhoneStatus] = useState<VerificationStatusType>('NOT_STARTED');
+  const [financialStatus, setFinancialStatus] = useState<VerificationStatusType>('NOT_STARTED');
   const [addressStatus, setAddressStatus] = useState<VerificationStatusType>('NOT_STARTED');
-  const [addressSimulating, setAddressSimulating] = useState<boolean>(false);
 
   // Modal / Sheet States
-  const [activeModal, setActiveModal] = useState<'financial' | null>(null);
+  const [activeModal, setActiveModal] = useState<'phone' | 'financial' | null>(null);
   const [whyVerifyTier, setWhyVerifyTier] = useState<1 | 2 | 3 | null>(null);
 
   // Fetch backend Profile Data (reusing ENDPOINTS.user)
@@ -64,29 +66,23 @@ export function IdentityCenter() {
     fetchProfile();
   }, [fetchProfile]);
 
+  useEffect(() => {
+    setFinancialStatus(user?.has_DVA ? 'VERIFIED' : 'NOT_STARTED');
+  }, [user?.has_DVA]);
+
   // Derived user details
   const userFullName = profileData
     ? `${profileData.other_names || ''} ${profileData.surname || ''}`.trim() || 'Valued Member'
     : user?.firstName ? `${user.firstName} ${user?.surname || ''}`.trim() : 'Valued Member';
 
-  const phoneRaw = profileData?.phone ? String(profileData.phone).trim() : '';
-  const hasDedicatedAccount = Boolean((profileData as any)?.account_number || (user as any)?.account_number);
-  const financialStatus: VerificationStatusType = hasDedicatedAccount ? 'VERIFIED' : 'NOT_STARTED';
+  const phoneRaw = profileData?.phone ? String(profileData.phone).replace(/\D/g, '') : '';
+  const phoneDisplay = phoneRaw ? `+234 ${phoneRaw.slice(-10)}` : 'Not Provided in Profile';
 
   const addressPref = profileData?.preference || {};
   const hasSavedAddress = Boolean(addressPref.street_address || addressPref.city || addressPref.state);
 
   // Tier calculation (In-memory representation)
-  const currentTier = addressStatus === 'VERIFIED' ? 2 : financialStatus === 'VERIFIED' ? 1 : 0;
-
-  // Address simulation trigger
-  const handleSimulateAddressVerification = () => {
-    setAddressSimulating(true);
-    setTimeout(() => {
-      setAddressSimulating(false);
-      setAddressStatus('VERIFIED');
-    }, 2000);
-  };
+  const currentTier = addressStatus === 'VERIFIED' ? 3 : financialStatus === 'VERIFIED' ? 2 : phoneStatus === 'VERIFIED' ? 1 : 0;
 
   const renderStatusBadge = (status: VerificationStatusType) => {
     switch (status) {
@@ -155,12 +151,13 @@ export function IdentityCenter() {
                     <span className="text-xs font-bold uppercase tracking-wider text-sky-300">Identity Verification Status</span>
                   </div>
                   <h2 className="text-2xl font-extrabold tracking-tight">
-                    Verification Progress
+                    Tier {currentTier} of 3 Completed
                   </h2>
                   <p className="text-xs text-slate-300 max-w-md leading-relaxed">
-                    {currentTier === 0 && 'Complete BVN verification to verify your financial identity and request your Dedicated Virtual Account.'}
-                    {currentTier === 1 && 'Your BVN verification and Dedicated Virtual Account setup are complete. Residential address verification remains optional for future features.'}
-                    {currentTier === 2 && 'Your BVN verification and address verification are complete.'}
+                    {currentTier === 0 && 'Your identity verification has not started. Verify your phone number to unlock Tier 1 access.'}
+                    {currentTier === 1 && 'Your phone number is verified. Complete Tier 2 financial identity verification to increase your transaction limits.'}
+                    {currentTier === 2 && 'Your financial identity is verified. Complete Tier 3 address verification for maximum account access.'}
+                    {currentTier === 3 && 'Your identity verification is fully complete! You enjoy full feature access and highest account limits.'}
                   </p>
                 </div>
 
@@ -168,12 +165,12 @@ export function IdentityCenter() {
                 <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 shrink-0 space-y-2 min-w-[200px]">
                   <div className="flex justify-between text-xs font-semibold">
                     <span>Progress</span>
-                    <span>{Math.round((currentTier / 2) * 100)}%</span>
+                    <span>{Math.round((currentTier / 3) * 100)}%</span>
                   </div>
                   <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-sky-400 transition-all duration-500 ease-out" 
-                      style={{ width: `${(currentTier / 2) * 100}%` }}
+                      style={{ width: `${(currentTier / 3) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -184,7 +181,52 @@ export function IdentityCenter() {
             <section className="space-y-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Verification Tiers</h3>
 
-              {/* TIER 1: FINANCIAL IDENTITY */}
+              {/* TIER 1: PHONE */}
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-sky-500/10 text-sky-500 rounded-2xl">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 1 - Phone Verification</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Confirm ownership of your registered mobile number.</p>
+                    </div>
+                  </div>
+                  {renderStatusBadge(phoneStatus)}
+                </div>
+
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs flex justify-between items-center">
+                  <span className="text-slate-500 dark:text-slate-400">Registered Phone:</span>
+                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{phoneDisplay}</span>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <button 
+                    onClick={() => setWhyVerifyTier(1)}
+                    className="text-xs font-semibold text-sky-500 hover:underline flex items-center gap-1"
+                  >
+                    <Info className="w-3.5 h-3.5" /> Why verify phone?
+                  </button>
+
+                  {phoneStatus !== 'VERIFIED' && (
+                    <button
+                      onClick={() => {
+                        if (!phoneRaw) {
+                          navigate('/profile');
+                        } else {
+                          setActiveModal('phone');
+                        }
+                      }}
+                      className="px-5 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
+                    >
+                      {!phoneRaw ? 'Add Phone in Profile' : 'Verify Phone'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* TIER 2: FINANCIAL IDENTITY */}
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -192,8 +234,8 @@ export function IdentityCenter() {
                       <Building2 className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 1 - Financial Identity</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Verify your BVN and assign your Dedicated Virtual Account.</p>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 2 - Financial Identity</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Link BVN and bank account details for higher financial limits.</p>
                     </div>
                   </div>
                   {renderStatusBadge(financialStatus)}
@@ -201,7 +243,7 @@ export function IdentityCenter() {
 
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
                   <button 
-                    onClick={() => setWhyVerifyTier(1)}
+                    onClick={() => setWhyVerifyTier(2)}
                     className="text-xs font-semibold text-sky-500 hover:underline flex items-center gap-1"
                   >
                     <Info className="w-3.5 h-3.5" /> Why verify financial identity?
@@ -212,13 +254,13 @@ export function IdentityCenter() {
                       onClick={() => setActiveModal('financial')}
                       className="px-5 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
                     >
-                      Start BVN Verification
+                      {financialStatus === 'PENDING' ? 'View Pending Request' : 'Start Financial Verification'}
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* TIER 2: RESIDENTIAL ADDRESS */}
+              {/* TIER 3: RESIDENTIAL ADDRESS */}
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -226,7 +268,7 @@ export function IdentityCenter() {
                       <MapPin className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 2 - Residential Address</h4>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 3 - Residential Address</h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400">Verify home address to unlock maximum limits and premium features.</p>
                     </div>
                   </div>
@@ -254,7 +296,7 @@ export function IdentityCenter() {
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex gap-3">
                     <button 
-                      onClick={() => setWhyVerifyTier(2)}
+                      onClick={() => setWhyVerifyTier(3)}
                       className="text-xs font-semibold text-sky-500 hover:underline flex items-center gap-1"
                     >
                       <Info className="w-3.5 h-3.5" /> Why verify address?
@@ -269,11 +311,12 @@ export function IdentityCenter() {
 
                   {addressStatus !== 'VERIFIED' && (
                     <button
-                      onClick={handleSimulateAddressVerification}
-                      disabled={!hasSavedAddress || addressSimulating}
-                      className="px-5 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+                      type="button"
+                      disabled
+                      className="px-5 h-10 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-semibold transition-colors cursor-not-allowed"
+                      title="No residential-address verification endpoint is included in the supplied backend contract."
                     >
-                      {addressSimulating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Verify Address'}
+                      Verification unavailable
                     </button>
                   )}
                 </div>
@@ -320,8 +363,16 @@ export function IdentityCenter() {
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 <div className="py-3 flex items-center justify-between text-xs">
                   <div>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200">Phone Verification</p>
+                    <p className="text-slate-400 text-[11px]">{phoneStatus === 'VERIFIED' ? 'Completed recently' : 'Not initiated'}</p>
+                  </div>
+                  {renderStatusBadge(phoneStatus)}
+                </div>
+
+                <div className="py-3 flex items-center justify-between text-xs">
+                  <div>
                     <p className="font-semibold text-slate-800 dark:text-slate-200">Financial Identity</p>
-                    <p className="text-slate-400 text-[11px]">{financialStatus === 'VERIFIED' ? 'Verified by backend' : 'Not initiated'}</p>
+                    <p className="text-slate-400 text-[11px]">{financialStatus === 'VERIFIED' ? 'Completed recently' : 'Not initiated'}</p>
                   </div>
                   {renderStatusBadge(financialStatus)}
                 </div>
@@ -329,7 +380,7 @@ export function IdentityCenter() {
                 <div className="py-3 flex items-center justify-between text-xs">
                   <div>
                     <p className="font-semibold text-slate-800 dark:text-slate-200">Residential Address</p>
-                    <p className="text-slate-400 text-[11px]">{addressStatus === 'VERIFIED' ? 'Completed in this session' : 'Not initiated'}</p>
+                    <p className="text-slate-400 text-[11px]">{addressStatus === 'VERIFIED' ? 'Completed recently' : 'Not initiated'}</p>
                   </div>
                   {renderStatusBadge(addressStatus)}
                 </div>
@@ -357,33 +408,41 @@ export function IdentityCenter() {
       </div>
 
       {/* MODALS & SHEETS */}
+      <PhoneVerificationModal
+        isOpen={activeModal === 'phone'}
+        onClose={() => setActiveModal(null)}
+        phoneDisplay={phoneDisplay}
+        onSuccess={() => setPhoneStatus('VERIFIED')}
+      />
+
       <FinancialIdentityModal
         isOpen={activeModal === 'financial'}
         onClose={() => setActiveModal(null)}
         userFullName={userFullName}
-        firstName={profileData?.other_names || user?.firstName || ''}
-        lastName={profileData?.surname || user?.surname || ''}
-        profilePhone={phoneRaw}
-        onSubmitted={fetchProfile}
+        onSubmitted={async () => {
+          await refreshUser();
+          await fetchProfile();
+          setFinancialStatus('VERIFIED');
+        }}
       />
 
       <WhyVerifySheet
         isOpen={whyVerifyTier !== null}
         onClose={() => setWhyVerifyTier(null)}
-        tierTitle={whyVerifyTier === 1 ? 'Tier 1 - Financial Identity' : whyVerifyTier === 2 ? 'Tier 2 - Residential Address' : 'Tier 3'}
+        tierTitle={`Tier ${whyVerifyTier}`}
         explanation={
-          whyVerifyTier === 1
-            ? 'BVN verification confirms your financial identity and is the verification required for Dedicated Virtual Account setup.'
+          whyVerifyTier === 1 
+            ? 'Phone verification confirms account ownership and protects your account against unauthorized logins.'
             : whyVerifyTier === 2
-            ? 'Residential address verification is retained as a future compliance step and does not block Dedicated Virtual Account setup.'
-            : 'This verification tier is reserved for future backend-supported compliance features.'
+            ? 'Financial identity verification links your BVN and bank account to verify your official legal identity.'
+            : 'Address verification completes your compliance profile and enables top-tier financial transfers.'
         }
         unlockedFeatures={
           whyVerifyTier === 1
-            ? ['Dedicated Virtual Account eligibility', 'Backend BVN verification', 'Financial identity confirmation']
+            ? ['Basic Airtime & Data', 'Cable & Utility Payments', 'Basic Wallet Access']
             : whyVerifyTier === 2
-            ? ['Future address-based compliance features']
-            : ['Future backend-supported features']
+            ? ['Higher Deposit Limits', 'Expanded Pay Link', 'Higher Internal Transfers']
+            : ['Maximum Wallet Caps', 'Full DVA Eligibility', 'Unlimited Daily Transfers']
         }
       />
 
