@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { useAuth } from '@/context/AuthContext';
+import type { DvaAccount } from '@/types';
 
 import { 
   Landmark, 
@@ -29,6 +30,7 @@ export function Wallet() {
 
   // Type assertion for optional backend user properties
   const userData = user as Record<string, any> | null;
+  const dvaAccount: DvaAccount | null = userData?.dva_account ?? null;
 
   // --- Layout State ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -110,22 +112,22 @@ export function Wallet() {
                 <span className="text-[10px] font-bold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-full">Automated</span>
               </div>
               
-              {(userData?.account_number || userData?.bank_name) ? (
+              {(dvaAccount?.account_number || dvaAccount?.bank_name) ? (
                 <div 
                   onClick={() => setVirtualAccountModalOpen(true)}
                   className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-white/5 cursor-pointer hover:border-sky-500/30 transition-all"
                 >
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Bank Name</p>
-                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{userData?.bank_name || '—'}</p>
+                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{dvaAccount?.bank_name || '—'}</p>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
-                    <p className="text-xs font-black text-sky-500 tracking-wider mt-0.5 truncate">{userData?.account_number || '—'}</p>
+                    <p className="text-xs font-black text-sky-500 tracking-wider mt-0.5 truncate">{dvaAccount?.account_number || '—'}</p>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Name</p>
-                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{userData?.account_name || userData?.name || '—'}</p>
+                    <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">{dvaAccount?.account_name || '—'}</p>
                   </div>
                 </div>
               ) : (
@@ -203,7 +205,7 @@ export function Wallet() {
       <DedicatedVirtualAccountModal
         isOpen={virtualAccountModalOpen}
         onClose={() => setVirtualAccountModalOpen(false)}
-        userData={userData}
+        userData={dvaAccount}
       />
 
       {/* --- REUSABLE INTERNAL TRANSFER MODAL --- */}

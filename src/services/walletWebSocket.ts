@@ -180,10 +180,11 @@ function toWebSocketBase(base: string): string {
   return trimmed;
 }
 
-export const walletWS = (
+export function createWalletWebSocket(
   base: string,
   onUpdate: (data: BalanceUpdate | WalletConnected) => void,
-) => {
+  onCloseCode?: (code: number) => void,
+) {
   const socket = new ReconnectWS(
     () => {
       const token = getCookie('access_token');
@@ -196,7 +197,7 @@ export const walletWS = (
         onUpdate(message);
       }
     },
-    (code) => {
+    (code: number) => {
       if (code === 4401) {
         console.warn(
           'Wallet WebSocket authentication expired (4401). Waiting for the existing auth/token-refresh flow.',
@@ -210,7 +211,10 @@ export const walletWS = (
     ping: () => socket.send({ type: 'ping' }),
     close: () => socket.close(),
   };
-};
+}
+
+// Backward-compatible alias for existing imports.
+export const walletWS = createWalletWebSocket;
 
 export const paymentsWS = (
   base: string,
@@ -232,6 +236,7 @@ export const paymentsWS = (
       }
     },
     (code) => {
+      onCloseCode?.(code);
       if (code === 4401) {
         console.warn(
           'Payment WebSocket authentication expired (4401). Waiting for the existing auth/token-refresh flow.',

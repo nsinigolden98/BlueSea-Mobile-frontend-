@@ -199,7 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     walletSocketRef.current = createWalletWebSocket(
       API_BASE,
       applyBalanceUpdate,
-      (code) => {
+      (code: number) => {
         if (code === 4401) {
           // Token refresh/re-authentication belongs to the existing auth flow.
           // Do not manufacture a second token system inside the WebSocket client.
