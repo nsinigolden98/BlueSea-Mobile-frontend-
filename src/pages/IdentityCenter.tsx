@@ -39,7 +39,7 @@ export function IdentityCenter() {
   // Verification state. Financial verification is derived from the backend-supported DVA state.
   const [phoneStatus, setPhoneStatus] = useState<VerificationStatusType>('NOT_STARTED');
   const [financialStatus, setFinancialStatus] = useState<VerificationStatusType>('NOT_STARTED');
-  const [addressStatus, setAddressStatus] = useState<VerificationStatusType>('NOT_STARTED');
+  const [addressStatus] = useState<VerificationStatusType>('NOT_STARTED');
 
   // Modal / Sheet States
   const [activeModal, setActiveModal] = useState<'phone' | 'financial' | null>(null);

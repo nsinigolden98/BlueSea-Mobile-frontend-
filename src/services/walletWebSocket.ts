@@ -1,5 +1,3 @@
-import { getCookie } from '@/types';
-
 export type WalletConnected = {
   type: 'connected';
   user_id: number;
@@ -23,62 +21,51 @@ export type BalanceUpdate = {
   transaction_type?: 'CREDIT' | 'DEBIT';
 };
 
+export type PaymentUpdate = {
+  type: 'payment_update';
+  reference_id: string;
+  status: 'pending' | 'delivered' | 'failed' | 'reversed';
+  payment_type: string;
+  vtpass_transaction_id?: string;
+  amount: string;
+};
+
 export type WalletMessage =
   | WalletConnected
   | BalanceUpdate
-  | { type: 'pong' }
-
-type WalletUpdateHandler = (message: WalletConnected | BalanceUpdate) => void;
+  | PaymentUpdate
+  | { type: 'pong' };
 
 type CloseHandler = (code: number) => void;
 
-const WS_OPEN = 1;
-const NORMAL_CLOSE = 1000;
-const JWT_EXPIRED_CLOSE = 4401;
-
-function toWebSocketBase(base: string): string {
-  if (base.startsWith('wss://') || base.startsWith('ws://')) return base;
-  if (base.startsWith('https://')) return `wss://${base.slice('https://'.length)}`;
-  if (base.startsWith('http://')) return `ws://${base.slice('http://'.length)}`;
-  return `wss://${base.replace(/^\/+/, '')}`;
-}
-
-class ReconnectWebSocket {
+class ReconnectWS {
   private ws?: WebSocket;
-  private pingTimer?: number;
-  private reconnectTimer?: number;
+  private ping?: number;
   private retries = 0;
+
+  private readonly urlFactory: () => string;
+  private readonly onMsg: (message: WalletMessage) => void;
+  private readonly onCloseCode?: CloseHandler;
   private closedByUser = false;
 
   constructor(
-    private readonly urlFactory: () => string,
-    private readonly onMessage: (message: WalletMessage) => void,
-    private readonly onClose?: CloseHandler,
+    urlFactory: () => string,
+    onMsg: (message: WalletMessage) => void,
+    onCloseCode?: CloseHandler,
   ) {
+    this.urlFactory = urlFactory;
+    this.onMsg = onMsg;
+    this.onCloseCode = onCloseCode;
     this.connect();
-  }
-
-  private clearTimers() {
-    if (this.pingTimer !== undefined) {
-      window.clearInterval(this.pingTimer);
-      this.pingTimer = undefined;
-    }
-    if (this.reconnectTimer !== undefined) {
-      window.clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = undefined;
-    }
   }
 
   private connect() {
     if (this.closedByUser) return;
 
-    const token = getCookie('access_token');
-    if (!token) return;
-
-    this.clearTimers();
+    const url = this.urlFactory();
 
     try {
-      this.ws = new WebSocket(this.urlFactory());
+      this.ws = new WebSocket(url);
     } catch (error) {
       console.error('Failed to create wallet WebSocket:', error);
       this.scheduleReconnect();
@@ -87,82 +74,135 @@ class ReconnectWebSocket {
 
     this.ws.onopen = () => {
       this.retries = 0;
-      this.pingTimer = window.setInterval(() => {
-        if (this.ws?.readyState === WS_OPEN) {
+
+      if (this.ping !== undefined) {
+        window.clearInterval(this.ping);
+      }
+
+      this.ping = window.setInterval(() => {
+        if (this.ws?.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify({ type: 'ping' }));
         }
       }, 25_000);
 
-      // Ask for a fresh balance after every connection. This is an explicit
-      // backend-supported request, not polling.
+      // The backend explicitly supports balance_request. This is a
+      // request/response initialization event, not polling.
       this.send({ type: 'balance_request' });
     };
 
-    this.ws.onmessage = (event) => {
+    this.ws.onmessage = (event: MessageEvent<string>) => {
       try {
         const message = JSON.parse(event.data) as WalletMessage;
-        this.onMessage(message);
+        this.onMsg(message);
       } catch (error) {
         console.error('Invalid wallet WebSocket message:', error);
       }
     };
 
-    this.ws.onclose = (event) => {
-      this.clearTimers();
-      this.onClose?.(event.code);
+    this.ws.onerror = (error) => {
+      console.error('Wallet WebSocket error:', error);
+    };
 
-      if (this.closedByUser || event.code === NORMAL_CLOSE || event.code === JWT_EXPIRED_CLOSE) {
+    this.ws.onclose = (event: CloseEvent) => {
+      this.clearPing();
+      this.onCloseCode?.(event.code);
+
+      if (this.closedByUser || event.code === 1000 || event.code === 4401) {
         return;
       }
 
       this.scheduleReconnect();
     };
-
-    this.ws.onerror = () => {
-      // onclose performs the reconnect. Avoid duplicate reconnect timers here.
-    };
   }
 
   private scheduleReconnect() {
-    if (this.closedByUser || this.reconnectTimer !== undefined) return;
+    if (this.closedByUser) return;
 
     const delay = Math.min(1_000 * 2 ** this.retries, 30_000);
     this.retries += 1;
 
-    this.reconnectTimer = window.setTimeout(() => {
-      this.reconnectTimer = undefined;
-      this.connect();
+    window.setTimeout(() => {
+      if (!this.closedByUser) {
+        this.connect();
+      }
     }, delay);
   }
 
+  private clearPing() {
+    if (this.ping !== undefined) {
+      window.clearInterval(this.ping);
+      this.ping = undefined;
+    }
+  }
+
   send(data: unknown) {
-    if (this.ws?.readyState === WS_OPEN) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(data));
     }
   }
 
   close() {
     this.closedByUser = true;
-    this.clearTimers();
-    this.ws?.close(NORMAL_CLOSE);
+    this.clearPing();
+
+    if (this.ws && this.ws.readyState !== WebSocket.CLOSED) {
+      this.ws.close(1000);
+    }
   }
 }
 
-export function createWalletWebSocket(
-  apiBase: string,
-  onUpdate: WalletUpdateHandler,
-  onClose?: CloseHandler,
-) {
-  const wsBase = toWebSocketBase(apiBase);
+function getCookie(name: string): string {
+  if (typeof document === 'undefined') return '';
 
-  const socket = new ReconnectWebSocket(
-    () => `${wsBase}/ws/wallet/?token=${encodeURIComponent(getCookie('access_token') || '')}`,
+  const prefix = `${name}=`;
+  const cookie = document.cookie
+    .split('; ')
+    .find((item) => item.startsWith(prefix));
+
+  return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : '';
+}
+
+function toWebSocketBase(base: string): string {
+  const trimmed = base.replace(/\/+$/, '');
+
+  if (trimmed.startsWith('https://')) {
+    return `wss://${trimmed.slice('https://'.length)}`;
+  }
+
+  if (trimmed.startsWith('http://')) {
+    return `ws://${trimmed.slice('http://'.length)}`;
+  }
+
+  if (trimmed.startsWith('wss://') || trimmed.startsWith('ws://')) {
+    return trimmed;
+  }
+
+  return trimmed;
+}
+
+export const walletWS = (
+  base: string,
+  onUpdate: (data: BalanceUpdate | WalletConnected) => void,
+) => {
+  const socket = new ReconnectWS(
+    () => {
+      const token = getCookie('access_token');
+      const wsBase = toWebSocketBase(base);
+
+      return `${wsBase}/ws/wallet/?token=${encodeURIComponent(token)}`;
+    },
     (message) => {
       if (message.type === 'connected' || message.type === 'balance_update') {
         onUpdate(message);
       }
     },
-    onClose,
+    (code) => {
+      if (code === 4401) {
+        console.warn(
+          'Wallet WebSocket authentication expired (4401). Waiting for the existing auth/token-refresh flow.',
+        );
+      }
+    },
   );
 
   return {
@@ -170,4 +210,38 @@ export function createWalletWebSocket(
     ping: () => socket.send({ type: 'ping' }),
     close: () => socket.close(),
   };
-}
+};
+
+export const paymentsWS = (
+  base: string,
+  referenceId: string,
+  onUpdate: (data: PaymentUpdate) => void,
+) => {
+  const socket = new ReconnectWS(
+    () => {
+      const token = getCookie('access_token');
+      const wsBase = toWebSocketBase(base);
+
+      return `${wsBase}/ws/payments/${encodeURIComponent(
+        referenceId,
+      )}/?token=${encodeURIComponent(token)}`;
+    },
+    (message) => {
+      if (message.type === 'payment_update') {
+        onUpdate(message);
+      }
+    },
+    (code) => {
+      if (code === 4401) {
+        console.warn(
+          'Payment WebSocket authentication expired (4401). Waiting for the existing auth/token-refresh flow.',
+        );
+      }
+    },
+  );
+
+  return {
+    ping: () => socket.send({ type: 'ping' }),
+    close: () => socket.close(),
+  };
+};
