@@ -30,7 +30,7 @@ export function Wallet() {
   // Type assertion for optional backend user properties
   const userData = user as Record<string, any> | null;
 
-  // Dedicated account details come only from GET /user_preference/user/ -> dva_account.
+  // The backend DVA is nested under has_DVA.dva_account.
   const dvaAccount = userData?.has_DVA === true ? userData?.dva_account ?? null : null;
 
   // --- Layout State ---

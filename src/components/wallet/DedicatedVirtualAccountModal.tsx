@@ -29,7 +29,6 @@ export function DedicatedVirtualAccountModal({
   const accountNumber = userData?.account_number != null ? String(userData.account_number) : '';
   const accountName = userData?.account_name || '';
 
-
   const handleCopy = async () => {
     if (!accountNumber) return;
     try {
@@ -71,6 +70,7 @@ export function DedicatedVirtualAccountModal({
 
         {/* Content Body */}
         {accountNumber ? (
+
           <div className="space-y-5">
             <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-white/5 rounded-2xl p-4 space-y-4">
               {bankName && (
@@ -88,14 +88,13 @@ export function DedicatedVirtualAccountModal({
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                   Account Number
                 </span>
-                <div className="flex items-center justify-between mt-1 gap-3">
-                  <p className="text-xl font-black text-sky-500 tracking-wider break-all">
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xl font-black text-sky-500 tracking-wider">
                     {accountNumber}
                   </p>
                   <button
-                    type="button"
                     onClick={handleCopy}
-                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer"
                   >
                     {copied ? (
                       <>
@@ -133,10 +132,10 @@ export function DedicatedVirtualAccountModal({
         ) : (
           <div className="text-center py-6 space-y-3">
             <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-              Your dedicated account details are not available yet.
+              Your account request is currently being processed.
             </p>
             <p className="text-[11px] text-slate-400">
-              Account details will appear here once the backend has assigned the dedicated account.
+              Details will appear here automatically once ready.
             </p>
           </div>
         )}
