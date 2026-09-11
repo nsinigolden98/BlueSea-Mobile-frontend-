@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { useAuth } from '@/context/AuthContext';
-import type { DvaAccount } from '@/types';
 
 import { 
   Landmark, 
@@ -30,27 +29,15 @@ export function Wallet() {
 
   // Type assertion for optional backend user properties
   const userData = user as Record<string, any> | null;
-  const dvaAccount: DvaAccount | null = userData?.dva_account ?? null;
+
+  // Dedicated account details come only from GET /user_preference/user/ -> dva_account.
+  const dvaAccount = userData?.has_DVA === true ? userData?.dva_account ?? null : null;
 
   // --- Layout State ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // --- Shared Virtual Account Modal State ---
   const [virtualAccountModalOpen, setVirtualAccountModalOpen] = useState(false);
-  const [copiedDvaAccount, setCopiedDvaAccount] = useState(false);
-
-  const handleCopyDvaAccount = async () => {
-    const number = dvaAccount?.account_number;
-    if (!number) return;
-
-    try {
-      await navigator.clipboard.writeText(String(number));
-      setCopiedDvaAccount(true);
-      window.setTimeout(() => setCopiedDvaAccount(false), 2500);
-    } catch (error) {
-      console.error('Failed to copy DVA account number:', error);
-    }
-  };
 
   // --- Internal Transfer Modal Toggle ---
   const [transferOpen, setTransferOpen] = useState(false);
@@ -126,7 +113,7 @@ export function Wallet() {
                 <span className="text-[10px] font-bold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-full">Automated</span>
               </div>
               
-              {(dvaAccount?.account_number || dvaAccount?.bank_name) ? (
+              {dvaAccount?.account_number ? (
                 <div 
                   onClick={() => setVirtualAccountModalOpen(true)}
                   className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-white/5 cursor-pointer hover:border-sky-500/30 transition-all"
@@ -137,21 +124,7 @@ export function Wallet() {
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs font-black text-sky-500 tracking-wider truncate">{dvaAccount?.account_number || '—'}</p>
-                      {dvaAccount?.account_number && (
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleCopyDvaAccount();
-                          }}
-                          className="shrink-0 px-2 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 text-[9px] font-bold transition-all active:scale-95"
-                        >
-                          {copiedDvaAccount ? 'Copied' : 'Copy'}
-                        </button>
-                      )}
-                    </div>
+                    <p className="text-xs font-black text-sky-500 tracking-wider mt-0.5 truncate">{dvaAccount?.account_number || '—'}</p>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Name</p>
