@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { 
   ArrowLeft, ShieldCheck, Phone, Building2, MapPin, CheckCircle2, Clock, 
-  AlertTriangle, Info, Edit3, ShieldAlert
+  AlertTriangle, Info, Edit3,  ShieldAlert
 } from 'lucide-react';
-import { getRequest, ENDPOINTS } from '@/types';
+import { getRequest, ENDPOINTS, API_BASE } from '@/types';
 import { Loader } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
@@ -29,14 +29,14 @@ interface ProfileData {
 
 export function IdentityCenter() {
   const navigate = useNavigate();
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const { LoaderComponent, showLoader, hideLoader } = Loader();
 
   // Profile data fetch
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [, setLoadingProfile] = useState<boolean>(true);
 
-  // Verification state. Financial verification is derived from the backend-supported DVA state.
+  // Verification simulation state (React in-memory only - NO localStorage persistence!)
   const [phoneStatus, setPhoneStatus] = useState<VerificationStatusType>('NOT_STARTED');
   const [financialStatus, setFinancialStatus] = useState<VerificationStatusType>('NOT_STARTED');
   const [addressStatus] = useState<VerificationStatusType>('NOT_STARTED');
@@ -45,14 +45,17 @@ export function IdentityCenter() {
   const [activeModal, setActiveModal] = useState<'phone' | 'financial' | null>(null);
   const [whyVerifyTier, setWhyVerifyTier] = useState<1 | 2 | 3 | null>(null);
 
-  // Fetch backend Profile Data (reusing ENDPOINTS.user)
+  // Backend profile is the source of truth for profile/address data.
   const fetchProfile = useCallback(async () => {
     setLoadingProfile(true);
     showLoader();
     try {
       const response = await getRequest(ENDPOINTS.user);
-      if (response) {
-        setProfileData(response);
+      const profile = response?.data && typeof response.data === 'object'
+        ? response.data
+        : response;
+      if (profile && typeof profile === 'object') {
+        setProfileData(profile);
       }
     } catch (err) {
       console.error('Failed to load profile for Identity Center:', err);
@@ -62,13 +65,32 @@ export function IdentityCenter() {
     }
   }, [showLoader, hideLoader]);
 
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+  const checkFinancialVerification = useCallback(async () => {
+    const email = user?.email;
+    if (!email) {
+      setFinancialStatus('NOT_STARTED');
+      return;
+    }
+
+    try {
+      const response = await getRequest(
+        `${API_BASE}/user_preference/check/${encodeURIComponent(email)}/`,
+      );
+      const result = response?.data && typeof response.data === 'object'
+        ? response.data
+        : response;
+
+      setFinancialStatus(result?.state === true ? 'VERIFIED' : 'NOT_STARTED');
+    } catch (err) {
+      console.error('Failed to load financial verification status:', err);
+      setFinancialStatus('NOT_STARTED');
+    }
+  }, [user?.email]);
 
   useEffect(() => {
-    setFinancialStatus(user?.has_DVA ? 'VERIFIED' : 'NOT_STARTED');
-  }, [user?.has_DVA]);
+    void fetchProfile();
+    void checkFinancialVerification();
+  }, [fetchProfile, checkFinancialVerification]);
 
   // Derived user details
   const userFullName = profileData
@@ -83,6 +105,9 @@ export function IdentityCenter() {
 
   // Tier calculation (In-memory representation)
   const currentTier = addressStatus === 'VERIFIED' ? 3 : financialStatus === 'VERIFIED' ? 2 : phoneStatus === 'VERIFIED' ? 1 : 0;
+
+  // No residential-address verification endpoint was supplied by the backend contract,
+  // so this page does not simulate or claim address verification.
 
   const renderStatusBadge = (status: VerificationStatusType) => {
     switch (status) {
@@ -309,16 +334,13 @@ export function IdentityCenter() {
                     </button>
                   </div>
 
-                  {addressStatus !== 'VERIFIED' && (
-                    <button
-                      type="button"
-                      disabled
-                      className="px-5 h-10 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-semibold transition-colors cursor-not-allowed"
-                      title="No residential-address verification endpoint is included in the supplied backend contract."
-                    >
-                      Verification unavailable
-                    </button>
-                  )}
+                  <button
+               type="button"
+               disabled
+                className="px-5 h-10 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl text-xs               font-semibold shadow-sm cursor-not-allowed flex items-center gap-2"
+              >
+                Verification Unavailable
+              </button>
                 </div>
               </div>
             </section>
@@ -419,10 +441,8 @@ export function IdentityCenter() {
         isOpen={activeModal === 'financial'}
         onClose={() => setActiveModal(null)}
         userFullName={userFullName}
-        onSubmitted={async () => {
-          await refreshUser();
-          await fetchProfile();
-          setFinancialStatus('VERIFIED');
+        onSubmitted={() => {
+          void Promise.all([fetchProfile(), checkFinancialVerification()]);
         }}
       />
 
