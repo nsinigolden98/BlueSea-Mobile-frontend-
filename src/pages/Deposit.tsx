@@ -17,8 +17,6 @@ import {
   Landmark, 
   Info, 
   ArrowLeft, 
-  ShieldAlert,
-  ChevronRight,
   CheckCircle2
 } from 'lucide-react';
 
@@ -34,7 +32,7 @@ export function Deposit() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Selected Method
-  const [selectedMethod, setSelectedMethod] = useState<DepositMethod>('paystack');
+  const [selectedMethod, setSelectedMethod] = useState<DepositMethod>('virtual_account');
 
   // Paystack Form State
   const [rawAmount, setRawAmount] = useState('');
@@ -43,15 +41,7 @@ export function Deposit() {
 
   // Account Modal & Request State
   const [accountModalOpen, setAccountModalOpen] = useState(false);
-  const [accountLoading, setAccountLoading] = useState(false);
 
-  // KYC verification check
-  const isKycComplete = Boolean(
-    userData?.is_verified ||
-    userData?.kyc_status === 'verified' ||
-    userData?.kyc_status === 'approved' ||
-    userData?.bvn
-  );
 
   // DVA details come only from the authenticated backend profile.
   const dvaAccount = userData?.has_DVA === true ? userData?.dva_account ?? null : null;
@@ -118,39 +108,15 @@ export function Deposit() {
     }
   };
 
-  const handleVirtualAccountAction = async () => {
-    if (!isKycComplete) {
-      navigate('/identity-verification');
-      return;
-    }
-
+  const handleVirtualAccountAction = () => {
     if (hasVirtualAccount) {
       setAccountModalOpen(true);
       return;
     }
 
-    // Request account using real backend endpoint if available
-    setAccountLoading(true);
-    try {
-      // Keep the existing request flow exactly as it was. The endpoint exists
-      // in the runtime endpoint map, but older TypeScript typings may omit it.
-      const requestVirtualAccount = (ENDPOINTS as typeof ENDPOINTS & {
-        requestVirtualAccount?: string;
-      }).requestVirtualAccount;
-      if (requestVirtualAccount) {
-        await postRequest(requestVirtualAccount, {});
-      }
-      const authCtx = user as any;
-      const refreshFn = authCtx?.refreshUser || authCtx?.checkAuth || authCtx?.fetchUserData;
-      if (typeof refreshFn === 'function') {
-        await refreshFn();
-      }
-    } catch (err) {
-      console.error('Account request failed:', err);
-    } finally {
-      setAccountLoading(false);
-      setAccountModalOpen(true);
-    }
+    // DVA creation/assignment remains in the existing Identity Center flow.
+    // Deposit only consumes the DVA state already returned by the backend.
+    navigate('/identity-center');
   };
 
   return (
@@ -195,34 +161,6 @@ export function Deposit() {
 
             {/* Method Selectors */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Paystack Card Option */}
-              <div
-                onClick={() => setSelectedMethod('paystack')}
-                className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer ${
-                  selectedMethod === 'paystack'
-                    ? 'border-sky-500 bg-sky-500/5 shadow-md'
-                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="p-2.5 bg-sky-500/10 text-sky-500 rounded-xl">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  {selectedMethod === 'paystack' && (
-                    <CheckCircle2 className="w-5 h-5 text-sky-500" />
-                  )}
-                </div>
-                <h3 className="text-sm font-black text-slate-900 dark:text-white mt-4">
-                  Paystack Checkout
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Card, Bank Transfer, USSD
-                </p>
-                <span className="inline-block mt-3 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
-                  Fee: 1.5%
-                </span>
-              </div>
-
               {/* Dedicated Virtual Account Option */}
               <div
                 onClick={() => setSelectedMethod('virtual_account')}
@@ -248,6 +186,34 @@ export function Deposit() {
                 </p>
                 <span className="inline-block mt-3 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
                   Fee: 1.0%
+                </span>
+              </div>
+
+              {/* Paystack Card Option */}
+              <div
+                onClick={() => setSelectedMethod('paystack')}
+                className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+                  selectedMethod === 'paystack'
+                    ? 'border-sky-500 bg-sky-500/5 shadow-md'
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="p-2.5 bg-sky-500/10 text-sky-500 rounded-xl">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  {selectedMethod === 'paystack' && (
+                    <CheckCircle2 className="w-5 h-5 text-sky-500" />
+                  )}
+                </div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white mt-4">
+                  Paystack Checkout
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  Card, Bank Transfer, USSD
+                </p>
+                <span className="inline-block mt-3 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
+                  Fee: 1.5%
                 </span>
               </div>
             </div>
@@ -353,28 +319,7 @@ export function Deposit() {
                   </p>
                 </div>
 
-                {/* KYC / Eligibility Status Card */}
-                {!isKycComplete ? (
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
-                      <h3 className="text-xs font-black text-slate-800 dark:text-slate-100">
-                        Identity Verification Required
-                      </h3>
-                    </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                      Complete your identity verification before requesting a dedicated virtual account.
-                    </p>
-                    <Button
-                      onClick={() => navigate('/identity-center')}
-                      className="w-full bg-amber-500 hover:bg-amber-600 text-white h-11 rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <span>Complete Verification</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <>
+                {/* Dedicated Account availability comes from the authenticated backend profile. */}
                     {/* Sample Calculator Preview */}
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">
@@ -429,19 +374,14 @@ export function Deposit() {
 
                     <Button
                       onClick={handleVirtualAccountAction}
-                      disabled={accountLoading}
                       className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-sm font-black shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all cursor-pointer"
                     >
-                      {accountLoading ? (
-                        <LoadingSpinner size="sm" text="Processing..." />
-                      ) : hasVirtualAccount ? (
+                      {hasVirtualAccount ? (
                         'View Account Details'
                       ) : (
                         'Request Dedicated Account'
                       )}
                     </Button>
-                  </>
-                )}
               </div>
             )}
           </div>

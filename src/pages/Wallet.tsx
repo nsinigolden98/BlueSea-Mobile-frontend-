@@ -19,6 +19,8 @@ import {
   Landmark, 
   Send, 
   X, 
+  Copy,
+  Check,
   ChevronRight, 
   CreditCard 
 } from 'lucide-react';
@@ -38,9 +40,24 @@ export function Wallet() {
 
   // --- Shared Virtual Account Modal State ---
   const [virtualAccountModalOpen, setVirtualAccountModalOpen] = useState(false);
+  const [copiedDvaAccount, setCopiedDvaAccount] = useState(false);
 
   // --- Internal Transfer Modal Toggle ---
   const [transferOpen, setTransferOpen] = useState(false);
+
+  const handleCopyDvaAccount = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+    const accountNumber = dvaAccount?.account_number;
+    if (accountNumber == null) return;
+
+    try {
+      await navigator.clipboard.writeText(String(accountNumber));
+      setCopiedDvaAccount(true);
+      setTimeout(() => setCopiedDvaAccount(false), 2500);
+    } catch (error) {
+      console.error('Failed to copy DVA account number:', error);
+    }
+  };
 
   // --- Saved Card States ---
   const [cardModalOpen, setCardModalOpen] = useState(false);
@@ -113,7 +130,7 @@ export function Wallet() {
                 <span className="text-[10px] font-bold text-sky-500 bg-sky-500/10 px-2 py-0.5 rounded-full">Automated</span>
               </div>
               
-              {dvaAccount?.account_number ? (
+              {(dvaAccount?.account_number) ? (
                 <div 
                   onClick={() => setVirtualAccountModalOpen(true)}
                   className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-white/5 cursor-pointer hover:border-sky-500/30 transition-all"
@@ -124,7 +141,21 @@ export function Wallet() {
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
-                    <p className="text-xs font-black text-sky-500 tracking-wider mt-0.5 truncate">{dvaAccount?.account_number || '—'}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-xs font-black text-sky-500 tracking-wider truncate">{dvaAccount?.account_number}</p>
+                      <button
+                        type="button"
+                        onClick={handleCopyDvaAccount}
+                        className="shrink-0 flex items-center gap-1 px-2 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-500 rounded-lg text-[10px] font-bold transition-all active:scale-95 cursor-pointer"
+                        aria-label="Copy dedicated account number"
+                      >
+                        {copiedDvaAccount ? (
+                          <><Check className="w-3 h-3 text-emerald-500" /><span className="text-emerald-500">Copied</span></>
+                        ) : (
+                          <><Copy className="w-3 h-3" /><span>Copy</span></>
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Name</p>
