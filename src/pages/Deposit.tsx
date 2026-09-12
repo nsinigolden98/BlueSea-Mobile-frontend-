@@ -319,7 +319,36 @@ export function Deposit() {
                   </p>
                 </div>
 
-                {/* Dedicated Account availability comes from the authenticated backend profile. */}
+                {/* Dedicated Account details are rendered directly from the authenticated backend profile. */}
+                {hasVirtualAccount && (
+                  <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 rounded-2xl p-3 md:p-4">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Dedicated Funding Account</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Use these details for your bank transfer</p>
+                      </div>
+                      <button type="button" onClick={() => setAccountModalOpen(true)} className="shrink-0 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-[9px] font-bold text-slate-600 dark:text-slate-300 hover:text-sky-500 hover:border-sky-500/30 transition-all cursor-pointer">View details</button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 md:gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Bank Name</p>
+                        <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-1 truncate">{dvaAccount?.bank_name}</p>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="text-sm font-black text-sky-500 tracking-wider truncate">{dvaAccount?.dva_account_number}</p>
+                          <button type="button" onClick={async () => { const accountNumber = dvaAccount?.dva_account_number; if (accountNumber == null) return; try { await navigator.clipboard.writeText(String(accountNumber)); } catch (error) { console.error('Failed to copy DVA account number:', error); } }} className="shrink-0 px-2 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-[9px] font-bold text-sky-500 transition-all active:scale-95 cursor-pointer" aria-label="Copy dedicated account number">Copy</button>
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Name</p>
+                        <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-1 truncate">{dvaAccount?.dva_account_name}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                     {/* Sample Calculator Preview */}
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">
