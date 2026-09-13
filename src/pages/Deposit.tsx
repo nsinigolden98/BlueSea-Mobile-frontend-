@@ -226,7 +226,7 @@ export function Deposit() {
                   Card, Bank Transfer, USSD
                 </p>
                 <span className="inline-block mt-3 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
-                  Fee: 1.5%
+                  Fee: 0%
                 </span>
               </div>
             </div>
@@ -284,7 +284,7 @@ export function Deposit() {
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-slate-500 dark:text-slate-400 font-medium">
-                        Processing fee (1.5%)
+                        Processing fee (0%)
                       </span>
                       <span className="font-bold text-slate-800 dark:text-slate-200">
                         {formatNaira(paystackFee)}
@@ -301,7 +301,7 @@ export function Deposit() {
                 <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
                   <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    A 1.5% processing fee will be added to your deposit amount before payment is completed. Your wallet will be credited with exact requested amount of <strong>{formatNaira(numericAmount)}</strong>.
+                    A 0% processing fee will be added to your deposit amount before payment is completed. Your wallet will be credited with exact requested amount of <strong>{formatNaira(numericAmount)}</strong>.
                   </p>
                 </div>
 

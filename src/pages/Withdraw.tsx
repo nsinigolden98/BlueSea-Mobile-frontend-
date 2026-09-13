@@ -107,11 +107,11 @@ export function Withdraw() {
   const hasVerifiedFinancialIdentity = user?.has_DVA === true;
   const withdrawalLimit = hasVerifiedFinancialIdentity ? 500000 : 100000;
 
-  // The backend deducts this ₦15 charge for withdrawals above ₦10,000.
+  // The backend deducts this ₦50 charge for withdrawals above ₦10,000.
   // Keep the entered withdrawal amount unchanged for the backend/PIN flow.
   // This charge is displayed only so the user knows the expected net amount.
   const numericAmount = Number(withdrawAmount) || 0;
-  const serviceCharge = numericAmount > 10000 ? 15 : 0;
+  const serviceCharge = numericAmount > 9999 ? 50 : 0;
   const expectedAmountReceived = Math.max(0, numericAmount - serviceCharge);
   const isOverWithdrawalLimit = numericAmount > withdrawalLimit;
 
@@ -285,7 +285,7 @@ export function Withdraw() {
       bank_code: selectedBank,
       bank_name: selectedBankObj?.name || '',
       // Send the exact amount entered by the user. The backend applies its
-      // own ₦15 deduction; the frontend must not add that charge to this value.
+      // own ₦50 deduction; the frontend must not add that charge to this value.
       amount: withdrawAmount,
       service_charge: 0,
     });
@@ -343,7 +343,7 @@ export function Withdraw() {
                   Beneficiary
                 </p>
                 <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">
-                  Add a destination account below. Saved beneficiaries can be connected when the backend supports them.
+                  Add a destination account below.
                 </p>
               </div>
 
@@ -558,14 +558,14 @@ export function Withdraw() {
                         <Info className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1 space-y-1">
                           <p className="text-xs font-bold">
-                            ₦15 withdrawal charge applies
+                            ₦50 withdrawal charge applies
                           </p>
                           <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
                             You will request ₦{numericAmount.toLocaleString()} and should receive approximately{' '}
                             <strong className="text-slate-900 dark:text-white">
                               ₦{expectedAmountReceived.toLocaleString()}
                             </strong>{' '}
-                            after the backend deducts the ₦15 charge.
+                            after the backend deducts the ₦50 charge.
                           </p>
                         </div>
                       </div>
@@ -594,7 +594,7 @@ export function Withdraw() {
                   {submitting ? (
                     <LoadingSpinner size="sm" />
                   ) : numericAmount > 0 ? (
-                    `Withdraw ₦${numericAmount.toLocaleString()}${serviceCharge > 0 ? ' (₦15 charge)' : ''}`
+                    `Withdraw ₦${numericAmount.toLocaleString()}${serviceCharge > 0 ? ' (₦50 charge)' : ''}`
                   ) : (
                     'Withdraw Funds'
                   )}
