@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { KeyboardEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Sidebar, 
   Header, 
@@ -22,13 +21,10 @@ import {
   Search, 
   AlertCircle, 
   RefreshCw, 
-  ArrowLeft, 
-  ShieldCheck, 
   UserCheck,
   Info,
   ChevronDown,
   X,
-  Wallet
 } from 'lucide-react';
 
 interface Bank {
@@ -70,7 +66,6 @@ interface VerifyAccountResponse {
 
 export function Withdraw() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const verificationRequestId = useRef(0);
 
   // Layout State
@@ -107,11 +102,22 @@ export function Withdraw() {
     ? rawBalance
     : 0;
 
-  // Service charge and balance safety calculations
+  // Withdrawal limits use the same backend-authoritative DVA state already
+  // carried by AuthContext. No BVN value is inferred or stored locally.
+  const hasVerifiedFinancialIdentity = user?.has_DVA === true;
+  const withdrawalLimit = hasVerifiedFinancialIdentity ? 500000 : 100000;
+
+  // The backend deducts this ₦15 charge for withdrawals above ₦10,000.
+  // Keep the entered withdrawal amount unchanged for the backend/PIN flow.
+  // This charge is displayed only so the user knows the expected net amount.
   const numericAmount = Number(withdrawAmount) || 0;
-  const serviceCharge = numericAmount >= 10000 ? 50 : 0;
-  const totalDeduction = numericAmount + serviceCharge;
-  const isOverBalance = numericAmount > 0 && totalDeduction > balance;
+  const serviceCharge = numericAmount > 10000 ? 15 : 0;
+  const expectedAmountReceived = Math.max(0, numericAmount - serviceCharge);
+  const isOverWithdrawalLimit = numericAmount > withdrawalLimit;
+
+  // Balance validation is based on the withdrawal amount itself because the
+  // backend already handles the ₦50 deduction; we do not add it to the payload.
+  const isOverBalance = numericAmount > 0 && numericAmount > balance;
 
   // Bank Filtering Logic
   const filteredBanks = useMemo(() => {
@@ -141,20 +147,14 @@ export function Withdraw() {
     }
   };
 
-  // Handler for "Withdraw All" with Service Charge Guard
+  // Fill the largest amount the user can request without exceeding the
+  // wallet balance or the applicable withdrawal limit.
   const handleWithdrawAll = () => {
     if (balance <= 0) {
       setWithdrawAmount('0');
       return;
     }
-    let maxAmount = balance;
-    if (balance >= 10050) {
-      maxAmount = balance - 50;
-    } else if (balance >= 10000) {
-      maxAmount = 9999;
-    } else {
-      maxAmount = balance;
-    }
+    const maxAmount = Math.min(balance, withdrawalLimit);
     setWithdrawAmount(maxAmount.toString());
   };
 
@@ -266,12 +266,15 @@ export function Withdraw() {
       showToast('Please enter a valid amount');
       return;
     }
-    if (isOverBalance) {
+    if (isOverWithdrawalLimit) {
       showToast(
-        serviceCharge > 0 
-          ? 'Insufficient balance. Amount + ₦50 service charge exceeds your available balance.'
-          : 'Insufficient wallet balance'
+        `Maximum withdrawal for your current verification level is ₦${withdrawalLimit.toLocaleString()}.`
       );
+      return;
+    }
+
+    if (isOverBalance) {
+      showToast('Insufficient wallet balance');
       return;
     }
 
@@ -281,8 +284,10 @@ export function Withdraw() {
       account_number: accountNumber,
       bank_code: selectedBank,
       bank_name: selectedBankObj?.name || '',
+      // Send the exact amount entered by the user. The backend applies its
+      // own ₦15 deduction; the frontend must not add that charge to this value.
       amount: withdrawAmount,
-      service_charge: serviceCharge,
+      service_charge: 0,
     });
     showPinModal();
   };
@@ -291,6 +296,7 @@ export function Withdraw() {
     accountVerified && 
     !verifyingAccount && 
     numericAmount > 0 && 
+    !isOverWithdrawalLimit &&
     !isOverBalance;
 
   return (
@@ -318,47 +324,26 @@ export function Withdraw() {
         {/* MAIN SCROLLABLE CONTENT */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-2xl mx-auto space-y-6">
-            
-            {/* BREADCRUMB HEADER */}
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => navigate('/wallet')}
-                className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Wallet</span>
-              </button>
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-sky-500/10 text-sky-500 rounded-full text-[10px] font-bold">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Instant Bank Transfer</span>
-              </div>
-            </div>
-
-            {/* WALLET BALANCE SUMMARY DISPLAY */}
-            <div className="bg-gradient-to-r from-sky-600 to-blue-700 text-white rounded-3xl p-5 md:p-6 shadow-md flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-sky-100/80 text-xs font-bold uppercase tracking-wider">
-                  <Wallet className="w-4 h-4" />
-                  <span>Available Wallet Balance</span>
-                </div>
-                <div className="text-2xl md:text-3xl font-black tracking-tight">
-                  ₦{balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-              </div>
-              <div className="hidden sm:block text-right text-xs text-sky-100/70 font-medium">
-                Verified Account
-              </div>
-            </div>
 
             {/* WITHDRAWAL FORM CARD */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-5 md:p-7 shadow-sm space-y-6">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 md:p-8 shadow-sm space-y-7">
               <div>
                 <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
-                  Bank Destination
+                  Destination Bank
                 </h2>
                 <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                  Select a bank and enter 10 digits for instant verification
+                  Add a destination bank and verify the account before withdrawing
+                </p>
+              </div>
+              {/* Future beneficiary support can be added here when the backend
+                  exposes a saved-beneficiary contract. No local/fake beneficiary
+                  records are created by this page. */}
+              <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-800/40 px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Beneficiary
+                </p>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">
+                  Add a destination account below. Saved beneficiaries can be connected when the backend supports them.
                 </p>
               </div>
 
@@ -566,16 +551,24 @@ export function Withdraw() {
                     </span>
                   </div>
 
-                  {/* SERVICE CHARGE NOTICE */}
-                  {numericAmount >= 10000 && !isOverBalance && (
-                    <div className="p-3.5 bg-sky-500/10 border border-sky-500/20 rounded-2xl flex items-center justify-between text-sky-700 dark:text-sky-300 animate-in fade-in">
-                      <div className="flex items-center gap-2">
-                        <Info className="w-4 h-4 text-sky-500 shrink-0" />
-                        <span className="text-xs font-bold">₦50 Service Charge Applies</span>
+                  {/* BACKEND CHARGE / EXPECTED RECEIPT NOTICE */}
+                  {numericAmount > 10000 && !isOverBalance && (
+                    <div className="p-3.5 bg-sky-500/10 border border-sky-500/20 rounded-2xl text-sky-700 dark:text-sky-300 animate-in fade-in">
+                      <div className="flex items-start gap-2">
+                        <Info className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <p className="text-xs font-bold">
+                            ₦15 withdrawal charge applies
+                          </p>
+                          <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                            You will request ₦{numericAmount.toLocaleString()} and should receive approximately{' '}
+                            <strong className="text-slate-900 dark:text-white">
+                              ₦{expectedAmountReceived.toLocaleString()}
+                            </strong>{' '}
+                            after the backend deducts the ₦15 charge.
+                          </p>
+                        </div>
                       </div>
-                      <span className="text-xs font-black">
-                        Total Debit: ₦{totalDeduction.toLocaleString()}
-                      </span>
                     </div>
                   )}
 
@@ -584,17 +577,7 @@ export function Withdraw() {
                     <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-start gap-2 text-rose-600 dark:text-rose-400 animate-in fade-in">
                       <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                       <div className="text-xs font-bold leading-tight">
-                        {serviceCharge > 0 ? (
-                          <>
-                            Amount exceeds available balance including service charge.
-                            <br />
-                            <span className="font-normal text-[11px] opacity-90">
-                              Required: ₦{numericAmount.toLocaleString()} + ₦50 charge = <strong>₦{totalDeduction.toLocaleString()}</strong> (Available: ₦{balance.toLocaleString()})
-                            </span>
-                          </>
-                        ) : (
-                          `Entered amount (₦${numericAmount.toLocaleString()}) exceeds your available balance of ₦${balance.toLocaleString()}`
-                        )}
+                        {`Entered amount (₦${numericAmount.toLocaleString()}) exceeds your available balance of ₦${balance.toLocaleString()}`}
                       </div>
                     </div>
                   )}
@@ -611,7 +594,7 @@ export function Withdraw() {
                   {submitting ? (
                     <LoadingSpinner size="sm" />
                   ) : numericAmount > 0 ? (
-                    `Withdraw ₦${numericAmount.toLocaleString()}${serviceCharge > 0 ? ' (+₦50 Fee)' : ''}`
+                    `Withdraw ₦${numericAmount.toLocaleString()}${serviceCharge > 0 ? ' (₦15 charge)' : ''}`
                   ) : (
                     'Withdraw Funds'
                   )}

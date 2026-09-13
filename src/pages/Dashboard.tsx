@@ -36,6 +36,7 @@ export function Dashboard() {
         console.error('Sync failed:', error);
       }
     };
+
     loadData();
   }, []);
 
@@ -46,6 +47,7 @@ export function Dashboard() {
     const weeklyTransactions = transactions.filter(
       (tx) => new Date(tx.created_at) >= oneWeekAgo
     );
+
     const totalSpent = weeklyTransactions
       .filter((tx) => tx.transaction_type === 'DEBIT')
       .reduce((sum, tx) => sum + Number(tx.amount), 0);
@@ -66,18 +68,28 @@ export function Dashboard() {
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex overflow-hidden transition-colors duration-300">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-900 transition-colors duration-300 relative overflow-x-hidden">
-        <DashboardHeader />
+
+        <DashboardHeader
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
 
         <main className="flex-1 p-3 md:p-6 overflow-y-auto z-10 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="max-w-4xl mx-auto space-y-3.5 md:space-y-5">
-            
+
             {/* 1. BALANCE CARD & WALLET BUTTON */}
             <div className="flex flex-col relative group">
               <div className="relative rounded-3xl overflow-hidden shadow-xs">
-                <BalanceCard showBalance={showBalance} onToggleBalance={setShowBalance} />
+                <BalanceCard
+                  showBalance={showBalance}
+                  onToggleBalance={setShowBalance}
+                />
 
                 <div className="absolute bottom-3 right-3 z-20">
                   <button
@@ -98,13 +110,17 @@ export function Dashboard() {
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+
                     <p className="text-[11px] md:text-xs font-semibold text-slate-800 dark:text-slate-200">
-                      {showBalance ? `₦${weeklyStats.amount.toLocaleString()}` : '••••••'}{' '}
+                      {showBalance
+                        ? `₦${weeklyStats.amount.toLocaleString()}`
+                        : '••••••'}{' '}
                       <span className="text-slate-500 dark:text-slate-400 font-normal ml-1">
                         spent • {weeklyStats.count} txns
                       </span>
                     </p>
                   </div>
+
                   <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400 group-hover/spent:translate-x-0.5 transition-transform" />
                 </button>
               </div>
@@ -118,6 +134,7 @@ export function Dashboard() {
               <h3 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
                 Quick Actions
               </h3>
+
               <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <div className="flex gap-3 md:gap-4 pb-1 md:pb-2 w-max pr-6 md:pr-0">
                   <QuickActions />
@@ -130,6 +147,7 @@ export function Dashboard() {
               <h3 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
                 BlueSea Exclusives
               </h3>
+
               <div className="grid grid-cols-3 gap-2 md:gap-3">
                 {premiumServices.map((service) => (
                   <div
@@ -140,6 +158,7 @@ export function Dashboard() {
                     <div className="w-6 h-6 md:w-7 md:h-7 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50 group-hover:bg-sky-500/10 transition-colors">
                       <service.icon className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
                     </div>
+
                     <span className="text-[11px] md:text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
                       {service.label}
                     </span>
@@ -157,15 +176,18 @@ export function Dashboard() {
                 <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50 group-hover:bg-sky-500/10 transition-colors">
                   <LayoutGrid className="w-4 h-4 md:w-5 md:h-5 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
                 </div>
+
                 <div>
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                     Explore All Services
                   </span>
+
                   <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
                     Airtime, data, bills & utilities
                   </span>
                 </div>
               </div>
+
               <div className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg group-hover:bg-sky-500/10 transition-colors">
                 <ChevronRight className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400" />
               </div>
@@ -181,13 +203,18 @@ export function Dashboard() {
                   <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white/20 flex items-center justify-center text-white border border-white/20">
                     <Award className="w-4 h-4 md:w-5 md:h-5 text-amber-300" />
                   </div>
+
                   <div>
-                    <h3 className="font-bold text-xs md:text-sm">BluePoints Reward</h3>
+                    <h3 className="font-bold text-xs md:text-sm">
+                      BluePoints Reward
+                    </h3>
+
                     <p className="text-[10px] md:text-[11px] text-sky-100 opacity-90">
                       Check your loyalty progress
                     </p>
                   </div>
                 </div>
+
                 <div className="bg-white/10 p-1.5 rounded-full border border-white/20">
                   <ChevronRight className="w-4 h-4" />
                 </div>
@@ -200,6 +227,7 @@ export function Dashboard() {
                 <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
                   Recent Transactions
                 </h3>
+
                 <button
                   onClick={() => navigate('/transaction-history')}
                   className="text-xs font-bold text-sky-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
@@ -207,6 +235,7 @@ export function Dashboard() {
                   View History
                 </button>
               </div>
+
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-1 shadow-2xs">
                 <TransactionList />
               </div>

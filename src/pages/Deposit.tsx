@@ -16,7 +16,6 @@ import {
   CreditCard, 
   Landmark, 
   Info, 
-  ArrowLeft, 
   CheckCircle2
 } from 'lucide-react';
 
@@ -50,9 +49,9 @@ export function Deposit() {
   // Calculation Utilities
   const numericAmount = Number(rawAmount.replace(/\D/g, '')) || 0;
   
-  // Paystack: 1.5% fee on top
-  const paystackFee = Math.round(numericAmount * 0.015 * 100) / 100;
-  const paystackTotal = numericAmount + paystackFee;
+  // Paystack: 0% fee
+  const paystackFee = 0;
+  const paystackTotal = numericAmount;
 
   // Virtual Account: 1.0% fee on top
   const virtualFee = Math.round(numericAmount * 0.01 * 100) / 100;
@@ -108,15 +107,38 @@ export function Deposit() {
     }
   };
 
-  const handleVirtualAccountAction = () => {
-    if (hasVirtualAccount) {
-      setAccountModalOpen(true);
-      return;
+  const handleRequestDedicatedAccount = () => {
+    navigate('/identity-center');
+  };
+
+  const handleCopyAccountNumber = async () => {
+    const accountNumber = dvaAccount?.dva_account_number;
+    if (accountNumber == null) return;
+
+    const value = String(accountNumber);
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to copy DVA account number:', error);
     }
 
-    // DVA creation/assignment remains in the existing Identity Center flow.
-    // Deposit only consumes the DVA state already returned by the backend.
-    navigate('/identity-center');
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = value;
+      textArea.setAttribute('readonly', '');
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    } catch (error) {
+      console.error('Failed to copy DVA account number:', error);
+    }
   };
 
   return (
@@ -140,15 +162,6 @@ export function Deposit() {
         <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-xl mx-auto space-y-6 pb-12">
             
-            {/* Back Button */}
-            <button
-              onClick={() => navigate('/wallet')}
-              className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Wallet</span>
-            </button>
-
             {/* Title Banner */}
             <div>
               <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -338,12 +351,12 @@ export function Deposit() {
                         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
                         <div className="flex items-center gap-2 mt-1">
                           <p className="text-sm font-black text-sky-500 tracking-wider truncate">{dvaAccount?.dva_account_number}</p>
-                          <button type="button" onClick={async () => { const accountNumber = dvaAccount?.dva_account_number; if (accountNumber == null) return; try { await navigator.clipboard.writeText(String(accountNumber)); } catch (error) { console.error('Failed to copy DVA account number:', error); } }} className="shrink-0 px-2 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-[9px] font-bold text-sky-500 transition-all active:scale-95 cursor-pointer" aria-label="Copy dedicated account number">Copy</button>
+                          <button type="button" onClick={handleCopyAccountNumber} className="shrink-0 px-2 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-[9px] font-bold text-sky-500 transition-all active:scale-95 cursor-pointer" aria-label="Copy dedicated account number">Copy</button>
                         </div>
                       </div>
                       <div className="min-w-0">
                         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Name</p>
-                        <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-1 truncate">{dvaAccount?.dva_account_name}</p>
+                        <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-1 whitespace-normal break-words leading-snug">{dvaAccount?.dva_account_name}</p>
                       </div>
                     </div>
                   </div>
@@ -401,16 +414,14 @@ export function Deposit() {
                       </p>
                     </div>
 
-                    <Button
-                      onClick={handleVirtualAccountAction}
-                      className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-sm font-black shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all cursor-pointer"
-                    >
-                      {hasVirtualAccount ? (
-                        'View Account Details'
-                      ) : (
-                        'Request Dedicated Account'
-                      )}
-                    </Button>
+                    {!hasVirtualAccount && (
+                      <Button
+                        onClick={handleRequestDedicatedAccount}
+                        className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-sm font-black shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all cursor-pointer"
+                      >
+                        Request Dedicated Account
+                      </Button>
+                    )}
               </div>
             )}
           </div>
