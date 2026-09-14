@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { Sidebar, Header } from '@/components/ui-custom';
+import { useNavigate } from 'react-router-dom';
+import { Sidebar } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { networks } from '@/data';
 import { cn } from '@/lib/utils';
-import { RefreshCw, Smartphone, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, Smartphone, CheckCircle2, ChevronLeft } from 'lucide-react';
 import type { Network } from '@/types';
 
 export function AirtimeBuyback() {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<Network>('MTN');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -25,11 +27,19 @@ export function AirtimeBuyback() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <Header 
-          title="Airtime Buyback" 
-          subtitle="Convert Unused Airtime to Wallet Credit"
-          onMenuClick={() => setSidebarOpen(true)} 
-        />
+        {/* CUSTOM INLINE HEADER (GiftCardPage Reference) */}
+        <header className="flex items-center gap-4 px-4 py-6 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-0 z-30">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-400"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <div>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white">Airtime Buyback</h1>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Convert Unused Airtime to Wallet Credit</p>
+          </div>
+        </header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
@@ -188,7 +198,7 @@ export function AirtimeBuyback() {
                     Coming Soon
                   </Button>
                   <Button 
-                    onClick={() => window.location.href = '/wallet'}
+                    onClick={() => navigate('/wallet')}
                     className="rounded-xl bg-sky-500 hover:bg-sky-600 px-6"
                   >
                     View Wallet

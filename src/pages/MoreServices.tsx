@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar } from '@/components/ui-custom';
+import { Sidebar, Header } from '@/components/ui-custom';
 import { moreServiceCategories } from '@/data';
 import { cn } from '@/lib/utils';
 import { 
@@ -20,8 +20,6 @@ import {
   Share2,
   Award,
   Headphones,
-  ChevronRight,
-  ArrowLeft,
   BookOpen,
   FileText,
   GraduationCap,
@@ -31,6 +29,7 @@ import {
   QrCode,
   Store,
   Trophy,
+  ChevronRight,
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -62,6 +61,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export function MoreServices() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(moreServiceCategories[0].id);
   const navigate = useNavigate();
 
@@ -108,23 +108,24 @@ export function MoreServices() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
-      {/* Sidebar */}
-      <Sidebar isOpen={false} onClose={() => {}} />
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
+      {/* Sidebar Panel Overlay */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center gap-3 px-4 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-          <button 
-            onClick={() => navigate(-1)}
-            className="p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-xl font-bold text-slate-800 dark:text-white">More Services</h1>
+      {/* Main Viewport Content Context Area */}
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+        
+        {/* FIXED APP HEADER LAYER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+          <Header 
+            title="More Services" 
+            subtitle="All features at your fingertips"
+            onMenuClick={() => setSidebarOpen(true)} 
+          />
         </div>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        {/* ISOLATED SCROLLABLE CONTENT AREA */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide z-10">
           <div className="max-w-4xl mx-auto">
             {/* Category Tabs */}
             <div className="flex flex-wrap gap-2 mb-6">

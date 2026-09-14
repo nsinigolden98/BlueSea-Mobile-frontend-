@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom'; // Added
-import { Sidebar, Loader } from '@/components/ui-custom';
+//import { useNavigate } from 'react-router-dom';
+import { Sidebar, Header, Loader } from '@/components/ui-custom';
 import { getRequest, postRequest, deleteRequest, ENDPOINTS } from '@/types';
-import { Bell, Check, Trash2, Loader2, ChevronDown, ChevronLeft } from 'lucide-react'; // Added ChevronLeft
+import { Bell, Check, Trash2, Loader2, ChevronDown, 
+  //ChevronLeft 
+  } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Notification {
@@ -15,7 +17,7 @@ interface Notification {
 }
 
 export function Notifications() {
-  const navigate = useNavigate(); // Added
+ // const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,29 +139,23 @@ export function Notifications() {
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* CUSTOM INLINE HEADER */}
-        <header className="sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 py-6 flex items-center gap-4">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 dark:text-white">Notifications</h1>
-            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
-              {`${count} total, ${unreadCount} unread`}
-            </p>
-          </div>
-        </header>
+      <div className="flex-1 flex flex-col h-full min-w-0 relative">
+        {/* UNIVERSAL HEADER */}
+        <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+          <Header 
+            title="Notifications" 
+            subtitle={`${count} total, ${unreadCount} unread`}
+            onMenuClick={() => setSidebarOpen(true)} 
+          />
+        </div>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+        {/* ISOLATED SCROLLABLE CONTENT AREA WITH SCROLLBAR HIDDEN */}
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden z-10">
           <div className="max-w-3xl mx-auto">
-            {/* Filter controls remain unchanged */}
+            {/* Filter controls */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex gap-2">
                 <button
@@ -197,7 +193,7 @@ export function Notifications() {
               )}
             </div>
 
-            {/* List rendering remains unchanged */}
+            {/* List rendering */}
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
@@ -220,7 +216,7 @@ export function Notifications() {
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1" onClick={() => markAsRead(notification.id)}>
+                      <div className="flex-1 cursor-pointer" onClick={() => markAsRead(notification.id)}>
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-slate-800 dark:text-white">
                             {notification.title}

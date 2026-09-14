@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Sidebar, Header, Toast, Loader } from '@/components/ui-custom';
+import { useNavigate } from 'react-router-dom';
+import {Toast, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { getRequest, postRequest, ENDPOINTS } from '@/types';
 import { cn } from '@/lib/utils';
@@ -9,7 +10,9 @@ import {
   CheckCircle2,
   X,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  //Bell // 1. Added Bell icon
 } from 'lucide-react';
 
 interface Reward {
@@ -24,7 +27,7 @@ interface Reward {
 }
 
 export function Loyalty() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<Reward | null>(null);
@@ -101,14 +104,38 @@ export function Loyalty() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
       <div className="flex-1 flex flex-col min-w-0">
-        <Header 
-          title="Loyalty Marketplace" 
-          subtitle="Spend Your BluePoints"
-          onMenuClick={() => setSidebarOpen(true)} 
-        />
+        
+        {/* --- FIXED HEADER SECTION --- */}
+        <div className="flex items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+  <div className="flex items-center gap-3 min-w-0">
+    <button
+      onClick={() => navigate(-1)}
+      className="p-1 text-slate-600 dark:text-slate-400"
+      aria-label="Go back"
+    >
+      <ChevronLeft className="w-6 h-6" />
+    </button>
+
+    <div className="min-w-0">
+      <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">
+        Loyalty Marketplace
+      </h1>
+      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+        Spend Your BluePoints
+      </p>
+    </div>
+  </div>
+
+{/* <button
+    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-600 dark:text-slate-400 relative"
+    aria-label="Notifications"
+  >
+    <Bell className="w-5 h-5" />
+    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-sky-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+  </button>*/}
+</div>
+        {/* --- END HEADER SECTION --- */}
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           <div className="max-w-5xl mx-auto space-y-6">
@@ -124,7 +151,7 @@ export function Loyalty() {
                     <p className="text-3xl font-bold">{totalPoints.toLocaleString()}</p>
                   </div>
                 </div>
-               <button
+                <button
                   onClick={fetchRewards}
                   className="p-2 bg-white/20 rounded-lg hover:bg-white/30"
                 >
@@ -173,7 +200,7 @@ export function Loyalty() {
                       onClick={() => isAvailable && canAfford && setSelectedItem(reward)}
                       disabled={!isAvailable || !canAfford}
                       className={cn(
-                        'relative p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all',
+                        'relative p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all text-left',
                         isAvailable && canAfford
                           ? 'border-slate-100 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-600 hover:shadow-lg'
                           : 'border-slate-100 dark:border-slate-800 opacity-60 cursor-not-allowed'
@@ -191,16 +218,6 @@ export function Loyalty() {
                       <p className="text-lg font-bold text-sky-500">
                         {reward.points_cost} pts
                       </p>
-                      {!isAvailable && (
-                        <span className="absolute top-2 right-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                          Out of stock
-                        </span>
-                      )}
-                      {isAvailable && !canAfford && (
-                        <span className="absolute top-2 right-2 px-2 py-0.5 bg-slate-800 text-white text-xs rounded-full">
-                          Need more points
-                        </span>
-                      )}
                     </button>
                   );
                 })}
@@ -239,13 +256,6 @@ export function Loyalty() {
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl mb-4">
-              <span className="text-slate-600 dark:text-slate-300">Your Balance</span>
-              <span className="text-xl font-bold text-slate-800 dark:text-white">
-                {totalPoints} pts
-              </span>
-            </div>
-
             <div className="flex gap-3">
               <Button
                 variant="outline"
@@ -277,7 +287,7 @@ export function Loyalty() {
               Redemption Successful!
             </h3>
             <p className="text-slate-500 dark:text-slate-400 mb-4">
-              Your reward has been redeemed. Check your rewards history for delivery details.
+              Your reward has been redeemed.
             </p>
             <Button
               className="w-full bg-sky-500 hover:bg-sky-600"

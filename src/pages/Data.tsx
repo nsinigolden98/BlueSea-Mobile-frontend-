@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar, Header, PinModal, TransactionModal, Toast } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,15 +9,6 @@ import type { Network, DataPlan } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, X, RefreshCw, ChevronDown, History } from 'lucide-react';
-
-type PlanType = 'Daily' | 'Weekly' | 'Monthly' | 'Extravalue';
-
-const planTypes: { value: PlanType; label: string }[] = [
-  { value: 'Daily', label: 'Daily' },
-  { value: 'Weekly', label: 'Weekly' },
-  { value: 'Monthly', label: 'Monthly' },
-  { value: 'Extravalue', label: 'Extravalue' },
-];
 
 export function Data() {
   const { user } = useAuth();
@@ -30,7 +21,7 @@ export function Data() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<Network>('MTN');
   const [phoneNumber, setPhoneNumber] = useState(defaultNumber);
-  const [selectedPlanType, setSelectedPlanType] = useState<PlanType>('Daily');
+  const [selectedPlanType, setSelectedPlanType] = useState<string>('Daily');
   const [selectedPlan, setSelectedPlan] = useState<DataPlan | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
@@ -41,16 +32,37 @@ export function Data() {
   const [recentNumbers, setRecentNumbers] = useState<string[]>([]);
   const [showRecentDropdown, setShowRecentDropdown] = useState(false);
 
-  // Group payment state (Untouched)
+  // Group payment state
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
   
   const dataPlans = dataPlanFunction();
+
+  // --- DYNAMIC PLAN TYPE LOGIC START ---
+  
+  // 1. Get unique plan types based on the selected network
+  const availablePlanTypes = useMemo(() => {
+    const networkSpecificPlans = dataPlans.filter(p => p.network === selectedNetwork);
+    const types = networkSpecificPlans.map(plan => plan.planType);
+    return Array.from(new Set(types)); // Removes duplicates
+  }, [selectedNetwork, dataPlans]);
+
+  // 2. Auto-reset selectedPlanType when switching network if the current type doesn't exist
+  useEffect(() => {
+    if (!availablePlanTypes.includes(selectedPlanType as any)) {
+      setSelectedPlanType(availablePlanTypes[0] || '');
+      setSelectedPlan(null); // Clear selected plan when switching types
+    }
+  }, [selectedNetwork, availablePlanTypes]);
+
+  // 3. Final filtered plans to display in the grid
   const filteredPlans = dataPlans.filter(
     plan => plan.network === selectedNetwork && plan.planType === selectedPlanType
   );
+
+  // --- DYNAMIC PLAN TYPE LOGIC END ---
 
   // Refs
   const bodyDivRef = useRef<HTMLDivElement>(null);
@@ -84,6 +96,7 @@ export function Data() {
     localStorage.setItem('data_recent_numbers', JSON.stringify(updated));
   };
 
+  // Fixed payload: standardized to selectedPlan?.id per the recent data structures
   const payload = isGroupPayment ? {
     name: groupName,
     description: groupDescription,
@@ -91,7 +104,7 @@ export function Data() {
     sub_number: phoneNumber,
     target_amount: Number(selectedPlan?.price || 0),
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
-    plan: selectedPlan?.description,
+    plan: selectedPlan?.description, 
     plan_type: selectedNetwork === '9mobile' ? 'etisalat': selectedNetwork.toLowerCase()
   } : {
     plan: selectedPlan?.description,
@@ -100,7 +113,6 @@ export function Data() {
   };
 
   const handleBuyData = async () => {
-    // Betting-level validation
     if (!phoneNumber || phoneNumber.length !== 11) {
       showToast('Please enter a valid 11-digit phone number');
       return;
@@ -111,7 +123,7 @@ export function Data() {
     }
 
     if (!user?.pin_is_set) {
-      navigate('/settings/pin');
+      navigate('/pin');
       return;
     }
     
@@ -165,18 +177,25 @@ export function Data() {
   }, [message]);
   
   return (
-    <div>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex" ref={bodyDivRef}>
+    <div className="relative">
+      <div className="h-screen bg-slate-50 dark:bg-slate-900 flex overflow-hidden" ref={bodyDivRef}>
+        {/* Sidebar Panel Overlay */}
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <div className="flex-1 flex flex-col min-w-0">
-          <Header 
-            title="Data" 
-            subtitle="Buy Smarter & Cheaper"
-            onMenuClick={() => setSidebarOpen(true)} 
-          />
+        {/* Main Viewport Content Context Area */}
+        <div className="flex-1 flex flex-col h-full min-w-0 relative">
+          
+          {/* FIXED APP HEADER LAYER */}
+          <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
+            <Header 
+              title="Data" 
+              subtitle="Buy Smarter & Cheaper"
+              onMenuClick={() => setSidebarOpen(true)} 
+            />
+          </div>
 
-          <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+          {/* ISOLATED SCROLLABLE CONTENT AREA WITH HIDDEN MAIN SCROLLBAR */}
+          <main className="flex-1 p-4 md:p-6 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden z-10">
             <div className="max-w-2xl mx-auto">
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
                 
@@ -244,57 +263,88 @@ export function Data() {
                   )}
                 </div>
 
+                {/* Plan Types */}
                 <div className="space-y-3">
-                  <Label>Select Plan Type</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {planTypes.map((type) => (
-                      <button
-                        key={type.value}
-                        onClick={() => setSelectedPlanType(type.value)}
-                        className={cn(
-                          'px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
-                          selectedPlanType === type.value
-                            ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-                        )}
-                      >
-                        {type.label}
-                      </button>
-                    ))}
+                  <Label className="px-1 text-slate-500 dark:text-slate-400">Select Plan Type</Label>
+                  <div className="relative group">
+                    <div 
+                      className={cn(
+                        "flex flex-nowrap gap-2 overflow-x-auto pb-2 px-1",
+                        "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+                        "[mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]"
+                      )}
+                      style={{ WebkitOverflowScrolling: 'touch' }}
+                    >
+                      {availablePlanTypes.map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setSelectedPlanType(type)}
+                          className={cn(
+                            'whitespace-nowrap px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 active:scale-90',
+                            'animate-in fade-in slide-in-from-right-4',
+                            selectedPlanType === type
+                              ? 'bg-sky-500 text-white ring-2 ring-sky-400 ring-offset-2 dark:ring-offset-slate-900 shadow-lg shadow-sky-500/20'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent'
+                          )}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 md:gap-3">
-                  {filteredPlans.map((plan) => (
-                    <button
-                      key={plan.id}
-                      onClick={() => setSelectedPlan(plan)}
-                      className={cn(
-                        'p-2 md:p-4 rounded-xl border-2 transition-all text-center active:scale-95 flex flex-col justify-between min-h-[120px]',
-                        selectedPlan?.id === plan.id
-                          ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-400'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-sky-300 shadow-sm'
-                      )}
-                    >
-                      <div>
-                        <p className="font-bold text-slate-800 dark:text-white text-xs md:text-base leading-tight">{plan.size}</p>
-                        <p className="text-[10px] text-slate-500 mb-2 line-clamp-2 leading-tight">
-                          ₦{plan.price} - {plan.validity}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-1 mt-auto">
-                        <span className="bg-sky-500 text-white text-[8px] md:text-xs py-0.5 rounded truncate px-1">
-                          ₦{plan.price}
-                        </span>
-                        <span className="bg-sky-600 text-white text-[8px] md:text-xs py-0.5 rounded truncate px-1">
-                          {plan.validity.toUpperCase()}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+                {/* COMPRESSED SCROLLABLE PLAN CONTAINER */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <Label className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                      Select Data Plan ({filteredPlans.length})
+                    </Label>
+                    <span className="text-[10px] text-sky-500 font-medium md:hidden animate-pulse">
+                      Scroll inside box ↓
+                    </span>
+                  </div>
+
+                  <div 
+                    className={cn(
+                      "max-h-72 sm:max-h-80 overflow-y-auto p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30",
+                      "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+                      "md:[scrollbar-width:thin] md:[-ms-overflow-style:auto] md:[&::-webkit-scrollbar]:block"
+                    )}
+                  >
+                    <div className="grid grid-cols-2 min-[380px]:grid-cols-4 gap-2 md:gap-3">
+                      {filteredPlans.map((plan) => (
+                        <button
+                          key={plan.id}
+                          onClick={() => setSelectedPlan(plan)}
+                          className={cn(
+                            'p-2 rounded-xl border-2 transition-all text-center active:scale-95 flex flex-col justify-between min-h-[105px] md:min-h-[115px]',
+                            selectedPlan?.id === plan.id
+                              ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-400'
+                              : 'border-slate-200 dark:border-slate-700 hover:border-sky-300 shadow-sm bg-white dark:bg-slate-800'
+                          )}
+                        >
+                          <div>
+                            <p className="font-bold text-slate-800 dark:text-white text-xs md:text-sm leading-tight">{plan.size}</p>
+                            <p className="text-[10px] text-slate-500 mb-1.5 line-clamp-2 leading-tight">
+                              ₦{plan.price} - {plan.validity}
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-1 mt-auto">
+                            <span className="bg-sky-500 text-white text-[8px] md:text-[10px] py-0.5 rounded truncate px-1 font-medium">
+                              ₦{plan.price}
+                            </span>
+                            <span className="bg-sky-600 text-white text-[8px] md:text-[10px] py-0.5 rounded truncate px-1 font-medium">
+                              {plan.validity.toUpperCase()}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Group Payment Toggle (Untouched) */}
+                {/* Group Payment Toggle */}
                 <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 transition-colors">
                   <div className="flex items-center gap-3">
                     <Users className="w-5 h-5 text-sky-500" />
@@ -413,7 +463,7 @@ export function Data() {
 
                   <Button 
                     variant="outline"
-                    onClick={() => navigate(`/auto-topup?service_type=data&network=${selectedNetwork.toLowerCase()}&phone_number=${phoneNumber}&amount=${selectedPlan?.price || ''}&plan=${selectedPlan?.description || ''}`)}
+                    onClick={() => navigate(`/auto-topup?service_type=data&network=${selectedNetwork.toLowerCase()}&phone_number=${phoneNumber}&amount=${selectedPlan?.price || ''}&plan=${selectedPlan?.id || ''}`)}
                     className="w-full rounded-full py-6 border-sky-500 text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/10 active:scale-95 transition-transform"
                     disabled={!phoneNumber || !selectedPlan}
                   >
@@ -427,6 +477,7 @@ export function Data() {
         </div>
       </div>
 
+      {/* Floating Action Trigger Link */}
       <button 
         onClick={() => navigate('/airtime')}
         className="fixed right-4 top-24 z-50 bg-sky-500 text-white rounded-full px-6 py-2 shadow-lg hover:bg-sky-600 transition-all duration-200 active:scale-95 flex items-center gap-2 animate-in fade-in slide-in-from-right-4"
@@ -435,11 +486,12 @@ export function Data() {
         <span>→</span>
       </button>
 
+      {/* Overlays & Modals */}
       <PinComponent type={isGroupPayment ? "group-data" : `data-${selectedPlan?.network}`} value={payload} />
       <ToastComponent />
       {isOpen && (
         <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
-        )}
-        </div>
-        );
+      )}
+    </div>
+  );
 }

@@ -1,30 +1,31 @@
 import { useState, useEffect, useMemo } from 'react';
-import { 
-  Sidebar, 
-  Header, 
-  BalanceCard, 
-  QuickActions, 
-  TransactionList 
-} from '@/components/ui-custom';
-import { announcements, TransactionsData } from '@/data'; 
-import { type Transaction } from '@/types';
-import { 
-  Megaphone, 
-  ChevronRight, 
-  Wallet, 
-  Plane, 
-  Hotel, 
-  Ticket,
-  Shield,
-  X
-} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Sidebar,
+  BalanceCard,
+  QuickActions,
+  TransactionList,
+} from '@/components/ui-custom';
+import { DashboardHeader } from '@/components/ui-custom/DashboardHeader';
+import { DashboardPrimaryActions } from '@/components/ui-custom/DashboardPrimaryActions';
+import { TransactionsData } from '@/data';
+import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
+import { type Transaction } from '@/types';
+import { ChevronRight, Wallet, Ticket, LayoutGrid, Award } from 'lucide-react';
 
 export function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<string[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const navigate = useNavigate();
+
+  const [showBalance, setShowBalance] = useState(() => {
+    const savedState = localStorage.getItem('dashboard_showBalance');
+    return savedState === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('dashboard_showBalance', String(showBalance));
+  }, [showBalance]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -32,160 +33,133 @@ export function Dashboard() {
         const data = await TransactionsData();
         setTransactions(data);
       } catch (error) {
-        console.error("Sync failed:", error);
+        console.error('Sync failed:', error);
       }
     };
+
     loadData();
   }, []);
-
-  const activeAnnouncements = announcements.filter(
-    a => !dismissedAnnouncements.includes(a.id) && a.priority === 'high'
-  );
 
   const weeklyStats = useMemo(() => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const weeklyTransactions = transactions.filter(tx => new Date(tx.created_at) >= oneWeekAgo);
+    const weeklyTransactions = transactions.filter(
+      (tx) => new Date(tx.created_at) >= oneWeekAgo
+    );
+
     const totalSpent = weeklyTransactions
-      .filter(tx => tx.transaction_type === 'DEBIT')
+      .filter((tx) => tx.transaction_type === 'DEBIT')
       .reduce((sum, tx) => sum + Number(tx.amount), 0);
 
     return {
       amount: totalSpent,
-      count: weeklyTransactions.length
+      count: weeklyTransactions.length,
     };
   }, [transactions]);
 
-  const exploreServices = [
-    { label: 'Flights', icon: Plane, path: '/flights' },
-    { label: 'Hotels', icon: Hotel, path: '/hotels' },
-    { label: 'Events', icon: Ticket, path: '/marketplace' },
-    { label: 'Insurance', icon: Shield, path: '/insurance' },
+  const premiumServices = [
+    {
+      label: 'Scan Events',
+      icon: Ticket,
+      path: '/scanner-assignments',
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-200 flex overflow-hidden transition-colors duration-300">
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          display: flex;
-          width: max-content;
-          animation: marquee 30s linear infinite;
-        }
-        .animate-marquee:hover { animation-play-state: paused; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Light mode QuickAction styles */
-        .quick-action-item {
-          width: 80px !important;
-          height: 80px !important;
-          background: #f8fafc !important; /* bg-slate-50 */
-          border: 1px solid #e2e8f0 !important; /* border-slate-200 */
-          border-radius: 1rem !important;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s;
-        }
-        .quick-action-item:hover { background: #f1f5f9 !important; }
+    <div className="h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex overflow-hidden transition-colors duration-300">
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-        /* Dark mode overrides for QuickAction items */
-        .dark .quick-action-item {
-          background: #1e293b !important; /* bg-slate-800 */
-          border: 1px solid rgba(255,255,255,0.1) !important;
-        }
-        .dark .quick-action-item:hover { background: rgba(255,255,255,0.1) !important; }
-      ` }} />
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-slate-50 dark:bg-slate-900 transition-colors duration-300 relative overflow-x-hidden">
 
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 transition-colors duration-300">
-        <Header
-          title="Dashboard"
-          subtitle="The Trusted Way To Stay Connected"
-          onMenuClick={() => setSidebarOpen(true)}
+        <DashboardHeader
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
         />
 
-        {/* 1. AUTO-SCROLL BILLBOARD */}
-        {activeAnnouncements.length > 0 && (
-          <div className="bg-slate-50 dark:bg-slate-900/50 border-y border-slate-200 dark:border-white/5 py-2 overflow-hidden group">
-            <div className="animate-marquee flex items-center">
-              {[...activeAnnouncements, ...activeAnnouncements].map((announcement, idx) => (
-                <div key={`${announcement.id}-${idx}`} className="flex items-center gap-3 px-8 border-r border-slate-200 dark:border-white/5">
-                  <Megaphone className="w-3 h-3 text-sky-500 dark:text-sky-400" />
-                  <span className="text-[11px] font-medium tracking-wide text-slate-500 dark:text-slate-400">
-                    {announcement.title}: {announcement.content}
-                  </span>
-                  <button 
-                    onClick={() => setDismissedAnnouncements([...dismissedAnnouncements, announcement.id])}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto z-10 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="max-w-4xl mx-auto space-y-3.5 md:space-y-5">
+
+            {/* 1. BALANCE CARD & WALLET BUTTON */}
+            <div className="flex flex-col relative group">
+              <div className="relative rounded-3xl overflow-hidden shadow-xs">
+                <BalanceCard
+                  showBalance={showBalance}
+                  onToggleBalance={setShowBalance}
+                />
+
+                <div className="absolute bottom-3 right-3 z-20">
+                  <button
+                    onClick={() => navigate('/wallet')}
+                    aria-label="Open Wallet"
+                    className="w-10 h-10 bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-500 text-white rounded-2xl flex items-center justify-center transition-all shadow-lg hover:shadow-xl active:scale-90 cursor-pointer border border-white/20 dark:border-white/10 group/wallet"
                   >
-                    <X className="w-3 h-3 text-slate-400 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white" />
+                    <Wallet className="w-4.5 h-4.5" />
                   </button>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
 
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto scrollbar-hide">
-          <div className="max-w-4xl mx-auto space-y-4">
-            
-            {/* 2. BALANCE CARD & WEEKLY SUMMARY */}
-            <div className="space-y-3">
-              <div className="relative group">
-                <BalanceCard />
+              {/* 2. SPENDING SUMMARY STRIP */}
+              <div className="mx-2 md:mx-3 -mt-1.5 flex items-center justify-between gap-2.5">
                 <button
-                  onClick={() => navigate('/wallet')}
-                  className="absolute bottom-4 right-4 w-10 h-10 bg-white/10 dark:bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-xl active:scale-95"
+                  onClick={() => navigate('/transaction-history')}
+                  className="flex-1 bg-white dark:bg-slate-900 border-x border-b border-slate-200/80 dark:border-slate-800 rounded-b-2xl px-3.5 py-2.5 md:py-3 flex items-center justify-between shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors z-0 text-left cursor-pointer group/spent"
                 >
-                  <Wallet className="w-5 h-5" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+
+                    <p className="text-[11px] md:text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      {showBalance
+                        ? `₦${weeklyStats.amount.toLocaleString()}`
+                        : '••••••'}{' '}
+                      <span className="text-slate-500 dark:text-slate-400 font-normal ml-1">
+                        spent • {weeklyStats.count} txns
+                      </span>
+                    </p>
+                  </div>
+
+                  <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400 group-hover/spent:translate-x-0.5 transition-transform" />
                 </button>
               </div>
-
-              {/* Refactored Weekly Summary Bar */}
-              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-3 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    ₦{weeklyStats.amount.toLocaleString()} <span className="text-slate-500 dark:text-slate-500 font-normal ml-1">spent • {weeklyStats.count} transactions</span>
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-600" />
-              </div>
             </div>
 
-            {/* 3. QUICK ACTIONS (Horizontal Scroll) */}
-            <section className="pt-2">
-              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
-                <div className="flex gap-3 pb-2 w-max pr-10">
-                  <div className="flex gap-3">
-                    <QuickActions />
-                  </div>
+            {/* 3. NEW THREE-ACTION MONEY CONTROL (NO HEADING) */}
+            <DashboardPrimaryActions />
+
+            {/* 4. QUICK ACTIONS (SERVICE SHORTCUTS) */}
+            <section className="space-y-2 md:space-y-3 pt-0.5">
+              <h3 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
+                Quick Actions
+              </h3>
+
+              <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="flex gap-3 md:gap-4 pb-1 md:pb-2 w-max pr-6 md:pr-0">
+                  <QuickActions />
                 </div>
               </div>
             </section>
 
-            {/* 4. EXPLORE SERVICES GRID */}
-            <section className="space-y-3 pt-2">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">Explore Services</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {exploreServices.map((service) => (
+            {/* 5. BLUESEA EXCLUSIVES */}
+            <section className="space-y-2 md:space-y-3 pt-0.5">
+              <h3 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 px-1">
+                BlueSea Exclusives
+              </h3>
+
+              <div className="grid grid-cols-3 gap-2 md:gap-3">
+                {premiumServices.map((service) => (
                   <div
                     key={service.label}
                     onClick={() => navigate(service.path)}
-                    className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-sm"
+                    className="flex items-center gap-2 p-2 md:p-2.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-95 shadow-2xs h-11 md:h-12 min-w-0"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700/50 flex items-center justify-center border border-slate-100 dark:border-transparent group-hover:bg-sky-500/10 transition-colors">
-                      <service.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
+                    <div className="w-6 h-6 md:w-7 md:h-7 shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50 group-hover:bg-sky-500/10 transition-colors">
+                      <service.icon className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
                     </div>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+
+                    <span className="text-[11px] md:text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
                       {service.label}
                     </span>
                   </div>
@@ -193,33 +167,85 @@ export function Dashboard() {
               </div>
             </section>
 
-            {/* REWARDS (The only remaining gradient) */}
+            {/* 6. EXPLORE ALL SERVICES NAV CARD */}
+            <div
+              onClick={() => navigate('/services')}
+              className="flex items-center justify-between p-2.5 md:p-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl hover:border-sky-500/30 dark:hover:border-sky-400/30 transition-all cursor-pointer group active:scale-[0.99] shadow-2xs"
+            >
+              <div className="flex items-center gap-2.5 md:gap-3">
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50 group-hover:bg-sky-500/10 transition-colors">
+                  <LayoutGrid className="w-4 h-4 md:w-5 md:h-5 text-slate-600 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors" />
+                </div>
+
+                <div>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Explore All Services
+                  </span>
+
+                  <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
+                    Airtime, data, bills & utilities
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg group-hover:bg-sky-500/10 transition-colors">
+                <ChevronRight className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400" />
+              </div>
+            </div>
+
+            {/* 7. REWARDS */}
             <div
               onClick={() => navigate('/rewards')}
-              className="bg-gradient-to-br from-sky-500 to-sky-700 rounded-2xl p-4 text-white cursor-pointer hover:shadow-lg hover:shadow-sky-500/20 transition-all active:scale-[0.98]"
+              className="bg-gradient-to-r from-sky-500 to-sky-700 rounded-2xl p-3.5 md:p-4 text-white cursor-pointer hover:shadow-lg hover:shadow-sky-500/20 transition-all active:scale-[0.98] shadow-xs relative overflow-hidden"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
-                    🎁
+              <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white/20 flex items-center justify-center text-white border border-white/20">
+                    <Award className="w-4 h-4 md:w-5 md:h-5 text-amber-300" />
                   </div>
+
                   <div>
-                    <h3 className="font-bold text-sm">BluePoints Reward</h3>
-                    <p className="text-[11px] text-sky-100 opacity-80">Check your loyalty progress</p>
+                    <h3 className="font-bold text-xs md:text-sm">
+                      BluePoints Reward
+                    </h3>
+
+                    <p className="text-[10px] md:text-[11px] text-sky-100 opacity-90">
+                      Check your loyalty progress
+                    </p>
                   </div>
                 </div>
-                <div className="bg-white/10 p-1 rounded-full">
+
+                <div className="bg-white/10 p-1.5 rounded-full border border-white/20">
                   <ChevronRight className="w-4 h-4" />
                 </div>
               </div>
             </div>
 
-            {/* 5. TRANSACTION LIST */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-white/5 p-1 shadow-sm dark:shadow-2xl">
-               <TransactionList />
-            </div>
+            {/* 8. RECENT TRANSACTIONS */}
+            <section className="hidden md:block space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500">
+                  Recent Transactions
+                </h3>
+
+                <button
+                  onClick={() => navigate('/transaction-history')}
+                  className="text-xs font-bold text-sky-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
+                >
+                  View History
+                </button>
+              </div>
+
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-1 shadow-2xs">
+                <TransactionList />
+              </div>
+            </section>
           </div>
         </main>
+
+        <div className="sticky bottom-0 z-30 shrink-0 md:hidden bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800">
+          <MobileBottomNavigation />
+        </div>
       </div>
     </div>
   );
