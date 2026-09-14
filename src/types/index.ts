@@ -373,8 +373,16 @@ export const ENDPOINTS = {
   notification_mark_all_read: `${API_BASE}/notifications/mark-all-read/`,
   notification_delete: (id: string) => `${API_BASE}/notifications/${id}/delete/`,
   support_tickets: `${API_BASE}/support/`,
-  support_ticket_detail: (id: string) => `${API_BASE}/support/${id}/`,
-  loyalty_rewards: `${API_BASE}/loyalty/rewards/`,
+support_ticket_detail: (id: string) => `${API_BASE}/support/${id}/`,
+
+// SUPPORT ADMIN
+support_admin_tickets: `${API_BASE}/support/admin/tickets/`,
+support_admin_ticket_detail: (id: string) =>
+  `${API_BASE}/support/admin/tickets/${id}/`,
+support_admin_ticket_update: (id: string) =>
+  `${API_BASE}/support/admin/tickets/${id}/`,
+
+loyalty_rewards: `${API_BASE}/loyalty/rewards/`,
   loyalty_reward_detail: (id: string) => `${API_BASE}/loyalty/rewards/${id}/`,
   loyalty_redeem: (id: string) => `${API_BASE}/loyalty/rewards/${id}/redeem/`,
   loyalty_redemptions: `${API_BASE}/loyalty/redemptions/`,

@@ -123,6 +123,7 @@ import {
 
 import { Withdraw } from '@/pages/Withdraw';
 import { Deposit } from '@/pages/Deposit';
+import AdminSupport from '@/pages/admin/support/AdminSupport';
 
 
 /**
@@ -196,9 +197,7 @@ function AppRoutes() {
 
         {/* Public event sharing */}
         <Route path="/event/:eventId" element={<EventPublic />} />
-
-        {/* Public support */}
-        <Route path="/support" element={<Support />} />
+        
 
         {/* Public legal pages */}
         <Route path="/legal/terms" element={<TermsAndConditions />} />
@@ -234,7 +233,7 @@ function AppRoutes() {
             {/* Standalone Production Withdrawal Page */}
       <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
       
-      // Inside your Router / AppRoutes definition:
+      {/*Inside your Router / AppRoutes definition:*/}
 <Route path="/deposit"  element={
     <ProtectedRoute> <Deposit />
     </ProtectedRoute> } />
@@ -260,6 +259,13 @@ function AppRoutes() {
           <Route path="/tv-subscription" element={<ProtectedRoute><TVSubscription /></ProtectedRoute>} />
           <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
           <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />
+
+
+        {/*support */}
+        <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+
+        {/* AUTHENTICATED SUPPORT */}
+        <Route path="/admin/support" element={ <ProtectedRoute> <AdminSupport /> </ProtectedRoute> } />
           
           {/* SECURED WITH PROTECTED ROUTE */}
           <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />

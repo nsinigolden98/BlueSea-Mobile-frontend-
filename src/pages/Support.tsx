@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { Sidebar, Header, Toast, Loader } from '@/components/ui-custom';
@@ -22,13 +22,14 @@ export function Support() {
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [search, setSearch] = useState('');
 
   const { showToast, ToastComponent } = Toast();
   const { LoaderComponent } = Loader();
 
-  const fetchTickets = useCallback(async () => {
+  const fetchTickets = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const response = await getRequest(ENDPOINTS.support_tickets);
       if (response && response.tickets) {
         setTickets(response.tickets);
@@ -38,7 +39,7 @@ export function Support() {
     } catch {
       showToast('Failed to fetch support tickets');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, [showToast]);
 
@@ -75,16 +76,23 @@ export function Support() {
   };
 
   const fetchTicketDetail = async (ticketId: number) => {
-    setIsLoadingConversation(true);
     const localTicket = tickets.find((t) => t.id === ticketId);
-    if (localTicket) {
+
+    // GET /support/ is documented to include full message threads. Reuse the
+    // hydrated ticket instead of immediately issuing a second detail request.
+    if (localTicket && Array.isArray(localTicket.messages)) {
       setSelectedTicket(localTicket);
+      return;
     }
+
+    setIsLoadingConversation(true);
+    if (localTicket) setSelectedTicket(localTicket);
 
     try {
       const response = await getRequest(ENDPOINTS.support_ticket_detail(String(ticketId)));
       if (response) {
         setSelectedTicket(response);
+        setTickets((current) => current.map((ticket) => ticket.id === ticketId ? response : ticket));
       }
     } catch {
       showToast('Failed to fetch conversation details');
@@ -115,11 +123,13 @@ export function Support() {
         showToast(typeof res.data.message === 'string' ? res.data.message : 'Support conversation started successfully');
         setShowNewTicket(false);
         setInitialSubject('');
-        await fetchTickets();
-
         const createdId = res.data.ticket?.id || res.data.id;
         if (createdId) {
-          fetchTicketDetail(createdId);
+          const createdTicket = (res.data.ticket || res.data) as SupportTicket;
+          setTickets((current) => [createdTicket, ...current.filter((ticket) => ticket.id !== createdId)]);
+          setSelectedTicket(createdTicket);
+          // Refresh quietly; the user does not wait for the full ticket list.
+          void fetchTickets(false);
         }
       } else {
         let errorMsg = 'Failed to create support ticket';
@@ -229,6 +239,15 @@ export function Support() {
     setShowNewTicket(true);
   };
 
+  const filteredTickets = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return tickets;
+    return tickets.filter((ticket) =>
+      [ticket.subject, ticket.description, ticket.status, ticket.priority]
+        .some((value) => String(value ?? '').toLowerCase().includes(query))
+    );
+  }, [tickets, search]);
+
   const hasActiveConversation = Boolean(selectedTicket || isLoadingConversation);
 
   return (
@@ -274,17 +293,29 @@ export function Support() {
                 )}
 
                 <div className="flex-1">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-slate-800 dark:text-white">
-                      Your Conversations
-                    </h3>
-                    <span className="text-xs text-slate-400">
-                      {tickets.length} {tickets.length === 1 ? 'ticket' : 'tickets'}
-                    </span>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-800 dark:text-white">
+                        Your Conversations
+                      </h3>
+                      <span className="text-xs text-slate-400">
+                        {filteredTickets.length} of {tickets.length} {tickets.length === 1 ? 'ticket' : 'tickets'}
+                      </span>
+                    </div>
+                    <label className="w-full sm:w-64">
+                      <span className="sr-only">Search conversations</span>
+                      <input
+                        type="search"
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Search conversations"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                      />
+                    </label>
                   </div>
 
                   <TicketList
-                    tickets={tickets}
+                    tickets={filteredTickets}
                     loading={loading}
                     selectedTicketId={selectedTicket?.id}
                     onSelectTicket={fetchTicketDetail}
