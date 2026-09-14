@@ -300,7 +300,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Signup failed:', error);
       throw error;
     }
-  }, []);
+  }, []); 
 
   const logout = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true }));
