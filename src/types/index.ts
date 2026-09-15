@@ -550,21 +550,22 @@ export async function putRequest(url: string, payload: object) {
 }
 
 // PATCH REQUEST
-export async function patchRequest(url: string, payload: object) {
-  try {
-    const response = await axios.patch(url,payload,
-      {
-        headers: {
-          "Authorization": `Bearer ${getCookie('access_token') || ''}`,
-          // "Content-Type": "multipart/formdata",
-          // "Accept": 'application/json'
-        }
+export async function patchRequest(url: string, payload: object | FormData) {
+  const isFormData = payload instanceof FormData;
 
-      });
-    return response.data
+  try {
+    const response = await axios.patch(url, payload, {
+      headers: {
+        "Authorization": `Bearer ${getCookie('access_token') || ''}`,
+        // Explicitly set it only for JSON
+        ...(!isFormData && { "Content-Type": "application/json" }),
+        "Accept": "application/json",
+      },
+    });
+    return response.data;
   } catch (error: any) {
-    console.log(error)
-    return error?.response?.data
+    console.log(error);
+    return error?.response?.data;
   }
 }
 
