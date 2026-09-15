@@ -234,6 +234,8 @@ export function PinModal() {
         setMessage(response);
         resetState();
 
+        console.log(response);
+
         const isSuccess = !!response && (
           response.success === true || 
           response.state === true || 
