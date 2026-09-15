@@ -4,6 +4,7 @@ import { Bell, Headset, Menu } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getRequest, ENDPOINTS } from '@/types';
 import { cn } from '@/lib/utils';
+import { Capacitor } from '@capacitor/core';
 //import { PayLinkHeaderButton } from './PayLinkHeaderButton';
 
 interface DashboardHeaderProps {
@@ -18,6 +19,7 @@ export function DashboardHeader({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const isNativeApp = Capacitor.isNativePlatform();
 
   // 100% preservation of existing notification logic
   useEffect(() => {
@@ -71,6 +73,7 @@ export function DashboardHeader({
         <div className="flex items-center gap-3.5 min-w-0">
 
           {/* Desktop Sidebar Menu */}
+          {!isNativeApp && (
           <button
             type="button"
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -86,6 +89,7 @@ export function DashboardHeader({
           >
             <Menu className="w-5 h-5 stroke-[1.75]" />
           </button>
+          )}
 
           {/* Circular Interactive Avatar Container */}
           <button
