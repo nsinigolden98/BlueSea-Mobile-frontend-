@@ -4,7 +4,6 @@ import { Bell, Headset, Menu } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getRequest, ENDPOINTS } from '@/types';
 import { cn } from '@/lib/utils';
-import { Capacitor } from '@capacitor/core';
 //import { PayLinkHeaderButton } from './PayLinkHeaderButton';
 
 interface DashboardHeaderProps {
@@ -19,7 +18,6 @@ export function DashboardHeader({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
-  const isNativeApp = Capacitor.isNativePlatform();
 
   // 100% preservation of existing notification logic
   useEffect(() => {
@@ -73,14 +71,13 @@ export function DashboardHeader({
         <div className="flex items-center gap-3.5 min-w-0">
 
           {/* Desktop Sidebar Menu */}
-          {!isNativeApp && (
           <button
             type="button"
             onClick={() => setSidebarOpen(!sidebarOpen)}
             aria-label={sidebarOpen ? 'Close sidebar menu' : 'Open sidebar menu'}
             aria-expanded={sidebarOpen}
             className={cn(
-              'hidden md:flex flex-shrink-0 w-10 h-10 items-center justify-center rounded-xl transition-all duration-200',
+              'flex md:hidden flex-shrink-0 w-10 h-10 items-center justify-center rounded-xl transition-all duration-200',
               'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100',
               'bg-slate-100/60 hover:bg-slate-200/70 dark:bg-slate-800/60 dark:hover:bg-slate-700/70',
               'border border-slate-200/30 dark:border-slate-700/30',
@@ -89,7 +86,6 @@ export function DashboardHeader({
           >
             <Menu className="w-5 h-5 stroke-[1.75]" />
           </button>
-          )}
 
           {/* Circular Interactive Avatar Container */}
           <button
