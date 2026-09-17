@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Headset, Menu } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { useAuth } from '@/context/AuthContext';
 import { getRequest, ENDPOINTS } from '@/types';
 import { cn } from '@/lib/utils';
@@ -20,10 +21,8 @@ export function DashboardHeader({
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Detect Capacitor native app runtime.
-  // The menu button remains visible on the normal website.
-  const isCapacitorApp =
-    typeof window !== 'undefined' &&
-    !!(window as Window & { Capacitor?: unknown }).Capacitor;
+  // The menu is shown only on mobile web.
+  const isCapacitorApp = Capacitor.isNativePlatform();
 
   // 100% preservation of existing notification logic
   useEffect(() => {
@@ -76,7 +75,7 @@ export function DashboardHeader({
         {/* LEFT SECTION: Sidebar Menu, User Profile & Dynamic Greeting */}
         <div className="flex items-center gap-3.5 min-w-0">
 
-          {/* Desktop Sidebar Menu */}
+          {/* Mobile Web Sidebar Menu */}
           {!isCapacitorApp && (
             <button
               type="button"
@@ -202,4 +201,3 @@ export function DashboardHeader({
     </header>
   );
 }
-
