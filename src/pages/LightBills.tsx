@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ENDPOINTS, postRequest } from '@/types';
-import { Users, Plus, X, RefreshCw, ChevronDown, History, Check } from 'lucide-react';
+import { Users, Plus, X, RefreshCw, ChevronDown, History, Check, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const meterTypes = ['Prepaid', 'Postpaid'];
@@ -47,7 +47,11 @@ interface VerificationData {
   Address?: string;
   Customer_Number?: string;
   Meter_Number?: string;
-  Tariff?: string;
+  MeterNumber?: string;
+  Customer_Phone?: string;
+  Customer_Arrears?: number | string;
+  Meter_Type?: string;
+  Service?: string;
   [key: string]: any;
 }
 
@@ -62,6 +66,7 @@ export function LightBills() {
   const [verificationData, setVerificationData] = useState<VerificationData | null>(null);
   const [isVerified, setIsVerified] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
 
   const { PinComponent, showPinModal, modalData, message } = PinModal();
   const { user, refreshUser } = useAuth();
@@ -113,6 +118,7 @@ export function LightBills() {
     setIsConfirmed(false);
     setVerificationData(null);
     setCustomer('');
+    setShowMoreDetails(false);
   }, [meterNumber, meterType, biller]);
 
   // Load recent meters on mount
@@ -521,42 +527,138 @@ export function LightBills() {
 
                     {/* VERIFICATION CARD */}
                     {isVerified && !isGroupPayment && verificationData && (
-                      <div className="mt-6 mb-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/40 shadow-sm animate-in fade-in slide-in-from-bottom-2">
-                        <div className="bg-emerald-50 dark:bg-emerald-900/20 border-b border-slate-100 dark:border-slate-700 px-5 py-3.5 flex items-center gap-3">
-                          <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm">
-                            <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                      <div className="mt-6 mb-4 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/40 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+                        <div className="bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-100 dark:border-emerald-900/40 px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                              <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 text-sm">
+                                Meter Successfully Verified
+                              </h4>
+                              {verificationData.Customer_Name && (
+                                <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                  {verificationData.Customer_Name}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 text-sm">
-                            Meter Successfully Verified
-                          </h4>
+
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {verificationData.Service && (
+                              <span className="inline-flex items-center rounded-full bg-white/80 dark:bg-slate-800 px-3 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200 border border-emerald-100 dark:border-slate-700">
+                                {verificationData.Service}
+                              </span>
+                            )}
+                            {verificationData.Meter_Type && (
+                              <span className="inline-flex items-center rounded-full bg-white/80 dark:bg-slate-800 px-3 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200 border border-emerald-100 dark:border-slate-700">
+                                {verificationData.Meter_Type}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <div className="p-5 space-y-4">
-                          {verificationData.Customer_Name && (
-                            <div>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Customer Name</p>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white leading-tight">{verificationData.Customer_Name}</p>
-                            </div>
-                          )}
-                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {verificationData.Meter_Number && (
+                              <div>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                  Meter Number
+                                </p>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white font-mono break-all">
+                                  {verificationData.Meter_Number}
+                                </p>
+                              </div>
+                            )}
+
+                            {verificationData.Customer_Number && (
+                              <div>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                  Customer Number
+                                </p>
+                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 font-mono break-all">
+                                  {verificationData.Customer_Number}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
                           {verificationData.Address && (
                             <div>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Customer Address</p>
-                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-tight">{verificationData.Address}</p>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                Customer Address
+                              </p>
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+                                {verificationData.Address}
+                              </p>
                             </div>
                           )}
-                          
-                          {(verificationData.Customer_Number || verificationData.Meter_Number) && (
-                            <div>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Customer Number</p>
-                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-tight font-mono">{verificationData.Customer_Number || verificationData.Meter_Number}</p>
-                            </div>
-                          )}
-                          
-                          {verificationData.Tariff && (
-                            <div>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Tariff / Rate</p>
-                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-tight">{verificationData.Tariff}</p>
+
+                          {verificationData.Customer_Arrears !== undefined &&
+                            verificationData.Customer_Arrears !== null &&
+                            verificationData.Customer_Arrears !== '' && (
+                              <div className="rounded-xl border border-amber-200/70 dark:border-amber-900/50 bg-amber-50/70 dark:bg-amber-900/10 px-4 py-3.5">
+                                <p className="text-[11px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider mb-1">
+                                  Customer Arrears
+                                </p>
+                                <p className="text-lg font-bold text-slate-900 dark:text-white">
+                                  ₦{Number(verificationData.Customer_Arrears).toLocaleString('en-NG', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                  })}
+                                </p>
+                              </div>
+                            )}
+
+                          <button
+                            type="button"
+                            onClick={() => setShowMoreDetails(!showMoreDetails)}
+                            className="w-full flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <span>{showMoreDetails ? 'Hide more details' : 'View more details'}</span>
+                            <ChevronRight
+                              className={cn(
+                                "w-4 h-4 transition-transform duration-200",
+                                showMoreDetails && "rotate-90"
+                              )}
+                            />
+                          </button>
+
+                          {showMoreDetails && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 animate-in fade-in slide-in-from-top-1">
+                              {verificationData.Customer_Phone && (
+                                <div>
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                    Customer Phone
+                                  </p>
+                                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300 font-mono">
+                                    {verificationData.Customer_Phone}
+                                  </p>
+                                </div>
+                              )}
+
+                              {verificationData.Meter_Type && (
+                                <div>
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                    Meter Type
+                                  </p>
+                                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    {verificationData.Meter_Type}
+                                  </p>
+                                </div>
+                              )}
+
+                              {verificationData.Service && (
+                                <div>
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                    Service Provider
+                                  </p>
+                                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    {verificationData.Service}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -573,16 +675,16 @@ export function LightBills() {
                               />
                               <div className={cn(
                                 "w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center",
-                                isConfirmed 
-                                  ? "bg-sky-500 border-sky-500" 
+                                isConfirmed
+                                  ? "bg-sky-500 border-sky-500"
                                   : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-slate-400 dark:group-hover:border-slate-500"
                               )}>
-                                <Check 
+                                <Check
                                   className={cn(
-                                    "w-3.5 h-3.5 transition-transform duration-200 text-white", 
+                                    "w-3.5 h-3.5 transition-transform duration-200 text-white",
                                     isConfirmed ? "scale-100" : "scale-0"
-                                  )} 
-                                  strokeWidth={3} 
+                                  )}
+                                  strokeWidth={3}
                                 />
                               </div>
                             </div>

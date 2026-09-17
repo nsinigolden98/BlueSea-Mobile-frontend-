@@ -19,6 +19,12 @@ export function DashboardHeader({
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Detect Capacitor native app runtime.
+  // The menu button remains visible on the normal website.
+  const isCapacitorApp =
+    typeof window !== 'undefined' &&
+    !!(window as Window & { Capacitor?: unknown }).Capacitor;
+
   // 100% preservation of existing notification logic
   useEffect(() => {
     const fetchUnreadCount = async () => {
@@ -71,21 +77,23 @@ export function DashboardHeader({
         <div className="flex items-center gap-3.5 min-w-0">
 
           {/* Desktop Sidebar Menu */}
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label={sidebarOpen ? 'Close sidebar menu' : 'Open sidebar menu'}
-            aria-expanded={sidebarOpen}
-            className={cn(
-              'flex md:hidden flex-shrink-0 w-10 h-10 items-center justify-center rounded-xl transition-all duration-200',
-              'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100',
-              'bg-slate-100/60 hover:bg-slate-200/70 dark:bg-slate-800/60 dark:hover:bg-slate-700/70',
-              'border border-slate-200/30 dark:border-slate-700/30',
-              'hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sky-500/50'
-            )}
-          >
-            <Menu className="w-5 h-5 stroke-[1.75]" />
-          </button>
+          {!isCapacitorApp && (
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? 'Close sidebar menu' : 'Open sidebar menu'}
+              aria-expanded={sidebarOpen}
+              className={cn(
+                'flex md:hidden flex-shrink-0 w-10 h-10 items-center justify-center rounded-xl transition-all duration-200',
+                'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100',
+                'bg-slate-100/60 hover:bg-slate-200/70 dark:bg-slate-800/60 dark:hover:bg-slate-700/70',
+                'border border-slate-200/30 dark:border-slate-700/30',
+                'hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sky-500/50'
+              )}
+            >
+              <Menu className="w-5 h-5 stroke-[1.75]" />
+            </button>
+          )}
 
           {/* Circular Interactive Avatar Container */}
           <button
@@ -194,3 +202,4 @@ export function DashboardHeader({
     </header>
   );
 }
+
