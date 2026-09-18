@@ -9,6 +9,17 @@ import { useNavigate } from 'react-router-dom';
 
 type TicketStatus = 'all' | 'upcoming' | 'used' | 'expired' | 'transferred';
 
+type TicketImageSource = MyTicket & {
+  event_image?: string | null;
+  event_banner?: string | null;
+  image?: string | null;
+  banner?: string | null;
+  event?: {
+    banner?: string | null;
+    image?: string | null;
+  } | null;
+};
+
 export function MyTickets() {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<MyTicket[]>([]);
@@ -27,6 +38,18 @@ export function MyTickets() {
   const [isOpen, setIsOpen] = useState(false);
   const [txStatus, setTxStatus] = useState<boolean | null>(null);
   const [txMessage, setTxMessage] = useState('');
+
+  // The backend supplies the complete QR payload in the format:
+  // ticket_id:event_id:signature. Never generate or alter these values.
+  const getQrParts = (qrCode: string | null | undefined) => {
+    const parts = (qrCode || '').trim().split(':');
+    if (parts.length !== 3 || parts.some((part) => !part.trim())) return null;
+    return {
+      ticketId: parts[0].trim(),
+      eventId: parts[1].trim(),
+      signature: parts[2].trim(),
+    };
+  };
 
   const fetchTickets = useCallback(async () => {
     try {
@@ -128,14 +151,14 @@ export function MyTickets() {
 
   const filteredTickets = filterTickets(tickets);
 
-  const handleCopyId = async (id: string) => {
+  const handleCopyId = async (value: string, message = 'Copied') => {
     try {
-      await navigator.clipboard.writeText(id);
+      await navigator.clipboard.writeText(value);
       setCopied(true);
-      showToast('Ticket ID copied');
+      showToast(message);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      showToast('Failed to copy Ticket ID');
+      showToast(`Failed to copy ${message.toLowerCase()}`);
     }
   };
 
@@ -177,7 +200,7 @@ export function MyTickets() {
     { label: 'Transferred', value: 'transferred' },
   ];
 
-  const getTicketImage = (ticket: any): string | null => {
+  const getTicketImage = (ticket: TicketImageSource): string | null => {
     return ticket.event_image || ticket.event_banner || ticket.image || ticket.banner || ticket.event?.banner || ticket.event?.image || null;
   };
 
@@ -337,24 +360,50 @@ export function MyTickets() {
                 <p className="text-xs text-slate-400 mt-2">Scan QR code at event entrance</p>
               </div>
 
-              {/* Unique Ticket ID with Copy */}
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-slate-400 font-medium">Ticket ID</p>
-                  <p className="font-mono text-sm font-semibold text-slate-800 dark:text-white truncate">
-                    {selectedTicket.id}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleCopyId(selectedTicket.id)}
-                  className="flex items-center gap-1.5 text-xs h-8 px-2.5 shrink-0"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Copied' : 'Copy'}</span>
-                </Button>
-              </div>
+              {/* Backend QR identity fields */}
+              {(() => {
+                const qrParts = getQrParts(selectedTicket.qr_code);
+                return (
+                  <div className="space-y-2">
+                    {[
+                      ['Ticket ID', qrParts?.ticketId || selectedTicket.id],
+                      ['Event ID', qrParts?.eventId || 'Not available'],
+                      ['Signature', qrParts?.signature || 'Not available'],
+                    ].map(([label, value]) => (
+                      <div key={label} className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-slate-400 font-medium">{label}</p>
+                          <p className="font-mono text-xs font-semibold text-slate-800 dark:text-white break-all">
+                            {value}
+                          </p>
+                        </div>
+                        {value !== 'Not available' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleCopyId(value, `${label} copied`)}
+                            className="flex items-center gap-1.5 text-xs h-8 px-2.5 shrink-0"
+                          >
+                            {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{copied ? 'Copied' : 'Copy'}</span>
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    {selectedTicket.qr_code && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCopyId(selectedTicket.qr_code, 'Complete QR data copied')}
+                        className="w-full text-xs"
+                      >
+                        <Copy className="w-3.5 h-3.5 mr-1.5" />
+                        Copy Complete QR Data
+                      </Button>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Details List */}
               <div className="space-y-3 text-sm">
@@ -500,9 +549,13 @@ export function MyTickets() {
         </div>
       )}
 
-      <PinComponent 
-        type="marketplace_transfer" 
-        value={{ ticket_id: selectedTicket?.id, recipient_email: transferEmail.trim(), recipient_name: recipientName.trim() }} 
+      <PinComponent
+        type="marketplace_transfer"
+        value={{
+          ticket_id: selectedTicket?.id,
+          recipient_email: transferEmail.trim(),
+          recipient_name: recipientName.trim(),
+        }}
       />
       <ToastComponent />
       {isOpen && (

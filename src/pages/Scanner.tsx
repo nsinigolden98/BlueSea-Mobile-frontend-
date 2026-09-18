@@ -1,14 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Toast, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { QrCode, CheckCircle, XCircle, Loader2, Camera as CameraIcon, ArrowLeft } from 'lucide-react';
 import { Camera as CapacitorCamera } from '@capacitor/camera';
+import type { Html5Qrcode } from 'html5-qrcode';
 import { cn } from '@/lib/utils';
 import { getRequest, postRequest, ENDPOINTS, API_BASE, type ScannerAssignment } from '@/types';
 
 interface ScanResult {
   ticket_id: string;
+  event_id: string;
+  signature: string;
   event_title: string;
   buyer_name: string;
   status: string;
@@ -29,7 +32,7 @@ export function Scanner() {
   const { showLoader, hideLoader, LoaderComponent } = Loader();
   
   const qrRef = useRef<HTMLDivElement>(null);
-  const html5QrCodeRef = useRef<any>(null);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
   const getImageUrl = (path: string | undefined | null) => {
     if (!path) return '';
@@ -37,64 +40,22 @@ export function Scanner() {
     return `${API_BASE}${path}`;
   };
 
-  useEffect(() => {
-    fetchAssignments();
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const startCameraScanner = async () => {
-      if (scanning && qrRef.current) {
-        try {
-          // Clean up any existing scanner instance before starting
-          await stopAndClearScanner();
-
-          const { Html5Qrcode } = await import('html5-qrcode');
-          if (!isMounted) return;
-
-          const scanner = new Html5Qrcode('qr-reader');
-          html5QrCodeRef.current = scanner;
-
-          await scanner.start(
-            { facingMode: 'environment' },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            (decodedText: string) => {
-              if (isMounted) {
-                onScanSuccess(decodedText);
-              }
-            },
-            () => {}
-          );
-        } catch (err: any) {
-          if (isMounted) {
-            showToast(err?.message || 'Failed to start camera feed');
-            setScanning(false);
-          }
-        }
-      }
-    };
-
-    startCameraScanner();
-
-    return () => {
-      isMounted = false;
-      stopAndClearScanner().catch(() => {});
-    };
-  }, [scanning]);
-
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
       const response = await getRequest(ENDPOINTS.marketplace_my_scanner_assignments);
       if (response?.events) {
         setAssignments(response.events);
       }
-    } catch (err) {
+    } catch {
       showToast('Failed to fetch scanner assignments');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchAssignments();
+  }, [fetchAssignments]);
 
   const stopAndClearScanner = async () => {
     if (html5QrCodeRef.current) {
@@ -109,11 +70,50 @@ export function Scanner() {
     }
   };
 
-  const onScanSuccess = async (decodedText: string) => {
-    await stopAndClearScanner();
-    setScanning(false);
-    await scanTicket(decodedText);
-  };
+  useEffect(() => {
+    let isMounted = true;
+
+    const onScanSuccess = async (decodedText: string) => {
+      await stopAndClearScanner();
+      setScanning(false);
+      await scanTicket(decodedText);
+    };
+
+    const startCameraScanner = async () => {
+      if (scanning && qrRef.current) {
+        try {
+          await stopAndClearScanner();
+
+          const { Html5Qrcode } = await import('html5-qrcode');
+          if (!isMounted) return;
+
+          const scanner = new Html5Qrcode('qr-reader');
+          html5QrCodeRef.current = scanner;
+
+          await scanner.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText: string) => {
+              if (isMounted) onScanSuccess(decodedText);
+            },
+            () => {}
+          );
+        } catch (err: unknown) {
+          if (isMounted) {
+            showToast(err instanceof Error ? err.message : 'Failed to start camera feed');
+            setScanning(false);
+          }
+        }
+      }
+    };
+
+    startCameraScanner();
+
+    return () => {
+      isMounted = false;
+      stopAndClearScanner().catch(() => {});
+    };
+  }, [scanning, showToast]);
 
   const scanTicket = async (ticketCode: string) => {
     try {
@@ -144,8 +144,11 @@ export function Scanner() {
       hideLoader();
       
       if (response?.ticket_details) {
+        const qrParts = qrData.split(':');
         setScanResult({
-          ticket_id: response.ticket_details.ticket_id || '',
+          ticket_id: qrParts[0] || response.ticket_details.ticket_id || '',
+          event_id: qrParts[1] || '',
+          signature: qrParts[2] || '',
           event_title: response.ticket_details.event?.title || '',
           buyer_name: response.ticket_details.owner_name || '',
           status: response.scan_result === 'success' ? 'valid' : response.ticket_details.status || 'invalid',
@@ -154,8 +157,11 @@ export function Scanner() {
         setShowModal(true);
       } else if (response?.error) {
         showToast(response.error);
+        const qrParts = qrData.split(':');
         setScanResult({
-          ticket_id: '',
+          ticket_id: qrParts[0] || '',
+          event_id: qrParts[1] || '',
+          signature: qrParts[2] || '',
           event_title: '',
           buyer_name: '',
           status: 'invalid',
@@ -165,7 +171,7 @@ export function Scanner() {
       } else {
         showToast('Invalid ticket');
       }
-    } catch (err) {
+    } catch {
       hideLoader();
       showToast('Failed to scan ticket');
     }
@@ -398,9 +404,17 @@ export function Scanner() {
               )}
               
               <div className="mt-5 space-y-2 text-left bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800 rounded-xl p-4">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]">Reference</span>
-                  <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{scanResult.ticket_code}</span>
+                <div className="text-xs">
+                  <span className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]">Ticket ID</span>
+                  <span className="block mt-1 font-mono font-bold text-slate-700 dark:text-slate-300 break-all">{scanResult.ticket_id}</span>
+                </div>
+                <div className="text-xs pt-2 border-t border-slate-100 dark:border-slate-900">
+                  <span className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]">Event ID</span>
+                  <span className="block mt-1 font-mono font-bold text-slate-700 dark:text-slate-300 break-all">{scanResult.event_id}</span>
+                </div>
+                <div className="text-xs pt-2 border-t border-slate-100 dark:border-slate-900">
+                  <span className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]">Signature</span>
+                  <span className="block mt-1 font-mono font-bold text-slate-700 dark:text-slate-300 break-all">{scanResult.signature}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-100 dark:border-slate-900">
                   <span className="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]">Event Track</span>

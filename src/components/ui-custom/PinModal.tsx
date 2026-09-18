@@ -122,10 +122,24 @@ export function PinModal() {
       // Ticket transfer uses the backend transfer contract directly. The PIN modal
       // remains the confirmation gate, but the encrypted transaction PIN is not
       // added to this request because the transfer endpoint contract does not require it.
-      'marketplace_transfer': () => postRequest(ENDPOINTS.marketplace_ticket_transfer(value.ticket_id), {
-        recipient_email: value.recipient_email,
-        recipient_name: value.recipient_name,
-      }),
+      'marketplace_transfer': () => {
+        if (!value.ticket_id) {
+          throw new Error('Ticket ID is required for transfer');
+        }
+        if (!value.recipient_email || !value.recipient_name) {
+          throw new Error('Recipient name and email are required for transfer');
+        }
+
+        const transferPayload = {
+          recipient_email: value.recipient_email,
+          recipient_name: value.recipient_name,
+        };
+
+        return postRequest(
+          ENDPOINTS.marketplace_ticket_transfer(value.ticket_id),
+          transferPayload
+        );
+      },
     };
 
     const action = TRANSACTION_MAP[type];
