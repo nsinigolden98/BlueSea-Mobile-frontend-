@@ -119,6 +119,13 @@ export function PinModal() {
       'withdrawal': () => postRequest(ENDPOINTS.withdrawal, payload),
       'internal_transfer': () => postRequest(ENDPOINTS.internal_transfer, payload),
       'event-withdraw': () => postRequest(ENDPOINTS.event_withdraw, payload),
+      // Ticket transfer uses the backend transfer contract directly. The PIN modal
+      // remains the confirmation gate, but the encrypted transaction PIN is not
+      // added to this request because the transfer endpoint contract does not require it.
+      'marketplace_transfer': () => postRequest(ENDPOINTS.marketplace_ticket_transfer(value.ticket_id), {
+        recipient_email: value.recipient_email,
+        recipient_name: value.recipient_name,
+      }),
     };
 
     const action = TRANSACTION_MAP[type];

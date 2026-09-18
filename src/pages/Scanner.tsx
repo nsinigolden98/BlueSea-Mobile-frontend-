@@ -116,42 +116,50 @@ export function Scanner() {
   };
 
   const scanTicket = async (ticketCode: string) => {
-    if (!selectedEvent?.event_id) {
-      showToast('Please select an event before scanning.');
-      return;
-    }
-
     try {
       showLoader();
+      const qrData = ticketCode.trim();
+      if (!qrData) {
+        showToast('Please enter ticket QR data');
+        return;
+      }
+
+      // Backend QR format: ticket ID:event ID:backend signature.
+      // Keep the complete backend-generated value unchanged; only validate its shape locally.
+      const qrParts = qrData.split(':');
+      if (qrParts.length !== 3 || qrParts.some((part) => !part.trim())) {
+        showToast('Invalid ticket QR code');
+        return;
+      }
+
+      if (!selectedEvent?.event_id) {
+        showToast('Please select an event before scanning.');
+        return;
+      }
+
       const response = await postRequest(ENDPOINTS.scan_ticket, {
-        qr_data: ticketCode,
+        qr_data: qrData,
         event_id: selectedEvent.event_id,
       });
       hideLoader();
-
+      
       if (response?.ticket_details) {
         setScanResult({
           ticket_id: response.ticket_details.ticket_id || '',
           event_title: response.ticket_details.event?.title || '',
           buyer_name: response.ticket_details.owner_name || '',
           status: response.scan_result === 'success' ? 'valid' : response.ticket_details.status || 'invalid',
-          ticket_code: ticketCode,
+          ticket_code: qrData,
         });
         setShowModal(true);
-      } else if (response?.error || response?.message) {
-        const errorMessage = typeof response?.error === 'string'
-          ? response.error
-          : typeof response?.message === 'string'
-            ? response.message
-            : 'Invalid ticket';
-
-        showToast(errorMessage);
+      } else if (response?.error) {
+        showToast(response.error);
         setScanResult({
           ticket_id: '',
           event_title: '',
           buyer_name: '',
           status: 'invalid',
-          ticket_code: ticketCode,
+          ticket_code: qrData,
         });
         setShowModal(true);
       } else {
@@ -345,7 +353,7 @@ export function Scanner() {
                         type="text"
                         value={manualCode}
                         onChange={(e) => setManualCode(e.target.value)}
-                        placeholder="Enter ticket QR data"
+                        placeholder="Enter ticket QR data (ticket ID:event ID:signature)"
                         className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500 transition-all placeholder:text-slate-400"
                       />
                       <Button 

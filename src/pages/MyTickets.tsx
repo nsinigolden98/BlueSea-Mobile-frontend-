@@ -16,6 +16,7 @@ export function MyTickets() {
   const [activeFilter, setActiveFilter] = useState<TicketStatus>('all');
   const [selectedTicket, setSelectedTicket] = useState<MyTicket | null>(null);
   const [transferEmail, setTransferEmail] = useState('');
+  const [recipientName, setRecipientName] = useState('');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -57,6 +58,7 @@ export function MyTickets() {
         setShowTransferModal(false);
         setShowDetailModal(false);
         setTransferEmail('');
+        setRecipientName('');
         fetchTickets();
       } else {
         const errorMsg = message?.error || message?.response_description || 'Transfer failed';
@@ -140,12 +142,17 @@ export function MyTickets() {
   const handleOpenTransferModal = (ticket: MyTicket) => {
     setSelectedTicket(ticket);
     setTransferEmail('');
+    setRecipientName('');
     setShowTransferModal(true);
   };
 
   const handleProceedTransfer = () => {
     if (!transferEmail || !/^\S+@\S+\.\S+$/.test(transferEmail.trim())) {
       showToast('Please enter a valid recipient email address');
+      return;
+    }
+    if (!recipientName.trim()) {
+      showToast('Please enter the recipient name');
       return;
     }
     showPinModal();
@@ -447,6 +454,19 @@ export function MyTickets() {
 
             <div className="space-y-2">
               <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                Recipient Name
+              </label>
+              <input
+                type="text"
+                value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                placeholder="Enter recipient name"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
                 Recipient's BlueSimo Email
               </label>
               <input 
@@ -482,7 +502,7 @@ export function MyTickets() {
 
       <PinComponent 
         type="marketplace_transfer" 
-        value={{ ticket_id: selectedTicket?.id, recipient_email: transferEmail }} 
+        value={{ ticket_id: selectedTicket?.id, recipient_email: transferEmail.trim(), recipient_name: recipientName.trim() }} 
       />
       <ToastComponent />
       {isOpen && (
