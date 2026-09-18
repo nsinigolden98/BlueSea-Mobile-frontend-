@@ -116,11 +116,19 @@ export function Scanner() {
   };
 
   const scanTicket = async (ticketCode: string) => {
+    if (!selectedEvent?.event_id) {
+      showToast('Please select an event before scanning.');
+      return;
+    }
+
     try {
       showLoader();
-      const response = await postRequest(ENDPOINTS.scan_ticket, { qr_data: ticketCode });
+      const response = await postRequest(ENDPOINTS.scan_ticket, {
+        qr_data: ticketCode,
+        event_id: selectedEvent.event_id,
+      });
       hideLoader();
-      
+
       if (response?.ticket_details) {
         setScanResult({
           ticket_id: response.ticket_details.ticket_id || '',
@@ -130,8 +138,14 @@ export function Scanner() {
           ticket_code: ticketCode,
         });
         setShowModal(true);
-      } else if (response?.error) {
-        showToast(response.error);
+      } else if (response?.error || response?.message) {
+        const errorMessage = typeof response?.error === 'string'
+          ? response.error
+          : typeof response?.message === 'string'
+            ? response.message
+            : 'Invalid ticket';
+
+        showToast(errorMessage);
         setScanResult({
           ticket_id: '',
           event_title: '',
@@ -331,7 +345,7 @@ export function Scanner() {
                         type="text"
                         value={manualCode}
                         onChange={(e) => setManualCode(e.target.value)}
-                        placeholder="Enter 10-digit serial identifier"
+                        placeholder="Enter ticket QR data"
                         className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-sky-500 transition-all placeholder:text-slate-400"
                       />
                       <Button 
