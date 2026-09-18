@@ -139,15 +139,6 @@ export function MyTickets() {
     }
   };
 
-  const handleCopyQrData = async (qrData: string) => {
-    try {
-      await navigator.clipboard.writeText(qrData);
-      showToast('QR data copied');
-    } catch {
-      showToast('Failed to copy QR data');
-    }
-  };
-
   const handleOpenTransferModal = (ticket: MyTicket) => {
     setSelectedTicket(ticket);
     setTransferEmail('');
