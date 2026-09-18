@@ -102,21 +102,17 @@ export function Withdraw() {
     ? rawBalance
     : 0;
 
-  // Withdrawal limits use the same backend-authoritative DVA state already
-  // carried by AuthContext. No BVN value is inferred or stored locally.
+  // Withdrawal limits use the same backend-authoritative DVA state already carried by AuthContext.
   const hasVerifiedFinancialIdentity = user?.has_DVA === true;
   const withdrawalLimit = hasVerifiedFinancialIdentity ? 500000 : 100000;
 
-  // The backend deducts this ₦50 charge for withdrawals above ₦10,000.
-  // Keep the entered withdrawal amount unchanged for the backend/PIN flow.
-  // This charge is displayed only so the user knows the expected net amount.
+  // 1% withdrawal charge calculation
   const numericAmount = Number(withdrawAmount) || 0;
-  const serviceCharge = numericAmount > 9999 ? 50 : 0;
+  const serviceCharge = numericAmount > 0 ? numericAmount * 0.01 : 0;
   const expectedAmountReceived = Math.max(0, numericAmount - serviceCharge);
+  
+  const isUnderMinimum = numericAmount > 0 && numericAmount < 500;
   const isOverWithdrawalLimit = numericAmount > withdrawalLimit;
-
-  // Balance validation is based on the withdrawal amount itself because the
-  // backend already handles the ₦50 deduction; we do not add it to the payload.
   const isOverBalance = numericAmount > 0 && numericAmount > balance;
 
   // Bank Filtering Logic
@@ -147,8 +143,7 @@ export function Withdraw() {
     }
   };
 
-  // Fill the largest amount the user can request without exceeding the
-  // wallet balance or the applicable withdrawal limit.
+  // Fill the largest amount the user can request without exceeding wallet balance or limit.
   const handleWithdrawAll = () => {
     if (balance <= 0) {
       setWithdrawAmount('0');
@@ -191,7 +186,7 @@ export function Withdraw() {
       )) as VerifyAccountResponse;
 
       if (requestId !== verificationRequestId.current) return;
-      
+       
       if (response && (response.success || response.status === 'success' || response.account_name)) {
         setAccountName(response.account_name || '');
         setAccountVerified(true);
@@ -262,8 +257,8 @@ export function Withdraw() {
       showToast('Please specify a verified bank account');
       return;
     }
-    if (!withdrawAmount || isNaN(numericAmount) || numericAmount <= 0) {
-      showToast('Please enter a valid amount');
+    if (!withdrawAmount || isNaN(numericAmount) || numericAmount < 500) {
+      showToast('Minimum withdrawal amount is ₦500');
       return;
     }
     if (isOverWithdrawalLimit) {
@@ -284,10 +279,8 @@ export function Withdraw() {
       account_number: accountNumber,
       bank_code: selectedBank,
       bank_name: selectedBankObj?.name || '',
-      // Send the exact amount entered by the user. The backend applies its
-      // own ₦50 deduction; the frontend must not add that charge to this value.
       amount: withdrawAmount,
-      service_charge: 0,
+      service_charge: serviceCharge,
     });
     showPinModal();
   };
@@ -295,7 +288,7 @@ export function Withdraw() {
   const isFormValid = 
     accountVerified && 
     !verifyingAccount && 
-    numericAmount > 0 && 
+    numericAmount >= 500 && 
     !isOverWithdrawalLimit &&
     !isOverBalance;
 
@@ -331,42 +324,31 @@ export function Withdraw() {
                 <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
                   Destination Bank
                 </h2>
-                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                  Add a destination bank and verify the account before withdrawing
-                </p>
-              </div>
-              {/* Future beneficiary support can be added here when the backend
-                  exposes a saved-beneficiary contract. No local/fake beneficiary
-                  records are created by this page. */}
-              <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-800/40 px-4 py-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  Beneficiary
-                </p>
-                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">
-                  Add a destination account below.
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mt-0.5">
+                  Select a destination bank and verify the account before withdrawing
                 </p>
               </div>
 
-              <div className="space-y-5">
+              <div className="space-y-6">
                 
                 {/* OPAY-STYLE DYNAMIC BANK SEARCH SELECTOR */}
-                <div className="space-y-1.5 relative">
-                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-1">
+                <div className="space-y-2 relative">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 ml-1">
                     Select Destination Bank
                   </Label>
 
                   {/* Selected Bank Banner or Search Input */}
                   {selectedBank && !isBankDropdownOpen ? (
-                    <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/80 border border-sky-500/30 rounded-2xl">
+                    <div className="flex items-center justify-between px-4 bg-white dark:bg-slate-800/80 border border-sky-500/30 rounded-2xl h-16 shadow-sm">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-black text-xs">
-                          <Landmark className="w-4 h-4" />
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-black text-sm">
+                          <Landmark className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-xs font-black text-slate-900 dark:text-white">
+                          <p className="text-sm font-black text-slate-900 dark:text-white">
                             {selectedBankObj?.name}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-medium">Bank Code: {selectedBank}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Bank Code: {selectedBank}</p>
                         </div>
                       </div>
                       <button
@@ -377,14 +359,14 @@ export function Withdraw() {
                           setIsBankDropdownOpen(true);
                           setAccountVerified(false);
                         }}
-                        className="p-1.5 text-xs text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        className="p-2 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-5 h-5" />
                       </button>
                     </div>
                   ) : (
                     <div className="relative">
-                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                       <Input
                         type="text"
                         placeholder="Search bank name (e.g. OPay, GTBank, Kuda)..."
@@ -395,9 +377,9 @@ export function Withdraw() {
                           setIsBankDropdownOpen(true);
                         }}
                         onKeyDown={handleBankKeyDown}
-                        className="bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-white/5 rounded-2xl h-13 text-xs font-bold pl-10 pr-10 focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white"
+                        className="bg-white dark:bg-slate-800/60 border-slate-300 dark:border-white/10 rounded-2xl h-16 text-base font-bold pl-12 pr-12 focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white shadow-sm"
                       />
-                      <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
                     </div>
                   )}
 
@@ -406,19 +388,19 @@ export function Withdraw() {
                     <div className="absolute z-50 left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto scrollbar-hide divide-y divide-slate-100 dark:divide-slate-700/50">
                       
                       {/* Search Match Feedback Bar */}
-                      <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/90 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider flex justify-between items-center sticky top-0 backdrop-blur-md">
+                      <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/90 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex justify-between items-center sticky top-0 backdrop-blur-md">
                         <span>
                           {bankSearch.trim() 
                             ? `Found ${filteredBanks.length} matching bank${filteredBanks.length === 1 ? '' : 's'}`
                             : 'All Supported Banks'}
                         </span>
                         {filteredBanks.length > 0 && bankSearch.trim() && (
-                          <span className="text-sky-500 text-[9px]">Press Enter to select top result</span>
+                          <span className="text-sky-500 text-[10px]">Press Enter to select top result</span>
                         )}
                       </div>
 
                       {filteredBanks.length === 0 ? (
-                        <div className="p-4 text-center text-xs text-slate-400 font-medium">
+                        <div className="p-4 text-center text-xs text-slate-500 font-medium">
                           No bank found matching &quot;{bankSearch}&quot;
                         </div>
                       ) : (
@@ -432,7 +414,7 @@ export function Withdraw() {
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-[10px]">
+                              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs">
                                 {bank.name.charAt(0)}
                               </div>
                               <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
@@ -440,7 +422,7 @@ export function Withdraw() {
                               </span>
                             </div>
                             {index === 0 && bankSearch.trim() && (
-                              <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-sky-500/10 text-sky-500">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/10 text-sky-500">
                                 Auto-select
                               </span>
                             )}
@@ -452,15 +434,15 @@ export function Withdraw() {
                 </div>
 
                 {/* ACCOUNT NUMBER INPUT */}
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-1">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 ml-1">
                     Account Number
                   </Label>
                   <Input
                     type="text"
                     inputMode="numeric"
                     placeholder="10-digit account number"
-                    className="bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-white/5 rounded-2xl h-13 focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white font-bold text-base"
+                    className="bg-white dark:bg-slate-800/60 border-slate-300 dark:border-white/10 rounded-2xl h-16 focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white font-bold text-lg shadow-sm"
                     value={accountNumber}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -483,15 +465,15 @@ export function Withdraw() {
                     <div className="flex items-center gap-3">
                       <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                        <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                           Account Verified
                         </p>
-                        <p className="text-xs font-black text-slate-800 dark:text-slate-100">
+                        <p className="text-xs font-black text-slate-900 dark:text-slate-100 mt-0.5">
                           {accountName}
                         </p>
                       </div>
                     </div>
-                    <UserCheck className="w-4 h-4 text-emerald-500" />
+                    <UserCheck className="w-5 h-5 text-emerald-500" />
                   </div>
                 )}
 
@@ -504,10 +486,10 @@ export function Withdraw() {
                     <div className="flex items-center gap-3">
                       <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                        <p className="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">
                           Verification Error
                         </p>
-                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">
                           {verificationError}
                         </p>
                       </div>
@@ -519,13 +501,13 @@ export function Withdraw() {
                 {/* AMOUNT INPUT SECTION */}
                 <div className="pt-2 space-y-2">
                   <div className="flex justify-between items-center px-1">
-                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      Withdrawal Amount
+                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Withdrawal Amount (Min. ₦500)
                     </Label>
                     <button 
                       type="button"
                       onClick={handleWithdrawAll}
-                      className="text-[10px] text-sky-500 font-bold uppercase tracking-wider hover:underline cursor-pointer"
+                      className="text-xs text-sky-500 font-bold uppercase tracking-wider hover:underline cursor-pointer"
                     >
                       Withdraw All
                     </button>
@@ -536,7 +518,7 @@ export function Withdraw() {
                       type="number"
                       placeholder="0.00"
                       disabled={!accountVerified}
-                      className="bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-white/5 rounded-2xl h-16 text-2xl font-black focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white pl-10"
+                      className="bg-white dark:bg-slate-800/60 border-slate-300 dark:border-white/10 rounded-2xl h-16 text-2xl font-black focus:ring-2 focus:ring-sky-500 text-slate-900 dark:text-white pl-12 shadow-sm"
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
                     />
@@ -546,38 +528,48 @@ export function Withdraw() {
                   </div>
 
                   <div className="flex justify-between px-2 pt-1">
-                    <span className="text-[10px] text-slate-400 font-medium">
-                      Available: ₦{balance.toLocaleString()}
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      Available Balance: ₦{balance.toLocaleString()}
                     </span>
                   </div>
 
-                  {/* BACKEND CHARGE / EXPECTED RECEIPT NOTICE */}
-                  {numericAmount > 10000 && !isOverBalance && (
-                    <div className="p-3.5 bg-sky-500/10 border border-sky-500/20 rounded-2xl text-sky-700 dark:text-sky-300 animate-in fade-in">
-                      <div className="flex items-start gap-2">
+                  {/* 1% DEDUCTION & EXPECTED RECEIPT NOTICE */}
+                  {numericAmount > 0 && !isOverBalance && !isUnderMinimum && (
+                    <div className="p-4 bg-sky-500/10 border border-sky-500/20 rounded-2xl text-sky-900 dark:text-sky-300 animate-in fade-in space-y-1">
+                      <div className="flex items-start gap-2.5">
                         <Info className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1 space-y-1">
-                          <p className="text-xs font-bold">
-                            ₦50 withdrawal charge applies
+                          <p className="text-xs font-black">
+                            1% withdrawal charge applies
                           </p>
-                          <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                            You will request ₦{numericAmount.toLocaleString()} and should receive approximately{' '}
+                          <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                            You are requesting <strong className="text-slate-900 dark:text-white">₦{numericAmount.toLocaleString()}</strong> (1% fee: ₦{serviceCharge.toFixed(2)}). You will receive exactly{' '}
                             <strong className="text-slate-900 dark:text-white">
-                              ₦{expectedAmountReceived.toLocaleString()}
+                              ₦{expectedAmountReceived.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                             </strong>{' '}
-                            after the backend deducts the ₦50 charge.
+                            in your bank account.
                           </p>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* INSUFFICIENT BALANCE INLINE ERROR */}
-                  {isOverBalance && (
-                    <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-start gap-2 text-rose-600 dark:text-rose-400 animate-in fade-in">
+                  {/* MINIMUM WITHDRAWAL INLINE ERROR */}
+                  {isUnderMinimum && (
+                    <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-start gap-2.5 text-rose-800 dark:text-rose-400 animate-in fade-in">
                       <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                       <div className="text-xs font-bold leading-tight">
-                        {`Entered amount (₦${numericAmount.toLocaleString()}) exceeds your available balance of ₦${balance.toLocaleString()}`}
+                        Minimum withdrawal amount is ₦500. Entered amount (₦{numericAmount.toLocaleString()}) is below the minimum limit.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* INSUFFICIENT BALANCE INLINE ERROR */}
+                  {isOverBalance && (
+                    <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-start gap-2.5 text-rose-800 dark:text-rose-400 animate-in fade-in">
+                      <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <div className="text-xs font-bold leading-tight">
+                        Entered amount (₦{numericAmount.toLocaleString()}) exceeds your available balance of ₦{balance.toLocaleString()}
                       </div>
                     </div>
                   )}
@@ -589,12 +581,12 @@ export function Withdraw() {
                   type="button"
                   onClick={handleInitiateWithdrawal}
                   disabled={!isFormValid || submitting}
-                  className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-14 font-black text-xs uppercase tracking-widest shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all mt-4 disabled:opacity-50"
+                  className="w-full bg-sky-500 hover:bg-sky-600 text-white rounded-2xl h-14 font-black text-xs uppercase tracking-widest shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all mt-4 disabled:opacity-50 cursor-pointer"
                 >
                   {submitting ? (
                     <LoadingSpinner size="sm" />
-                  ) : numericAmount > 0 ? (
-                    `Withdraw ₦${numericAmount.toLocaleString()}${serviceCharge > 0 ? ' (₦50 charge)' : ''}`
+                  ) : numericAmount >= 500 ? (
+                    `Withdraw ₦${numericAmount.toLocaleString()} (1% charge)`
                   ) : (
                     'Withdraw Funds'
                   )}
