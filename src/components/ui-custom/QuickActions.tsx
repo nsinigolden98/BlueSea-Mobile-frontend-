@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, Wifi, Lightbulb, Tv } from 'lucide-react';
+import { Smartphone, Wifi, Lightbulb, Ticket } from 'lucide-react';
 
 interface QuickAction {
   id: string;
@@ -33,10 +33,10 @@ const actions: QuickAction[] = [
     color: 'text-amber-500 dark:text-amber-400',
   },
   {
-    id: 'tv',
-    label: 'TV Subscription',
-    icon: Tv,
-    path: '/tv-subscription',
+    id: 'tickets',
+    label: 'Tickets',
+    icon: Ticket,
+    path: '/marketplace',
     color: 'text-indigo-500 dark:text-indigo-400',
   },
 ];
