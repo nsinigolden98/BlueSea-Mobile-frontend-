@@ -106,9 +106,10 @@ export function Withdraw() {
   const hasVerifiedFinancialIdentity = user?.has_DVA === true;
   const withdrawalLimit = hasVerifiedFinancialIdentity ? 500000 : 100000;
 
-  // 1% withdrawal charge calculation
+  // Transfer service charge: ₦10 for transfers up to ₦10,000,
+  // and ₦60 total (₦50 + ₦10 service charge) for transfers above ₦10,000.
   const numericAmount = Number(withdrawAmount) || 0;
-  const serviceCharge = numericAmount > 0 ? numericAmount * 0.01 : 0;
+  const serviceCharge = numericAmount > 10000 ? 60 : numericAmount > 0 ? 10 : 0;
   const expectedAmountReceived = Math.max(0, numericAmount - serviceCharge);
   
   const isUnderMinimum = numericAmount > 0 && numericAmount < 500;
@@ -236,7 +237,7 @@ export function Withdraw() {
         msg?.status === true
       );
 
-      const serverMessage = msg?.message || msg?.error || msg?.data?.message || (isSuccess ? 'Withdrawal request successful' : 'Withdrawal failed');
+      const serverMessage = msg?.message || msg?.error || msg?.data?.message || (isSuccess ? 'Transfer request successful' : 'Transfer failed');
 
       if (isSuccess) {
         showToast(serverMessage);
@@ -258,12 +259,12 @@ export function Withdraw() {
       return;
     }
     if (!withdrawAmount || isNaN(numericAmount) || numericAmount < 500) {
-      showToast('Minimum withdrawal amount is ₦500');
+      showToast('Minimum transfer amount is ₦500');
       return;
     }
     if (isOverWithdrawalLimit) {
       showToast(
-        `Maximum withdrawal for your current verification level is ₦${withdrawalLimit.toLocaleString()}.`
+        `Maximum transfer for your current verification level is ₦${withdrawalLimit.toLocaleString()}.`
       );
       return;
     }
@@ -308,7 +309,7 @@ export function Withdraw() {
         {/* APP HEADER */}
         <div className="sticky top-0 z-30 shrink-0 bg-slate-50 dark:bg-slate-900">
           <Header 
-            title="Withdrawal" 
+            title="Transfer" 
             subtitle="Transfer funds directly to your bank account"
             onMenuClick={() => setSidebarOpen(true)} 
           />
@@ -325,7 +326,7 @@ export function Withdraw() {
                   Destination Bank
                 </h2>
                 <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mt-0.5">
-                  Select a destination bank and verify the account before withdrawing
+                  Select a destination bank and verify the account before transferring
                 </p>
               </div>
 
@@ -502,14 +503,14 @@ export function Withdraw() {
                 <div className="pt-2 space-y-2">
                   <div className="flex justify-between items-center px-1">
                     <Label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Withdrawal Amount (Min. ₦500)
+                      Transfer Amount (Min. ₦500)
                     </Label>
                     <button 
                       type="button"
                       onClick={handleWithdrawAll}
                       className="text-xs text-sky-500 font-bold uppercase tracking-wider hover:underline cursor-pointer"
                     >
-                      Withdraw All
+                      Use Maximum
                     </button>
                   </div>
 
@@ -533,21 +534,37 @@ export function Withdraw() {
                     </span>
                   </div>
 
-                  {/* 1% DEDUCTION & EXPECTED RECEIPT NOTICE */}
+                  {/* TRANSFER FEE BREAKDOWN */}
                   {numericAmount > 0 && !isOverBalance && !isUnderMinimum && (
-                    <div className="p-4 bg-sky-500/10 border border-sky-500/20 rounded-2xl text-sky-900 dark:text-sky-300 animate-in fade-in space-y-1">
+                    <div className="p-4 bg-sky-500/10 border border-sky-500/20 rounded-2xl text-sky-900 dark:text-sky-300 animate-in fade-in space-y-2">
                       <div className="flex items-start gap-2.5">
                         <Info className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
-                        <div className="min-w-0 flex-1 space-y-1">
+                        <div className="min-w-0 flex-1 space-y-2">
                           <p className="text-xs font-black">
-                            1% withdrawal charge applies
+                            Transfer fee
                           </p>
-                          <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                            You are requesting <strong className="text-slate-900 dark:text-white">₦{numericAmount.toLocaleString()}</strong> (1% fee: ₦{serviceCharge.toFixed(2)}). You will receive exactly{' '}
-                            <strong className="text-slate-900 dark:text-white">
-                              ₦{expectedAmountReceived.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                            </strong>{' '}
-                            in your bank account.
+                          <div className="space-y-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                            <div className="flex justify-between gap-4">
+                              <span>Transfer amount</span>
+                              <strong className="text-slate-900 dark:text-white">
+                                ₦{numericAmount.toLocaleString()}
+                              </strong>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span>Service fee</span>
+                              <strong className="text-slate-900 dark:text-white">
+                                ₦{serviceCharge.toLocaleString()}
+                              </strong>
+                            </div>
+                            <div className="flex justify-between gap-4 pt-1 border-t border-sky-500/10">
+                              <span>Amount received</span>
+                              <strong className="text-slate-900 dark:text-white">
+                                ₦{expectedAmountReceived.toLocaleString()}
+                              </strong>
+                            </div>
+                          </div>
+                          <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                            A ₦10 service fee applies to transfers up to ₦10,000. Transfers above ₦10,000 include a ₦50 transfer charge plus the ₦10 service fee (₦60 total).
                           </p>
                         </div>
                       </div>
@@ -559,7 +576,7 @@ export function Withdraw() {
                     <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-start gap-2.5 text-rose-800 dark:text-rose-400 animate-in fade-in">
                       <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                       <div className="text-xs font-bold leading-tight">
-                        Minimum withdrawal amount is ₦500. Entered amount (₦{numericAmount.toLocaleString()}) is below the minimum limit.
+                        Minimum transfer amount is ₦500. Entered amount (₦{numericAmount.toLocaleString()}) is below the minimum limit.
                       </div>
                     </div>
                   )}
@@ -585,10 +602,8 @@ export function Withdraw() {
                 >
                   {submitting ? (
                     <LoadingSpinner size="sm" />
-                  ) : numericAmount >= 500 ? (
-                    `Withdraw ₦${numericAmount.toLocaleString()} (1% charge)`
                   ) : (
-                    'Withdraw Funds'
+                    'Transfer Funds'
                   )}
                 </Button>
 

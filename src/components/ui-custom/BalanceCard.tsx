@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Eye, EyeOff, Lock, Coins, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Lock, Coins, ShieldCheck, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getRequest, ENDPOINTS } from '@/types';
 
@@ -51,6 +51,8 @@ export function BalanceCard({
     }
   }, [showBalance]);
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   // 3. Fetch the Reward Balance directly from the bonus_summary endpoint
   useEffect(() => {
     let isMounted = true;
@@ -72,6 +74,23 @@ export function BalanceCard({
     return () => { isMounted = false; };
   }, []);
 
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+
+    try {
+      const summaryRes = await getRequest(ENDPOINTS.bonus_summary);
+
+      if (summaryRes?.data) {
+        setRewardBalance(summaryRes.data.current_points ?? 0);
+      }
+    } catch (error) {
+      console.error("Failed to refresh reward balance for Balance Card", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const lockedBalance = user?.lockedBalance || '₦0.00';
   const availableBalance = user?.balance || '₦0.00';
 
@@ -90,7 +109,18 @@ export function BalanceCard({
         <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-white" />
       </div>
 
-      <div className="relative z-10 flex flex-col h-full">  
+      <div className="relative z-10 flex flex-col h-full">
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          aria-label="Refresh balance"
+          className="absolute top-0 right-0 p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-70"
+        >
+          <RefreshCw
+            className={`w-4 h-4 text-white ${isRefreshing ? 'animate-spin' : ''}`}
+          />
+        </button>  
         {/* Available Balance Label & Closely Aligned Toggle */}
         <div className="flex items-center gap-2 mb-2">  
           <span className="text-sm text-sky-100 font-medium">Available Balance</span>  

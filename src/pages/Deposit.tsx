@@ -40,6 +40,7 @@ export function Deposit() {
 
   // Account Modal & Request State
   const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [accountCopied, setAccountCopied] = useState(false);
 
 
   // DVA details come only from the authenticated backend profile.
@@ -49,13 +50,9 @@ export function Deposit() {
   // Calculation Utilities
   const numericAmount = Number(rawAmount.replace(/\D/g, '')) || 0;
   
-  // Paystack: 0% fee
-  const paystackFee = 0;
-  const paystackTotal = numericAmount;
-
-  // Virtual Account: 1.0% fee on top
-  const virtualFee = Math.round(numericAmount * 0.01 * 100) / 100;
-  const virtualTotal = numericAmount + virtualFee;
+  // Deposit service fee: ₦5 for every deposit.
+  const depositFee = numericAmount > 0 ? 5 : 0;
+  const depositTotal = numericAmount + depositFee;
 
   const formatNaira = (val: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -120,6 +117,8 @@ export function Deposit() {
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(value);
+        setAccountCopied(true);
+        window.setTimeout(() => setAccountCopied(false), 1800);
         return;
       }
     } catch (error) {
@@ -136,6 +135,8 @@ export function Deposit() {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
+      setAccountCopied(true);
+      window.setTimeout(() => setAccountCopied(false), 1800);
     } catch (error) {
       console.error('Failed to copy DVA account number:', error);
     }
@@ -198,7 +199,7 @@ export function Deposit() {
                   Direct Bank Transfer
                 </p>
                 <span className="inline-block mt-3 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
-                  Fee: 1.0%
+                  Fee: ₦5
                 </span>
               </div>
 
@@ -284,15 +285,15 @@ export function Deposit() {
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-slate-500 dark:text-slate-400 font-medium">
-                        Processing fee (0%)
+                        Deposit service fee
                       </span>
                       <span className="font-bold text-slate-800 dark:text-slate-200">
-                        {formatNaira(paystackFee)}
+                        {formatNaira(depositFee)}
                       </span>
                     </div>
                     <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex justify-between items-center text-sm font-black">
                       <span className="text-slate-900 dark:text-white">Total payable</span>
-                      <span className="text-sky-500">{formatNaira(paystackTotal)}</span>
+                      <span className="text-sky-500">{formatNaira(depositTotal)}</span>
                     </div>
                   </div>
                 )}
@@ -351,7 +352,18 @@ export function Deposit() {
                         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Account Number</p>
                         <div className="flex items-center gap-2 mt-1">
                           <p className="text-sm font-black text-sky-500 tracking-wider truncate">{dvaAccount?.dva_account_number}</p>
-                          <button type="button" onClick={handleCopyAccountNumber} className="shrink-0 px-2 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-[9px] font-bold text-sky-500 transition-all active:scale-95 cursor-pointer" aria-label="Copy dedicated account number">Copy</button>
+                          <button
+                              type="button"
+                              onClick={handleCopyAccountNumber}
+                              className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[9px] font-bold transition-all active:scale-95 cursor-pointer ${
+                                accountCopied
+                                  ? 'bg-emerald-500/10 text-emerald-500'
+                                  : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-500'
+                              }`}
+                              aria-label={accountCopied ? 'Account number copied' : 'Copy dedicated account number'}
+                            >
+                              {accountCopied ? 'Copied ✓' : 'Copy'}
+                            </button>
                         </div>
                       </div>
                       <div className="min-w-0">
@@ -394,15 +406,15 @@ export function Deposit() {
                         </div>
                         <div className="flex justify-between items-center text-xs">
                           <span className="text-slate-500 dark:text-slate-400 font-medium">
-                            Processing fee (1.0%)
+                            Deposit service fee
                           </span>
                           <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {formatNaira(virtualFee)}
+                            {formatNaira(depositFee)}
                           </span>
                         </div>
                         <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex justify-between items-center text-sm font-black">
                           <span className="text-slate-900 dark:text-white">Total required transfer</span>
-                          <span className="text-sky-500">{formatNaira(virtualTotal)}</span>
+                          <span className="text-sky-500">{formatNaira(depositTotal)}</span>
                         </div>
                       </div>
                     )}
@@ -410,7 +422,7 @@ export function Deposit() {
                     <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
                       <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                        A 1% processing fee will be added to your deposit amount when the transfer is processed.
+                        A flat ₦5 deposit service fee applies to every deposit. The fee is shown clearly before you proceed.
                       </p>
                     </div>
 

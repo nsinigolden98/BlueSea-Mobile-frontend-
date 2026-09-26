@@ -43,6 +43,9 @@ export const services: Service[] = [
   //{ id: 'mc-5', name: 'Contracts', description: 'Secure escrow agreements', icon: 'FileSignature', route: '/commerce/contracts', category: 'Marketplace & Commerce' },
 
   // Finance
+  { id: 'fi-1', name: 'Transfer', description: 'Transfer funds seamlessly', icon: 'ArrowUpRight', route: '/withdraw', category: 'Finance' },
+
+  { id: 'fi-2', name: 'deposit', description: 'deposit funds', icon: 'ArrowDownLeft', route: '/deposit', category: 'Finance' },
   //{ id: 'fi-1', name: 'PayLink', description: 'Recieve & Make Payment Slimlessly', icon: 'ScanQrCode', route: '/paylink', category: 'Finance' },
  // { id: 'fi-2', name: 'BlueConnect', description: 'securely recieve and make payment', icon: 'KeyRound', route: '/blueconnect', category: 'Finance' },
   //{ id: 'fi-1', name: 'Savings Vault', description: 'Earn interest on your funds', icon: 'PiggyBank', route: '/finance/savings', category: 'Finance', badge: 'Recommended' },

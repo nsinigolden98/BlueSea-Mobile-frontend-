@@ -61,7 +61,7 @@ export function DashboardPrimaryActions({ className }: DashboardPrimaryActionsPr
             <ArrowUpRight className="w-3.5 h-3.5 md:w-4 md:h-4 text-sky-600 dark:text-sky-400 group-hover:scale-110 transition-transform" />
           </div>
           <span className="text-[11px] sm:text-xs font-bold truncate">
-            Withdrawal
+            Transfer 
           </span>
         </button>
       </div>
