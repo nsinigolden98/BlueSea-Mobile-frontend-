@@ -60,11 +60,6 @@ const MAX_CUSTOM_ACTIONS = 4;
 
 /**
  * Central catalogue.
- *
- * IMPORTANT:
- * Routes below are kept as explicit metadata so adding a future service only
- * requires one catalogue entry. Verify any route that is not already present
- * in your application before enabling it in production.
  */
 const quickActionCatalog: QuickActionDefinition[] = [
   {
@@ -381,7 +376,7 @@ function QuickActionTile({
         />
       </span>
 
-      <span className="flex min-h-[22px] w-full max-w-[76px] items-center justify-center px-0.5 text-slate-700 dark:text-slate-200">
+      <span className="flex min-h-[22px] w-full max-w-[84px] sm:max-w-none items-center justify-center px-0.5 text-slate-700 dark:text-slate-200">
         <QuickActionLabel label={action.label} compact={compact} />
       </span>
     </button>
@@ -767,8 +762,9 @@ function QuickActionsEditor({
         }
       `}</style>
 
+      {/* Top-aligned Modal Container */}
       <div
-        className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/35 p-0 backdrop-blur-[2px] md:items-center md:p-6"
+        className="fixed inset-0 z-[80] flex items-start justify-center bg-slate-950/35 p-3 pt-4 sm:p-6 sm:pt-8 backdrop-blur-[2px]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="quick-actions-editor-title"
@@ -781,12 +777,10 @@ function QuickActionsEditor({
             'relative flex w-full flex-col overflow-hidden',
             'border border-white/45 bg-white/85 shadow-2xl backdrop-blur-2xl',
             'dark:border-white/[0.08] dark:bg-slate-950/85',
-            'md:max-h-[min(760px,calc(100vh-48px))] md:max-w-2xl md:rounded-3xl',
-            'max-h-[88vh] rounded-t-[28px]',
+            'max-h-[min(780px,calc(100vh-32px))] max-w-2xl rounded-2xl sm:rounded-3xl',
           )}
           onMouseDown={(event) => event.stopPropagation()}
         >
-          <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-slate-300 dark:bg-slate-700 md:hidden" />
           {content}
         </div>
       </div>
