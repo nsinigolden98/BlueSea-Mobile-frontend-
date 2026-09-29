@@ -135,9 +135,9 @@ export function Dashboard() {
                 Quick Actions
               </h3>
 
-              <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <div className="flex gap-3 md:gap-4 pb-1 md:pb-2 w-max pr-6 md:pr-0">
-                  <QuickActions />
+              <div className="w-full scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="flex w-full justify-center pb-1 md:pb-2">
+                  <QuickActions className="w-full max-w-none" />
                 </div>
               </div>
             </section>

@@ -60,6 +60,11 @@ const MAX_CUSTOM_ACTIONS = 4;
 
 /**
  * Central catalogue.
+ *
+ * IMPORTANT:
+ * Routes below are kept as explicit metadata so adding a future service only
+ * requires one catalogue entry. Verify any route that is not already present
+ * in your application before enabling it in production.
  */
 const quickActionCatalog: QuickActionDefinition[] = [
   {
@@ -111,7 +116,7 @@ const quickActionCatalog: QuickActionDefinition[] = [
     id: 'transfer',
     label: 'Transfer',
     icon: ArrowLeftRight,
-    path: '/transfer',
+    path: '/withdraw',
     category: 'Everyday Payments',
     enabled: true,
   },
@@ -143,7 +148,7 @@ const quickActionCatalog: QuickActionDefinition[] = [
     id: 'smart-auto-top-up',
     label: 'Smart Auto Top-up',
     icon: Zap,
-    path: '/auto-top-up',
+    path: '/auto-topup',
     category: 'Wallet & Rewards',
     enabled: true,
   },
@@ -151,7 +156,7 @@ const quickActionCatalog: QuickActionDefinition[] = [
     id: 'referral-rewards',
     label: 'Referral Rewards',
     icon: Gift,
-    path: '/referral',
+    path: '/rewards',
     category: 'Wallet & Rewards',
     enabled: true,
   },
@@ -175,7 +180,7 @@ const quickActionCatalog: QuickActionDefinition[] = [
     id: 'payroll',
     label: 'Payroll Pro',
     icon: BriefcaseBusiness,
-    path: '/payroll',
+    path: '/payroll-pro',
     category: 'Business',
     enabled: true,
   },
@@ -199,7 +204,7 @@ const quickActionCatalog: QuickActionDefinition[] = [
     id: 'scan-assignment',
     label: 'Scan Assignment',
     icon: QrCode,
-    path: '/scan-assignment',
+    path: '/scan-assignments',
     category: 'Advanced Services',
     enabled: true,
   },
@@ -376,7 +381,7 @@ function QuickActionTile({
         />
       </span>
 
-      <span className="flex min-h-[22px] w-full max-w-[84px] sm:max-w-none items-center justify-center px-0.5 text-slate-700 dark:text-slate-200">
+      <span className="flex min-h-[22px] w-full max-w-[76px] items-center justify-center px-0.5 text-slate-700 dark:text-slate-200">
         <QuickActionLabel label={action.label} compact={compact} />
       </span>
     </button>
@@ -533,7 +538,10 @@ function QuickActionsEditor({
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
               <Edit3 className="h-4 w-4" />
             </div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2
+              id="quick-actions-editor-title"
+              className="text-sm font-bold text-slate-900 dark:text-white"
+            >
               Customize Quick Actions
             </h2>
           </div>
@@ -542,14 +550,26 @@ function QuickActionsEditor({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-500/10 hover:text-slate-900 dark:hover:text-white"
-          aria-label="Close Quick Actions editor"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-xl bg-sky-600 px-4 py-2 text-[10px] font-bold text-white shadow-sm transition hover:bg-sky-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:px-5 sm:py-2.5 sm:text-[11px]"
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-500/10 hover:text-slate-900 disabled:opacity-50 dark:hover:text-white"
+            aria-label="Close Quick Actions editor"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -715,27 +735,6 @@ function QuickActionsEditor({
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-slate-200/70 bg-white/55 px-4 py-3 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/55 sm:px-5">
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="rounded-xl px-4 py-2.5 text-[11px] font-bold text-slate-600 transition hover:bg-slate-500/10 disabled:opacity-50 dark:text-slate-300"
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="rounded-xl bg-sky-600 px-5 py-2.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-sky-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </div>
     </>
   );
 
@@ -762,9 +761,8 @@ function QuickActionsEditor({
         }
       `}</style>
 
-      {/* Top-aligned Modal Container */}
       <div
-        className="fixed inset-0 z-[80] flex items-start justify-center bg-slate-950/35 p-3 pt-4 sm:p-6 sm:pt-8 backdrop-blur-[2px]"
+        className="fixed inset-0 z-[80] flex items-end justify-center bg-slate-950/35 p-0 backdrop-blur-[2px] md:items-center md:p-6"
         role="dialog"
         aria-modal="true"
         aria-labelledby="quick-actions-editor-title"
@@ -777,10 +775,12 @@ function QuickActionsEditor({
             'relative flex w-full flex-col overflow-hidden',
             'border border-white/45 bg-white/85 shadow-2xl backdrop-blur-2xl',
             'dark:border-white/[0.08] dark:bg-slate-950/85',
-            'max-h-[min(780px,calc(100vh-32px))] max-w-2xl rounded-2xl sm:rounded-3xl',
+            'md:max-h-[min(760px,calc(100vh-48px))] md:max-w-2xl md:rounded-3xl',
+            'max-h-[88vh] rounded-t-[28px]',
           )}
           onMouseDown={(event) => event.stopPropagation()}
         >
+          <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-slate-300 dark:bg-slate-700 md:hidden" />
           {content}
         </div>
       </div>
