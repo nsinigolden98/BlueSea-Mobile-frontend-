@@ -24,8 +24,8 @@ import {
   //Orbit,
   //ShieldCheck
   ScanQrCode,
-  ChevronLeft,
-  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -52,10 +52,45 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
  ScanQrCode
 };
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'bluesimo-sidebar-collapsed';
+
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+
+  React.useEffect(() => {
+    try {
+      const savedCollapsedState = window.localStorage.getItem(
+        SIDEBAR_COLLAPSED_STORAGE_KEY
+      );
+
+      if (savedCollapsedState === 'true') {
+        setIsCollapsed(true);
+      } else if (savedCollapsedState === 'false') {
+        setIsCollapsed(false);
+      }
+    } catch {
+      // Keep the default expanded state if localStorage is unavailable.
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    setIsCollapsed((collapsed) => {
+      const nextCollapsedState = !collapsed;
+
+      try {
+        window.localStorage.setItem(
+          SIDEBAR_COLLAPSED_STORAGE_KEY,
+          String(nextCollapsedState)
+        );
+      } catch {
+        // Keep the UI working if localStorage is unavailable.
+      }
+
+      return nextCollapsedState;
+    });
+  };
 
   return (
     <>
@@ -103,7 +138,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             {/* Desktop collapse button */}
             <button
               type="button"
-              onClick={() => setIsCollapsed((collapsed) => !collapsed)}
+              onClick={toggleSidebar}
               aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               className={cn(
@@ -114,9 +149,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               )}
             >
               {isCollapsed ? (
-                <ChevronRight className="w-5 h-5" />
+                <PanelLeftOpen className="w-5 h-5" />
               ) : (
-                <ChevronLeft className="w-5 h-5" />
+                <PanelLeftClose className="w-5 h-5" />
               )}
             </button>
           </div>
@@ -127,12 +162,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               {navItems.map((item) => {
                 const Icon = iconMap[item.icon] || LayoutGrid;
                 const isActive = location.pathname === item.path;
-                
+
                 return (
                   <li key={item.id} className="relative group">
                     <NavLink
                       to={item.path}
                       onClick={() => onClose()}
+                      title={isCollapsed ? item.label : undefined}
                       className={cn(
                         'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200',
                         isCollapsed && 'lg:justify-center lg:px-0',
@@ -170,6 +206,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <NavLink
               to="/settings"
               onClick={() => onClose()}
+              title={isCollapsed ? `${user?.firstName || 'Guest'} ${user?.surname || ''}`.trim() : undefined}
               className={cn(
                 'relative flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group',
                 isCollapsed && 'lg:justify-center lg:p-2'
