@@ -1,3 +1,4 @@
+import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
@@ -22,7 +23,9 @@ import {
   Briefcase,
   //Orbit,
   //ShieldCheck
-  ScanQrCode
+  ScanQrCode,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -52,6 +55,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
   const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
 
   return (
     <>
@@ -66,20 +70,54 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar */}
       <aside 
         className={cn(
-          'fixed lg:static inset-y-0 left-0 z-50 w-[280px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800',
-          'transform transition-transform duration-300 ease-out',
+          'fixed lg:static inset-y-0 left-0 z-50 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800',
+          'transform transition-all duration-300 ease-out',
+          'w-[280px] lg:w-[280px]',
+          'lg:transition-[width,transform] lg:duration-300',
+          isCollapsed ? 'lg:w-[76px]' : 'lg:w-[280px]',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
-            <Logo size="sm" />
+          <div className={cn(
+            'flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800',
+            'lg:min-h-[73px]',
+            isCollapsed && 'lg:justify-center lg:px-2'
+          )}>
+            <div className={cn(
+              'transition-opacity duration-200',
+              isCollapsed && 'lg:hidden'
+            )}>
+              <Logo size="sm" />
+            </div>
+
+            {/* Mobile close button - unchanged */}
             <button 
               onClick={onClose}
               className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
+            </button>
+
+            {/* Desktop collapse button */}
+            <button
+              type="button"
+              onClick={() => setIsCollapsed((collapsed) => !collapsed)}
+              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              className={cn(
+                'hidden lg:flex items-center justify-center w-9 h-9 rounded-lg',
+                'text-slate-500 hover:text-sky-500 hover:bg-slate-100 dark:hover:bg-slate-800',
+                'transition-colors',
+                !isCollapsed && 'ml-auto'
+              )}
+            >
+              {isCollapsed ? (
+                <ChevronRight className="w-5 h-5" />
+              ) : (
+                <ChevronLeft className="w-5 h-5" />
+              )}
             </button>
           </div>
 
@@ -91,20 +129,33 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 const isActive = location.pathname === item.path;
                 
                 return (
-                  <li key={item.id}>
+                  <li key={item.id} className="relative group">
                     <NavLink
                       to={item.path}
                       onClick={() => onClose()}
                       className={cn(
                         'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200',
+                        isCollapsed && 'lg:justify-center lg:px-0',
                         isActive 
                           ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' 
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                       )}
                     >
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{item.label}</span>
+                      <Icon className="w-5 h-5 shrink-0" />
+                      <span className={cn(
+                        'font-medium transition-opacity duration-150',
+                        isCollapsed && 'lg:hidden'
+                      )}>
+                        {item.label}
+                      </span>
                     </NavLink>
+
+                    {/* Desktop collapsed label */}
+                    {isCollapsed && (
+                      <div className="hidden lg:block pointer-events-none absolute left-full top-1/2 z-[60] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 dark:bg-white dark:text-slate-900">
+                        {item.label}
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -112,13 +163,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </nav>
 
           {/* Profile Section */}
-          <div className="p-3 border-t border-slate-100 dark:border-slate-800">
+          <div className={cn(
+            'p-3 border-t border-slate-100 dark:border-slate-800',
+            isCollapsed && 'lg:px-2'
+          )}>
             <NavLink
               to="/settings"
               onClick={() => onClose()}
-              className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+              className={cn(
+                'relative flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group',
+                isCollapsed && 'lg:justify-center lg:p-2'
+              )}
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
+              <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
                 {user?.profilePicture ?
                     <img 
                   src={user?.profilePicture} 
@@ -129,7 +186,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <User className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                 }
               </div>
-              <div className="flex-1 min-w-0">
+              <div className={cn(
+                'flex-1 min-w-0',
+                isCollapsed && 'lg:hidden'
+              )}>
                 <p className="font-medium text-slate-800 dark:text-white truncate">
                   {user?.firstName || 'Guest'} {user?.surname || ''}
                 </p>
@@ -137,7 +197,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   {user?.email || 'guest@example.com'}
                 </p>
               </div>
-              <Settings className="w-4 h-4 text-slate-400 group-hover:text-sky-500 transition-colors" />
+              <Settings className={cn(
+                'w-4 h-4 text-slate-400 group-hover:text-sky-500 transition-colors',
+                isCollapsed && 'lg:hidden'
+              )} />
+
+              {/* Desktop collapsed profile label */}
+              {isCollapsed && (
+                <div className="hidden lg:block pointer-events-none absolute left-[70px] bottom-3 z-[60] whitespace-nowrap rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 dark:bg-white dark:text-slate-900">
+                  <div>{user?.firstName || 'Guest'} {user?.surname || ''}</div>
+                  <div className="text-xs font-normal opacity-80">{user?.email || 'guest@example.com'}</div>
+                </div>
+              )}
             </NavLink>
           </div>
         </div>

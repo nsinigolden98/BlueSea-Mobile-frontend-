@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { cn } from '@/lib/utils';
 import { Home, Gift,
   // Briefcase, 
@@ -14,6 +15,11 @@ interface NavigationItem {
 
 export function MobileBottomNavigation() {
   const location = useLocation();
+
+  // This navigation is app-only. On the web browser, render nothing.
+  if (!Capacitor.isNativePlatform()) {
+    return null;
+  }
 
   // Primary destinations mapped to their respective routes
   const bottomNavItems: NavigationItem[] = [
