@@ -63,7 +63,7 @@ export function Rewards() {
   const { LoaderComponent, showLoader, hideLoader } = Loader();
   const { user } = useAuth();
 
-  const referralLink = `https://blueseamobile.com.ng/login?ref=${user?.referral_code}`;
+  const referralLink = `https://blueseamobile.com/login?ref=${user?.referral_code}`;
 
   // Defined outside or memoized to avoid re-render issues
   const tasks: Task[] = [

@@ -20,14 +20,14 @@ import { getAuthToken } from './api';
  * Production API base URL.
  *
  * Expected:
- * https://api.blueseamobile.com.ng
+ * https://api.blueseamobile.com
  *
  * VITE_API_BASE_URL may be supplied through the Vite environment.
  * The trailing slash is removed so endpoint construction remains consistent.
  */
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
-  'https://api.blueseamobile.com.ng'
+  'https://api.blueseamobile.com'
 ).replace(/\/+$/, '');
 
 /**

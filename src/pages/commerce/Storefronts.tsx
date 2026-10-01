@@ -132,7 +132,7 @@ export function Storefronts() {
                         <p className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
                           {store.name} <Heart className="w-3 h-3 text-pink-500" />
                         </p>
-                        <p className="text-[10px] text-slate-400">blueseamobile.com.ng/store/{store.slug}</p>
+                        <p className="text-[10px] text-slate-400">blueseamobile.com/store/{store.slug}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">

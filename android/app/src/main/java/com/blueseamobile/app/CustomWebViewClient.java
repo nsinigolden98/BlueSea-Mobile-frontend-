@@ -15,7 +15,7 @@ public class CustomWebViewClient extends BridgeWebViewClient {
 
     public static final String KEY_LAST_URL = "LAST_SUCCESSFUL_URL";
     public static final String OFFLINE_ASSET_URL = "file:///android_asset/offline.html";
-    public static final String DEFAULT_FALLBACK_URL = "https://blueseamobile.com.ng/dashboard";
+    public static final String DEFAULT_FALLBACK_URL = "https://blueseamobile.com/dashboard";
 
     public CustomWebViewClient(Bridge bridge) {
         super(bridge);

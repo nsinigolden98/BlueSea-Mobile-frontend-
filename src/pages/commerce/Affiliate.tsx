@@ -37,7 +37,7 @@ export function Affiliate() {
 
   // Ready for backend activity triggers (e.g., logging link generation metrics)
   const handleCopy = async (itemId: string) => {
-    const link = `https://blueseamobile.com.ng/ref/${referralCode}/${itemId}`;
+    const link = `https://blueseamobile.com/ref/${referralCode}/${itemId}`;
     try {
       await navigator.clipboard.writeText(link);
       setCopiedId(itemId);
@@ -56,7 +56,7 @@ export function Affiliate() {
     const shareData = {
       title: item.title,
       text: `Check out ${item.title} on BlueSea!`,
-      url: `https://blueseamobile.com.ng/ref/${referralCode}/${item.id}`,
+      url: `https://blueseamobile.com/ref/${referralCode}/${item.id}`,
     };
 
     if (navigator.share) {
@@ -112,7 +112,7 @@ export function Affiliate() {
             
             <div className="mt-4 p-3 bg-white/5 rounded-xl flex items-center gap-3">
               <Link2 className="w-4 h-4 text-slate-400" />
-              <span className="text-xs font-mono text-slate-300 flex-1 truncate">blueseamobile.com.ng/ref/{referralCode}</span>
+              <span className="text-xs font-mono text-slate-300 flex-1 truncate">blueseamobile.com/ref/{referralCode}</span>
               <button onClick={() => handleCopy('general')} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-bold transition-all">
                 {copiedId === 'general' ? 'Copied!' : 'Copy'}
               </button>

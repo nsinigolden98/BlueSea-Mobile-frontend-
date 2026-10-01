@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
-  'https://api.blueseamobile.com.ng'
+  'https://api.blueseamobile.com'
 ).replace(/\/+$/, '');
 
 export function setCookie(name: string, token: string) {

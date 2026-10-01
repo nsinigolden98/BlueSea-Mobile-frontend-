@@ -12,7 +12,7 @@ export function VaultReferral({ showToast }: { showToast: (msg: string) => void 
   const [totalEarned, setTotalEarned] = useState<number>(0);
 
   const code = user?.referral_code || 'BLUESEA';
-  const link = `https://blueseamobile.com.ng/login?ref=${code}`;
+  const link = `https://blueseamobile.com/login?ref=${code}`;
 
   useEffect(() => {
     getRequest(ENDPOINTS.bonus_summary)

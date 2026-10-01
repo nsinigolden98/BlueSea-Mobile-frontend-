@@ -362,7 +362,7 @@ export function EventManager() {
   };
 
   const getEventLink = (event: MarketplaceEvent) => {
-    return `https://blueseamobile.com.ng/event/${event.id}`;
+    return `https://blueseamobile.com/event/${event.id}`;
   };
 
   const handleCopyLink = (e: React.MouseEvent, event: MarketplaceEvent) => {

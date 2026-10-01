@@ -44,7 +44,7 @@ export function VaultOverview({ onNavigate, showToast }: VaultOverviewProps) {
   const btcBalance = Number((totalNgnEquivalent / BTC_RATE_NGN).toFixed(6));
 
   const referralCode = user?.referral_code || 'BLUESEA';
-  const referralLink = `https://blueseamobile.com.ng/login?ref=${referralCode}`;
+  const referralLink = `https://blueseamobile.com/login?ref=${referralCode}`;
 
   const handleCopyReferral = () => {
     navigator.clipboard.writeText(referralLink);
