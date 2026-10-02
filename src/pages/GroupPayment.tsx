@@ -409,8 +409,9 @@ export function GroupPayment() {
         showToast('Payment completed successfully!');
         setShowPaymentModal(false);
         setPinPay({ payment_pin: ['', '', '', ''] });
-        fetchGroupDetails(selectedGroup!.id);
+        // fetchGroupDetails(selectedGroup!.id);
         fetchGroups();
+        setSelectedGroup(null);
       } else {
         showToast(response?.error || 'Payment failed');
       }
