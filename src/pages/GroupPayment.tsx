@@ -78,6 +78,9 @@ export function GroupPayment() {
   const [pin, setPin] = useState({
       current_pin:['', '','',''],
     });
+  const [pinPay, setPinPay] = useState({
+      payment_pin:['', '','',''],
+    });
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [addMemberEmail, setAddMemberEmail] = useState('');
   const [addingMember, setAddingMember] = useState(false);
@@ -126,6 +129,42 @@ export function GroupPayment() {
        };
      };
    };
+
+   const handlePaymentPinChange = (
+     type: 'payment_pin',
+     index: number,
+     value: string
+   ) => {
+     if (value.length > 1) return;
+     
+     const newPins = { ...pinPay};
+     newPins[type][index] = value;
+     setPinPay(newPins);
+ 
+     if (value.length === 1 && index < 3) {
+       const input = document.getElementById(`${type}${index + 1}`) as HTMLInputElement;
+       if (input) {
+         input.focus();
+       };
+     };
+   };
+ 
+   const handlePaymentPinKeyDown = (
+     type: 'payment_pin',
+     index: number,
+     e: React.KeyboardEvent
+   ) => {
+     if (e.key === 'Backspace' && !pinPay[type][index] && index > 0) {
+       const newPins = { ...pinPay};
+       newPins[type][index] = '';
+       setPinPay(newPins);
+        const input = document.getElementById(`${type}${index - 1}`) as HTMLInputElement
+       if (input) {
+         input.focus();
+       };
+     };
+   };
+ 
  
   
   const fetchGroups = async () => {
@@ -322,7 +361,7 @@ export function GroupPayment() {
   };
 
   const handleCompletePayment = async () => {
-    if (pin.current_pin.join('').length !== 4) {
+    if (pinPay.payment_pin.join('').length !== 4) {
       showToast('Please enter your PIN');
       return;
     }
@@ -359,7 +398,7 @@ export function GroupPayment() {
 
     try {
       const response = await postRequest(ENDPOINTS.group_payment, {
-        transaction_pin: pin.current_pin.join(''),
+        transaction_pin: makeTransactionPin(pinPay.payment_pin.join('')),
         group_id: selectedGroup?.id,
         payment_type: selectedGroup?.service_type,
         total_amount: selectedGroup?.target_amount,
@@ -369,7 +408,7 @@ export function GroupPayment() {
       if (response?.success) {
         showToast('Payment completed successfully!');
         setShowPaymentModal(false);
-        setPin({ current_pin: ['', '', '', ''] });
+        setPinPay({ payment_pin: ['', '', '', ''] });
         fetchGroupDetails(selectedGroup!.id);
         fetchGroups();
       } else {
@@ -761,12 +800,12 @@ export function GroupPayment() {
                         <input
                           key={index}
                           type="password"
-                          id={`pay_pin${index}`}
+                          id={`payment_pin${index}`}
                           inputMode="numeric"
                           maxLength={1}
-                          value={pin['current_pin'][index]}
-                          onChange={(e) => handlePinChange('current_pin', index, e.target.value)}
-                          onKeyDown={(e) => handleKeyDown('current_pin', index, e)}
+                          value={pinPay['payment_pin'][index]}
+                          onChange={(e) => handlePaymentPinChange('payment_pin', index, e.target.value)}
+                          onKeyDown={(e) => handlePaymentPinKeyDown('payment_pin', index, e)}
                           className={cn(
                             'w-14 h-14 text-center text-2xl font-bold rounded-xl',
                             'border-2 border-slate-200 dark:border-slate-700',
@@ -782,7 +821,7 @@ export function GroupPayment() {
                         variant="outline"
                         onClick={() => {
                           setShowPaymentModal(false);
-                          setPin({ current_pin: ['', '', '', ''] });
+                          setPinPay({ payment_pin: ['', '', '', ''] });
                         }}
                         className="flex-1"
                       >
@@ -790,7 +829,7 @@ export function GroupPayment() {
                       </Button>
                       <Button
                         onClick={handleCompletePayment}
-                        disabled={processingPayment || pin.current_pin.join('').length !== 4}
+                        disabled={processingPayment || pinPay.payment_pin.join('').length !== 4}
                         className="flex-1 bg-sky-500 hover:bg-sky-600"
                       >
                         {processingPayment ? 'Processing...' : `Pay ₦${selectedGroup?.target_amount?.toLocaleString()}`}
