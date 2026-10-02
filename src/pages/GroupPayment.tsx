@@ -23,6 +23,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { API_BASE } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import {makeTransactionPin} from '@/lib/security/pinEncryption';
 
 interface GroupMember {
   id: string;
@@ -182,7 +183,7 @@ export function GroupPayment() {
     setJoining(true);
     try {
       const response = await postRequest(ENDPOINTS.join_group, {
-        transaction_pin: pin.current_pin.join(''),
+        transaction_pin: makeTransactionPin(pin.current_pin.join('')),
         join_code: joinCode.trim()
       });
       if (response?.success) {
