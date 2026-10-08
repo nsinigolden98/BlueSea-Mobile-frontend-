@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -39,7 +41,9 @@ import {
   Info,
   ExternalLink,
   Award,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  Megaphone
 } from 'lucide-react';
 
 const performBiometricPrompt = async (reason: string): Promise<boolean> => {
@@ -72,6 +76,20 @@ const performBiometricPrompt = async (reason: string): Promise<boolean> => {
     return false;
   }
 };
+
+const API_BASE = String(import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
+const CURRENT_USER_URL = `${API_BASE}/user_preference/user/`;
+
+const authHeaders = () => {
+  const token = Cookies.get('access_token') || Cookies.get('token') || '';
+  return token
+    ? { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
+    : {};
+};
+
+const ADMIN_SUPPORT_ROUTE = '/admin/support';
+const ADMIN_BROADCAST_ROUTE = '/admin/broadcast';
+const ADMIN_ANALYSIS_ROUTE = '/admin/analysis';
 
 const checkBiometricSupport = async (): Promise<boolean> => {
   if (!Capacitor.isNativePlatform()) return false;
@@ -152,6 +170,51 @@ export function Settings() {
   // PIN Verification Action state
   const [pendingBiometricAction, setPendingBiometricAction] = useState<'enable' | 'disable' | null>(null);
   const [pinErrorMessage, setPinErrorMessage] = useState<string | null>(null);
+
+  // Privileges are read from the backend profile endpoint, not inferred from the UI.
+  const [privileges, setPrivileges] = useState({
+    isStaff: false,
+    isAdmin: false,
+    loaded: false,
+  });
+
+  const isStaff = privileges.isStaff;
+  const isAdmin = privileges.isAdmin;
+  const canAccessStaffSupport = isStaff || isAdmin;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCurrentUserPrivileges = async () => {
+      try {
+        const response = await axios.get(CURRENT_USER_URL, {
+          headers: authHeaders(),
+        });
+
+        if (cancelled) return;
+
+        const data = response.data && typeof response.data === 'object'
+          ? response.data as Record<string, unknown>
+          : {};
+
+        setPrivileges({
+          isStaff: data.is_staff === true,
+          isAdmin: data.is_admin === true,
+          loaded: true,
+        });
+      } catch (error) {
+        if (cancelled) return;
+        console.error('Failed to verify user privileges:', error);
+        setPrivileges({ isStaff: false, isAdmin: false, loaded: true });
+      }
+    };
+
+    void loadCurrentUserPrivileges();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (isNative) {
@@ -346,13 +409,88 @@ export function Settings() {
               </div>
             )}
 
+            {/* PRIVILEGED WORKSPACE
+                Visibility is controlled by the backend's is_staff / is_admin flags.
+                These links are intentionally not rendered for ordinary users. */}
+            {privileges.loaded && (canAccessStaffSupport || isAdmin) && (
+              <section className="space-y-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                  Administration
+                </h3>
+
+                <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
+                  {canAccessStaffSupport && (
+                    <button
+                      type="button"
+                      onClick={() => navigate(ADMIN_SUPPORT_ROUTE)}
+                      className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                          <Headset className="w-5 h-5 stroke-[1.75]" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Support Administration</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Manage customer tickets and support conversations</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                    </button>
+                  )}
+
+                  {isAdmin && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => navigate(ADMIN_BROADCAST_ROUTE)}
+                        className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/30 text-violet-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <Megaphone className="w-5 h-5 stroke-[1.75]" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Broadcast</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Send platform-wide messages and announcements</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => navigate(ADMIN_ANALYSIS_ROUTE)}
+                        className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <BarChart3 className="w-5 h-5 stroke-[1.75]" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Platform Analysis</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Detailed platform performance and operational analysis</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </section>
+            )}
+
             {/* PROFILE HEADER CARD */}
             <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
               <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 dark:bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
               <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-600/5 dark:bg-blue-600/10 rounded-full blur-2xl pointer-events-none" />
 
               <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-                <div className="relative shrink-0 group">
+                <button
+                  type="button"
+                  onClick={() => navigate('/profile')}
+                  aria-label="Open profile"
+                  className="relative shrink-0 group rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+                >
                   <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full p-1 bg-gradient-to-tr from-sky-400 via-blue-600 to-sky-500 shadow-md transition-transform duration-300 group-hover:scale-105">
                     <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 p-0.5 overflow-hidden flex items-center justify-center">
                       {user?.profilePicture ? (
@@ -369,7 +507,7 @@ export function Settings() {
                     </div>
                   </div>
                   <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm" />
-                </div>
+                </button>
 
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
