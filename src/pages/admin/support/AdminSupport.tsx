@@ -118,6 +118,11 @@ const formatDate = (value: string) => {
 
 const formatStatus = (value: TicketStatus) => value.replace('_', ' ');
 
+const formatInboxView = (value: InboxView) => {
+  if (value === 'urgent') return 'Urgent';
+  return formatStatus(value);
+};
+
 const isSameMessage = (left: AdminMessage, right: AdminMessage) =>
   left.id === right.id &&
   left.message === right.message &&
@@ -662,11 +667,7 @@ export function AdminSupport() {
                     <p className="font-bold text-slate-900 dark:text-white">
                       {inboxView === 'closed'
                         ? 'Closed tickets'
-                        : `${formatStatus(
-                            inboxView === 'in_progress'
-                              ? 'in_progress'
-                              : inboxView,
-                          )} tickets`}
+                        : `${formatInboxView(inboxView)} tickets`}
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {filteredTickets.length} ticket
