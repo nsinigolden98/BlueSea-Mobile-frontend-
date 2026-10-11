@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar, Header, Toast, TransactionModal, PinModal, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,16 +9,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { postRequest, ENDPOINTS } from '@/types';
+import { usePlans, toCablePlans } from '@/hooks/usePlans';
 
-const gotvPlans: Record<string, [string, number]> = {
-  "GOtv Lite N410": ["gotv-lite", 410],
-  "GOtv Max N3,600": ["gotv-max", 3600],
-  "GOtv Jolli N2,460": ["gotv-jolli", 2460],
-  "GOtv Jinja N1,640": ["gotv-jinja", 1640],
-  "GOtv Lite (3 Months) N1,080": ["gotv-lite-3months", 1080],
-  "GOtv Lite (1 Year) N3,180": ["gotv-lite-1year", 3180],
-  "GOtv Supa Plus - monthly N15,700": ["gotv-supa-plus", 15700],
-};
+const PROVIDER_KEY = 'gotv' as const;
 
 const subscriptionTypes = ["change", "renew"];
 
@@ -43,7 +37,12 @@ export function GOTV() {
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
 
-  const planPrice = selectedPlan ? gotvPlans[selectedPlan]?.[1] || 0 : 0;
+  const { plans: livePlans, unavailable: plansUnavailable } = usePlans();
+  const cablePlans = useMemo(() => toCablePlans(livePlans[PROVIDER_KEY] ?? []), [livePlans]);
+  const planPrice = selectedPlan ? cablePlans.find((p) => p.value === selectedPlan)?.price || 0 : 0;
+  const [verifiedCustomer, setVerifiedCustomer] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   const payload = isGroupPayment ? {
     name: groupName,
@@ -53,6 +52,7 @@ export function GOTV() {
     target_amount : planPrice,
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
     plan: selectedPlan,
+    plan_id: selectedPlan,
     plan_type: subscriptionType,
 
   }: {
@@ -64,9 +64,44 @@ export function GOTV() {
   
 
 
+  const handleVerify = async () => {
+    if (!smartCardNumber) {
+      showToast('Please enter smart card number');
+      return;
+    }
+    setVerifying(true);
+    setVerifiedCustomer(null);
+    setConfirmed(false);
+    try {
+      const res: any = await postRequest(ENDPOINTS.cable_lookup, {
+        provider: 'gotv',
+        smart_card_number: smartCardNumber,
+      });
+      const customer = res?.customer ?? res?.data ?? null;
+      const name = customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null;
+      if (res?.success && name) {
+        setVerifiedCustomer(String(name));
+      } else {
+        showToast(res?.message || 'Smart card not found');
+      }
+    } catch (e) {
+      showToast('Verification failed. Try again.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const handleContinue = async () => {
     if (!smartCardNumber || !selectedPlan || !phoneNumber) {
       showToast('Please fill in all fields');
+      return;
+    }
+    if (!verifiedCustomer) {
+      showToast('Verify the smart card first');
+      return;
+    }
+    if (!confirmed) {
+      showToast('Confirm these details belong to the intended customer');
       return;
     }
     if (!user?.pin_is_set) {
@@ -166,28 +201,56 @@ export function GOTV() {
                       />
                     </div>
 
+                    <div className="flex items-end gap-2">
+                      <Button
+                        type="button"
+                        onClick={handleVerify}
+                        disabled={verifying || !smartCardNumber}
+                        className="shrink-0"
+                      >
+                        {verifying ? 'Verifying…' : verifiedCustomer ? 'Verified ✓' : 'Verify Card'}
+                      </Button>
+                    </div>
+                    {verifiedCustomer && (
+                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3 text-sm">
+                        <p className="text-slate-500">Customer</p>
+                        <p className="font-medium">{verifiedCustomer}</p>
+                        <label className="mt-2 flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={confirmed}
+                            onChange={(e) => setConfirmed(e.target.checked)}
+                            className="mt-0.5"
+                          />
+                          I confirm these details belong to the intended customer.
+                        </label>
+                      </div>
+                    )}
                     <div className="space-y-3">
                       <Label>Select Plan</Label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {Object.keys(gotvPlans).map((plan) => {
-                          const planData = gotvPlans[plan];
-                          return (
-                            <button
-                              key={plan}
-                              onClick={() => setSelectedPlan(plan)}
+{plansUnavailable && cablePlans.length === 0 ? (
+                          <p className="text-xs text-amber-600 font-medium">
+                            Live plans unavailable — check connection
+                          </p>
+                        ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {cablePlans.map((plan) => (
+                          <button
+                            key={plan.value}
+                            onClick={() => { setSelectedPlan(plan.value); setVerifiedCustomer(null); setConfirmed(false); }}
                               className={cn(
                                 'p-4 rounded-xl border-2 transition-all text-center',
-                                selectedPlan === plan
+selectedPlan === plan.value
                                   ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
                                   : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
                               )}
                             >
-                              <p className="font-bold text-sm text-slate-800 dark:text-white">{plan}</p>
-                              <p className="text-xs text-slate-500 mt-1">₦{planData[1].toLocaleString()}</p>
+                              <p className="font-bold text-sm text-slate-800 dark:text-white">{plan.label}</p>
+                              <p className="text-xs text-slate-500 mt-1">₦{plan.price.toLocaleString()}</p>
                             </button>
-                          );
-                        })}
-                      </div>
+                        ))}
+                        </div>
+                        )}
                     </div>
 
                     <div className="space-y-2">

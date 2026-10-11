@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar, Header, Toast, TransactionModal, PinModal, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,20 +9,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { postRequest, ENDPOINTS } from '@/types';
+import { usePlans, toCablePlans } from '@/hooks/usePlans';
 
-const dstvPlans: Record<string, [string, number]> = {
-  "DStv Padi N1,850": ["dstv-padi", 1850],
-  "DStv Yanga N2,565": ["dstv-yanga", 2565],
-  "Dstv Confam N4,615": ["dstv-confam", 4615],
-  "DStv Compact N7,900": ["dstv79", 7900],
-  "DStv Premium N18,400": ["dstv3", 18400],
-  "DStv Asia N6,200": ["dstv6", 6200],
-  "DStv Compact Plus N12,400": ["dstv7", 12400],
-  "DStv Premium-French N25,550": ["dstv9", 25550],
-  "DStv Premium-Asia N20,500": ["dstv10", 20500],
-  "DStv Access N2,000": ["dstv-access-1", 2000],
-  "DStv Family": ["dstv-family-1", 4000],
-};
+const PROVIDER_KEY = 'dstv' as const;
 
 const subscriptionTypes = ["change", "renew"];
 
@@ -47,7 +37,12 @@ export function DSTV() {
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('')
 
-  const planPrice = selectedPlan ? dstvPlans[selectedPlan]?.[1] || 0 : 0;
+  const { plans: livePlans, unavailable: plansUnavailable } = usePlans();
+  const cablePlans = useMemo(() => toCablePlans(livePlans[PROVIDER_KEY] ?? []), [livePlans]);
+  const planPrice = selectedPlan ? cablePlans.find((p) => p.value === selectedPlan)?.price || 0 : 0;
+  const [verifiedCustomer, setVerifiedCustomer] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   const payload = isGroupPayment ? {
     name: groupName,
@@ -57,6 +52,7 @@ export function DSTV() {
     target_amount : planPrice,
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
     plan: selectedPlan,
+    plan_id: selectedPlan,
     plan_type: subscriptionType,
   }:{
     billersCode: smartCardNumber,
@@ -65,9 +61,44 @@ export function DSTV() {
     phone_number: phoneNumber,
   };
 
+  const handleVerify = async () => {
+    if (!smartCardNumber) {
+      showToast('Please enter smart card number');
+      return;
+    }
+    setVerifying(true);
+    setVerifiedCustomer(null);
+    setConfirmed(false);
+    try {
+      const res: any = await postRequest(ENDPOINTS.cable_lookup, {
+        provider: 'dstv',
+        smart_card_number: smartCardNumber,
+      });
+      const customer = res?.customer ?? res?.data ?? null;
+      const name = customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null;
+      if (res?.success && name) {
+        setVerifiedCustomer(String(name));
+      } else {
+        showToast(res?.message || 'Smart card not found');
+      }
+    } catch (e) {
+      showToast('Verification failed. Try again.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const handleContinue = async () => {
     if (!smartCardNumber || !selectedPlan || !phoneNumber) {
       showToast('Please fill in all fields');
+      return;
+    }
+    if (!verifiedCustomer) {
+      showToast('Verify the smart card first');
+      return;
+    }
+    if (!confirmed) {
+      showToast('Confirm these details belong to the intended customer');
       return;
     }
     if (!user?.pin_is_set) {
@@ -167,28 +198,56 @@ export function DSTV() {
                       />
                     </div>
 
+                    <div className="flex items-end gap-2">
+                      <Button
+                        type="button"
+                        onClick={handleVerify}
+                        disabled={verifying || !smartCardNumber}
+                        className="shrink-0"
+                      >
+                        {verifying ? 'Verifying…' : verifiedCustomer ? 'Verified ✓' : 'Verify Card'}
+                      </Button>
+                    </div>
+                    {verifiedCustomer && (
+                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3 text-sm">
+                        <p className="text-slate-500">Customer</p>
+                        <p className="font-medium">{verifiedCustomer}</p>
+                        <label className="mt-2 flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={confirmed}
+                            onChange={(e) => setConfirmed(e.target.checked)}
+                            className="mt-0.5"
+                          />
+                          I confirm these details belong to the intended customer.
+                        </label>
+                      </div>
+                    )}
                     <div className="space-y-3">
                       <Label>Select Plan</Label>
+                      {plansUnavailable && cablePlans.length === 0 ? (
+                        <p className="text-xs text-amber-600 font-medium">
+                          Live plans unavailable — check connection
+                        </p>
+                      ) : (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {Object.keys(dstvPlans).map((plan) => {
-                          const planData = dstvPlans[plan];
-                          return (
-                            <button
-                              key={plan}
-                              onClick={() => setSelectedPlan(plan)}
-                              className={cn(
+                        {cablePlans.map((plan) => (
+                          <button
+                            key={plan.value}
+                            onClick={() => { setSelectedPlan(plan.value); setVerifiedCustomer(null); setConfirmed(false); }}
+                            className={cn(
                                 'p-4 rounded-xl border-2 transition-all text-center',
-                                selectedPlan === plan
+                                selectedPlan === plan.value
                                   ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
                                   : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
                               )}
                             >
-                              <p className="font-bold text-sm text-slate-800 dark:text-white">{plan}</p>
-                              <p className="text-xs text-slate-500 mt-1">₦{planData[1].toLocaleString()}</p>
+                              <p className="font-bold text-sm text-slate-800 dark:text-white">{plan.label}</p>
+                              <p className="text-xs text-slate-500 mt-1">₦{plan.price.toLocaleString()}</p>
                             </button>
-                          );
-                        })}
+                        ))}
                       </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -324,7 +383,7 @@ export function DSTV() {
                     {/* Auto Top-Up Button */}
                     <Button 
                       variant="outline"
-                      onClick={() => navigate(`/auto-topup?service_type=dstv&network=dstv&phone_number=${smartCardNumber}&amount=${dstvPlans[selectedPlan]?.[1] || ''}&plan=${selectedPlan}`)}
+                      onClick={() => navigate(`/auto-topup?service_type=dstv&network=dstv&phone_number=${smartCardNumber}&amount=${planPrice}&plan=${selectedPlan}`)}
                       className="w-full rounded-full py-6 mt-3 border-sky-500 text-sky-500 hover:bg-sky-50"
                       disabled={!smartCardNumber || !selectedPlan}
                     >

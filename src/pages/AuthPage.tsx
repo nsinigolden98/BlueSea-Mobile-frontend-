@@ -8,7 +8,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff, Lock, Mail, User, Phone, Ticket } from 'lucide-react';
-import { TOKEN, postRequest, ENDPOINTS, setCookie } from '@/types';
+import { postRequest, ENDPOINTS, setCookie } from '@/types';
+import { hasSessionToken } from '@/lib/session';
 import { ForgotPasswordModal } from '@/components/ui-custom/AuthModal';
 import { GoogleLogin } from '@react-oauth/google';
 import { isNativeAndroid, performNativeGoogleSignIn } from '@/lib/nativeGoogleAuth';
@@ -113,7 +114,7 @@ export function AuthPage() {
   };
 
   // If already authenticated or redirecting to mobile app view, render loader immediately
-  if (TOKEN || isNative) {
+  if (hasSessionToken() || isNative) {
     return <AuthLoader />;
   }
 

@@ -3,7 +3,8 @@ import { Sidebar, Header, PinModal, TransactionModal, Toast } from '@/components
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { networks, dataPlanFunction } from '@/data';
+import { networks } from '@/data';
+import { usePlans, toDataPlans } from '@/hooks/usePlans';
 import { cn } from '@/lib/utils';
 import type { Network, DataPlan } from '@/types';
 import { useAuth } from '@/context/AuthContext';
@@ -38,7 +39,14 @@ export function Data() {
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
   
-  const dataPlans = dataPlanFunction();
+  const { plans: livePlans, unavailable: plansUnavailable } = usePlans();
+  const dataPlans = useMemo(() => {
+    const out: DataPlan[] = [];
+    (['mtn', 'airtel', 'glo', '9mobile'] as const).forEach((key) => {
+      out.push(...toDataPlans(key, livePlans[key] ?? []));
+    });
+    return out;
+  }, [livePlans]);
 
   // --- DYNAMIC PLAN TYPE LOGIC START ---
   
@@ -104,10 +112,11 @@ export function Data() {
     sub_number: phoneNumber,
     target_amount: Number(selectedPlan?.price || 0),
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
-    plan: selectedPlan?.description, 
-    plan_type: selectedNetwork === '9mobile' ? 'etisalat': selectedNetwork.toLowerCase()
-  } : {
     plan: selectedPlan?.description,
+    plan_id: selectedPlan?.id,
+    plan_type: selectedNetwork.toLowerCase()
+  } : {
+    plan: selectedPlan?.id,
     billersCode: phoneNumber,
     phone_number: phoneNumber,
   };
@@ -300,6 +309,11 @@ export function Data() {
                     <Label className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                       Select Data Plan ({filteredPlans.length})
                     </Label>
+                    {plansUnavailable && filteredPlans.length === 0 && (
+                      <span className="text-[10px] text-amber-600 font-medium">
+                        Live plans unavailable — check connection
+                      </span>
+                    )}
                     <span className="text-[10px] text-sky-500 font-medium md:hidden animate-pulse">
                       Scroll inside box ↓
                     </span>

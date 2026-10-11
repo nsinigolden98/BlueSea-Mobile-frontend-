@@ -77,6 +77,37 @@ export function Notifications() {
     fetchNotifications(true);
   }, [filter]);
 
+  // Live prepend from the notification socket (see AuthContext wiring).
+  useEffect(() => {
+    const onPush = (e: Event) => {
+      const n = (e as CustomEvent).detail as {
+        id: number;
+        title?: string;
+        message?: string;
+        notification_type?: string;
+        created_at?: string;
+      };
+      if (typeof n?.id !== 'number') return;
+      setNotifications((prev) => {
+        if (prev.some((x) => x.id === n.id)) return prev;
+        return [
+          {
+            id: n.id,
+            title: String(n.title ?? 'Notification'),
+            message: String(n.message ?? ''),
+            notification_type: String(n.notification_type ?? 'info'),
+            is_read: false,
+            created_at: String(n.created_at ?? new Date().toISOString()),
+          },
+          ...prev,
+        ];
+      });
+      setCount((c) => c + 1);
+    };
+    window.addEventListener('bluesea:notification', onPush);
+    return () => window.removeEventListener('bluesea:notification', onPush);
+  }, []);
+
   const markAsRead = async (notificationId: number) => {
     try {
       await postRequest(ENDPOINTS.notification_read(notificationId.toString()), {});

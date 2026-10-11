@@ -17,7 +17,7 @@ import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavi
 // Registry of validated routes extracted from AppRoutes
 const VALID_APP_ROUTES = new Set([
   '/', '/login', '/signup', '/dashboard', '/wallet', '/airtime', '/data', 
-  '/marketplace', '/services', '/settings', '/profile', '/pin', '/light-bills', 
+  '/marketplace', '/services', '/settings', '/profile', '/pin', '/light-bills', '/betting', 
   '/transactions', '/rewards', '/transaction-history',  '/airtime-buyback', 
   '/group-payment', '/loyalty', '/more-services', '/notifications', '/event-manager', 
   '/scanner', '/scanner-assignments', '/my-tickets', '/vendor-verification', '/dstv', 

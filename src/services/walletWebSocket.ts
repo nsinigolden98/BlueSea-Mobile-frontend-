@@ -1,3 +1,4 @@
+import { getSessionToken } from '@/lib/session';
 export type WalletConnected = {
   type: 'connected';
   user_id: number;
@@ -181,16 +182,6 @@ class ReconnectWS {
   }
 }
 
-function getCookie(name: string): string {
-  if (typeof document === 'undefined') return '';
-
-  const prefix = `${name}=`;
-  const cookie = document.cookie
-    .split('; ')
-    .find((item) => item.startsWith(prefix));
-
-  return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : '';
-}
 
 function toWebSocketBase(base: string): string {
   const trimmed = base.replace(/\/+$/, '');
@@ -217,8 +208,9 @@ export function createWalletWebSocket(
 ) {
   const socket = new ReconnectWS(
     () => {
-      const token = getCookie('access_token');
       const wsBase = toWebSocketBase(base);
+      const token = getSessionToken();
+      if (!token) return `${wsBase}/ws/wallet/`;
       return `${wsBase}/ws/wallet/?token=${encodeURIComponent(token)}`;
     },
     (message) => {
@@ -253,7 +245,7 @@ export const paymentsWS = (
 ) => {
   const socket = new ReconnectWS(
     () => {
-      const token = getCookie('access_token');
+      const token = getSessionToken() ?? '';
       const wsBase = toWebSocketBase(base);
       return `${wsBase}/ws/payments/${encodeURIComponent(referenceId)}/?token=${encodeURIComponent(token)}`;
     },

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { postRequest, ENDPOINTS } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, ChevronDown, History } from 'lucide-react';
 
@@ -120,14 +121,53 @@ export function Betting() {
       navigate('/settings/pin');
       return;
     }
+    if (!verifiedCustomer) {
+      showToast('Verify the betting account first');
+      return;
+    }
+    if (!confirmed) {
+      showToast('Confirm these details belong to the intended customer');
+      return;
+    }
 
     showPinModal();
   };
 
-  // Payload for the system
+  const [verifiedCustomer, setVerifiedCustomer] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+
+  const handleVerify = async () => {
+    if (!identifier || identifier.length !== selectedProvider.maxLength) {
+      showToast(`Invalid ${selectedProvider.label} length`);
+      return;
+    }
+    setVerifying(true);
+    setVerifiedCustomer(null);
+    setConfirmed(false);
+    try {
+      const res: any = await postRequest(ENDPOINTS.betting_lookup, {
+        provider: selectedProvider.name.toLowerCase(),
+        customer_id: identifier,
+      });
+      const customer = res?.customer ?? res?.data ?? null;
+      const name = customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? customer?.fullName ?? null;
+      if (res?.success && name) {
+        setVerifiedCustomer(String(name));
+      } else {
+        showToast(res?.message || 'Betting account not found');
+      }
+    } catch (e) {
+      showToast('Verification failed. Try again.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  // Payload for the system (backend funds by customer_id, verified above)
   const payload = {
     provider: selectedProvider.name.toLowerCase(),
-    identifier: identifier,
+    customer_id: identifier,
     amount: String(finalAmount)
   };
 
@@ -193,6 +233,8 @@ export function Betting() {
                         onClick={() => {
                           setSelectedProvider(provider);
                           setIdentifier('');
+                          setVerifiedCustomer(null);
+                          setConfirmed(false);
                         }}
                         className={cn(
                           'flex-shrink-0 px-6 py-4 rounded-xl border-2 transition-all active:scale-95 text-left min-w-[140px]',
@@ -261,6 +303,32 @@ export function Betting() {
                     </div>
                   )}
                 </div>
+
+                <div className="flex items-end gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleVerify}
+                    disabled={verifying || !identifier}
+                    className="shrink-0"
+                  >
+                    {verifying ? 'Verifying…' : verifiedCustomer ? 'Verified ✓' : 'Verify Account'}
+                  </Button>
+                </div>
+                {verifiedCustomer && (
+                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3 text-sm">
+                    <p className="text-slate-500">Customer</p>
+                    <p className="font-medium">{verifiedCustomer}</p>
+                    <label className="mt-2 flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={confirmed}
+                        onChange={(e) => setConfirmed(e.target.checked)}
+                        className="mt-0.5"
+                      />
+                      I confirm these details belong to the intended customer.
+                    </label>
+                  </div>
+                )}
 
                 {/* Amount Presets */}
                 <div className="space-y-3">

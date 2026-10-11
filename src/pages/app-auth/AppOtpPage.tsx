@@ -5,7 +5,8 @@ import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
 import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
 import { AppOtpInput } from '../../components/app-auth/AppOtpInput';
 import { AppAuthButton } from '../../components/app-auth/AppAuthButton';
-import { postRequest, ENDPOINTS, setCookie } from '@/types';
+import { postRequest, ENDPOINTS } from '@/types';
+import { setSessionToken } from '@/lib/session';
 
 export const AppOtpPage: React.FC = () => {
   const location = useLocation();
@@ -36,11 +37,9 @@ export const AppOtpPage: React.FC = () => {
 
       if (response?.state !== false) {
         const accessToken = response?.access_token || response?.data?.access_token || response?.access;
-        const refreshToken = response?.refresh_token || response?.data?.refresh_token || response?.refresh;
 
         if (accessToken) {
-          setCookie('access_token', accessToken);
-          if (refreshToken) setCookie('refresh_token', refreshToken);
+          setSessionToken(accessToken);
           await refreshUser();
         }
 

@@ -7,12 +7,13 @@ import {
   postRequest,
   deleteCookie,
   getRequest,
-  setCookie,
   ENDPOINTS,
   API_BASE,
   getCookie,
 } from '@/types';
+import { hasSessionToken, setSessionToken } from '@/lib/session';
 import { createWalletWebSocket, type BalanceUpdate, type WalletConnected } from '@/services/walletWebSocket';
+import { createNotificationSocket, type ServerNotification } from '@/services/notificationSocket';
 import type { CredentialResponse } from '@react-oauth/google';
 
 type GoogleLoginInput = CredentialResponse | { credential?: string; idToken?: string };
@@ -101,8 +102,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
-    const token = getCookie('access_token');
-    if (!token) return;
+    // No token pre-check: the httpOnly cookie session (web) or the
+    // in-memory token (native) authenticates the probe itself.
 
     try {
       const [profileResponse, balanceResponse] = await Promise.all([
@@ -143,19 +144,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Bootstrap authenticated state from the backend once on application start.
+  // Probe-first: a live cookie session (web) or memory token (native)
+  // authenticates; failure means logged out.
   useEffect(() => {
     let cancelled = false;
 
     const loadUser = async () => {
-      const token = getCookie('access_token');
-
-      if (!token) {
-        if (!cancelled) {
-          setState({ isAuthenticated: false, user: null, loading: false });
-        }
-        return;
-      }
-
       try {
         const [profileResponse, balanceResponse] = await Promise.all([
           getRequest(ENDPOINTS.user),
@@ -193,7 +187,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // One wallet WebSocket per authenticated application session.
   useEffect(() => {
-    if (!state.isAuthenticated || !getCookie('access_token')) return;
+    // WebSocket auth travels as ?token=: it must come from memory —
+    // readable cookies are gone and Lax cookies don't ride cross-site WS.
+    if (!state.isAuthenticated || !hasSessionToken()) return;
 
     walletSocketRef.current?.close();
     walletSocketRef.current = createWalletWebSocket(
@@ -214,11 +210,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [state.isAuthenticated, applyBalanceUpdate]);
 
+  // One notification WebSocket per session: unread badge seeding +
+  // live pushes, fanned out as DOM events so any screen can listen.
+  useEffect(() => {
+    if (!state.isAuthenticated || !hasSessionToken()) return;
+
+    const socket = createNotificationSocket(
+      API_BASE,
+      {
+        onUnread: (count) => {
+          window.dispatchEvent(new CustomEvent<number>('bluesea:unread-count', { detail: count }));
+        },
+        onNotification: (n: ServerNotification) => {
+          window.dispatchEvent(new CustomEvent<ServerNotification>('bluesea:notification', { detail: n }));
+        },
+      },
+    );
+
+    return () => {
+      socket.close();
+    };
+  }, [state.isAuthenticated]);
+
   const login = useCallback(async (data: LoginFormData) => {
     setState((prev) => ({ ...prev, loading: true }));
 
-    deleteCookie('access_token');
-    deleteCookie('refresh_token');
+    setSessionToken(null);
 
     try {
       const response = await postRequest(ENDPOINTS.login, data);
@@ -238,8 +255,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return 'Please verify your email';
       }
 
-      setCookie('access_token', response.access_token);
-      setCookie('refresh_token', response.refresh_token);
+      setSessionToken(response.access_token);
 
       await referral();
 
@@ -316,8 +332,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       walletSocketRef.current?.close();
       walletSocketRef.current = null;
-      deleteCookie('access_token');
-      deleteCookie('refresh_token');
+      setSessionToken(null);
       setState({ isAuthenticated: false, user: null, loading: false });
     }
   }, []);
@@ -346,8 +361,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      setCookie('refresh_token', response.refresh_token);
-      setCookie('access_token', response.access_token);
+      setSessionToken(response.access_token);
 
       await referral();
 

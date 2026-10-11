@@ -122,10 +122,10 @@ export function Airtime() {
     sub_number: phoneNumber,
     target_amount: finalAmount,
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
-    plan: selectedNetwork.toLowerCase() !== "9mobile" ? selectedNetwork.toLowerCase() : "etisalat",
+    plan: selectedNetwork.toLowerCase(),
   } : {
     amount: String(finalAmount),
-    network: selectedNetwork.toLowerCase() !== "9mobile" ? selectedNetwork.toLowerCase() : "etisalat",
+    network: selectedNetwork.toLowerCase(),
     phone_number: String(phoneNumber),
   };
 

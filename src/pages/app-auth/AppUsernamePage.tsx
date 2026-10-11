@@ -4,7 +4,8 @@ import { AppAuthLayout } from '@/components/app-auth/AppAuthLayout';
 import { AppAuthInput } from '@/components/app-auth/AppAuthInput';
 import { AppAuthButton } from '@/components/app-auth/AppAuthButton';
 import { Toast, Loader } from '@/components/ui-custom';
-import { getCookie, getRequest, patchRequest, ENDPOINTS } from '@/types';
+import { getRequest, patchRequest, ENDPOINTS } from '@/types';
+import { getSessionToken } from '@/lib/session';
 import { useAuth } from '@/context/AuthContext';
 import { clearDashboardReadinessCache } from '@/components/ui-custom/DashboardAccessGuard';
 
@@ -27,7 +28,7 @@ export function AppUsernamePage() {
   const { showToast, ToastComponent } = Toast();
   const { showLoader, hideLoader, LoaderComponent } = Loader();
 
-  const token = getCookie('access_token') || '';
+  const token = getSessionToken() || '';
   const skippedForCurrentLogin = useMemo(
     () => !!token && sessionStorage.getItem(SKIP_KEY) === token,
     [token]

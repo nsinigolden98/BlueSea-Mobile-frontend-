@@ -1,5 +1,6 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
+import { authHeaders, getSessionToken } from '@/lib/session';
   
 // User Types
 export interface DvaAccount {
@@ -358,7 +359,7 @@ export const ENDPOINTS = {
   buy_airtel: `${API_BASE}/payments/airtel-data/`,
   buy_mtn: `${API_BASE}/payments/mtn-data/`,
   buy_glo: `${API_BASE}/payments/glo-data/`,
-  buy_etisalat: `${API_BASE}/payments/etisalat-data/`,
+  buy_etisalat: `${API_BASE}/payments/9mobile-data/`,
   account_name: `${API_BASE}/transactions/account-name/`,
   verify_account_name: `${API_BASE}/marketplace/verify-account-name/`,
   event_public: (id: string) => `${API_BASE}/marketplace/events/public/${id}/`,
@@ -393,6 +394,10 @@ loyalty_rewards: `${API_BASE}/loyalty/rewards/`,
   group_payment_history: `${API_BASE}/payments/group-payment/history/`,
   group_payment: `${API_BASE}/payments/group-payment/`,
   dstv: `${API_BASE}/payments/dstv/`,
+  cable_lookup: `${API_BASE}/payments/cable/lookup/`,
+  betting_fund: `${API_BASE}/payments/betting/fund/`,
+  betting_providers: `${API_BASE}/payments/betting/providers/`,
+  betting_lookup: `${API_BASE}/payments/betting/lookup/`,
   showmax: `${API_BASE}/payments/showmax/`,
   startimes: `${API_BASE}/payments/startimes/`,
   gotv: `${API_BASE}/payments/gotv/`,
@@ -470,7 +475,7 @@ export function getCookie(name:string){
     return cookie
 }
 
-export const TOKEN:string = getCookie('access_token') || ''
+export const TOKEN:string = getSessionToken() || ''
 
 // Delete Cookie
  export function deleteCookie(name:string) {
@@ -481,11 +486,11 @@ export const TOKEN:string = getCookie('access_token') || ''
 // GET REQUEST
 export async function getRequest(url: string, options?: { method?: string }) {
   try {
-    const token = getCookie('access_token') || '';
     const response = await axios.get(url, {
+      withCredentials: true,
       ...(options?.method ? { method: options.method } : {}),
       headers: {
-        "Authorization": `Bearer ${token}`,
+        ...authHeaders(false),
         "Content-Type": "application/json",
         "Accept": 'application/json'
       }
@@ -500,10 +505,12 @@ export async function getRequest(url: string, options?: { method?: string }) {
 // POST REQUEST
 export async function postRequest(url: string, payload: object) {
   try {
-    const token = getCookie('access_token') || '';
+    const token = getSessionToken() || '';
     const response = await axios.post(url, payload, {
+      withCredentials: true,
       headers: {
-        "Authorization": `Bearer ${token}`,
+        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        ...authHeaders(true),
         "Content-Type": "application/json",
         "Accept": 'application/json'
       }
@@ -519,8 +526,9 @@ export async function postFileRequest(url: string,payload: object) {
   try {
     const response = await axios.post(url,payload,
       {
+        withCredentials: true,
         headers: {
-          "Authorization": `Bearer ${getCookie('access_token') || ''}`,
+          ...authHeaders(true),
         },
       });
     return response.data
@@ -535,8 +543,9 @@ export async function putRequest(url: string, payload: object) {
   try {
     const response = await axios.put(url,payload,
       {
+        withCredentials: true,
         headers: {
-          "Authorization": `Bearer ${getCookie('access_token') || ''}`,
+          ...authHeaders(true),
           "Content-Type": "application/json",
           "Accept": 'application/json'
         }
@@ -555,8 +564,9 @@ export async function patchRequest(url: string, payload: object | FormData) {
 
   try {
     const response = await axios.patch(url, payload, {
+      withCredentials: true,
       headers: {
-        "Authorization": `Bearer ${getCookie('access_token') || ''}`,
+        ...authHeaders(true),
         // Explicitly set it only for JSON
         ...(!isFormData && { "Content-Type": "application/json" }),
         "Accept": "application/json",
@@ -574,8 +584,9 @@ export async function deleteRequest(url: string) {
   try {
     const response = await axios.delete(url,
       {
+        withCredentials: true,
         headers: {
-          "Authorization": `Bearer ${getCookie('access_token') || ''}`,
+          ...authHeaders(true),
           "Content-Type": "application/json",
           "Accept": 'application/json'
         }

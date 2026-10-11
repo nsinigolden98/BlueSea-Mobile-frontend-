@@ -3,6 +3,7 @@
 // ==========================================
 
 import Cookies from 'js-cookie';
+import { authHeaders, getSessionToken } from '@/lib/session';
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
@@ -23,25 +24,21 @@ export function getCookie(name: string): string | undefined {
 }
 
 export function getAuthToken(): string {
-  return getCookie('access_token') || '';
+  return getSessionToken() ?? '';
 }
 
 export function deleteCookie(name: string) {
   Cookies.remove(name, { path: '/' });
 }
 
-function getAuthHeaders(isJson = true): Record<string, string> {
-  const token = getAuthToken();
+function getAuthHeaders(isJson = true, unsafe = false): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: 'application/json',
+    ...authHeaders(unsafe),
   };
 
   if (isJson) {
     headers['Content-Type'] = 'application/json';
-  }
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${getAuthToken()}`;
   }
 
   return headers;
@@ -51,7 +48,8 @@ export async function getRequest<T>(endpoint: string): Promise<T> {
   const normalizedPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     method: 'GET',
-    headers: getAuthHeaders(true),
+    credentials: 'include',
+    headers: getAuthHeaders(true, false),
   });
 
   if (!response.ok) {
@@ -66,7 +64,8 @@ export async function postRequest<T>(endpoint: string, body: unknown): Promise<T
   const normalizedPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     method: 'POST',
-    headers: getAuthHeaders(true),
+    credentials: 'include',
+    headers: getAuthHeaders(true, true),
     body: JSON.stringify(body),
   });
 
@@ -82,7 +81,8 @@ export async function postFileRequest<T>(endpoint: string, formData: FormData): 
   const normalizedPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     method: 'POST',
-    headers: getAuthHeaders(false),
+    credentials: 'include',
+    headers: getAuthHeaders(false, true),
     body: formData,
   });
 
@@ -98,7 +98,8 @@ export async function putRequest<T>(endpoint: string, body: unknown): Promise<T>
   const normalizedPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     method: 'PUT',
-    headers: getAuthHeaders(true),
+    credentials: 'include',
+    headers: getAuthHeaders(true, true),
     body: JSON.stringify(body),
   });
 
@@ -114,7 +115,8 @@ export async function patchRequest<T>(endpoint: string, body: unknown): Promise<
   const normalizedPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     method: 'PATCH',
-    headers: getAuthHeaders(true),
+    credentials: 'include',
+    headers: getAuthHeaders(true, true),
     body: JSON.stringify(body),
   });
 
@@ -130,7 +132,8 @@ export async function deleteRequest<T>(endpoint: string): Promise<T> {
   const normalizedPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     method: 'DELETE',
-    headers: getAuthHeaders(true),
+    credentials: 'include',
+    headers: getAuthHeaders(true, true),
   });
 
   if (!response.ok) {

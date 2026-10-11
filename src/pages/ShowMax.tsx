@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar, Header, Toast, TransactionModal, PinModal, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,20 +9,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { postRequest, ENDPOINTS } from '@/types';
+import { usePlans, toCablePlans } from '@/hooks/usePlans';
 
-const showmaxPlans: Record<string, [string, number]> = {
-  "Full - N8,400 - 3 Months": ["full_3", 8400],
-  "Mobile Only - N3,800 - 3 Months": ["mobile_only_3", 3800],
-  "Sports Mobile Only - N12,000 - 3 Months": ["sports_mobile_only_3", 12000],
-  "Sports Only - N3,200": ["sports-only-1", 3200],
-  "Sports Only 3 months - N9,600": ["sports-only-3", 9600],
-  "Full Sports Mobile Only - 3 months - N16,200": ["full-sports-mobile-only-3", 16200],
-  "Mobile Only - N6,700 - 6 Months": ["mobile-only-6", 6700],
-  "Full - 6 months - 14,700": ["full-only-6", 14700],
-  "Full Sports Mobile Only - 6 months - N32,400": ["full-sports-mobile-only-6", 32400],
-  "Sports Mobile Only - 6 months - N24,000": ["sports-mobile-only-6", 24000],
-  "Sports Only - 6 months - N18,200": ["sports-only-6", 18200],
-};
+const PROVIDER_KEY = 'showmax' as const;
 
 export function ShowMax() {
   const { user } = useAuth();
@@ -43,7 +33,12 @@ export function ShowMax() {
   const [groupName, setGroupName] = useState('');
   const [groupDescripition, setGroupDescription] = useState('');
 
-  const planPrice = selectedPlan ? showmaxPlans[selectedPlan]?.[1] || 0 : 0;
+  const { plans: livePlans, unavailable: plansUnavailable } = usePlans();
+  const cablePlans = useMemo(() => toCablePlans(livePlans[PROVIDER_KEY] ?? []), [livePlans]);
+  const planPrice = selectedPlan ? cablePlans.find((p) => p.value === selectedPlan)?.price || 0 : 0;
+  const [verifiedCustomer, setVerifiedCustomer] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   const payload = isGroupPayment ? {
     name: groupName,
@@ -53,6 +48,7 @@ export function ShowMax() {
     target_amount : planPrice,
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
     plan: selectedPlan,
+    plan_id: selectedPlan,
 
   }: {
     showmax_plan: selectedPlan,
@@ -61,9 +57,44 @@ export function ShowMax() {
   
   
 
+  const handleVerify = async () => {
+    if (phoneNumber.length < 11) {
+      showToast('Please enter a valid phone number');
+      return;
+    }
+    setVerifying(true);
+    setVerifiedCustomer(null);
+    setConfirmed(false);
+    try {
+      const res: any = await postRequest(ENDPOINTS.cable_lookup, {
+        provider: 'showmax',
+        smart_card_number: phoneNumber,
+      });
+      const customer = res?.customer ?? res?.data ?? null;
+      const name = customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null;
+      if (res?.success && name) {
+        setVerifiedCustomer(String(name));
+      } else {
+        showToast(res?.message || 'Account not found');
+      }
+    } catch (e) {
+      showToast('Verification failed. Try again.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const handleContinue = async () => {
     if (!selectedPlan || phoneNumber.length < 11 ) {
       showToast('Please fill in all fields');
+      return;
+    }
+    if (!verifiedCustomer) {
+      showToast('Verify the account first');
+      return;
+    }
+    if (!confirmed) {
+      showToast('Confirm these details belong to the intended customer');
       return;
     }
     if (!user?.pin_is_set) {
@@ -164,28 +195,56 @@ export function ShowMax() {
                       />
                     </div>
 
+                    <div className="flex items-end gap-2">
+                      <Button
+                        type="button"
+                        onClick={handleVerify}
+                        disabled={verifying || phoneNumber.length < 11}
+                        className="shrink-0"
+                      >
+                        {verifying ? 'Verifying…' : verifiedCustomer ? 'Verified ✓' : 'Verify Account'}
+                      </Button>
+                    </div>
+                    {verifiedCustomer && (
+                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3 text-sm">
+                        <p className="text-slate-500">Customer</p>
+                        <p className="font-medium">{verifiedCustomer}</p>
+                        <label className="mt-2 flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={confirmed}
+                            onChange={(e) => setConfirmed(e.target.checked)}
+                            className="mt-0.5"
+                          />
+                          I confirm these details belong to the intended customer.
+                        </label>
+                      </div>
+                    )}
                     <div className="space-y-3">
                       <Label>Select Plan</Label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {Object.keys(showmaxPlans).map((plan) => {
-                          const planData = showmaxPlans[plan];
-                          return (
-                            <button
-                              key={plan}
-                              onClick={() => setSelectedPlan(plan)}
+{plansUnavailable && cablePlans.length === 0 ? (
+                          <p className="text-xs text-amber-600 font-medium">
+                            Live plans unavailable — check connection
+                          </p>
+                        ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {cablePlans.map((plan) => (
+                          <button
+                            key={plan.value}
+                            onClick={() => { setSelectedPlan(plan.value); setVerifiedCustomer(null); setConfirmed(false); }}
                               className={cn(
                                 'p-4 rounded-xl border-2 transition-all text-center',
-                                selectedPlan === plan
+selectedPlan === plan.value
                                   ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
                                   : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
                               )}
                             >
-                              <p className="font-bold text-xs text-slate-800 dark:text-white">{plan}</p>
-                              <p className="text-xs text-slate-500 mt-1">₦{planData[1].toLocaleString()}</p>
+                              <p className="font-bold text-xs text-slate-800 dark:text-white">{plan.label}</p>
+                              <p className="text-xs text-slate-500 mt-1">₦{plan.price.toLocaleString()}</p>
                             </button>
-                          );
-                        })}
-                      </div>
+                        ))}
+                        </div>
+                        )}
                     </div>
 
                     {selectedPlan && (

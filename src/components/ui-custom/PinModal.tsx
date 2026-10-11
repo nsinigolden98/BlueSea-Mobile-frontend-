@@ -89,6 +89,7 @@ export function PinModal() {
         return await postRequest(endpoint, { pin: encryptedPin });
       },
       'airtime': () => postRequest(ENDPOINTS.buy_airtime, payload),
+      'betting': () => postRequest(ENDPOINTS.betting_fund, payload),
       'light': () => postRequest(ENDPOINTS.electricity, payload),
       'data-MTN': () => postRequest(ENDPOINTS.buy_mtn, payload),
       'data-Glo': () => postRequest(ENDPOINTS.buy_glo, payload),

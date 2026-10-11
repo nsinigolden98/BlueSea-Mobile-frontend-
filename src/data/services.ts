@@ -28,6 +28,7 @@ export const services: Service[] = [
   { id: 'ep-3', name: 'Electricity', description: 'Pay prepaid & postpaid bills', icon: 'Zap', route: '/light-bills', category: 'Everyday Payments' },
   { id: 'ep-4', name: 'TV Subscription', description: 'DSTV, GOTV, Startimes', icon: 'Tv', route: '/tv-subscription', category: 'Everyday Payments' },
   { id: 'ep-5', name: 'Smart Top-up', description: 'Automate your regular recharges', icon: 'RefreshCw', route: '/auto-topup', category: 'Everyday Payments' },
+  { id: 'ep-6', name: 'Betting', description: 'Fund your betting wallet', icon: 'Coins', route: '/betting', category: 'Everyday Payments' },
 
   // Wallet & Rewards
   { id: 'wr-1', name: 'Wallet', description: 'Manage your primary balance', icon: 'Wallet', route: '/wallet', category: 'Wallet & Rewards' },
