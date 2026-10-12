@@ -1,6 +1,24 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
-import { authHeaders, getSessionToken } from '@/lib/session';
+import { authHeaders, getSessionToken, refreshAccessToken, shouldAttemptRefresh } from '@/lib/session';
+
+// Single retry after silent refresh: on 401 (non-auth endpoints) rotate
+// once via the refresh endpoint, then replay the identical request.
+async function send<T>(url: string, run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (error: any) {
+    const status = error?.response?.status ?? 0;
+    if (shouldAttemptRefresh(url, status)) {
+      try {
+        if (await refreshAccessToken(API_BASE)) return await run();
+      } catch {
+        // fall through to the original error handling below
+      }
+    }
+    throw error;
+  }
+}
   
 // User Types
 export interface DvaAccount {
@@ -486,7 +504,7 @@ export const TOKEN:string = getSessionToken() || ''
 // GET REQUEST
 export async function getRequest(url: string, options?: { method?: string }) {
   try {
-    const response = await axios.get(url, {
+    const response = await send(url, () => axios.get(url, {
       withCredentials: true,
       ...(options?.method ? { method: options.method } : {}),
       headers: {
@@ -494,7 +512,7 @@ export async function getRequest(url: string, options?: { method?: string }) {
         "Content-Type": "application/json",
         "Accept": 'application/json'
       }
-    });
+    }));
     return response.data
   } catch (error) {
     console.log(error)
@@ -506,7 +524,7 @@ export async function getRequest(url: string, options?: { method?: string }) {
 export async function postRequest(url: string, payload: object) {
   try {
     const token = getSessionToken() || '';
-    const response = await axios.post(url, payload, {
+    const response = await send(url, () => axios.post(url, payload, {
       withCredentials: true,
       headers: {
         ...(token ? { "Authorization": `Bearer ${token}` } : {}),
@@ -514,7 +532,7 @@ export async function postRequest(url: string, payload: object) {
         "Content-Type": "application/json",
         "Accept": 'application/json'
       }
-    });
+    }));
     return response.data
   } catch (error: any) {
     console.log(error)
@@ -524,13 +542,13 @@ export async function postRequest(url: string, payload: object) {
 // POST REQUEST (FILES)
 export async function postFileRequest(url: string,payload: object) {
   try {
-    const response = await axios.post(url,payload,
+    const response = await send(url, () => axios.post(url,payload,
       {
         withCredentials: true,
         headers: {
           ...authHeaders(true),
         },
-      });
+      }));
     return response.data
   } catch (error: any) {
     console.log(error);
@@ -541,7 +559,7 @@ export async function postFileRequest(url: string,payload: object) {
 // PUT REQUEST
 export async function putRequest(url: string, payload: object) {
   try {
-    const response = await axios.put(url,payload,
+    const response = await send(url, () => axios.put(url,payload,
       {
         withCredentials: true,
         headers: {
@@ -550,7 +568,7 @@ export async function putRequest(url: string, payload: object) {
           "Accept": 'application/json'
         }
 
-      });
+      }));
     return response.data
   } catch (error: any) {
     console.log(error)
@@ -563,7 +581,7 @@ export async function patchRequest(url: string, payload: object | FormData) {
   const isFormData = payload instanceof FormData;
 
   try {
-    const response = await axios.patch(url, payload, {
+    const response = await send(url, () => axios.patch(url, payload, {
       withCredentials: true,
       headers: {
         ...authHeaders(true),
@@ -571,7 +589,7 @@ export async function patchRequest(url: string, payload: object | FormData) {
         ...(!isFormData && { "Content-Type": "application/json" }),
         "Accept": "application/json",
       },
-    });
+    }));
     return response.data;
   } catch (error: any) {
     console.log(error);
@@ -582,7 +600,7 @@ export async function patchRequest(url: string, payload: object | FormData) {
 // DELETE REQUEST
 export async function deleteRequest(url: string) {
   try {
-    const response = await axios.delete(url,
+    const response = await send(url, () => axios.delete(url,
       {
         withCredentials: true,
         headers: {
@@ -591,7 +609,7 @@ export async function deleteRequest(url: string) {
           "Accept": 'application/json'
         }
 
-      });
+      }));
     return response.data
   } catch (error: any) {
     console.log(error);

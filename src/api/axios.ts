@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { authHeaders } from '@/lib/session';
+import { authHeaders, refreshAccessToken, shouldAttemptRefresh } from '@/lib/session';
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -9,6 +9,26 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+apiClient.interceptors.response.use(
+  undefined,
+  async (error) => {
+    const config: any = error?.config;
+    const status = error?.response?.status ?? 0;
+    const url: string = config?.url ?? '';
+    if (config && !config.__refreshed && shouldAttemptRefresh(url, status)) {
+      config.__refreshed = true;
+      try {
+        if (await refreshAccessToken(config.baseURL ?? '')) {
+          return apiClient.request(config);
+        }
+      } catch {
+        // fall through to the original rejection below
+      }
+    }
+    return Promise.reject(error);
+  },
+);
 
 apiClient.interceptors.request.use((config) => {
   // Bearer from memory when held (native/explicit); cookies ride along

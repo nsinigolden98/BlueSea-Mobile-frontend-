@@ -11,7 +11,7 @@ import {
   API_BASE,
   getCookie,
 } from '@/types';
-import { hasSessionToken, setSessionToken } from '@/lib/session';
+import { hasSessionToken, onSessionRefreshed, refreshAccessToken, setSessionToken } from '@/lib/session';
 import { createWalletWebSocket, type BalanceUpdate, type WalletConnected } from '@/services/walletWebSocket';
 import { createNotificationSocket, type ServerNotification } from '@/services/notificationSocket';
 import type { CredentialResponse } from '@react-oauth/google';
@@ -52,6 +52,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   const walletSocketRef = useRef<ReturnType<typeof createWalletWebSocket> | null>(null);
+  // Bumped whenever the session rotates: socket effects below depend on
+  // it so they reconnect with the fresh memory token after a 4401.
+  const [sessionNonce, setSessionNonce] = useState(0);
+  useEffect(() => onSessionRefreshed(() => setSessionNonce((n) => n + 1)), []);
 
   const getImageUrl = useCallback((path: string | undefined | null) => {
     if (!path) return '';
@@ -195,11 +199,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     walletSocketRef.current = createWalletWebSocket(
       API_BASE,
       applyBalanceUpdate,
-      (code: number) => {
+      async (code: number) => {
         if (code === 4401) {
-          // Token refresh/re-authentication belongs to the existing auth flow.
-          // Do not manufacture a second token system inside the WebSocket client.
-          console.warn('Wallet WebSocket authentication expired. Waiting for the existing auth session to refresh.');
+          // Rotate silently, then recreate with the fresh token via nonce.
+          if (await refreshAccessToken(API_BASE)) setSessionNonce((n) => n + 1);
+          else console.warn('Wallet WebSocket authentication expired (4401). Re-login required.');
         }
       },
     );
@@ -208,14 +212,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       walletSocketRef.current?.close();
       walletSocketRef.current = null;
     };
-  }, [state.isAuthenticated, applyBalanceUpdate]);
+  }, [state.isAuthenticated, applyBalanceUpdate, sessionNonce]);
 
   // One notification WebSocket per session: unread badge seeding +
   // live pushes, fanned out as DOM events so any screen can listen.
   useEffect(() => {
     if (!state.isAuthenticated || !hasSessionToken()) return;
 
-    const socket = createNotificationSocket(
+    let socket = createNotificationSocket(
       API_BASE,
       {
         onUnread: (count) => {
@@ -225,12 +229,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           window.dispatchEvent(new CustomEvent<ServerNotification>('bluesea:notification', { detail: n }));
         },
       },
+      async () => {
+        // 4401: rotate, then recreate with the fresh token via the nonce.
+        if (await refreshAccessToken(API_BASE)) setSessionNonce((n) => n + 1);
+      },
     );
 
     return () => {
       socket.close();
     };
-  }, [state.isAuthenticated]);
+  }, [state.isAuthenticated, sessionNonce]);
 
   const login = useCallback(async (data: LoginFormData) => {
     setState((prev) => ({ ...prev, loading: true }));
@@ -255,7 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return 'Please verify your email';
       }
 
-      setSessionToken(response.access_token);
+      setSessionToken(response.access_token, response.refresh_token);
 
       await referral();
 
@@ -361,7 +369,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      setSessionToken(response.access_token);
+      setSessionToken(response.access_token, response.refresh_token);
 
       await referral();
 

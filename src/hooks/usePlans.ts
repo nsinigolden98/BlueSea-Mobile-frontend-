@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import type { Network } from '@/types';
 import { API_BASE } from '@/types';
 import { createPlansSocket, PLAN_KEYS, type PlanKey, type PlanItem, type PlansMap } from '@/services/plansSocket';
+import { refreshAccessToken } from '@/lib/session';
 import { getSessionToken } from '@/lib/session';
 
 export type { PlanKey, PlanItem, PlansMap };
@@ -29,6 +30,14 @@ function emit(partial: Partial<PlansState>) {
   listeners.forEach((fn) => fn(current));
 }
 
+async function restartAfterRefresh() {
+  // 4401: rotate, then restart the module socket with the fresh token.
+  if (await refreshAccessToken(API_BASE)) {
+    socketStarted = false;
+    ensureSocket();
+  }
+}
+
 function ensureSocket() {
   if (socketStarted) return;
   socketStarted = true;
@@ -45,6 +54,7 @@ function ensureSocket() {
       // On auth failure the cache stays as-is; pages show stale-or-empty
       // with the unavailable flag rather than fake prices.
       emit({ ready: true, unavailable: Object.keys(cache).length === 0 });
+      void restartAfterRefresh();
     },
   );
   void socket;
