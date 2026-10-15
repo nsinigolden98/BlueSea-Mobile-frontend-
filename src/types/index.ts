@@ -385,7 +385,7 @@ export const ENDPOINTS = {
   event_withdraw: `${API_BASE}/marketplace/withdraw/`,
   withdrawal: `${API_BASE}/payments/withdrawal/`,
   electricity: `${API_BASE}/payments/electricity/`,
-  electricity_user: `${API_BASE}/payments/electricity/customer/`,
+  electricity_user: `${API_BASE}/payments/electricity/lookup/`,
   internal_transfer: `${API_BASE}/payments/internal-transfer/`,
   user_lookup: `${API_BASE}/accounts/user/lookup/`,
   notifications: `${API_BASE}/notifications/`,

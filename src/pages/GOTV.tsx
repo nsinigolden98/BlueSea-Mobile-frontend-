@@ -73,7 +73,7 @@ export function GOTV() {
     try {
       const res: any = await postRequest(ENDPOINTS.cable_lookup, {
         provider: 'gotv',
-        smart_card_number: smartCardNumber,
+        billersCode: smartCardNumber,
       });
       const customer = res?.customer ?? res?.data ?? null;
       // Nomba returns the customer as a plain name string ("John Doe").

@@ -72,7 +72,7 @@ export function ShowMax() {
     try {
       const res: any = await postRequest(ENDPOINTS.cable_lookup, {
         provider: 'showmax',
-        smart_card_number: phoneNumber,
+        billersCode: phoneNumber,
       });
       const customer = res?.customer ?? res?.data ?? null;
       // Nomba returns the customer as a plain name string ("John Doe").
