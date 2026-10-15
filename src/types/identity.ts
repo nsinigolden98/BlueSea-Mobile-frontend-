@@ -1,4 +1,4 @@
-export type VerificationTierLevel = 0 | 1 | 2 | 3;
+export type VerificationTierLevel = 0 | 1 | 2 | 3 | 4;
 
 export type VerificationStatusType = 
   | 'NOT_STARTED' 

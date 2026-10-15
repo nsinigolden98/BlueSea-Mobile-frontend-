@@ -388,6 +388,18 @@ export function GroupPayment() {
         meter_type: selectedGroup?.plan_type,
         phone_number: user?.phone,
       }
+    } else if (selectedGroup?.service_type === 'transfer') {
+      service_detail = {
+        recipient_email: selectedGroup?.sub_number,
+        bank_code: selectedGroup?.plan,
+        account_name: selectedGroup?.plan_type,
+      }
+    } else if (selectedGroup?.service_type === 'withdrawal') {
+      service_detail = {
+        account_number: selectedGroup?.sub_number,
+        bank_code: selectedGroup?.plan,
+        account_name: selectedGroup?.plan_type,
+      }
     } else {
       service_detail = {
         plan_id: selectedGroup?.plan,

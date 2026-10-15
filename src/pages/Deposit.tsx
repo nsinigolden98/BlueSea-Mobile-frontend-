@@ -75,10 +75,10 @@ export function Deposit() {
       // Backend expects desired deposit credit amount
       const response = await postRequest(ENDPOINTS.fund, { amount: numericAmount });
 
-      if (response.success && response.authorization_url) {
+      if (response.success || response.checkout_url) {
         if (Capacitor.isNativePlatform()) {
           setProcessing(false);
-          await openMobilePaystackCheckout(response.authorization_url);
+          await openMobilePaystackCheckout(response.checkout_url);
 
           const authCtx = user as any;
           const refreshFn = authCtx?.refreshUser || authCtx?.checkAuth || authCtx?.fetchUserData;
@@ -91,14 +91,14 @@ export function Deposit() {
           }
         } else {
           setProcessing(false);
-          window.location.href = response.authorization_url;
+          window.location.href = response.checkout_url;
         }
       } else {
         setProcessing(false);
         setDepositError(response.message || 'Could not initiate payment. Please try again.');
       }
     } catch (error: any) {
-      console.error('Paystack checkout error:', error);
+      console.error('Nomba checkout error:', error);
       setProcessing(false);
       setDepositError(error?.message || 'Payment initiation failed. Please check your connection.');
     }
@@ -221,7 +221,7 @@ export function Deposit() {
                   )}
                 </div>
                 <h3 className="text-sm font-black text-slate-900 dark:text-white mt-4">
-                  Paystack Checkout
+                  Nomba Checkout
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                   Card, Bank Transfer, USSD
@@ -239,7 +239,7 @@ export function Deposit() {
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
                 <div>
                   <h2 className="text-base font-black text-slate-900 dark:text-white">
-                    Paystack Deposit
+                    Nomba Deposit
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Fast and convenient online payment

@@ -7,13 +7,15 @@ import {
   postRequest,
   deleteCookie,
   getRequest,
+  getRequestStrict,
   ENDPOINTS,
   API_BASE,
   getCookie,
 } from '@/types';
-import { hasSessionToken, onSessionRefreshed, refreshAccessToken, setSessionToken } from '@/lib/session';
+import { hasSessionToken, onSessionRefreshed, refreshAccessToken, setSessionToken, getSessionRefresh } from '@/lib/session';
 import { createWalletWebSocket, type BalanceUpdate, type WalletConnected } from '@/services/walletWebSocket';
 import { createNotificationSocket, type ServerNotification } from '@/services/notificationSocket';
+import { resetPlansSocket, stopPlansSocket } from '@/hooks/usePlans';
 import type { CredentialResponse } from '@react-oauth/google';
 
 type GoogleLoginInput = CredentialResponse | { credential?: string; idToken?: string };
@@ -27,6 +29,8 @@ interface SignUpResponse {
 }
 
 interface AuthContextType extends AuthState {
+  /** False until the boot bootstrap settles (route guards gate on this). */
+  initialized: boolean;
   login: (data: LoginFormData) => Promise<string>;
   signup: (data: SignupFormData) => Promise<SignUpResponse>;
   logout: () => void;
@@ -50,12 +54,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user: null,
     loading: true,
   });
+  // Boot bootstrap completion. Route guards gate on this — NOT on `loading`,
+  // which login/signup/logout also set (unmounting the form mid-attempt
+  // would wipe its local error/input state on every failure).
+  const [initialized, setInitialized] = useState(false);
 
   const walletSocketRef = useRef<ReturnType<typeof createWalletWebSocket> | null>(null);
   // Bumped whenever the session rotates: socket effects below depend on
   // it so they reconnect with the fresh memory token after a 4401.
   const [sessionNonce, setSessionNonce] = useState(0);
   useEffect(() => onSessionRefreshed(() => setSessionNonce((n) => n + 1)), []);
+
+  // Rapid 4401s across sockets mean the session is unrecoverable (fresh
+  // tokens still rejected): stop recreating sockets instead of spinning.
+  const wsAuthFailures = useRef<number[]>([]);
+  const noteWsAuthFailure = useCallback(() => {
+    const now = Date.now();
+    wsAuthFailures.current = [...wsAuthFailures.current.filter((t) => now - t < 30_000), now];
+    return wsAuthFailures.current.length >= 3;
+  }, []);
 
   const getImageUrl = useCallback((path: string | undefined | null) => {
     if (!path) return '';
@@ -125,6 +142,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: true,
         user: buildUser(profile, balance, prev.user),
       }));
+
+      // Cross-site JS cannot read the csrf cookie, so unsafe calls need the
+      // memory Bearer: rotate once to populate it. Cookie session already
+      // authenticated these probes; a failed rotation keeps cookie-auth.
+      if (!hasSessionToken()) {
+        await refreshAccessToken(API_BASE);
+      }
     } catch (error) {
       console.error('Failed to synchronize authenticated user state:', error);
     }
@@ -154,10 +178,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     const loadUser = async () => {
+      // Safety: a stalled tunnel must never leave `loading:true` forever
+      // (the dashboard guard renders <AuthLoader/> while loading). Race the
+      // probes against a timeout so the app always settles to logged-out.
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Auth bootstrap timed out')), 60000),
+      );
       try {
-        const [profileResponse, balanceResponse] = await Promise.all([
-          getRequest(ENDPOINTS.user),
-          getRequest(ENDPOINTS.balance),
+        const [profileResponse, balanceResponse] = await Promise.race([
+          Promise.all([
+            getRequest(ENDPOINTS.user),
+            getRequest(ENDPOINTS.balance),
+          ]),
+          timeout,
         ]);
 
         const profile = unwrapResponse<any>(profileResponse);
@@ -168,17 +201,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (!cancelled) {
+          // Cross-site JS cannot read the csrf cookie, so unsafe calls need
+          // the memory Bearer: rotate once to populate it (now CSRF-exempt).
+          // The cookie session already authenticated these probes.
+          if (!hasSessionToken()) {
+            await refreshAccessToken(API_BASE);
+          }
           setState({
             isAuthenticated: true,
             user: buildUser(profile, balance),
             loading: false,
           });
+          // Start the plans socket now that the memory token exists.
+          resetPlansSocket();
         }
       } catch (error) {
         console.error('Failed to load authenticated user:', error);
         if (!cancelled) {
           setState((prev) => ({ ...prev, loading: false }));
         }
+      } finally {
+        if (!cancelled) setInitialized(true);
       }
     };
 
@@ -202,7 +245,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (code: number) => {
         if (code === 4401) {
           // Rotate silently, then recreate with the fresh token via nonce.
-          if (await refreshAccessToken(API_BASE)) setSessionNonce((n) => n + 1);
+          // Give up after rapid repeated rejections instead of spinning.
+          if (await refreshAccessToken(API_BASE)) {
+            if (noteWsAuthFailure()) {
+              console.warn('Wallet WebSocket authentication repeatedly rejected (4401). Stopping reconnects; re-login required.');
+              return;
+            }
+            setSessionNonce((n) => n + 1);
+          }
           else console.warn('Wallet WebSocket authentication expired (4401). Re-login required.');
         }
       },
@@ -212,7 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       walletSocketRef.current?.close();
       walletSocketRef.current = null;
     };
-  }, [state.isAuthenticated, applyBalanceUpdate, sessionNonce]);
+  }, [state.isAuthenticated, applyBalanceUpdate, sessionNonce, noteWsAuthFailure]);
 
   // One notification WebSocket per session: unread badge seeding +
   // live pushes, fanned out as DOM events so any screen can listen.
@@ -231,14 +281,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       async () => {
         // 4401: rotate, then recreate with the fresh token via the nonce.
-        if (await refreshAccessToken(API_BASE)) setSessionNonce((n) => n + 1);
+        // Give up after rapid repeated rejections instead of spinning.
+        if (await refreshAccessToken(API_BASE)) {
+          if (noteWsAuthFailure()) {
+            console.warn('Notification WebSocket authentication repeatedly rejected (4401). Stopping reconnects; re-login required.');
+            return;
+          }
+          setSessionNonce((n) => n + 1);
+        }
       },
     );
 
     return () => {
       socket.close();
     };
-  }, [state.isAuthenticated, sessionNonce]);
+  }, [state.isAuthenticated, sessionNonce, noteWsAuthFailure]);
 
   const login = useCallback(async (data: LoginFormData) => {
     setState((prev) => ({ ...prev, loading: true }));
@@ -267,10 +324,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       await referral();
 
-      const [profileResponse, balanceResponse] = await Promise.all([
-        getRequest(ENDPOINTS.user),
-        getRequest(ENDPOINTS.balance),
-      ]);
+      // Strict probes: surface the real status (401/CORS/timeout) instead of
+      // masking it as an empty profile.
+      let profileResponse: any;
+      let balanceResponse: any;
+      try {
+        [profileResponse, balanceResponse] = await Promise.all([
+          getRequestStrict(ENDPOINTS.user),
+          getRequestStrict(ENDPOINTS.balance),
+        ]);
+      } catch (probeError: any) {
+        const status = probeError?.status ?? 0;
+        throw new Error(
+          status === 0
+            ? 'Login succeeded but the app could not reach the profile service (network/CORS).'
+            : `Login succeeded but loading your profile failed (${status}).`,
+        );
+      }
 
       const profile = unwrapResponse<any>(profileResponse);
       const balance = unwrapResponse<any>(balanceResponse);
@@ -284,6 +354,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: buildUser(profile, balance),
         loading: false,
       });
+      // Start the plans socket now that the memory token exists.
+      resetPlansSocket();
 
       return profile.email;
     } catch (error: any) {
@@ -330,7 +402,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, loading: true }));
 
     try {
-      const response = await postRequest(ENDPOINTS.logout, {});
+      // Cross-site the refresh cookie won't ride, so send the memory refresh
+      // in the body (backend reads cookie-first, body fallback) for a real
+      // server-side blacklist instead of a local-only logout.
+      const refresh = getSessionRefresh();
+      const response = await postRequest(ENDPOINTS.logout, refresh ? { refresh_token: refresh } : {});
       if (response?.state === false) {
         setState((prev) => ({ ...prev, loading: false }));
         return response.message;
@@ -341,6 +417,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       walletSocketRef.current?.close();
       walletSocketRef.current = null;
       setSessionToken(null);
+      stopPlansSocket();
       setState({ isAuthenticated: false, user: null, loading: false });
     }
   }, []);
@@ -388,6 +465,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: buildUser(profile, balance),
         loading: false,
       });
+      // Start the plans socket now that the memory token exists.
+      resetPlansSocket();
     } catch (error) {
       console.error('Google login failed:', error);
       setState({ isAuthenticated: false, user: null, loading: false });
@@ -398,6 +477,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         ...state,
+        initialized,
         login,
         signup,
         logout,

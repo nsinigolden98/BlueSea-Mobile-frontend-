@@ -61,6 +61,7 @@ export class ReconnectWS {
       this.retries = 0;
       this.clearReconnectTimer();
       this.clearPing();
+      console.log(`${this.label} opened: ${url}`);
       if (this.opts.pingMs) {
         this.pingTimer = window.setInterval(() => {
           if (this.ws?.readyState === WebSocket.OPEN) {
@@ -85,6 +86,7 @@ export class ReconnectWS {
 
     this.ws.onclose = (event: CloseEvent) => {
       this.clearPing();
+      console.log(`${this.label} closed: code=${event.code} reason=${event.reason} wasClean=${event.wasClean}`);
       this.opts.onCloseCode?.(event.code, event.reason, event.wasClean);
       if (this.closedByUser || event.code === 1000 || event.code === 4401) {
         // 4401: server rejected the JWT — don't retry with the same token.
@@ -134,7 +136,7 @@ export class ReconnectWS {
 }
 
 export function toWebSocketBase(base: string): string {
-  const trimmed = base.replace(/\/+$/, '');
+  const trimmed = base.trim().replace(/\/+$/, '');
   if (trimmed.startsWith('https://')) return `wss://${trimmed.slice('https://'.length)}`;
   if (trimmed.startsWith('http://')) return `ws://${trimmed.slice('http://'.length)}`;
   return trimmed;

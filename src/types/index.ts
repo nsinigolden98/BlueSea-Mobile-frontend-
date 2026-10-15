@@ -363,10 +363,11 @@ export const ENDPOINTS = {
   balance: `${API_BASE}/wallet/balance/`,
   dvaAssign: `${API_BASE}/accounts/dva/assign/`,
   checkUserVerification: (email: string) => `${API_BASE}/user_preference/check/${encodeURIComponent(email)}/`,
-  fund: `${API_BASE}/transactions/fund-wallet/`,
-  webhook: `${API_BASE}/transactions/webhook/paystack/`,
+  fund: `${API_BASE}/transactions/nomba/fund-wallet/`,
   history: `${API_BASE}/transactions/history/`,
   user: `${API_BASE}/user_preference/user/`,
+  kyc_status: `${API_BASE}/accounts/kyc/`,
+  kyc_submit: `${API_BASE}/accounts/kyc/submit/`,
   pin_set: `${API_BASE}/accounts/pin/set/`,
   pin_verify: `${API_BASE}/accounts/pin/verify/`,
   pin_reset: `${API_BASE}/accounts/pin/reset/`,
@@ -493,7 +494,11 @@ export function getCookie(name:string){
     return cookie
 }
 
-export const TOKEN:string = getSessionToken() || ''
+// LiveVault: memory token read at call time. The old `TOKEN` const snapshotted
+// once at import (always '') because setSessionToken runs after login.
+export function liveToken(): string {
+  return getSessionToken() ?? '';
+}
 
 // Delete Cookie
  export function deleteCookie(name:string) {
@@ -501,11 +506,39 @@ export const TOKEN:string = getSessionToken() || ''
   }
 
 
+// GET REQUEST (STRICT — throws with status instead of returning {}).
+// Use for auth-critical probes (login profile, bootstrap, readiness) so the
+// real failure (401/CORS/network) surfaces instead of a misleading empty object.
+export async function getRequestStrict<T = any>(url: string): Promise<T> {
+  try {
+    const response = await send(url, () => axios.get(url, {
+      withCredentials: true,
+      timeout: 90000,
+      headers: {
+        ...authHeaders(false),
+        "Content-Type": "application/json",
+        "Accept": 'application/json'
+      }
+    }));
+    return response.data as T;
+  } catch (error: any) {
+    const status = error?.response?.status ?? 0;
+    const data = error?.response?.data;
+    const err: any = new Error(
+      (data && (data.detail || data.message)) || error?.message || `Request failed (${status})`,
+    );
+    err.status = status;
+    err.data = data;
+    throw err;
+  }
+}
+
 // GET REQUEST
 export async function getRequest(url: string, options?: { method?: string }) {
   try {
     const response = await send(url, () => axios.get(url, {
       withCredentials: true,
+      timeout: 90000,
       ...(options?.method ? { method: options.method } : {}),
       headers: {
         ...authHeaders(false),
@@ -526,6 +559,7 @@ export async function postRequest(url: string, payload: object) {
     const token = getSessionToken() || '';
     const response = await send(url, () => axios.post(url, payload, {
       withCredentials: true,
+      timeout: 90000,
       headers: {
         ...(token ? { "Authorization": `Bearer ${token}` } : {}),
         ...authHeaders(true),
@@ -545,6 +579,7 @@ export async function postFileRequest(url: string,payload: object) {
     const response = await send(url, () => axios.post(url,payload,
       {
         withCredentials: true,
+        timeout: 90000,
         headers: {
           ...authHeaders(true),
         },
@@ -562,6 +597,7 @@ export async function putRequest(url: string, payload: object) {
     const response = await send(url, () => axios.put(url,payload,
       {
         withCredentials: true,
+        timeout: 90000,
         headers: {
           ...authHeaders(true),
           "Content-Type": "application/json",
@@ -583,6 +619,7 @@ export async function patchRequest(url: string, payload: object | FormData) {
   try {
     const response = await send(url, () => axios.patch(url, payload, {
       withCredentials: true,
+      timeout: 90000,
       headers: {
         ...authHeaders(true),
         // Explicitly set it only for JSON
@@ -603,6 +640,7 @@ export async function deleteRequest(url: string) {
     const response = await send(url, () => axios.delete(url,
       {
         withCredentials: true,
+        timeout: 90000,
         headers: {
           ...authHeaders(true),
           "Content-Type": "application/json",

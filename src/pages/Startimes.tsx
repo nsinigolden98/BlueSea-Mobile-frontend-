@@ -41,6 +41,9 @@ export function Startimes() {
   const [verifying, setVerifying] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
+  // Payer is the account owner, never the lookup-returned name.
+  const payerName = `${user?.firstName ?? ''} ${user?.surname ?? ''}`.trim();
+
   const payload = isGroupPayment ? {
     name: groupName,
     description: groupDescription,
@@ -54,6 +57,7 @@ export function Startimes() {
     billersCode: smartCardNumber,
     startimes_plan: selectedPlan,
     phone_number: phoneNumber,
+    payerName,
   };
   
   
@@ -72,7 +76,10 @@ export function Startimes() {
         smart_card_number: smartCardNumber,
       });
       const customer = res?.customer ?? res?.data ?? null;
-      const name = customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null;
+      // Nomba returns the customer as a plain name string ("John Doe").
+      const name = typeof customer === 'string'
+        ? customer
+        : (customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null);
       if (res?.success && name) {
         setVerifiedCustomer(String(name));
       } else {

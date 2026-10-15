@@ -5,7 +5,7 @@ import {
   ArrowLeft, ShieldCheck, Phone, Building2, MapPin, CheckCircle2, Clock, 
   AlertTriangle, Info, Edit3, ShieldAlert
 } from 'lucide-react';
-import { getRequest, ENDPOINTS } from '@/types';
+import { getRequest, postFileRequest, ENDPOINTS } from '@/types';
 import { Loader } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
@@ -27,6 +27,19 @@ interface ProfileData {
   };
 }
 
+interface KycStatus {
+  tier: number;
+  in_limit_display?: string | null;
+  missing?: string[];
+  has_nin?: boolean;
+  has_bvn?: boolean;
+  has_address?: boolean;
+  has_utility_bill?: boolean;
+  dva_assigned?: boolean;
+  dva_new?: boolean;
+  dva_account_number?: string;
+}
+
 export function IdentityCenter() {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
@@ -36,14 +49,67 @@ export function IdentityCenter() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [, setLoadingProfile] = useState<boolean>(true);
 
-  // Verification state. Financial verification is derived from the backend-supported DVA state.
+  // Verification state. Tiers mirror the backend (/accounts/kyc/):
+  // T1 phone · T2 NIN · T3 BVN · T4 address + utility bill.
   const [phoneStatus, setPhoneStatus] = useState<VerificationStatusType>('NOT_STARTED');
   const [financialStatus, setFinancialStatus] = useState<VerificationStatusType>('NOT_STARTED');
-  const [addressStatus] = useState<VerificationStatusType>('NOT_STARTED');
+  const [kycStatus, setKycStatus] = useState<KycStatus | null>(null);
+
+  // Evidence inputs (single unified submit endpoint).
+  const [nin, setNin] = useState('');
+  const [bvn, setBvn] = useState('');
+  const [houseAddress, setHouseAddress] = useState('');
+  const [billFile, setBillFile] = useState<File | null>(null);
+  const [submittingKyc, setSubmittingKyc] = useState(false);
 
   // Modal / Sheet States
   const [activeModal, setActiveModal] = useState<'phone' | 'financial' | null>(null);
-  const [whyVerifyTier, setWhyVerifyTier] = useState<1 | 2 | 3 | null>(null);
+  const [whyVerifyTier, setWhyVerifyTier] = useState<1 | 2 | 3 | 4 | null>(null);
+
+  // Backend KYC tier status: single source of truth for tier + evidence.
+  const fetchKycStatus = useCallback(async () => {
+    try {
+      const response = await getRequest(ENDPOINTS.kyc_status);
+      if (response && typeof response === 'object') {
+        setKycStatus(response as KycStatus);
+      }
+    } catch (err) {
+      console.error('Failed to load KYC status:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchKycStatus();
+  }, [fetchKycStatus]);
+
+  // One multipart call carries any evidence subset (NIN/BVN/address/bill).
+  const submitKyc = async (fields: Record<string, string>, file?: File | null) => {
+    setSubmittingKyc(true);
+    showLoader();
+    try {
+      const form = new FormData();
+      Object.entries(fields).forEach(([k, v]) => {
+        if (v.trim()) form.append(k, v.trim());
+      });
+      if (file) form.append('utility_bill', file);
+      const response: any = await postFileRequest(ENDPOINTS.kyc_submit, form);
+      if (response && typeof response === 'object' && !response.error) {
+        setKycStatus(response as KycStatus);
+        setNin('');
+        setBvn('');
+        setHouseAddress('');
+        setBillFile(null);
+        // NIN submission provisions the DVA server-side: sync auth state
+        // so has_DVA/financial badges update without a reload.
+        await refreshUser();
+        await fetchProfile();
+      }
+      return response;
+    } finally {
+      setSubmittingKyc(false);
+      hideLoader();
+    }
+  };
 
   // Fetch backend Profile Data (reusing ENDPOINTS.user)
   const fetchProfile = useCallback(async () => {
@@ -78,11 +144,30 @@ export function IdentityCenter() {
   const phoneRaw = profileData?.phone ? String(profileData.phone).replace(/\D/g, '') : '';
   const phoneDisplay = phoneRaw ? `+234 ${phoneRaw.slice(-10)}` : 'Not Provided in Profile';
 
+  // Tier 1 is phone presence (backend rule): a saved number counts as
+  // verified without the OTP modal round-trip.
+  useEffect(() => {
+    if (phoneRaw || user?.phone) setPhoneStatus('VERIFIED');
+  }, [phoneRaw, user?.phone]);
+
   const addressPref = profileData?.preference || {};
   const hasSavedAddress = Boolean(addressPref.street_address || addressPref.city || addressPref.state);
 
-  // Tier calculation (In-memory representation)
-  const currentTier = addressStatus === 'VERIFIED' ? 3 : financialStatus === 'VERIFIED' ? 2 : phoneStatus === 'VERIFIED' ? 1 : 0;
+  // Tier calculation: backend status is authoritative (T0 none · T1 phone
+  // · T2 +NIN · T3 +BVN · T4 +address+bill); local derivation is fallback.
+  const ninStatus: VerificationStatusType = kycStatus?.has_nin ? 'VERIFIED' : 'NOT_STARTED';
+  const bvnStatus: VerificationStatusType = kycStatus?.has_bvn ? 'VERIFIED' : 'NOT_STARTED';
+  const addressStatus: VerificationStatusType =
+    kycStatus?.has_address && kycStatus?.has_utility_bill ? 'VERIFIED' : 'NOT_STARTED';
+  const currentTier = typeof kycStatus?.tier === 'number'
+    ? Math.min(Math.max(kycStatus.tier, 0), 4)
+    : (addressStatus === 'VERIFIED' ? 4 : bvnStatus === 'VERIFIED' ? 3 : ninStatus === 'VERIFIED' ? 2 : phoneStatus === 'VERIFIED' ? 1 : 0);
+  const missing: string[] = Array.isArray(kycStatus?.missing) ? kycStatus.missing : [];
+
+  // Sequential-tier gates for the evidence cards (backend enforces too).
+  const phoneDone = phoneStatus === 'VERIFIED' || currentTier >= 1;
+  const ninDone = ninStatus === 'VERIFIED';
+  const bvnDone = bvnStatus === 'VERIFIED';
 
   const renderStatusBadge = (status: VerificationStatusType) => {
     switch (status) {
@@ -151,26 +236,43 @@ export function IdentityCenter() {
                     <span className="text-xs font-bold uppercase tracking-wider text-sky-300">Identity Verification Status</span>
                   </div>
                   <h2 className="text-2xl font-extrabold tracking-tight">
-                    Tier {currentTier} of 3 Completed
+                    Tier {currentTier} of 4 Completed
                   </h2>
                   <p className="text-xs text-slate-300 max-w-md leading-relaxed">
                     {currentTier === 0 && 'Your identity verification has not started. Verify your phone number to unlock Tier 1 access.'}
-                    {currentTier === 1 && 'Your phone number is verified. Complete Tier 2 financial identity verification to increase your transaction limits.'}
-                    {currentTier === 2 && 'Your financial identity is verified. Complete Tier 3 address verification for maximum account access.'}
-                    {currentTier === 3 && 'Your identity verification is fully complete! You enjoy full feature access and highest account limits.'}
+                    {currentTier === 1 && 'Phone verified. Submit your NIN to reach Tier 2.'}
+                    {currentTier === 2 && 'NIN verified. Submit your BVN to reach Tier 3.'}
+                    {currentTier === 3 && 'BVN verified. Submit your address + utility bill to reach Tier 4.'}
+                    {currentTier === 4 && 'Your identity verification is fully complete! You enjoy full feature access and highest account limits.'}
                   </p>
+                  {kycStatus?.in_limit_display && (
+                    <p className="text-xs text-sky-300 font-semibold">
+                      Current limit: {kycStatus.in_limit_display}
+                    </p>
+                  )}
+                  {missing.length > 0 && (
+                    <p className="text-xs text-slate-300">
+                      Still needed: {missing.join(', ')}
+                    </p>
+                  )}
+                  {kycStatus?.dva_assigned && kycStatus?.dva_account_number && (
+                    <p className="text-xs text-emerald-300 font-semibold">
+                      Dedicated account: {kycStatus.dva_account_number}
+                      {kycStatus?.dva_new ? ' (just created)' : ''}
+                    </p>
+                  )}
                 </div>
 
                 {/* Progress bar pill */}
                 <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 shrink-0 space-y-2 min-w-[200px]">
                   <div className="flex justify-between text-xs font-semibold">
                     <span>Progress</span>
-                    <span>{Math.round((currentTier / 3) * 100)}%</span>
+                    <span>{Math.round((currentTier / 4) * 100)}%</span>
                   </div>
                   <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-sky-400 transition-all duration-500 ease-out" 
-                      style={{ width: `${(currentTier / 3) * 100}%` }}
+                      style={{ width: `${(currentTier / 4) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -226,7 +328,7 @@ export function IdentityCenter() {
                 </div>
               </div>
 
-              {/* TIER 2: FINANCIAL IDENTITY */}
+              {/* TIER 2: NIN */}
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -234,33 +336,101 @@ export function IdentityCenter() {
                       <Building2 className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 2 - Financial Identity</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Link BVN and bank account details for higher financial limits.</p>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 2 - NIN Verification</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Submit your 11-digit National Identification Number.</p>
                     </div>
                   </div>
-                  {renderStatusBadge(financialStatus)}
+                  {renderStatusBadge(ninStatus)}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                  <button 
-                    onClick={() => setWhyVerifyTier(2)}
-                    className="text-xs font-semibold text-sky-500 hover:underline flex items-center gap-1"
-                  >
-                    <Info className="w-3.5 h-3.5" /> Why verify financial identity?
-                  </button>
-
-                  {financialStatus !== 'VERIFIED' && (
-                    <button
-                      onClick={() => setActiveModal('financial')}
-                      className="px-5 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
-                    >
-                      {financialStatus === 'PENDING' ? 'View Pending Request' : 'Start Financial Verification'}
-                    </button>
-                  )}
-                </div>
+                {ninStatus !== 'VERIFIED' && (
+                  <div className="space-y-3">
+                    {!phoneDone && (
+                      <p className="text-xs text-amber-600 font-medium">
+                        Verify your phone number first (Tier 1) to unlock NIN submission.
+                      </p>
+                    )}
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={11}
+                      placeholder="11-digit NIN"
+                      value={nin}
+                      onChange={(e) => setNin(e.target.value.replace(/\D/g, ''))}
+                      disabled={!phoneDone}
+                      className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-mono outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
+                    />
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                      <button 
+                        onClick={() => setWhyVerifyTier(2)}
+                        className="text-xs font-semibold text-sky-500 hover:underline flex items-center gap-1"
+                      >
+                        <Info className="w-3.5 h-3.5" /> Why verify NIN?
+                      </button>
+                      <button
+                        onClick={() => submitKyc({ nin })}
+                        disabled={submittingKyc || nin.length !== 11 || !phoneDone}
+                        className="px-5 h-10 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
+                      >
+                        {submittingKyc ? 'Submitting…' : 'Submit NIN'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* TIER 3: RESIDENTIAL ADDRESS */}
+              {/* TIER 3: BVN */}
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-violet-500/10 text-violet-500 rounded-2xl">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 3 - BVN Verification</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Submit your 11-digit Bank Verification Number.</p>
+                    </div>
+                  </div>
+                  {renderStatusBadge(bvnStatus)}
+                </div>
+
+                {bvnStatus !== 'VERIFIED' && (
+                  <div className="space-y-3">
+                    {!ninDone && (
+                      <p className="text-xs text-amber-600 font-medium">
+                        Submit your NIN first (Tier 2) to unlock BVN submission.
+                      </p>
+                    )}
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={11}
+                      placeholder="11-digit BVN"
+                      value={bvn}
+                      onChange={(e) => setBvn(e.target.value.replace(/\D/g, ''))}
+                      disabled={!ninDone}
+                      className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-mono outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
+                    />
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                      <button 
+                        onClick={() => setWhyVerifyTier(3)}
+                        className="text-xs font-semibold text-sky-500 hover:underline flex items-center gap-1"
+                      >
+                        <Info className="w-3.5 h-3.5" /> Why verify BVN?
+                      </button>
+                      <button
+                        onClick={() => submitKyc({ bvn })}
+                        disabled={submittingKyc || bvn.length !== 11 || !ninDone}
+                        className="px-5 h-10 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
+                      >
+                        {submittingKyc ? 'Submitting…' : 'Submit BVN'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* TIER 4: RESIDENTIAL ADDRESS + UTILITY BILL (one submit) */}
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -268,8 +438,8 @@ export function IdentityCenter() {
                       <MapPin className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 3 - Residential Address</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Verify home address to unlock maximum limits and premium features.</p>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 4 - Address & Utility Bill</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">House address plus a utility bill (JPG/PNG/WEBP/PDF, max 5MB) — submitted together.</p>
                     </div>
                   </div>
                   {renderStatusBadge(addressStatus)}
@@ -293,30 +463,87 @@ export function IdentityCenter() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => setWhyVerifyTier(3)}
-                      className="text-xs font-semibold text-sky-500 hover:underline flex items-center gap-1"
-                    >
-                      <Info className="w-3.5 h-3.5" /> Why verify address?
-                    </button>
-                    <button 
-                      onClick={() => navigate('/profile')}
-                      className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:underline flex items-center gap-1"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" /> Edit in Profile
-                    </button>
+                {addressStatus !== 'VERIFIED' && (
+                  <div className="space-y-3">
+                    {!bvnDone && (
+                      <p className="text-xs text-amber-600 font-medium">
+                        Submit your BVN first (Tier 3) to unlock address verification.
+                      </p>
+                    )}
+                    <input
+                      type="text"
+                      placeholder="House address (min 10 characters)"
+                      value={houseAddress}
+                      onChange={(e) => setHouseAddress(e.target.value)}
+                      disabled={!bvnDone}
+                      className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
+                    />
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,.pdf"
+                      disabled={!bvnDone}
+                      onChange={(e) => setBillFile(e.target.files?.[0] ?? null)}
+                      className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-sky-500/10 file:text-sky-600 file:font-semibold disabled:opacity-50"
+                    />
+                    {billFile && (
+                      <p className="text-xs text-slate-500">Selected: {billFile.name}</p>
+                    )}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={() => setWhyVerifyTier(4)}
+                          className="text-xs font-semibold text-sky-500 hover:underline flex items-center gap-1"
+                        >
+                          <Info className="w-3.5 h-3.5" /> Why verify address?
+                        </button>
+                        <button 
+                          onClick={() => navigate('/profile')}
+                          className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:underline flex items-center gap-1"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" /> Edit in Profile
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => submitKyc({ house_address: houseAddress }, billFile)}
+                        disabled={submittingKyc || houseAddress.trim().length < 10 || !billFile || !bvnDone}
+                        className="px-5 h-10 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
+                      >
+                        {submittingKyc ? 'Submitting…' : 'Submit Address & Bill'}
+                      </button>
+                    </div>
                   </div>
+                )}
+              </div>
 
-                  {addressStatus !== 'VERIFIED' && (
+              {/* FINANCIAL IDENTITY (DVA) — separate feature, not a KYC tier */}
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-blue-600/10 text-blue-600 dark:text-blue-400 rounded-2xl">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">Financial Identity (DVA)</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Link BVN and bank account details for a dedicated virtual account.</p>
+                    </div>
+                  </div>
+                  {renderStatusBadge(financialStatus)}
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <button 
+                    onClick={() => setWhyVerifyTier(2)}
+                    className="text-xs font-semibold text-sky-500 hover:underline flex items-center gap-1"
+                  >
+                    <Info className="w-3.5 h-3.5" /> Why verify financial identity?
+                  </button>
+
+                  {financialStatus !== 'VERIFIED' && (
                     <button
-                      type="button"
-                      disabled
-                      className="px-5 h-10 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-semibold transition-colors cursor-not-allowed"
-                      title="No residential-address verification endpoint is included in the supplied backend contract."
+                      onClick={() => setActiveModal('financial')}
+                      className="px-5 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
                     >
-                      Verification unavailable
+                      {financialStatus === 'PENDING' ? 'View Pending Request' : 'Start Financial Verification'}
                     </button>
                   )}
                 </div>
@@ -371,7 +598,23 @@ export function IdentityCenter() {
 
                 <div className="py-3 flex items-center justify-between text-xs">
                   <div>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200">Financial Identity</p>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200">NIN Verification</p>
+                    <p className="text-slate-400 text-[11px]">{ninStatus === 'VERIFIED' ? 'Completed recently' : 'Not initiated'}</p>
+                  </div>
+                  {renderStatusBadge(ninStatus)}
+                </div>
+
+                <div className="py-3 flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200">BVN Verification</p>
+                    <p className="text-slate-400 text-[11px]">{bvnStatus === 'VERIFIED' ? 'Completed recently' : 'Not initiated'}</p>
+                  </div>
+                  {renderStatusBadge(bvnStatus)}
+                </div>
+
+                <div className="py-3 flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200">Financial Identity (DVA)</p>
                     <p className="text-slate-400 text-[11px]">{financialStatus === 'VERIFIED' ? 'Completed recently' : 'Not initiated'}</p>
                   </div>
                   {renderStatusBadge(financialStatus)}
@@ -434,14 +677,18 @@ export function IdentityCenter() {
           whyVerifyTier === 1 
             ? 'Phone verification confirms account ownership and protects your account against unauthorized logins.'
             : whyVerifyTier === 2
-            ? 'Financial identity verification links your BVN and bank account to verify your official legal identity.'
-            : 'Address verification completes your compliance profile and enables top-tier financial transfers.'
+            ? 'NIN verification confirms your national identity and raises your limits to Tier 2.'
+            : whyVerifyTier === 3
+            ? 'BVN verification links your bank identity and raises your limits to Tier 3.'
+            : 'Address plus utility-bill verification completes your compliance profile for Tier 4 maximum limits.'
         }
         unlockedFeatures={
           whyVerifyTier === 1
             ? ['Basic Airtime & Data', 'Cable & Utility Payments', 'Basic Wallet Access']
             : whyVerifyTier === 2
-            ? ['Higher Deposit Limits', 'Expanded Pay Link', 'Higher Internal Transfers']
+            ? ['Tier 2 Limits', 'Higher Internal Transfers', 'Group Payments']
+            : whyVerifyTier === 3
+            ? ['Tier 3 Limits', 'Expanded Pay Link', 'Higher Withdrawals']
             : ['Maximum Wallet Caps', 'Full DVA Eligibility', 'Unlimited Daily Transfers']
         }
       />

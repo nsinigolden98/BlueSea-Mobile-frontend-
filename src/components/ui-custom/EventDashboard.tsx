@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import type { MarketplaceEvent } from '@/types';
-import { ENDPOINTS, TOKEN } from '@/types';
+import { ENDPOINTS, liveToken } from '@/types';
 import { PinModal, Toast } from '@/components/ui-custom';
 
 export interface EventWithdrawalItem {
@@ -152,8 +152,9 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
       const url = `${ENDPOINTS.event_withdraw}?event_id=${encodeURIComponent(event.id)}`;
       const response = await fetch(url, {
         method: 'GET',
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${TOKEN}`,
+          'Authorization': `Bearer ${liveToken()}`,
           'Content-Type': 'application/json',
         },
       });
@@ -212,8 +213,9 @@ export function EventDashboard({ event, onClose }: EventDashboardProps) {
     setExporting(true);
     try {
       const response = await fetch(ENDPOINTS.export_attendees(event.id), {
+        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${TOKEN}`,
+          'Authorization': `Bearer ${liveToken()}`,
         },
       });
       const blob = await response.blob();

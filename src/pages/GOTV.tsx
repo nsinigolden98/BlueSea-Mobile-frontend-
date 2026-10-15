@@ -3,7 +3,6 @@ import { Sidebar, Header, Toast, TransactionModal, PinModal, Loader } from '@/co
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -14,15 +13,12 @@ import { usePlans, toCablePlans } from '@/hooks/usePlans';
 
 const PROVIDER_KEY = 'gotv' as const;
 
-const subscriptionTypes = ["change", "renew"];
-
 export function GOTV() {
   const { user } = useAuth();
   const defaultPhone = user?.phone ? "0" + user.phone.slice(-10) : '';
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [smartCardNumber, setSmartCardNumber] = useState('');
   const [selectedPlan, setSelectedPlan] = useState('');
-  const [subscriptionType, setSubscriptionType] = useState('change');
   const [phoneNumber, setPhoneNumber] = useState(defaultPhone);
   const { PinComponent, showPinModal, modalData, message } = PinModal();
   const { LoaderComponent } = Loader();
@@ -44,6 +40,9 @@ export function GOTV() {
   const [verifying, setVerifying] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
+  // Payer is the account owner, never the lookup-returned name.
+  const payerName = `${user?.firstName ?? ''} ${user?.surname ?? ''}`.trim();
+
   const payload = isGroupPayment ? {
     name: groupName,
     description: groupDescription,
@@ -53,13 +52,12 @@ export function GOTV() {
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
     plan: selectedPlan,
     plan_id: selectedPlan,
-    plan_type: subscriptionType,
 
   }: {
     billersCode: smartCardNumber,
     gotv_plan: selectedPlan,
-    subscription_type: subscriptionType,
     phone_number: phoneNumber,
+    payerName,
   };
   
 
@@ -78,7 +76,10 @@ export function GOTV() {
         smart_card_number: smartCardNumber,
       });
       const customer = res?.customer ?? res?.data ?? null;
-      const name = customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null;
+      // Nomba returns the customer as a plain name string ("John Doe").
+      const name = typeof customer === 'string'
+        ? customer
+        : (customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null);
       if (res?.success && name) {
         setVerifiedCustomer(String(name));
       } else {
@@ -251,22 +252,6 @@ selectedPlan === plan.value
                         ))}
                         </div>
                         )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Subscription Type</Label>
-                      <Select value={subscriptionType} onValueChange={setSubscriptionType}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {subscriptionTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type === 'change' ? 'change' : 'renew'}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     </div>
 
                     <div className="space-y-2">

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, Outlet } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, Outlet, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 // import { Header } from '@/components/ui-custom/Header';
@@ -75,6 +75,7 @@ import { DashboardAccessGuard } from '@/components/ui-custom/DashboardAccessGuar
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
+import { initAppPush, PUSH_TAP_EVENT, type PushTapDetail } from '@/services/appPush';
 import PayrollProHome from './screens/payroll-pro/PayrollProHome';
 import CreateCompany from './screens/payroll-pro/CreateCompany';
 import CompanyWorkspace from './screens/payroll-pro/CompanyWorkspace';
@@ -160,16 +161,19 @@ function AuthenticatedLayout() {
 }
 
 // Protected Route Component
+// Gates on bootstrap `initialized`, NOT `loading`: auth attempts set
+// `loading` too, and unmounting the page on every attempt would wipe local
+// form/error state (failed logins looked like a silent reload).
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
-  if (loading) return <AuthLoader />;
+  const { isAuthenticated, initialized } = useAuth();
+  if (!initialized) return <AuthLoader />;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 }
 
 // Public Route Component
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
-  if (loading) return <AuthLoader />;
+  const { isAuthenticated, initialized } = useAuth();
+  if (!initialized) return <AuthLoader />;
   return !isAuthenticated ? <>{children}</> : <Navigate to="/dashboard" />;
 }
 
@@ -199,12 +203,13 @@ function AppRoutes() {
         <Route path="/event/:eventId" element={<EventPublic />} />
         
 
-        {/* Public legal pages */}
+        {/* Public legal pages  */ }
         <Route path="/legal/terms" element={<TermsAndConditions />} />
         <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+        <Route path="/legal/cookies" element={<CookiePolicy />} />
         <Route path="/legal/refund" element={<RefundPolicy />} />
         <Route path="/legal/security" element={<SecurityPolicy />} />
-        <Route path="/legal/cookies" element={<CookiePolicy />} />
+        
         <Route path="/legal/kyc" element={<KYCPolicy />} />
         <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
 
@@ -335,8 +340,11 @@ function App() {
     }
 
     window.addEventListener('offline', handleOffline);
+    // Option B push bridge: WS `bluesea:notification` -> OS tray (no FCM).
+    const cleanupPush = initAppPush();
     return () => {
       window.removeEventListener('offline', handleOffline);
+      cleanupPush();
     };
   }, []);
 
@@ -345,12 +353,27 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <QueryClientProvider client={queryClient}>
+            <PushTapNavigator />
             <AppRoutes />
           </QueryClientProvider>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
   );
+}
+
+/** Routes system-tray taps to the right screen (must live inside Router). */
+function PushTapNavigator() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const onTap = (e: Event) => {
+      const detail = (e as CustomEvent<PushTapDetail>).detail;
+      navigate(detail?.route || '/notifications');
+    };
+    window.addEventListener(PUSH_TAP_EVENT, onTap);
+    return () => window.removeEventListener(PUSH_TAP_EVENT, onTap);
+  }, [navigate]);
+  return null;
 }
 
 export default App;

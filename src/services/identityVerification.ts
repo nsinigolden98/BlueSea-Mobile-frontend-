@@ -27,7 +27,7 @@ export const DEFAULT_TIER_LIMITS: TierLimit[] = [
     ticketPaymentLimit: '₦20,000',
   },
   {
-    tier: 'Tier 2 (Financial)',
+    tier: 'Tier 2 (NIN)',
     maxWalletBalance: '₦5,000,000',
     dailyDeposit: '₦500,000',
     singleDeposit: '₦200,000',
@@ -36,7 +36,16 @@ export const DEFAULT_TIER_LIMITS: TierLimit[] = [
     ticketPaymentLimit: '₦100,000',
   },
   {
-    tier: 'Tier 3 (Address)',
+    tier: 'Tier 3 (BVN)',
+    maxWalletBalance: '₦5,000,000',
+    dailyDeposit: '₦500,000',
+    singleDeposit: '₦200,000',
+    dailyWithdrawal: '₦200,000',
+    dailyTransfer: '₦500,000',
+    ticketPaymentLimit: '₦100,000',
+  },
+  {
+    tier: 'Tier 4 (Address)',
     maxWalletBalance: 'Unlimited',
     dailyDeposit: 'Unlimited',
     singleDeposit: '₦5,000,000',

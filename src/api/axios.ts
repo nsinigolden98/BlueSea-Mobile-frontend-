@@ -3,7 +3,7 @@ import { authHeaders, refreshAccessToken, shouldAttemptRefresh } from '@/lib/ses
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 30000,
+  timeout: 90000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

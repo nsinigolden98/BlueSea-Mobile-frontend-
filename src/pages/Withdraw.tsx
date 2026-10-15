@@ -15,13 +15,15 @@ import { postRequest, ENDPOINTS } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { useAuth } from '@/context/AuthContext';
 import { NIGERIAN_BANKS } from '@/data';
-import { 
-  Landmark, 
-  CheckCircle2, 
-  Search, 
-  AlertCircle, 
-  RefreshCw, 
+import {
+  Landmark,
+  CheckCircle2,
+  Search,
+  AlertCircle,
+  RefreshCw,
   UserCheck,
+  Users,
+  Plus,
   Info,
   ChevronDown,
   X,
@@ -166,6 +168,10 @@ export function Withdraw() {
     setVerifyingAccount(false);
     setVerificationError(null);
     setSubmitting(false);
+    setIsGroupPayment(false);
+    setGroupName('');
+    setGroupDescription('');
+    setInviteMembers(['']);
   }, []);
 
   // Automatic Account Verification
@@ -224,6 +230,12 @@ export function Withdraw() {
     }
   }, [accountNumber, selectedBank, verifyAccount]);
 
+  // Group payment state (mirrors Airtime/Data flow)
+  const [isGroupPayment, setIsGroupPayment] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
+  const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
+
   // PIN Modal Response & Status Handling
   useEffect(() => {
     if (message) {
@@ -271,6 +283,31 @@ export function Withdraw() {
 
     if (isOverBalance) {
       showToast('Insufficient wallet balance');
+      return;
+    }
+
+    if (isGroupPayment) {
+      if (!groupName) {
+        showToast('Please enter a group name');
+        return;
+      }
+      const memberEmails = inviteMembers.filter(e => e.trim());
+      if (memberEmails.length === 0) {
+        showToast('Please add at least one member to invite');
+        return;
+      }
+      setSubmitting(true);
+      setPinValue({
+        name: groupName,
+        description: groupDescription,
+        service_type: 'withdrawal',
+        sub_number: accountNumber,
+        target_amount: numericAmount,
+        invite_members: memberEmails.join(','),
+        plan: selectedBank,
+        plan_type: accountName,
+      } as any);
+      showPinModal();
       return;
     }
 
@@ -593,6 +630,86 @@ export function Withdraw() {
 
                 </div>
 
+                {/* GROUP PAYMENT TOGGLE (mirrors Airtime/Data flow) */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-sky-500" />
+                    <div>
+                      <p className="font-medium text-slate-800 dark:text-white">Group Payment</p>
+                      <p className="text-xs text-slate-500">Split with friends & family</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsGroupPayment(!isGroupPayment)}
+                    className={`w-12 h-6 rounded-full transition-colors ${
+                      isGroupPayment ? "bg-sky-500" : "bg-slate-300 dark:bg-slate-600"
+                    }`}
+                  >
+                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
+                      isGroupPayment ? "translate-x-6" : "translate-x-0.5"
+                    }`} />
+                  </button>
+                </div>
+
+                {isGroupPayment && (
+                  <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div className="space-y-2">
+                      <Label htmlFor="groupName">Group Name</Label>
+                      <Input
+                        id="groupName"
+                        placeholder="e.g., Family Transfer"
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="groupDescription">Group Description</Label>
+                      <Input
+                        id="groupDescription"
+                        placeholder="Enter a description for the payment"
+                        value={groupDescription}
+                        onChange={(e) => setGroupDescription(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Invite Members (Email addresses)</Label>
+                      {inviteMembers.map((email, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Input
+                            placeholder="Enter email address"
+                            value={email}
+                            onChange={(e) => {
+                              const newMembers = [...inviteMembers];
+                              newMembers[index] = e.target.value;
+                              setInviteMembers(newMembers);
+                            }}
+                          />
+                          {inviteMembers.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newMembers = inviteMembers.filter((_, i) => i !== index);
+                                setInviteMembers(newMembers);
+                              }}
+                              className="p-2 text-red-500"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setInviteMembers([...inviteMembers, ''])}
+                        className="text-sm text-sky-500 flex items-center gap-1"
+                      >
+                        <Plus className="w-4 h-4" /> Add another
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* MAIN SUBMIT BUTTON */}
                 <Button
                   type="button"
@@ -632,7 +749,7 @@ export function Withdraw() {
       <ToastComponent />
 
       <PinComponent 
-        type="withdrawal" 
+        type={isGroupPayment ? "group-withdrawal" : "withdrawal"} 
         value={pinValue} 
       />
 

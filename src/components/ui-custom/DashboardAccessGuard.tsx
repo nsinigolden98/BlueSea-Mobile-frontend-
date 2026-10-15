@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { AuthLoader } from '@/components/ui-custom';
-import { getCookie, getRequest, ENDPOINTS } from '@/types';
+import { getCookie, getRequestStrict, ENDPOINTS } from '@/types';
+import { getSessionToken } from '@/lib/session';
 
 type DashboardReadiness = {
   nicknameSet: boolean;
@@ -44,7 +45,7 @@ export function DashboardAccessGuard({
         return;
       }
 
-      const accessToken = getCookie('access_token');
+      const accessToken = getSessionToken() || getCookie('access_token');
 
       if (!accessToken) {
         if (!cancelled) {
@@ -65,7 +66,7 @@ export function DashboardAccessGuard({
       }
 
       try {
-        const profile = await getRequest(ENDPOINTS.user);
+        const profile = await getRequestStrict<any>(ENDPOINTS.user);
 
         const nickname = profile?.preference?.nickname;
 
@@ -97,8 +98,22 @@ export function DashboardAccessGuard({
 
     checkReadiness();
 
+    // Safety: never spin forever. If the profile probe hangs (tunnel /
+    // network stall), stop checking so the router can redirect instead of
+    // showing <AuthLoader/> indefinitely. Aligned with the 60s bootstrap
+    // cap (debug hashing + tunnel routinely cost tens of seconds).
+    const safety = setTimeout(() => {
+      if (!cancelled) {
+        setChecking((c) => {
+          if (c) setError(true);
+          return false;
+        });
+      }
+    }, 60000);
+
     return () => {
       cancelled = true;
+      clearTimeout(safety);
     };
   }, [isAuthenticated, loading]);
 
@@ -114,7 +129,7 @@ export function DashboardAccessGuard({
     return <Navigate to="/login" replace />;
   }
 
-  const accessToken = getCookie('access_token') || '';
+  const accessToken = getSessionToken() || getCookie('access_token') || '';
   const usernameWasSkipped =
     !!accessToken &&
     sessionStorage.getItem(USERNAME_SKIP_KEY) === accessToken;

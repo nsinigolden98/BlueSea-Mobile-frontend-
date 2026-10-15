@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Ticket, Loader2, ArrowLeft, ChevronLeft } from 'lucide-react';
-import { getRequest, type MarketplaceEvent, TOKEN } from '@/types';
+import { getRequest, type MarketplaceEvent } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 import { ENDPOINTS } from '@/types';
 
 export function EventPublic() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [event, setEvent] = useState<MarketplaceEvent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTicketType, setSelectedTicketType] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
-
-  const isAuthenticated = !!TOKEN;
 
   const handleBuyTicket = () => {
     if (!isAuthenticated) {

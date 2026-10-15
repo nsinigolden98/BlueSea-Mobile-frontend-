@@ -11,7 +11,6 @@ import { ENDPOINTS, postRequest } from '@/types';
 import { Users, Plus, X, RefreshCw, ChevronDown, History, Check, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const meterTypes = ['Prepaid', 'Postpaid'];
 interface BillerName {
   'Ikeja Electric(IKEDC)': string;
   'Eko Electric(EKEDC)': string;
@@ -367,18 +366,27 @@ export function LightBills() {
                     
                     <div className="space-y-2">
                       <Label className="text-slate-700 dark:text-slate-300">Meter Type</Label>
-                      <Select value={meterType} onValueChange={setMeterType}>
-                        <SelectTrigger className="h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                          <SelectValue placeholder="Select meter type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {meterTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { value: 'Prepaid', hint: 'Pay as you go' },
+                          { value: 'Postpaid', hint: 'Pay monthly bill' },
+                        ].map((t) => (
+                          <button
+                            key={t.value}
+                            type="button"
+                            onClick={() => setMeterType(t.value)}
+                            className={cn(
+                              'p-4 rounded-xl border-2 transition-all text-center',
+                              meterType === t.value
+                                ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
+                                : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
+                            )}
+                          >
+                            <p className="font-bold text-sm text-slate-800 dark:text-white">{t.value}</p>
+                            <p className="text-xs text-slate-500 mt-1">{t.hint}</p>
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="space-y-2">

@@ -45,11 +45,19 @@ export function createPlansSocket(
       return `${toWebSocketBase(base)}/ws/plans/?token=${encodeURIComponent(token)}`;
     },
     (message: any) => {
+      console.log('[plans] rx:', message?.type, 'key=', message?.key, 'count=', extractList(message).length);
       if (message?.type === 'plans_all' && message?.plans && typeof message.plans === 'object') {
         const out: PlansMap = {};
+        const shapes: Record<string, string> = {};
         for (const key of PLAN_KEYS) {
-          if (Array.isArray(message.plans[key])) out[key] = message.plans[key] as PlanItem[];
+          const v: any = (message.plans as Record<string, unknown>)[key];
+          shapes[key] = Array.isArray(v) ? `array(${v.length})` : typeof v;
+          // Raw array (new backend) or envelope `{..., plans:[...]}` (old):
+          // accept either so plans survive backend/frontend version skew.
+          const list = Array.isArray(v) ? v : extractList(v);
+          if (list.length > 0) out[key] = list as PlanItem[];
         }
+        console.log('[plans] rx plans_all shapes:', shapes);
         handlers.onPlans(out);
         return;
       }

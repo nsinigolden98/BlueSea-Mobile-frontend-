@@ -9,6 +9,14 @@ import { Sidebar, Header } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { PinModal } from '@/components/ui-custom/PinModal';
 import { Capacitor } from '@capacitor/core';
+import { Switch } from '@/components/ui/switch';
+import {
+  isPushEnabled,
+  setPushEnabled,
+  requestPushPermission,
+  getPushPermissionStatus,
+  openPushSettings,
+} from '@/services/appPush';
 import {
   User,
   ShieldCheck,
@@ -140,6 +148,23 @@ export function Settings() {
 
   // Capacitor platform detection & Biometric state
   const isNative = Capacitor.isNativePlatform();
+  const [pushEnabled, setPushEnabledState] = useState<boolean>(() => isPushEnabled());
+  const [pushPermission, setPushPermission] = useState<string>('unknown');
+  useEffect(() => {
+    getPushPermissionStatus().then(setPushPermission).catch(() => setPushPermission('unknown'));
+  }, []);
+  const handlePushToggle = async (next: boolean) => {
+    if (next) {
+      const granted = await requestPushPermission();
+      setPushPermission(await getPushPermissionStatus().catch(() => 'unknown'));
+      if (!granted) return;
+      setPushEnabled(true);
+      setPushEnabledState(true);
+    } else {
+      setPushEnabled(false);
+      setPushEnabledState(false);
+    }
+  };
   const [biometricAccordionExpanded, setBiometricAccordionExpanded] = useState(false);
   const [biometricSupported, setBiometricSupported] = useState(true);
 
@@ -625,6 +650,38 @@ export function Settings() {
                   </div>
                   <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </button>
+
+                <div className="w-full flex items-center justify-between gap-3 p-4 sm:px-5">
+                  <button
+                    onClick={() => navigate('/notifications')}
+                    className="flex items-center gap-3.5 min-w-0 text-left"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0">
+                      <Bell className="w-5 h-5 stroke-[1.75]" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
+                        System tray alerts
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        Show a system notification when the app is in the background
+                      </p>
+                      {pushEnabled && pushPermission === 'denied' && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); void openPushSettings(); }}
+                          className="text-xs text-sky-500 hover:text-sky-600 font-medium mt-0.5"
+                        >
+                          Blocked by OS — open system settings
+                        </button>
+                      )}
+                    </div>
+                  </button>
+                  <Switch
+                    checked={pushEnabled}
+                    onCheckedChange={(v) => { void handlePushToggle(v); }}
+                    aria-label="Toggle system tray alerts"
+                  />
+                </div>
 
                 <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-60 cursor-not-allowed">
                   <div className="flex items-center gap-3.5 min-w-0">

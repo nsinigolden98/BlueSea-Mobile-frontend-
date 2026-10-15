@@ -23,6 +23,7 @@ export interface PlansState {
 const cache: PlansMap = {};
 let listeners = new Set<(s: PlansState) => void>();
 let socketStarted = false;
+let socketHandle: { close: () => void } | null = null;
 let current: PlansState = { plans: {}, ready: false, unavailable: false };
 
 function emit(partial: Partial<PlansState>) {
@@ -30,9 +31,18 @@ function emit(partial: Partial<PlansState>) {
   listeners.forEach((fn) => fn(current));
 }
 
+let authFailureTimes: number[] = [];
+
 async function restartAfterRefresh() {
   // 4401: rotate, then restart the module socket with the fresh token.
+  // Give up after rapid repeated rejections instead of spinning.
   if (await refreshAccessToken(API_BASE)) {
+    const now = Date.now();
+    authFailureTimes = [...authFailureTimes.filter((t) => now - t < 30_000), now];
+    if (authFailureTimes.length >= 3) {
+      console.warn('Plans WebSocket authentication repeatedly rejected. Stopping reconnects; re-login required.');
+      return;
+    }
     socketStarted = false;
     ensureSocket();
   }
@@ -40,13 +50,18 @@ async function restartAfterRefresh() {
 
 function ensureSocket() {
   if (socketStarted) return;
-  socketStarted = true;
   if (!API_BASE) return;
+  // Never open with an empty token: the server answers 4401 and the
+  // reconnect policy intentionally stops on 4401, which would wedge the
+  // module socket for the whole session. AuthContext resets us post-login.
+  if (!getSessionToken()) return;
+  socketStarted = true;
   const socket = createPlansSocket(
     API_BASE,
     {
       onPlans: (incoming) => {
         Object.assign(cache, incoming);
+        console.log('[plans] keys:', Object.fromEntries(Object.entries(cache).map(([k, v]) => [k, (v as unknown[]).length])));
         emit({ plans: { ...cache }, ready: true, unavailable: Object.keys(cache).length === 0 });
       },
     },
@@ -57,7 +72,26 @@ function ensureSocket() {
       void restartAfterRefresh();
     },
   );
-  void socket;
+  socketHandle = socket;
+}
+
+/// (Re)start the module socket — call after login/bootstrap so the URL
+/// factory picks up the fresh memory token. Safe to call when logged out
+/// (no-op until a token exists).
+export function resetPlansSocket() {
+  socketHandle?.close();
+  socketHandle = null;
+  socketStarted = false;
+  ensureSocket();
+}
+
+/// Tear down on logout and drop cached plans so the next user starts clean.
+export function stopPlansSocket() {
+  socketHandle?.close();
+  socketHandle = null;
+  socketStarted = false;
+  for (const k of Object.keys(cache)) delete cache[k as keyof PlansMap];
+  emit({ plans: {}, ready: false, unavailable: false });
 }
 
 export function usePlans(): PlansState {

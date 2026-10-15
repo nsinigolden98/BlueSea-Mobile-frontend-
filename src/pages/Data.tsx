@@ -45,8 +45,9 @@ export function Data() {
     (['mtn', 'airtel', 'glo', '9mobile'] as const).forEach((key) => {
       out.push(...toDataPlans(key, livePlans[key] ?? []));
     });
+    console.log('[plans] Data render: rawKeys=', Object.keys(livePlans), 'unavailable=', plansUnavailable, 'adapted=', out.length);
     return out;
-  }, [livePlans]);
+  }, [livePlans, plansUnavailable]);
 
   // --- DYNAMIC PLAN TYPE LOGIC START ---
   

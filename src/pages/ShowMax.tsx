@@ -40,6 +40,9 @@ export function ShowMax() {
   const [verifying, setVerifying] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
+  // Payer is the account owner, never the lookup-returned name.
+  const payerName = `${user?.firstName ?? ''} ${user?.surname ?? ''}`.trim();
+
   const payload = isGroupPayment ? {
     name: groupName,
     description: groupDescripition,
@@ -53,6 +56,7 @@ export function ShowMax() {
   }: {
     showmax_plan: selectedPlan,
     phone_number: phoneNumber,
+    payerName,
   };
   
   
@@ -71,7 +75,10 @@ export function ShowMax() {
         smart_card_number: phoneNumber,
       });
       const customer = res?.customer ?? res?.data ?? null;
-      const name = customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null;
+      // Nomba returns the customer as a plain name string ("John Doe").
+      const name = typeof customer === 'string'
+        ? customer
+        : (customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null);
       if (res?.success && name) {
         setVerifiedCustomer(String(name));
       } else {

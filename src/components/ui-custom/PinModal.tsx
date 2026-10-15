@@ -116,6 +116,8 @@ export function PinModal() {
       'group-startimes': () => postRequest(ENDPOINTS.create_group, payload),
       'group-showmax': () => postRequest(ENDPOINTS.create_group, payload),
       'group-lightbill': () => postRequest(ENDPOINTS.create_group, payload),
+      'group-transfer': () => postRequest(ENDPOINTS.create_group, payload),
+      'group-withdrawal': () => postRequest(ENDPOINTS.create_group, payload),
       'add-scanner': () => postRequest(ENDPOINTS.marketplace_add_scanner(value.event_id), { user_email: value.user_email }),
       'withdrawal': () => postRequest(ENDPOINTS.withdrawal, payload),
       'internal_transfer': () => postRequest(ENDPOINTS.internal_transfer, payload),
@@ -276,8 +278,15 @@ export function PinModal() {
         hidePinModal();
         hideLoader();
         resetState();
-        if (onError) onError(error);
-        else if (onFailure) onFailure(error);
+        // Thrown errors (timeouts, network failures, unsupported types)
+        // must surface: without setMessage the modal just closes silently.
+        const failure = {
+          success: false,
+          error: (error as any)?.message || 'Transaction failed. Please try again.',
+        };
+        setMessage(failure);
+        if (onError) onError(failure);
+        else if (onFailure) onFailure(failure);
       }
     };
 

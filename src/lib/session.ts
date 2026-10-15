@@ -19,6 +19,10 @@ export function getSessionToken(): string | null {
   return memoryToken;
 }
 
+export function getSessionRefresh(): string | null {
+  return memoryRefresh;
+}
+
 export function hasSessionToken(): boolean {
   return memoryToken !== null;
 }
@@ -90,14 +94,33 @@ export function shouldAttemptRefresh(url: string, status: number): boolean {
 
 let inflight: Promise<boolean> | null = null;
 
+// Rotation cooldown: a completed rotation (success or failure) suppresses
+// new network rotations for ROTATE_COOLDOWN_MS, returning the last result.
+// Without this, a client whose retried requests keep 401ing (or sockets
+// stuck in 4401) rotates in a tight loop — single-use rotation means every
+// iteration burns a refresh token and hammers the endpoint.
+const ROTATE_COOLDOWN_MS = 10_000;
+let lastFinish = 0;
+let lastResult = false;
+
 // Rotate the session: cookie-first (web), memory-refresh body fallback
 // (native, where httpOnly cookies don't flow). Single-flighted so concurrent
 // 401s share one rotation. Notifies socket subscribers on success.
 export function refreshAccessToken(apiBase: string): Promise<boolean> {
   if (!inflight) {
-    inflight = doRefresh(apiBase).finally(() => {
-      inflight = null;
-    });
+    const now = Date.now();
+    if (now - lastFinish < ROTATE_COOLDOWN_MS) {
+      return Promise.resolve(lastResult);
+    }
+    inflight = doRefresh(apiBase)
+      .then((ok) => {
+        lastFinish = Date.now();
+        lastResult = ok;
+        return ok;
+      })
+      .finally(() => {
+        inflight = null;
+      });
   }
   return inflight;
 }
@@ -120,6 +143,10 @@ async function doRefresh(apiBase: string): Promise<boolean> {
     const res = await fetch(`${apiBase}/accounts/token/refresh/`, {
       method: 'POST',
       credentials: 'include',
+      // Never hang the auth bootstrap on a stalled tunnel: abort the
+      // rotation so callers resolve (logged-out) instead of pending forever.
+      // (Generous: debug hashing + tunnel routinely cost tens of seconds.)
+      signal: AbortSignal.timeout(60000),
       headers: {
         'Content-Type': 'application/json',
         ...(csrf ? { 'X-CSRFToken': csrf } : {}),
