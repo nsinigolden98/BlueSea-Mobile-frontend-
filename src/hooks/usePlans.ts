@@ -206,6 +206,69 @@ export function toCablePlans(items: PlanItem[]): CablePlan[] {
     .filter((p): p is CablePlan => p !== null);
 }
 
+export interface BettingProvider {
+  /** Display name (Nomba `name`). */
+  name: string;
+  /**
+   * Code the lookup/vend calls need: Nomba `id` (e.g. `bet9ja`), per the
+   * lookup docs example. (`lookup_id` is kept for reference.)
+   */
+  id: string;
+  lookupCode: string;
+  label: string;
+  placeholder: string;
+  maxLength: number;
+  /** Input keyboard: phone numbers get `tel`. */
+  type: 'phone' | 'id';
+  /**
+   * Exact identifier length that auto-fires verification (`null` for
+   * providers with no known fixed length — those verify on typing pause).
+   */
+  lookupAt: number | null;
+}
+
+/// Fallback list when the socket has no betting providers yet. Only Nomba-
+/// supported providers: `1xBet` is absent from Nomba and can never verify.
+export const DEFAULT_BETTING_PROVIDERS: BettingProvider[] = [
+  { name: 'SportyBet', id: 'sportybet', lookupCode: 'SPORTYBET', label: 'Phone Number', placeholder: 'Enter your SportyBet phone number', maxLength: 11, type: 'phone', lookupAt: 11 },
+  { name: 'Bet9ja', id: 'bet9ja', lookupCode: 'BET9JA', label: 'User ID', placeholder: 'Enter your Bet9ja User ID', maxLength: 10, type: 'id', lookupAt: 10 },
+  { name: 'NairaBet', id: 'nairabet', lookupCode: 'NAIRABET', label: 'User ID', placeholder: 'Enter your NairaBet ID', maxLength: 10, type: 'id', lookupAt: 10 },
+];
+
+/// Backend caps `customer_id` at 50 chars — the input ceiling for providers
+/// with no known fixed length.
+export const BETTING_MAX_LENGTH = 50;
+
+/** Minimum digits before pause-based verification kicks in (unknown lengths). */
+export const BETTING_MIN_LOOKUP_LENGTH = 9;
+
+/// Server betting items `{id, lookup_id, name}` -> selectable providers.
+/// Lengths/UX labels come from the fallback table by name match; unknown
+/// providers get generic limits (backend caps `customer_id` at 50 chars).
+export function toBettingProviders(items: PlanItem[]): BettingProvider[] {
+  return items
+    .map((it) => {
+      const name = str(it.name ?? it.id);
+      const id = str(it.id);
+      const lookupCode = str(it.lookup_id ?? it.lookupId ?? it.id);
+      if (!name || !id) return null;
+      const known = DEFAULT_BETTING_PROVIDERS.find(
+        (d) => d.name.toLowerCase() === name.toLowerCase(),
+      );
+      return {
+        name,
+        id,
+        lookupCode,
+        label: known?.label ?? 'Customer ID',
+        placeholder: known?.placeholder ?? `Enter your ${name} ID`,
+        maxLength: known?.maxLength ?? BETTING_MAX_LENGTH,
+        type: known?.type ?? 'id',
+        lookupAt: known?.lookupAt ?? null,
+      } satisfies BettingProvider;
+    })
+    .filter((p): p is BettingProvider => p !== null);
+}
+
 export function sessionTokenPresent(): boolean {
   return getSessionToken() !== null;
 }

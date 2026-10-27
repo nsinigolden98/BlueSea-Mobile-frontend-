@@ -3,37 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext'; 
 import { Capacitor } from '@capacitor/core';
 import logo from './logo.png'; 
-
-const performBiometricPrompt = async (reason: string): Promise<boolean> => {
-  if (!Capacitor.isNativePlatform()) return false;
-  try {
-    const plugins = (window as any).Capacitor?.Plugins;
-    if (plugins?.NativeBiometrics) {
-      await plugins.NativeBiometrics.verifyIdentity({
-        reason,
-        title: 'Biometric Authentication',
-        subtitle: reason,
-        description: 'Please authenticate to continue',
-      });
-      return true;
-    }
-    if (plugins?.Biometrics) {
-      await plugins.Biometrics.verify({
-        reason,
-        title: 'Biometric Authentication',
-      });
-      return true;
-    }
-    if (plugins?.BiometricAuth) {
-      await plugins.BiometricAuth.authenticate({ reason });
-      return true;
-    }
-    return true;
-  } catch (e) {
-    console.error('Biometric login prompt error:', e);
-    return false;
-  }
-};
+import {
+  getBiometricFlag,
+  promptBiometric as performBiometricPrompt,
+} from '@/lib/security/biometrics';
 
 export const SplashScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -91,8 +64,8 @@ export const SplashScreen: React.FC = () => {
 
       if (isSessionValid) {
         const isNative = Capacitor.isNativePlatform();
-        const biometricEnabled = localStorage.getItem('biometricEnabled') === 'true';
-        const biometricLoginEnabled = localStorage.getItem('biometricLoginEnabled') === 'true';
+        const biometricEnabled = getBiometricFlag('biometricEnabled');
+        const biometricLoginEnabled = getBiometricFlag('biometricLoginEnabled');
 
         if (isNative && biometricEnabled && biometricLoginEnabled) {
           setStatusText('Authenticating with biometrics');

@@ -9,6 +9,7 @@ export { Services } from './Services';
 export { Settings } from './Settings';
 export { Profile } from './Profile';
 export { CreatePin } from './CreatePin';
+export { CompleteProfile } from './CompleteProfile';
 export { LightBills } from './LightBills';
 export { Transactions } from './Transactions';
 export { Rewards } from './Rewards';

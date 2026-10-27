@@ -196,13 +196,11 @@ export const FinancialIdentityModal: React.FC<FinancialIdentityModalProps> = ({
        *
        * first_name: string
        * last_name: string
-       * account_number: string
-       * bank_code: string
-       * bvn: encrypted BVN
-       * phone: string
+       * bvn: RSA-encrypted BVN (mandatory — the DVA identity;
+       *      the NIN on the profile rides along as supplementary)
        *
-       * account_number remains a string because it is a 10-digit
-       * Nigerian account number.
+       * account_number / bank_code / phone are ignored by the backend
+       * but kept here for the form's own state.
        */
       const nameParts = userFullName
         .trim()

@@ -17,6 +17,15 @@ import {
   getPushPermissionStatus,
   openPushSettings,
 } from '@/services/appPush';
+import { ENDPOINTS } from '@/types';
+import {
+  promptBiometric as performBiometricPrompt,
+  isBiometricSupported as checkBiometricSupport,
+  getBiometricToken,
+  setBiometricToken,
+  getBiometricFlag,
+  setBiometricFlag,
+} from '@/lib/security/biometrics';
 import {
   User,
   ShieldCheck,
@@ -54,37 +63,6 @@ import {
   Megaphone
 } from 'lucide-react';
 
-const performBiometricPrompt = async (reason: string): Promise<boolean> => {
-  if (!Capacitor.isNativePlatform()) return false;
-  try {
-    const plugins = (window as any).Capacitor?.Plugins;
-    if (plugins?.NativeBiometrics) {
-      await plugins.NativeBiometrics.verifyIdentity({
-        reason,
-        title: 'Biometric Authentication',
-        subtitle: reason,
-        description: 'Please authenticate to continue',
-      });
-      return true;
-    }
-    if (plugins?.Biometrics) {
-      await plugins.Biometrics.verify({
-        reason,
-        title: 'Biometric Authentication',
-      });
-      return true;
-    }
-    if (plugins?.BiometricAuth) {
-      await plugins.BiometricAuth.authenticate({ reason });
-      return true;
-    }
-    return true;
-  } catch (e) {
-    console.error('Biometric authentication failed:', e);
-    return false;
-  }
-};
-
 const API_BASE = String(import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
 const CURRENT_USER_URL = `${API_BASE}/user_preference/user/`;
 
@@ -98,28 +76,6 @@ const authHeaders = () => {
 const ADMIN_SUPPORT_ROUTE = '/admin/support';
 const ADMIN_BROADCAST_ROUTE = '/admin/broadcast';
 const ADMIN_ANALYSIS_ROUTE = '/admin/analysis';
-
-const checkBiometricSupport = async (): Promise<boolean> => {
-  if (!Capacitor.isNativePlatform()) return false;
-  try {
-    const plugins = (window as any).Capacitor?.Plugins;
-    if (plugins?.NativeBiometrics) {
-      const res = await plugins.NativeBiometrics.isAvailable();
-      return !!(res?.isAvailable || res?.available);
-    }
-    if (plugins?.Biometrics) {
-      const res = await plugins.Biometrics.isAvailable();
-      return !!(res?.isAvailable || res?.available);
-    }
-    if (plugins?.BiometricAuth) {
-      const res = await plugins.BiometricAuth.checkBiometry();
-      return !!(res?.isAvailable || res?.isBiometryAvailable);
-    }
-    return true;
-  } catch {
-    return false;
-  }
-};
 
 export function Settings() {
   const navigate = useNavigate();
@@ -169,27 +125,15 @@ export function Settings() {
   const [biometricSupported, setBiometricSupported] = useState(true);
 
   const [biometricEnabled, setBiometricEnabled] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('biometricEnabled') === 'true';
-    } catch {
-      return false;
-    }
+    return getBiometricFlag('biometricEnabled');
   });
 
   const [biometricLoginEnabled, setBiometricLoginEnabled] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('biometricLoginEnabled') === 'true';
-    } catch {
-      return false;
-    }
+    return getBiometricFlag('biometricLoginEnabled');
   });
 
   const [biometricPaymentEnabled, setBiometricPaymentEnabled] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('biometricPaymentEnabled') === 'true';
-    } catch {
-      return false;
-    }
+    return getBiometricFlag('biometricPaymentEnabled');
   });
 
   // PIN Verification Action state
@@ -249,6 +193,33 @@ export function Settings() {
     }
   }, [isNative]);
 
+  // Server is the source of truth for enrollment: the local flag only
+  // mirrors it (plus the device token) for the payment prompt.
+  useEffect(() => {
+    if (!isNative) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await axios.get(ENDPOINTS.biometric_status, { headers: authHeaders() });
+        if (cancelled) return;
+        const enrolled = !!res.data?.enabled && !!getBiometricToken();
+        setBiometricEnabled(enrolled);
+        setBiometricFlag('biometricEnabled', enrolled);
+        if (!enrolled) {
+          setBiometricLoginEnabled(false);
+          setBiometricPaymentEnabled(false);
+          setBiometricFlag('biometricLoginEnabled', false);
+          setBiometricFlag('biometricPaymentEnabled', false);
+        }
+      } catch (e) {
+        console.error('Biometric status check failed:', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isNative]);
+
   useEffect(() => {
     try {
       localStorage.setItem('bluese_settings_legal_expanded', String(legalExpanded));
@@ -301,7 +272,8 @@ export function Settings() {
     }
   };
 
-  // Toggle handlers using PinModal
+  // Toggle handlers using PinModal: PIN first (server-verified), then
+  // the fingerprint scan itself — the server mints the device token.
   const handleMainBiometricToggle = () => {
     if (!biometricSupported) return;
     setPinErrorMessage(null);
@@ -309,46 +281,56 @@ export function Settings() {
     if (!biometricEnabled) {
       setPendingBiometricAction('enable');
       showPinModal({
-        type: 'verify-pin',
+        type: 'enable-biometric',
         value: {
-          product_name: 'Enable Biometric Login',
-          title: 'Identity Verification'
+          product_name: 'Add Fingerprint',
+          title: 'Enter your current transaction PIN'
         }
       });
     } else {
       setPendingBiometricAction('disable');
       showPinModal({
-        type: 'verify-pin',
+        type: 'disable-biometric',
         value: {
-          product_name: 'Disable Biometric Security',
-          title: 'Identity Verification'
+          product_name: 'Remove Fingerprint',
+          title: 'Enter your current transaction PIN'
         }
       });
     }
   };
 
-  const handlePinVerificationSuccess = async () => {
+  const handlePinVerificationSuccess = async (response?: any) => {
     const action = pendingBiometricAction;
     setPendingBiometricAction(null);
     setPinErrorMessage(null);
 
     if (action === 'enable') {
-      const bioSuccess = await performBiometricPrompt('Confirm biometric authentication to enable');
+      // Server verified the PIN and minted a device token (returned once).
+      const token = response?.token;
+      if (!token) {
+        setPinErrorMessage('Could not add your fingerprint. Please try again.');
+        return;
+      }
+      const bioSuccess = await performBiometricPrompt('Confirm your fingerprint to finish setup');
       if (bioSuccess) {
-        localStorage.setItem('biometricEnabled', 'true');
-        localStorage.setItem('biometricLoginEnabled', 'true');
-        localStorage.setItem('biometricPaymentEnabled', 'true');
+        setBiometricToken(token);
+        setBiometricFlag('biometricEnabled', true);
+        setBiometricFlag('biometricLoginEnabled', true);
+        setBiometricFlag('biometricPaymentEnabled', true);
         localStorage.setItem('stayLoggedIn', 'false');
         setBiometricEnabled(true);
         setBiometricLoginEnabled(true);
         setBiometricPaymentEnabled(true);
       } else {
-        setBiometricEnabled(false);
+        // Token deliberately not stored: payments stay on the PIN until
+        // the fingerprint scan is confirmed.
+        setPinErrorMessage('Fingerprint not confirmed. Tap Add fingerprint to try again.');
       }
     } else if (action === 'disable') {
-      localStorage.setItem('biometricEnabled', 'false');
-      localStorage.setItem('biometricLoginEnabled', 'false');
-      localStorage.setItem('biometricPaymentEnabled', 'false');
+      setBiometricToken('');
+      setBiometricFlag('biometricEnabled', false);
+      setBiometricFlag('biometricLoginEnabled', false);
+      setBiometricFlag('biometricPaymentEnabled', false);
       setBiometricEnabled(false);
       setBiometricLoginEnabled(false);
       setBiometricPaymentEnabled(false);
@@ -368,7 +350,7 @@ export function Settings() {
     if (!biometricEnabled) return;
     const newValue = !biometricLoginEnabled;
     setBiometricLoginEnabled(newValue);
-    localStorage.setItem('biometricLoginEnabled', String(newValue));
+    setBiometricFlag('biometricLoginEnabled', newValue);
     if (newValue) {
       localStorage.setItem('stayLoggedIn', 'false');
     }
@@ -378,7 +360,7 @@ export function Settings() {
     if (!biometricEnabled) return;
     const newValue = !biometricPaymentEnabled;
     setBiometricPaymentEnabled(newValue);
-    localStorage.setItem('biometricPaymentEnabled', String(newValue));
+    setBiometricFlag('biometricPaymentEnabled', newValue);
   };
 
   const legalPolicies = [
@@ -793,10 +775,12 @@ export function Settings() {
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                                  Enable Biometrics
+                                  {biometricEnabled ? 'Fingerprint Added' : 'Add Fingerprint'}
                                 </p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                                  Requires PIN verification to enable or disable
+                                  {biometricEnabled
+                                    ? 'Confirm payments with your fingerprint. Tap to remove.'
+                                    : 'Enter your current transaction PIN, then scan your fingerprint.'}
                                 </p>
                               </div>
                               <button
@@ -852,10 +836,10 @@ export function Settings() {
                             <div className={cn("flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800", !biometricEnabled && "opacity-50 pointer-events-none")}>
                               <div>
                                 <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                                  Use Biometrics for Payments
+                                  Use Fingerprint for Payments
                                 </p>
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                                  Authorize transactions using biometrics before PIN
+                                  Confirm transactions with your fingerprint instead of the PIN
                                 </p>
                               </div>
                               <button

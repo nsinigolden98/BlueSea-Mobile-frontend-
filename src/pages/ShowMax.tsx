@@ -38,7 +38,8 @@ export function ShowMax() {
   const planPrice = selectedPlan ? cablePlans.find((p) => p.value === selectedPlan)?.price || 0 : 0;
   const [verifiedCustomer, setVerifiedCustomer] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const lookupSeq = useRef(0);
 
   // Payer is the account owner, never the lookup-returned name.
   const payerName = `${user?.firstName ?? ''} ${user?.surname ?? ''}`.trim();
@@ -61,35 +62,45 @@ export function ShowMax() {
   
   
 
-  const handleVerify = async () => {
-    if (phoneNumber.length < 11) {
-      showToast('Please enter a valid phone number');
+  // Auto-lookup: fire when the phone number reaches 11 digits.
+  useEffect(() => {
+    const digits = phoneNumber.replace(/\D/g, '');
+    if (digits.length < 11) {
+      setVerifiedCustomer(null);
+      setVerifyError(null);
+      setVerifying(false);
       return;
     }
+    const seq = ++lookupSeq.current;
     setVerifying(true);
-    setVerifiedCustomer(null);
-    setConfirmed(false);
-    try {
-      const res: any = await postRequest(ENDPOINTS.cable_lookup, {
-        provider: 'showmax',
-        billersCode: phoneNumber,
-      });
-      const customer = res?.customer ?? res?.data ?? null;
-      // Nomba returns the customer as a plain name string ("John Doe").
-      const name = typeof customer === 'string'
-        ? customer
-        : (customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null);
-      if (res?.success && name) {
-        setVerifiedCustomer(String(name));
-      } else {
-        showToast(res?.message || 'Account not found');
+    setVerifyError(null);
+    const t = setTimeout(async () => {
+      try {
+        const res: any = await postRequest(ENDPOINTS.cable_lookup, {
+          provider: 'showmax',
+          billersCode: digits,
+        });
+        if (lookupSeq.current !== seq) return;
+        const customer = res?.customer ?? res?.data ?? null;
+        const name = typeof customer === 'string'
+          ? customer
+          : (customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null);
+        if (res?.success && name) {
+          setVerifiedCustomer(String(name));
+        } else {
+          setVerifiedCustomer(null);
+          setVerifyError(res?.message || 'Account not found');
+        }
+      } catch (e) {
+        if (lookupSeq.current !== seq) return;
+        setVerifiedCustomer(null);
+        setVerifyError('Verification failed. Try again.');
+      } finally {
+        if (lookupSeq.current === seq) setVerifying(false);
       }
-    } catch (e) {
-      showToast('Verification failed. Try again.');
-    } finally {
-      setVerifying(false);
-    }
-  };
+    }, 600);
+    return () => clearTimeout(t);
+  }, [phoneNumber]);
 
   const handleContinue = async () => {
     if (!selectedPlan || phoneNumber.length < 11 ) {
@@ -97,11 +108,7 @@ export function ShowMax() {
       return;
     }
     if (!verifiedCustomer) {
-      showToast('Verify the account first');
-      return;
-    }
-    if (!confirmed) {
-      showToast('Confirm these details belong to the intended customer');
+      showToast(verifyError || 'Verifying account — please wait');
       return;
     }
     if (!user?.pin_is_set) {
@@ -202,30 +209,17 @@ export function ShowMax() {
                       />
                     </div>
 
-                    <div className="flex items-end gap-2">
-                      <Button
-                        type="button"
-                        onClick={handleVerify}
-                        disabled={verifying || phoneNumber.length < 11}
-                        className="shrink-0"
-                      >
-                        {verifying ? 'Verifying…' : verifiedCustomer ? 'Verified ✓' : 'Verify Account'}
-                      </Button>
-                    </div>
-                    {verifiedCustomer && (
+                    {verifying && (
+                      <p className="text-xs text-slate-500">Verifying account…</p>
+                    )}
+                    {!verifying && verifiedCustomer && (
                       <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3 text-sm">
                         <p className="text-slate-500">Customer</p>
                         <p className="font-medium">{verifiedCustomer}</p>
-                        <label className="mt-2 flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
-                          <input
-                            type="checkbox"
-                            checked={confirmed}
-                            onChange={(e) => setConfirmed(e.target.checked)}
-                            className="mt-0.5"
-                          />
-                          I confirm these details belong to the intended customer.
-                        </label>
                       </div>
+                    )}
+                    {!verifying && verifyError && phoneNumber.replace(/\D/g, '').length >= 11 && (
+                      <p className="text-xs text-red-500">{verifyError}</p>
                     )}
                     <div className="space-y-3">
                       <Label>Select Plan</Label>
@@ -238,7 +232,7 @@ export function ShowMax() {
                         {cablePlans.map((plan) => (
                           <button
                             key={plan.value}
-                            onClick={() => { setSelectedPlan(plan.value); setVerifiedCustomer(null); setConfirmed(false); }}
+                            onClick={() => { setSelectedPlan(plan.value); }}
                               className={cn(
                                 'p-4 rounded-xl border-2 transition-all text-center',
 selectedPlan === plan.value
@@ -350,7 +344,7 @@ selectedPlan === plan.value
                     <Button
                       onClick={handleContinue}
                       className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
-                      disabled={!selectedPlan || !phoneNumber}
+                      disabled={!selectedPlan || !phoneNumber || !verifiedCustomer}
                     >
                       Continue Payment
                     </Button>

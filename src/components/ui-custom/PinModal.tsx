@@ -3,8 +3,14 @@ import { ENDPOINTS, postRequest } from '@/types';
 import { Loader } from '@/components/ui-custom';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
-import { Capacitor } from '@capacitor/core';
 import { makeTransactionPin } from '@/lib/security/pinEncryption';
+import {
+  biometricPaymentActive,
+  getBiometricToken,
+  promptBiometric,
+  setBiometricToken,
+  setBiometricFlag,
+} from '@/lib/security/biometrics';
 
 interface PinComponentProps {
   type: string;
@@ -23,37 +29,6 @@ interface Message {
   state?: boolean;
   is_active?: boolean;
 }
-
-const performBiometricPrompt = async (reason: string): Promise<boolean> => {
-  if (!Capacitor.isNativePlatform()) return false;
-  try {
-    const plugins = (window as any).Capacitor?.Plugins;
-    if (plugins?.NativeBiometrics) {
-      await plugins.NativeBiometrics.verifyIdentity({
-        reason,
-        title: 'Biometric Authentication',
-        subtitle: reason,
-        description: 'Please authenticate to continue',
-      });
-      return true;
-    }
-    if (plugins?.Biometrics) {
-      await plugins.Biometrics.verify({
-        reason,
-        title: 'Biometric Authentication',
-      });
-      return true;
-    }
-    if (plugins?.BiometricAuth) {
-      await plugins.BiometricAuth.authenticate({ reason });
-      return true;
-    }
-    return true;
-  } catch (e) {
-    console.error('Biometric payment prompt error:', e);
-    return false;
-  }
-};
 
 export function PinModal() {
   const [modalData, setModalData] = useState<{ visible: boolean; type?: string; value?: object }>({
@@ -74,20 +49,36 @@ export function PinModal() {
     setModalData({ visible: false });
   }, []);
 
-  // Centralized Transaction & Verification Action Handler
-  const executeTransaction = async (type: string, value: any, rawPin: string) => {
-    if (!/^\d{4}$/.test(rawPin)) {
+  // Centralized Transaction & Verification Action Handler.
+  // Confirmation is either the 4-digit PIN (`rawPin`) or — when the
+  // fingerprint prompt already passed on mobile — the enrolled
+  // `biometric_token` standing in for it (never both).
+  const executeTransaction = async (
+    type: string,
+    value: any,
+    rawPin: string | null,
+    biometricToken: string = '',
+  ) => {
+    const useBiometric = !rawPin && !!biometricToken;
+    if (!useBiometric && (rawPin === null || !/^\d{4}$/.test(rawPin))) {
       throw new Error('PIN must be exactly 4 digits');
     }
 
-    const encryptedPin = makeTransactionPin(rawPin);
-    const payload = { ...value, transaction_pin: encryptedPin };
+    const encryptedPin = useBiometric ? '' : makeTransactionPin(rawPin as string);
+    const confirmation = useBiometric
+      ? { biometric_token: biometricToken }
+      : { transaction_pin: encryptedPin };
+    const payload = { ...value, ...confirmation };
 
     const TRANSACTION_MAP: Record<string, () => Promise<any>> = {
       'verify-pin': async () => {
         const endpoint = (ENDPOINTS as any).pin_verify || (ENDPOINTS as any).verify_pin || '/accounts/pin/verify/';
         return await postRequest(endpoint, { pin: encryptedPin });
       },
+      // Settings > Add/Remove fingerprint: PIN-gated enrollment; the
+      // server answers with the one-time device token (enable only).
+      'enable-biometric': () => postRequest(ENDPOINTS.biometric_enable, payload),
+      'disable-biometric': () => postRequest(ENDPOINTS.biometric_disable, payload),
       'airtime': () => postRequest(ENDPOINTS.buy_airtime, payload),
       'betting': () => postRequest(ENDPOINTS.betting_fund, payload),
       'light': () => postRequest(ENDPOINTS.electricity, payload),
@@ -98,7 +89,7 @@ export function PinModal() {
       'marketplace': () => postRequest(ENDPOINTS.marketplace_purchase(value.event_id), {
         ticket_type: value.ticket_type,
         quantity: value.quantity,
-        transaction_pin: encryptedPin,
+        ...confirmation,
       }),
       'dstv': () => postRequest(ENDPOINTS.dstv, payload),
       'gotv': () => postRequest(ENDPOINTS.gotv, payload),
@@ -108,7 +99,7 @@ export function PinModal() {
       'waec-result': () => postRequest(ENDPOINTS.waec_result, payload),
       'jamb': () => postRequest(ENDPOINTS.jamb_registration, payload),
       'auto-topup': () => postRequest(ENDPOINTS.auto_topup_create, payload),
-      'auto-topup-reactivate': () => postRequest(ENDPOINTS.auto_topup_reactivate(value.id?.toString()), { transaction_pin: encryptedPin }),
+      'auto-topup-reactivate': () => postRequest(ENDPOINTS.auto_topup_reactivate(value.id?.toString()), confirmation),
       'group-airtime': () => postRequest(ENDPOINTS.create_group, payload),
       'group-data': () => postRequest(ENDPOINTS.create_group, payload),
       'group-gotv': () => postRequest(ENDPOINTS.create_group, payload),
@@ -154,15 +145,22 @@ export function PinModal() {
     const [pin, setPin] = useState<string>('');
     const [visibleDigitIndex, setVisibleDigitIndex] = useState<number | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
-    
+    // Which confirmation method the modal is offering right now.
+    // 'fingerprint' => native prompt view; 'pin' => keypad.
+    const [mode, setMode] = useState<'fingerprint' | 'pin'>('pin');
+
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const biometricAttemptedRef = useRef(false);
+    // Bumped whenever the user leaves fingerprint mode (or re-enters it):
+    // a native prompt that resolves afterwards is ignored — no surprise
+    // auto-submit after the user chose "Use PIN instead".
+    const attemptIdRef = useRef(0);
 
     const resetState = useCallback(() => {
       setPin('');
       setVisibleDigitIndex(null);
       setIsProcessing(false);
-      biometricAttemptedRef.current = false;
+      attemptIdRef.current += 1;
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }, []);
 
@@ -171,34 +169,54 @@ export function PinModal() {
       hidePinModal();
     };
 
-    // Attempt Biometric authentication for Payments prior to PIN fallback
+    const PIN_ONLY_TYPES = ['verify-pin', 'enable-biometric', 'disable-biometric'];
+    const canUseBiometric = !PIN_ONLY_TYPES.includes(type) && biometricPaymentActive();
+
+    // Fire the native fingerprint prompt for the current attempt.
+    // success => submit with the enrolled token; cancel/failure => back to PIN.
+    const runBiometricAttempt = async () => {
+      const attempt = ++attemptIdRef.current;
+      setIsProcessing(true);
+      const ok = await promptBiometric('Authenticate transaction payment');
+      if (attempt !== attemptIdRef.current) return; // user switched to PIN meanwhile
+      if (ok) {
+        await finishWith(null, getBiometricToken());
+      } else {
+        // Cancelled or failed: fall back to the PIN keypad.
+        setIsProcessing(false);
+        setMode('pin');
+      }
+    };
+
+    const switchToPin = () => {
+      attemptIdRef.current += 1; // invalidate any in-flight prompt
+      setIsProcessing(false);
+      setMode('pin');
+    };
+
+    const switchToFingerprint = () => {
+      setMode('fingerprint');
+      void runBiometricAttempt();
+    };
+
+    // Mobile: open the payment modal in fingerprint mode and prompt
+    // immediately. Cancel/failure lands on the keypad; the user can also
+    // flip between the two methods explicitly while the modal is open.
     useEffect(() => {
       if (!modalData.visible) {
         biometricAttemptedRef.current = false;
         return;
       }
 
-      const isBiometricPaymentEnabled =
-        Capacitor.isNativePlatform() &&
-        type !== 'verify-pin' &&
-        localStorage.getItem('biometricEnabled') === 'true' &&
-        localStorage.getItem('biometricPaymentEnabled') === 'true';
-
-      if (isBiometricPaymentEnabled && !biometricAttemptedRef.current) {
+      if (canUseBiometric && !biometricAttemptedRef.current) {
         biometricAttemptedRef.current = true;
-
-        const handleBiometricPayment = async () => {
-          setIsProcessing(true);
-          showLoader();
-
-          await performBiometricPrompt('Authenticate transaction payment');
-          hideLoader();
-          setIsProcessing(false);
-        };
-
-        handleBiometricPayment();
+        setMode('fingerprint');
+        void runBiometricAttempt();
+      } else if (!canUseBiometric) {
+        setMode('pin');
       }
-    }, [modalData.visible, type, value, onSuccess, onError, onFailure]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [modalData.visible, type]);
 
     // Keypad Logic: Accepts 0-9 and Backspace
     const handleKeyPress = useCallback((key: string) => {
@@ -244,15 +262,15 @@ export function PinModal() {
       };
     }, [modalData.visible, handleKeyPress]);
 
-    const makeTransaction = async () => {
-      if (pin.length !== 4 || isProcessing) return;
-      
+    // Shared confirmation runner: PIN keypad and fingerprint both land
+    // here — the only difference is what stands in for the PIN.
+    const finishWith = async (rawPin: string | null, biometricToken: string) => {
       setIsProcessing(true);
       showLoader();
-      
+
       try {
-        const response = await executeTransaction(type, value, pin);
-        
+        const response = await executeTransaction(type, value, rawPin, biometricToken);
+
         hidePinModal();
         hideLoader();
         setMessage(response);
@@ -266,6 +284,17 @@ export function PinModal() {
           (!response.error && response.code === '00') ||
           (!response.error && response.success !== false && response.state !== false)
         );
+
+        // Stale enrollment (PIN changed/disabled elsewhere): drop the
+        // local token so the next attempt falls back to the PIN keypad.
+        if (biometricToken && !isSuccess) {
+          const err = String(response?.error || response?.message || '');
+          if (err.includes('Fingerprint confirmation expired')) {
+            setBiometricToken('');
+            setBiometricFlag('biometricEnabled', false);
+            setBiometricFlag('biometricPaymentEnabled', false);
+          }
+        }
 
         if (isSuccess && onSuccess) {
           onSuccess(response);
@@ -290,6 +319,11 @@ export function PinModal() {
       }
     };
 
+    const makeTransaction = () => {
+      if (pin.length !== 4 || isProcessing) return;
+      void finishWith(pin, '');
+    };
+
     if (!modalData.visible) return null;
 
     const displayAmount = (value as any)?.amount ? `₦${(value as any)?.amount.toLocaleString()}` : null;
@@ -312,7 +346,9 @@ export function PinModal() {
         >
           {/* Header & Context */}
           <div className="text-center space-y-1 mb-6">
-            <h2 className="text-xl font-bold text-slate-800 dark:text-white">Transaction PIN</h2>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+              {mode === 'fingerprint' ? 'Fingerprint Confirmation' : 'Transaction PIN'}
+            </h2>
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{displayTitle}</p>
             
             <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
@@ -329,6 +365,59 @@ export function PinModal() {
             </div>
           </div>
 
+          {mode === 'fingerprint' ? (
+            /* Fingerprint view: the native prompt sits on top of this;
+               cancel/failure flips us to the PIN keypad below. */
+            <div className="space-y-6">
+              <div className="flex flex-col items-center gap-3 py-6">
+                <div className="w-20 h-20 rounded-full bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-10 h-10 text-sky-500"
+                  >
+                    <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4" />
+                    <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+                    <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" />
+                    <path d="M2 12a10 10 0 0 1 18-6" />
+                    <path d="M2 16h.01" />
+                    <path d="M21.8 16c.2-2 .131-5.354 0-6" />
+                    <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" />
+                    <path d="M8.65 22c.21-.66.45-1.32.57-2" />
+                    <path d="M9 6.8a6 6 0 0 1 9 5.2v2" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 text-center">
+                  {isProcessing
+                    ? 'Waiting for fingerprint…'
+                    : 'Scan your fingerprint to confirm this payment'}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full h-14 text-lg font-medium rounded-2xl border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                  onClick={switchToPin}
+                >
+                  Use PIN instead
+                </Button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="w-full h-10 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+          <>
           {/* PIN Indicators */}
           <div className="flex gap-4 justify-center mb-8">
             {[0, 1, 2, 3].map((index) => {
@@ -387,11 +476,24 @@ export function PinModal() {
             {isProcessing ? 'Verifying...' : 'Confirm'}
           </Button>
 
+          {/* Switch back to fingerprint while the modal is open */}
+          {canUseBiometric && (
+            <button
+              type="button"
+              className="w-full h-10 mt-3 text-sm font-medium text-sky-600 dark:text-sky-400 hover:underline transition-colors"
+              onClick={switchToFingerprint}
+            >
+              Use fingerprint instead
+            </button>
+          )}
+
           {/* Security Footer */}
           <div className="mt-6 flex items-center justify-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500">
             <span aria-hidden="true">🔒</span>
             <span>Secured by Transaction PIN Verification</span>
           </div>
+          </>
+          )}
         </div>
         <LoaderComponent />
       </div>

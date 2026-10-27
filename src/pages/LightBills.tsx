@@ -64,12 +64,14 @@ export function LightBills() {
   // Verification State Management
   const [verificationData, setVerificationData] = useState<VerificationData | null>(null);
   const [isVerified, setIsVerified] = useState(false);
-  const [isConfirmed, setIsConfirmed] = useState(false);
   const [showMoreDetails, setShowMoreDetails] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const lookupSeq = useRef(0);
 
   const { PinComponent, showPinModal, modalData, message } = PinModal();
   const { user, refreshUser } = useAuth();
-  const { LoaderComponent, showLoader, hideLoader } = Loader();
+  const { LoaderComponent } = Loader();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState('');
   const { showToast, ToastComponent } = Toast();
@@ -114,10 +116,66 @@ export function LightBills() {
   // Field Change Protection: Force re-verification if core meter details are altered
   useEffect(() => {
     setIsVerified(false);
-    setIsConfirmed(false);
     setVerificationData(null);
     setCustomer('');
     setShowMoreDetails(false);
+    setVerifyError(null);
+  }, [meterNumber, meterType, biller]);
+
+  // Auto-lookup: fire when the meter number reaches 11 digits with type + biller set.
+  useEffect(() => {
+    const digits = meterNumber.replace(/\D/g, '');
+    if (digits.length < 11 || !meterType || !biller) {
+      if (digits.length < 11) {
+        setIsVerified(false);
+        setVerificationData(null);
+        setCustomer('');
+      }
+      setVerifyError(null);
+      setVerifying(false);
+      return;
+    }
+    const seq = ++lookupSeq.current;
+    setVerifying(true);
+    setVerifyError(null);
+    const t = setTimeout(async () => {
+      try {
+        const data = {
+          meter_number: Number(digits),
+          meter_type: meterType.toLowerCase(),
+          biller: BILLER_NAME[biller as keyof BillerName]
+        };
+        const response = await postRequest(ENDPOINTS.electricity_user, data);
+        if (lookupSeq.current !== seq) return;
+        if (response.success) {
+          const customerDetails = response.response || response.data || {};
+          if (customerDetails.Customer_Name || customerDetails.Customer_Number || customerDetails.Address) {
+            setVerificationData(customerDetails);
+            setCustomer(`Customer: ${customerDetails.Customer_Name || 'Verified'}`);
+            setIsVerified(true);
+          } else {
+            setVerifyError('Customer not found. Please check the meter details and try again.');
+            setIsVerified(false);
+            setVerificationData(null);
+            setCustomer('');
+          }
+        } else {
+          setVerifyError(response.error || 'Failed to verify meter details.');
+          setIsVerified(false);
+          setVerificationData(null);
+          setCustomer('');
+        }
+      } catch (e) {
+        if (lookupSeq.current !== seq) return;
+        setVerifyError('Verification failed. Try again.');
+        setIsVerified(false);
+        setVerificationData(null);
+        setCustomer('');
+      } finally {
+        if (lookupSeq.current === seq) setVerifying(false);
+      }
+    }, 600);
+    return () => clearTimeout(t);
   }, [meterNumber, meterType, biller]);
 
   // Load recent meters on mount
@@ -174,50 +232,13 @@ export function LightBills() {
       return;
     }
 
-    // Normal Payment Flow - Step 1: Customer Verification
+    // Normal Payment Flow - verified automatically; proceed to PIN.
     if (!isVerified) {
-      showToast("Searching For Customer ...", 3000);
-      showLoader();
-      const data = {
-        meter_number: Number(meterNumber),
-        meter_type: meterType.toLowerCase(),
-        biller: BILLER_NAME[biller as keyof BillerName]
-      };
-      
-      const response = await postRequest(ENDPOINTS.electricity_user, data);
-      hideLoader();
-      
-      if (response.success) {
-        const customerDetails = response.response || response.data || {};
-        
-        // STRICT CHECK: Ensure actual customer data was returned before verifying
-        if (customerDetails.Customer_Name || customerDetails.Customer_Number || customerDetails.Address) {
-          setVerificationData(customerDetails);
-          setCustomer(`Customer: ${customerDetails.Customer_Name || 'Verified'}`);
-          setIsVerified(true);
-        } else {
-          // Triggers if API returns 200 OK but payload is empty/null
-          showToast('Customer not found. Please check the meter details and try again.');
-          setIsVerified(false);
-          setVerificationData(null);
-          setCustomer('');
-        }
-      } else {
-        showToast(response.error || 'Failed to verify meter details.');
-        setIsVerified(false);
-        setVerificationData(null);
-        setCustomer('');
-      }
+      showToast(verifyError || 'Verifying meter details — please wait');
       return;
     }
 
-    // Normal Payment Flow - Step 2: Ensure User Has Confirmed Verified Data
-    if (isVerified && !isConfirmed) {
-      showToast("Please confirm the meter details to proceed.");
-      return;
-    }
-
-    // Normal Payment Flow - Step 3: Trigger PIN Modal
+    // Normal Payment Flow: Trigger PIN Modal
     showPinModal();
   };
 
@@ -361,6 +382,12 @@ export function LightBills() {
                             </button>
                           ))}
                         </div>
+                      )}
+                      {verifying && (
+                        <p className="text-xs text-slate-500">Verifying meter…</p>
+                      )}
+                      {!verifying && verifyError && meterNumber.replace(/\D/g, '').length >= 11 && (
+                        <p className="text-xs text-red-500">{verifyError}</p>
                       )}
                     </div>
                     
@@ -670,37 +697,6 @@ export function LightBills() {
                             </div>
                           )}
                         </div>
-
-                        {/* Confirmation Action Box */}
-                        <div className="bg-slate-50 dark:bg-slate-900/40 p-4 border-t border-slate-100 dark:border-slate-700">
-                          <label className="flex items-start gap-3.5 cursor-pointer group">
-                            <div className="relative flex items-start mt-0.5">
-                              <input
-                                type="checkbox"
-                                checked={isConfirmed}
-                                onChange={(e) => setIsConfirmed(e.target.checked)}
-                                className="peer sr-only"
-                              />
-                              <div className={cn(
-                                "w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center",
-                                isConfirmed
-                                  ? "bg-sky-500 border-sky-500"
-                                  : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-slate-400 dark:group-hover:border-slate-500"
-                              )}>
-                                <Check
-                                  className={cn(
-                                    "w-3.5 h-3.5 transition-transform duration-200 text-white",
-                                    isConfirmed ? "scale-100" : "scale-0"
-                                  )}
-                                  strokeWidth={3}
-                                />
-                              </div>
-                            </div>
-                            <span className="text-sm text-slate-700 dark:text-slate-300 font-medium select-none leading-snug pt-0.5 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                              I confirm that these meter details belong to the intended customer.
-                            </span>
-                          </label>
-                        </div>
                       </div>
                     )}
 
@@ -709,17 +705,13 @@ export function LightBills() {
                       onClick={handleContinue}
                       className={cn(
                         "w-full rounded-full py-7 text-lg font-bold transition-all duration-200 shadow-sm mt-2",
-                        (!isGroupPayment && isVerified && !isConfirmed)
-                          ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800"
-                          : "bg-sky-500 hover:bg-sky-600 text-white active:scale-[0.98]"
+                        "bg-sky-500 hover:bg-sky-600 text-white active:scale-[0.98]"
                       )}
-                      disabled={!meterNumber || !meterType || !biller || !amount || isLoading || (!isGroupPayment && isVerified && !isConfirmed)}
+                      disabled={!meterNumber || !meterType || !biller || !amount || isLoading || (!isGroupPayment && !isVerified)}
                     >
-                      {isLoading 
-                        ? "Processing..." 
-                        : (!isGroupPayment && !isVerified 
-                            ? "Verify Meter Details" 
-                            : "Continue Payment")}
+                      {isLoading
+                        ? "Processing..."
+                        : "Continue Payment"}
                     </Button>
 
                     {/* Auto Top-Up Button */}

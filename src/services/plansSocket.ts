@@ -1,5 +1,5 @@
-// Live data/cable plans over `/ws/plans/` (JWT in `?token=`).
-// Keys: mtn, airtel, glo, 9mobile, dstv, gotv, startimes, showmax.
+// Live data/cable plans + betting providers over `/ws/plans/` (JWT in `?token=`).
+// Keys: mtn, airtel, glo, 9mobile, dstv, gotv, startimes, showmax, betting.
 // `get_all` returns everything (`plans_all`); `get_plans {key}` refreshes
 // one list (`plans`). Same auth semantics as the wallet socket.
 
@@ -15,6 +15,7 @@ export const PLAN_KEYS = [
   'gotv',
   'startimes',
   'showmax',
+  'betting',
 ] as const;
 
 export type PlanKey = (typeof PLAN_KEYS)[number];

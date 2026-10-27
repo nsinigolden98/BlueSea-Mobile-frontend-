@@ -90,6 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       firstName: profile.other_names ?? previous?.firstName ?? '',
       surname: profile.surname ?? previous?.surname ?? '',
       phone: profile.phone != null ? String(profile.phone) : (previous?.phone ?? ''),
+      phoneVerified: profile.phone_verified ?? previous?.phoneVerified ?? false,
+      // Default true so a response without the flag never locks the app.
+      profileCompleted: profile.profile_completed !== undefined
+        ? Boolean(profile.profile_completed)
+        : (previous?.profileCompleted ?? true),
       profilePicture: getImageUrl(profile.image ?? previous?.profilePicture),
       balance: wallet.balance ?? previous?.balance ?? '0',
       lockedBalance: wallet.locked_balance ?? previous?.lockedBalance ?? '0',

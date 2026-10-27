@@ -51,6 +51,10 @@ export interface User {
   firstName: string;
   surname: string;
   phone: string;
+  /** Phone confirmed via SMS OTP (Termii). */
+  phoneVerified?: boolean;
+  /** False until the post-Google-signup name step is confirmed. */
+  profileCompleted?: boolean;
   profilePicture?: string;
   balance: string;
   lockedBalance?: string;
@@ -371,6 +375,11 @@ export const ENDPOINTS = {
   pin_set: `${API_BASE}/accounts/pin/set/`,
   pin_verify: `${API_BASE}/accounts/pin/verify/`,
   pin_reset: `${API_BASE}/accounts/pin/reset/`,
+  biometric_enable: `${API_BASE}/accounts/biometric/enable/`,
+  biometric_disable: `${API_BASE}/accounts/biometric/disable/`,
+  biometric_status: `${API_BASE}/accounts/biometric/status/`,
+  phone_send_otp: `${API_BASE}/accounts/phone/send-otp/`,
+  phone_verify_otp: `${API_BASE}/accounts/phone/verify-otp/`,
   pin_reset_request: `${API_BASE}/accounts/transaction/pin/request/`,
   pin_reset_verify: `${API_BASE}/accounts/transaction/pin/verify-otp/`,
   pin_reset_confirm: `${API_BASE}/accounts/transaction/pin/new/`,

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar, TransactionModal, PinModal, Toast } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,40 +6,12 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { postRequest, ENDPOINTS } from '@/types';
+import { usePlans, toBettingProviders, DEFAULT_BETTING_PROVIDERS, BETTING_MIN_LOOKUP_LENGTH, type BettingProvider } from '@/hooks/usePlans';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, ChevronDown, History } from 'lucide-react';
 
-// --- CONSTANTS ---
-const bettingProviders = [
-  {
-    name: "SportyBet",
-    type: "phone",
-    label: "Phone Number",
-    placeholder: "Enter your SportyBet phone number",
-    maxLength: 11
-  },
-  {
-    name: "Bet9ja",
-    type: "id",
-    label: "User ID",
-    placeholder: "Enter your Bet9ja User ID",
-    maxLength: 10
-  },
-  {
-    name: "1xBet",
-    type: "id",
-    label: "User ID",
-    placeholder: "Enter your 1xBet ID",
-    maxLength: 9
-  },
-  {
-    name: "NairaBet",
-    type: "id",
-    label: "User ID",
-    placeholder: "Enter your NairaBet ID",
-    maxLength: 10
-  }
-];
+// Fallback providers (Nomba-supported only) until the plans socket serves
+// the live list. `lookupCode` is the Nomba `lookup_id` the API requires.
 
 const bettingAmounts = [100, 500, 1000, 2000];
 
@@ -51,7 +23,29 @@ export function Betting() {
 
   // State
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState(bettingProviders[0]);
+  // Live Nomba providers via `/ws/plans/` key `betting`; fallback offline.
+  const { plans: livePlans } = usePlans();
+  const liveBetting = useMemo(
+    () => toBettingProviders(livePlans['betting'] ?? []),
+    [livePlans],
+  );
+  const providers: BettingProvider[] =
+    liveBetting.length > 0 ? liveBetting : DEFAULT_BETTING_PROVIDERS;
+  const [selectedProvider, setSelectedProvider] = useState<BettingProvider>(
+    DEFAULT_BETTING_PROVIDERS[0],
+  );
+
+  // Adopt the live list once it arrives (keep selection when still offered).
+  useEffect(() => {
+    if (liveBetting.length === 0) return;
+    setSelectedProvider((prev) => {
+      const match =
+        liveBetting.find((p) => p.lookupCode === prev.lookupCode) ??
+        liveBetting.find((p) => p.name.toLowerCase() === prev.name.toLowerCase()) ??
+        liveBetting[0];
+      return match;
+    });
+  }, [liveBetting]);
   const [identifier, setIdentifier] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
@@ -67,6 +61,9 @@ export function Betting() {
   // Refs
   const bodyDivRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const providerDropdownRef = useRef<HTMLDivElement>(null);
+  const [providerSearch, setProviderSearch] = useState('');
+  const [showProviderDropdown, setShowProviderDropdown] = useState(false);
 
   // Load recent identifiers
   useEffect(() => {
@@ -76,11 +73,14 @@ export function Betting() {
     }
   }, []);
 
-  // Close dropdown on click outside
+  // Close dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowRecentDropdown(false);
+      }
+      if (providerDropdownRef.current && !providerDropdownRef.current.contains(event.target as Node)) {
+        setShowProviderDropdown(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -108,7 +108,8 @@ export function Betting() {
   };
 
   const handleFundWallet = async () => {
-    if (!identifier || identifier.length !== selectedProvider.maxLength) {
+    const minLen = selectedProvider.lookupAt ?? BETTING_MIN_LOOKUP_LENGTH;
+    if (!identifier || identifier.replace(/\D/g, '').length < minLen) {
       showToast(`Invalid ${selectedProvider.label} length`);
       return;
     }
@@ -122,11 +123,7 @@ export function Betting() {
       return;
     }
     if (!verifiedCustomer) {
-      showToast('Verify the betting account first');
-      return;
-    }
-    if (!confirmed) {
-      showToast('Confirm these details belong to the intended customer');
+      showToast(verifyError || 'Verifying betting account — please wait');
       return;
     }
 
@@ -135,38 +132,55 @@ export function Betting() {
 
   const [verifiedCustomer, setVerifiedCustomer] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const lookupSeq = useRef(0);
 
-  const handleVerify = async () => {
-    if (!identifier || identifier.length !== selectedProvider.maxLength) {
-      showToast(`Invalid ${selectedProvider.label} length`);
+  // Auto-lookup: exact length when known, otherwise on typing pause (≥9).
+  useEffect(() => {
+    const digits = identifier.replace(/\D/g, '');
+    const trigger = selectedProvider.lookupAt;
+    const minLen = trigger ?? BETTING_MIN_LOOKUP_LENGTH;
+    if (digits.length < minLen) {
+      setVerifiedCustomer(null);
+      setVerifyError(null);
+      setVerifying(false);
       return;
     }
+    const seq = ++lookupSeq.current;
     setVerifying(true);
-    setVerifiedCustomer(null);
-    setConfirmed(false);
-    try {
-      const res: any = await postRequest(ENDPOINTS.betting_lookup, {
-        provider: selectedProvider.name.toLowerCase(),
-        customer_id: identifier,
-      });
-      const customer = res?.customer ?? res?.data ?? null;
-      const name = customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? customer?.fullName ?? null;
-      if (res?.success && name) {
-        setVerifiedCustomer(String(name));
-      } else {
-        showToast(res?.message || 'Betting account not found');
+    setVerifyError(null);
+    // Unknown lengths need a longer pause so mid-typing IDs aren't fired.
+    const t = setTimeout(async () => {
+      try {
+        const res: any = await postRequest(ENDPOINTS.betting_lookup, {
+          provider: selectedProvider.id,
+          customer_id: identifier,
+        });
+        if (lookupSeq.current !== seq) return;
+        const customer = res?.customer ?? res?.data ?? null;
+        const name = typeof customer === 'string'
+          ? customer
+          : (customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? customer?.fullName ?? null);
+        if (res?.success && name) {
+          setVerifiedCustomer(String(name));
+        } else {
+          setVerifiedCustomer(null);
+          setVerifyError(res?.message || 'Betting account not found');
+        }
+      } catch (e) {
+        if (lookupSeq.current !== seq) return;
+        setVerifiedCustomer(null);
+        setVerifyError('Verification failed. Try again.');
+      } finally {
+        if (lookupSeq.current === seq) setVerifying(false);
       }
-    } catch (e) {
-      showToast('Verification failed. Try again.');
-    } finally {
-      setVerifying(false);
-    }
-  };
+    }, trigger != null ? 600 : 1000);
+    return () => clearTimeout(t);
+  }, [identifier, selectedProvider]);
 
   // Payload for the system (backend funds by customer_id, verified above)
   const payload = {
-    provider: selectedProvider.name.toLowerCase(),
+    provider: selectedProvider.id,
     customer_id: identifier,
     amount: String(finalAmount)
   };
@@ -223,35 +237,88 @@ export function Betting() {
             <div className="max-w-2xl mx-auto">
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 space-y-6 shadow-sm hover:shadow-md transition-all duration-200">
                 
-                {/* Provider Selection (Horizontal Scroll) */}
+                {/* Provider Selection (searchable dropdown) */}
                 <div className="space-y-3">
                   <Label>Select Betting Provider</Label>
-                  <div className="flex overflow-x-auto gap-3 pb-2 no-scrollbar -mx-1 px-1">
-                    {bettingProviders.map((provider) => (
-                      <button
-                        key={provider.name}
-                        onClick={() => {
-                          setSelectedProvider(provider);
-                          setIdentifier('');
-                          setVerifiedCustomer(null);
-                          setConfirmed(false);
-                        }}
-                        className={cn(
-                          'flex-shrink-0 px-6 py-4 rounded-xl border-2 transition-all active:scale-95 text-left min-w-[140px]',
-                          selectedProvider.name === provider.name
-                            ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-2 ring-sky-400'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
-                        )}
-                      >
-                        <p className={cn(
-                          "font-bold",
-                          selectedProvider.name === provider.name ? "text-sky-600 dark:text-sky-400" : "text-slate-700 dark:text-slate-300"
-                        )}>
-                          {provider.name}
-                        </p>
-                        <p className="text-[10px] uppercase tracking-wider text-slate-500 mt-1 font-medium">Provider</p>
-                      </button>
-                    ))}
+                  <div className="relative" ref={providerDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setShowProviderDropdown((v) => !v)}
+                      className="w-full flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3.5 text-left hover:border-sky-300 transition-colors"
+                    >
+                      <span className="flex items-center gap-3 min-w-0">
+                        <span className="w-9 h-9 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-300 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                          {selectedProvider.name.charAt(0).toUpperCase()}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block font-semibold text-slate-800 dark:text-white truncate">
+                            {selectedProvider.name}
+                          </span>
+                          <span className="block text-[11px] text-slate-500">
+                            {providers.length} providers
+                          </span>
+                        </span>
+                      </span>
+                      <ChevronDown className={cn("w-5 h-5 text-slate-400 transition-transform", showProviderDropdown && "rotate-180")} />
+                    </button>
+
+                    {showProviderDropdown && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1">
+                        <div className="p-2 border-b border-slate-100 dark:border-slate-700">
+                          <Input
+                            placeholder="Search providers…"
+                            value={providerSearch}
+                            onChange={(e) => setProviderSearch(e.target.value)}
+                            className="h-10"
+                          />
+                        </div>
+                        <div className="max-h-64 overflow-y-auto">
+                          {providers
+                            .filter((p) =>
+                              p.name.toLowerCase().includes(providerSearch.trim().toLowerCase()),
+                            )
+                            .map((provider) => (
+                              <button
+                                key={provider.lookupCode}
+                                type="button"
+                                className={cn(
+                                  "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b last:border-0 border-slate-50 dark:border-slate-700",
+                                  selectedProvider.lookupCode === provider.lookupCode
+                                    ? "bg-sky-50 dark:bg-sky-900/20"
+                                    : "hover:bg-slate-50 dark:hover:bg-slate-700"
+                                )}
+                                onClick={() => {
+                                  setSelectedProvider(provider);
+                                  setIdentifier('');
+                                  setVerifiedCustomer(null);
+                                  setVerifyError(null);
+                                  setProviderSearch('');
+                                  setShowProviderDropdown(false);
+                                }}
+                              >
+                                <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                  {provider.name.charAt(0).toUpperCase()}
+                                </span>
+                                <span className="min-w-0">
+                                  <span className="block text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
+                                    {provider.name}
+                                  </span>
+                                </span>
+                                {selectedProvider.lookupCode === provider.lookupCode && (
+                                  <span className="ml-auto text-sky-500 text-sm font-bold">✓</span>
+                                )}
+                              </button>
+                            ))}
+                          {providers.filter((p) =>
+                            p.name.toLowerCase().includes(providerSearch.trim().toLowerCase()),
+                          ).length === 0 && (
+                            <p className="px-4 py-6 text-sm text-slate-500 text-center">
+                              No providers match “{providerSearch}”
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -304,30 +371,17 @@ export function Betting() {
                   )}
                 </div>
 
-                <div className="flex items-end gap-2">
-                  <Button
-                    type="button"
-                    onClick={handleVerify}
-                    disabled={verifying || !identifier}
-                    className="shrink-0"
-                  >
-                    {verifying ? 'Verifying…' : verifiedCustomer ? 'Verified ✓' : 'Verify Account'}
-                  </Button>
-                </div>
-                {verifiedCustomer && (
+                {verifying && (
+                  <p className="text-xs text-slate-500">Verifying account…</p>
+                )}
+                {!verifying && verifiedCustomer && (
                   <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3 text-sm">
                     <p className="text-slate-500">Customer</p>
                     <p className="font-medium">{verifiedCustomer}</p>
-                    <label className="mt-2 flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
-                      <input
-                        type="checkbox"
-                        checked={confirmed}
-                        onChange={(e) => setConfirmed(e.target.checked)}
-                        className="mt-0.5"
-                      />
-                      I confirm these details belong to the intended customer.
-                    </label>
                   </div>
+                )}
+                {!verifying && verifyError && identifier.replace(/\D/g, '').length >= (selectedProvider.lookupAt ?? BETTING_MIN_LOOKUP_LENGTH) && (
+                  <p className="text-xs text-red-500">{verifyError}</p>
                 )}
 
                 {/* Amount Presets */}
@@ -396,14 +450,14 @@ export function Betting() {
                   <Button
                     onClick={handleFundWallet}
                     className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-7 text-lg font-bold active:scale-95 transition-transform"
-                    disabled={!identifier || identifier.length !== selectedProvider.maxLength || finalAmount < 100 || isLoading}
+                    disabled={!identifier || identifier.replace(/\D/g, '').length < (selectedProvider.lookupAt ?? BETTING_MIN_LOOKUP_LENGTH) || !verifiedCustomer || finalAmount < 100 || isLoading}
                   >
                     {isLoading ? "Processing..." : `Fund ${selectedProvider.name}`}
                   </Button>
 
                   <Button
                     variant="outline"
-                    onClick={() => navigate(`/auto-topup?service_type=betting&provider=${selectedProvider.name.toLowerCase()}&identifier=${identifier}&amount=${finalAmount}`)}
+                    onClick={() => navigate(`/auto-topup?service_type=betting&provider=${selectedProvider.id}&identifier=${identifier}&amount=${finalAmount}`)}
                     className="w-full rounded-full py-6 border-sky-500 text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/10 active:scale-95 transition-transform"
                     disabled={!identifier || finalAmount < 100}
                   >

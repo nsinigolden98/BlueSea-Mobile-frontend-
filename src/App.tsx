@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, Outlet, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 // import { Header } from '@/components/ui-custom/Header';
@@ -29,6 +29,7 @@ import {
   Settings,
   Profile,
   CreatePin,
+  CompleteProfile,
   LightBills,
   Transactions,
   AirtimeBuyback,
@@ -164,10 +165,22 @@ function AuthenticatedLayout() {
 // Gates on bootstrap `initialized`, NOT `loading`: auth attempts set
 // `loading` too, and unmounting the page on every attempt would wipe local
 // form/error state (failed logins looked like a silent reload).
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, initialized } = useAuth();
+// Also enforces the one-time name confirmation for Google signups: every
+// other screen redirects to /complete-profile until it is done
+// (`allowIncomplete` opts the completion screen itself out of the check).
+function ProtectedRoute({ children, allowIncomplete = false }: {
+  children: React.ReactNode;
+  allowIncomplete?: boolean;
+}) {
+  const { isAuthenticated, initialized, user } = useAuth();
+  const location = useLocation();
   if (!initialized) return <AuthLoader />;
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  const needsNameStep = user != null && user.profileCompleted === false;
+  if (needsNameStep && !allowIncomplete && location.pathname !== '/complete-profile') {
+    return <Navigate to="/complete-profile" replace />;
+  }
+  return <>{children}</>;
 }
 
 // Public Route Component
@@ -227,6 +240,7 @@ function AppRoutes() {
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/pin" element={<ProtectedRoute><CreatePin /></ProtectedRoute>} />
+          <Route path="/complete-profile" element={<ProtectedRoute allowIncomplete><CompleteProfile /></ProtectedRoute>} />
           <Route path="/light-bills" element={<ProtectedRoute><LightBills /></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
           

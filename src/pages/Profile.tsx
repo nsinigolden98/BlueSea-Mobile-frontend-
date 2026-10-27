@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { patchRequest, getRequest, ENDPOINTS } from '@/types';
+import { patchRequest, postRequest, getRequest, ENDPOINTS } from '@/types';
 import { Loader } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
@@ -30,6 +30,8 @@ interface UserProfileData {
   other_names?: string | null;
   email?: string | null;
   phone?: string | number | null;
+  phone_verified?: boolean;
+  profile_completed?: boolean;
   surname?: string | null;
   pin_is_set?: boolean;
   image?: string | null;
@@ -107,11 +109,14 @@ export function Profile() {
   const [savingDob, setSavingDob] = useState<boolean>(false);
   const [dobError, setDobError] = useState<string | null>(null);
 
-  // Phone Number Editing State
+  // Phone Number Editing State — two steps: number, then the SMS OTP.
   const [isEditingPhone, setIsEditingPhone] = useState<boolean>(false);
   const [phoneInput, setPhoneInput] = useState<string>('');
+  const [phoneStep, setPhoneStep] = useState<'phone' | 'code'>('phone');
+  const [phoneOtp, setPhoneOtp] = useState<string>('');
   const [savingPhone, setSavingPhone] = useState<boolean>(false);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [resendIn, setResendIn] = useState<number>(0);
 
   // Address State
   const [isEditingAddress, setIsEditingAddress] = useState<boolean>(false);
@@ -145,6 +150,13 @@ export function Profile() {
       setImagePreview(user.profilePicture);
     }
   }, [user?.profilePicture]);
+
+  // Resend cooldown for the phone verification code.
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
 
   // Helper to sync local edit states with latest profile data
   const populateFormStates = useCallback((data: UserProfileData) => {
@@ -409,7 +421,8 @@ export function Profile() {
     }
   };
 
-  // Phone Number PATCH Handler
+  // Phone Number OTP Handlers — SMS verifies the number (Termii); there
+  // is no direct PATCH of the phone from this screen anymore.
   const handlePhoneInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, '');
     if (val.length <= 10) {
@@ -418,33 +431,67 @@ export function Profile() {
     }
   };
 
-  const handleSavePhone = async () => {
+  const handleOtpInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '');
+    if (val.length <= 6) {
+      setPhoneOtp(val);
+      setPhoneError(null);
+    }
+  };
+
+  const closePhoneEditor = () => {
+    setIsEditingPhone(false);
+    setPhoneStep('phone');
+    setPhoneOtp('');
+    setPhoneError(null);
+    setPhoneInput(profileData?.phone ? String(profileData.phone).replace(/\D/g, '') : '');
+  };
+
+  const handleSendCode = async () => {
     if (phoneInput.length !== 10) {
       setPhoneError('Phone number must be exactly 10 digits.');
       return;
     }
-
     setSavingPhone(true);
     setPhoneError(null);
-    showLoader();
-
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('phone', phoneInput);
-
-      const response = await patchRequest(ENDPOINTS.user, formDataToSend);
-      if (response) {
-        await fetchUserProfile(true);
-        setIsEditingPhone(false);
-      } else {
-        setPhoneError('Could not update phone number.');
+      const res = await postRequest(ENDPOINTS.phone_send_otp, { phone: phoneInput });
+      if (!res || res.state === false) {
+        setPhoneError(res?.message || 'Could not send the code. Please try again.');
+        return;
       }
+      setPhoneStep('code');
+      setPhoneOtp('');
+      setResendIn(60);
     } catch (error) {
-      console.error('Failed to update phone:', error);
-      setPhoneError('An error occurred while updating phone number.');
+      console.error('Failed to send phone code:', error);
+      setPhoneError('Could not send the code. Please try again.');
     } finally {
       setSavingPhone(false);
-      hideLoader();
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (phoneOtp.length !== 6) {
+      setPhoneError('Enter the 6-digit code.');
+      return;
+    }
+    setSavingPhone(true);
+    setPhoneError(null);
+    try {
+      const res = await postRequest(ENDPOINTS.phone_verify_otp, { otp: phoneOtp });
+      if (!res || res.state === false) {
+        setPhoneError(res?.message || 'Invalid or expired code.');
+        return;
+      }
+      await fetchUserProfile(true);
+      setResendIn(0);
+      closePhoneEditor();
+    } catch (error) {
+      console.error('Failed to verify phone code:', error);
+      setPhoneError('Invalid or expired code.');
+    } finally {
+      setSavingPhone(false);
     }
   };
 
@@ -888,23 +935,39 @@ export function Profile() {
 
                     <div className="divide-y divide-slate-100 dark:divide-slate-800">
                       
-                      {/* Mobile Number (Editable) */}
+                      {/* Mobile Number (Editable — verified via SMS OTP) */}
                       <div className="p-4 transition-colors">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-xs text-slate-400 dark:text-slate-500">Mobile Number</p>
-                            <p className="font-medium text-slate-800 dark:text-slate-100 mt-0.5">
-                              {profileData?.phone ? `+234 ${String(profileData.phone).replace(/\D/g, '').slice(-10)}` : 'Not Provided'}
-                            </p>
+                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                              <p className="font-medium text-slate-800 dark:text-slate-100">
+                                {profileData?.phone ? `+234 ${String(profileData.phone).replace(/\D/g, '').slice(-10)}` : 'Not Provided'}
+                              </p>
+                              {profileData?.phone && (profileData.phone_verified ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                                  <ShieldCheck className="w-3 h-3" />
+                                  Verified
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                                  <AlertCircle className="w-3 h-3" />
+                                  Not verified
+                                </span>
+                              ))}
+                            </div>
                           </div>
-                          
+
                           <button
                             onClick={() => {
-                              const nextState = !isEditingPhone;
-                              setIsEditingPhone(nextState);
-                              if (!nextState) {
-                                setPhoneInput(profileData?.phone ? String(profileData.phone).replace(/\D/g, '') : '');
+                              if (isEditingPhone) {
+                                closePhoneEditor();
+                              } else {
+                                setIsEditingPhone(true);
+                                setPhoneStep('phone');
+                                setPhoneOtp('');
                                 setPhoneError(null);
+                                setPhoneInput(profileData?.phone ? String(profileData.phone).replace(/\D/g, '') : '');
                               }
                             }}
                             className="flex items-center gap-1 text-sky-500 font-medium text-xs hover:text-sky-600 transition-colors"
@@ -915,52 +978,120 @@ export function Profile() {
                           </button>
                         </div>
 
-                        {/* Phone Editing Form */}
+                        {/* Phone Editing Form — step 1: number, step 2: SMS code */}
                         {isEditingPhone && (
                           <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                            <div>
-                              <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
-                                Enter 10 Mobile Digits (e.g. 8012345678)
-                              </label>
-                              <div className="flex items-center gap-2">
-                                <span className="px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                                  +234
-                                </span>
-                                <Input
-                                  type="tel"
-                                  maxLength={10}
-                                  value={phoneInput}
-                                  onChange={handlePhoneInputChange}
-                                  placeholder="8012345678"
-                                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 flex-1"
-                                />
-                              </div>
-                              {phoneError && (
-                                <p className="text-xs text-red-500 mt-1.5">{phoneError}</p>
-                              )}
-                            </div>
+                            {phoneStep === 'phone' ? (
+                              <>
+                                <div>
+                                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
+                                    Enter 10 Mobile Digits (e.g. 8012345678)
+                                  </label>
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                      +234
+                                    </span>
+                                    <Input
+                                      type="tel"
+                                      maxLength={10}
+                                      value={phoneInput}
+                                      onChange={handlePhoneInputChange}
+                                      placeholder="8012345678"
+                                      className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 flex-1"
+                                    />
+                                  </div>
+                                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">
+                                    We'll text you a 6-digit code to confirm this number.
+                                  </p>
+                                  {phoneError && (
+                                    <p className="text-xs text-red-500 mt-1.5">{phoneError}</p>
+                                  )}
+                                </div>
 
-                            <div className="flex gap-2 pt-1">
-                              <button
-                                onClick={handleSavePhone}
-                                disabled={savingPhone}
-                                className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                              >
-                                <Save className="w-3.5 h-3.5" />
-                                {savingPhone ? 'Saving...' : 'Save Phone Number'}
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setIsEditingPhone(false);
-                                  setPhoneInput(profileData?.phone ? String(profileData.phone).replace(/\D/g, '') : '');
-                                  setPhoneError(null);
-                                }}
-                                className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                                Cancel
-                              </button>
-                            </div>
+                                <div className="flex gap-2 pt-1">
+                                  <button
+                                    onClick={handleSendCode}
+                                    disabled={savingPhone || resendIn > 0}
+                                    className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                  >
+                                    <Save className="w-3.5 h-3.5" />
+                                    {savingPhone
+                                      ? 'Sending...'
+                                      : resendIn > 0
+                                        ? `Wait ${resendIn}s`
+                                        : 'Send Verification Code'}
+                                  </button>
+                                  <button
+                                    onClick={closePhoneEditor}
+                                    className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                    Cancel
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div>
+                                  <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
+                                    Enter the 6-digit code sent to +234 {phoneInput}
+                                  </label>
+                                  <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={6}
+                                    value={phoneOtp}
+                                    onChange={handleOtpInputChange}
+                                    placeholder="123456"
+                                    autoFocus
+                                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 tracking-[0.4em]"
+                                  />
+                                  {phoneError && (
+                                    <p className="text-xs text-red-500 mt-1.5">{phoneError}</p>
+                                  )}
+                                </div>
+
+                                <div className="flex gap-2 pt-1 flex-wrap">
+                                  <button
+                                    onClick={handleVerifyOtp}
+                                    disabled={savingPhone}
+                                    className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                  >
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                    {savingPhone ? 'Verifying...' : 'Verify Number'}
+                                  </button>
+                                  <button
+                                    onClick={handleSendCode}
+                                    disabled={savingPhone || resendIn > 0}
+                                    className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1 disabled:opacity-50"
+                                  >
+                                    <RefreshCw className="w-3.5 h-3.5" />
+                                    {resendIn > 0 ? `Resend in ${resendIn}s` : 'Resend Code'}
+                                  </button>
+                                  <button
+                                    onClick={closePhoneEditor}
+                                    className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                    Cancel
+                                  </button>
+                                </div>
+
+                                <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                  Wrong number?{' '}
+                                  <button
+                                    onClick={() => {
+                                      setPhoneStep('phone');
+                                      setPhoneOtp('');
+                                      setPhoneError(null);
+                                    }}
+                                    className="text-sky-500 font-semibold hover:text-sky-600"
+                                  >
+                                    Change it
+                                  </button>
+                                </p>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>

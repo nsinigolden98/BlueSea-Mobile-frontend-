@@ -6,6 +6,7 @@ import {
   AlertTriangle, Info, Edit3, ShieldAlert
 } from 'lucide-react';
 import { getRequest, postFileRequest, ENDPOINTS } from '@/types';
+import { encryptBvn } from '@/lib/security/bvnEncryption';
 import { Loader } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 
@@ -82,15 +83,24 @@ export function IdentityCenter() {
     fetchKycStatus();
   }, [fetchKycStatus]);
 
-  // One multipart call carries any evidence subset (NIN/BVN/address/bill).
+  // NIN/BVN are RSA-encrypted client-side (like the transaction PIN) so
+  // raw identity numbers never traverse the network; the backend stores
+  // the >64-char blobs as-is and decrypts only for DVA provisioning
+  // (BVN is the DVA identity — mandatory; NIN rides along, optional).
   const submitKyc = async (fields: Record<string, string>, file?: File | null) => {
     setSubmittingKyc(true);
     showLoader();
     try {
       const form = new FormData();
-      Object.entries(fields).forEach(([k, v]) => {
-        if (v.trim()) form.append(k, v.trim());
-      });
+      for (const [k, v] of Object.entries(fields)) {
+        const value = v.trim();
+        if (!value) continue;
+        if (k === 'nin' || k === 'bvn') {
+          form.append(k, await encryptBvn(value));
+        } else {
+          form.append(k, value);
+        }
+      }
       if (file) form.append('utility_bill', file);
       const response: any = await postFileRequest(ENDPOINTS.kyc_submit, form);
       if (response && typeof response === 'object' && !response.error) {
@@ -99,8 +109,9 @@ export function IdentityCenter() {
         setBvn('');
         setHouseAddress('');
         setBillFile(null);
-        // NIN submission provisions the DVA server-side: sync auth state
-        // so has_DVA/financial badges update without a reload.
+        // BVN submission provisions the DVA server-side (NIN is only
+        // supplementary): sync auth state so has_DVA/financial badges
+        // update without a reload.
         await refreshUser();
         await fetchProfile();
       }
@@ -337,7 +348,7 @@ export function IdentityCenter() {
                     </div>
                     <div>
                       <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 2 - NIN Verification</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Submit your 11-digit National Identification Number.</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Submit your 11-digit National Identification Number. Supplementary — required to unlock BVN submission.</p>
                     </div>
                   </div>
                   {renderStatusBadge(ninStatus)}
@@ -388,7 +399,7 @@ export function IdentityCenter() {
                     </div>
                     <div>
                       <h4 className="text-base font-bold text-slate-900 dark:text-white">Tier 3 - BVN Verification</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Submit your 11-digit Bank Verification Number.</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Submit your 11-digit Bank Verification Number — required to create your dedicated account (DVA).</p>
                     </div>
                   </div>
                   {renderStatusBadge(bvnStatus)}
