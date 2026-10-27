@@ -1,0 +1,22 @@
+# BlueSea frontend stack (runs on the VPS next to the backend stack).
+# The `web` service publishes nothing: the edge nginx in the backend stack
+# proxies APP_DOMAIN_PLACEHOLDER to web:8080 over the shared `edge` network.
+# One-time VPS setup: docker network create edge
+
+services:
+  web:
+    image: ghcr.io/REGISTRY_OWNER_PLACEHOLDER/bluesea-frontend:latest
+    expose:
+      - "8080"
+    networks:
+      - edge
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  edge:
+    external: true
