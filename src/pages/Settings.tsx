@@ -41,9 +41,7 @@ import {
   Info,
   ExternalLink,
   Award,
-  AlertCircle,
-  BarChart3,
-  Megaphone
+  AlertCircle
 } from 'lucide-react';
 
 const performBiometricPrompt = async (reason: string): Promise<boolean> => {
@@ -88,8 +86,6 @@ const authHeaders = () => {
 };
 
 const ADMIN_SUPPORT_ROUTE = '/admin/support';
-const ADMIN_BROADCAST_ROUTE = '/admin/broadcast';
-const ADMIN_ANALYSIS_ROUTE = '/admin/analysis';
 
 const checkBiometricSupport = async (): Promise<boolean> => {
   if (!Capacitor.isNativePlatform()) return false;
@@ -409,76 +405,6 @@ export function Settings() {
               </div>
             )}
 
-            {/* PRIVILEGED WORKSPACE
-                Visibility is controlled by the backend's is_staff / is_admin flags.
-                These links are intentionally not rendered for ordinary users. */}
-            {privileges.loaded && (canAccessStaffSupport || isAdmin) && (
-              <section className="space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
-                  Administration
-                </h3>
-
-                <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
-                  {canAccessStaffSupport && (
-                    <button
-                      type="button"
-                      onClick={() => navigate(ADMIN_SUPPORT_ROUTE)}
-                      className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                          <Headset className="w-5 h-5 stroke-[1.75]" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Support Administration</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Manage customer tickets and support conversations</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                    </button>
-                  )}
-
-                  {isAdmin && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => navigate(ADMIN_BROADCAST_ROUTE)}
-                        className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
-                      >
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/30 text-violet-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                            <Megaphone className="w-5 h-5 stroke-[1.75]" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Broadcast</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Send platform-wide messages and announcements</p>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => navigate(ADMIN_ANALYSIS_ROUTE)}
-                        className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
-                      >
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                            <BarChart3 className="w-5 h-5 stroke-[1.75]" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Platform Analysis</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Detailed platform performance and operational analysis</p>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </section>
-            )}
-
             {/* PROFILE HEADER CARD */}
             <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
               <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 dark:bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -538,6 +464,36 @@ export function Settings() {
                 </div>
               </div>
             </div>
+
+            {/* PRIVILEGED WORKSPACE
+                Visibility is controlled by the backend's is_staff / is_admin flags.
+                Staff and admins see only Support Administration. */}
+            {privileges.loaded && canAccessStaffSupport && (
+              <section className="space-y-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                  Administration
+                </h3>
+
+                <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
+                  <button
+                    type="button"
+                    onClick={() => navigate(ADMIN_SUPPORT_ROUTE)}
+                    className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <Headset className="w-5 h-5 stroke-[1.75]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Support Administration</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Manage customer tickets and support conversations</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  </button>
+                </div>
+              </section>
+            )}
 
             {/* ACCOUNT SECTION */}
             <section className="space-y-2">
