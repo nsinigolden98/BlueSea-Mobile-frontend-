@@ -326,7 +326,7 @@ export function Settings() {
     }
   };
 
-  const handlePinVerificationError = (errorResponse?: any) => {
+  const handlePinVerificationError = (errorResponse?: { message?: string; error?: string }) => {
     const errorMsg = errorResponse?.message || errorResponse?.error || 'Invalid Transaction PIN. Please try again.';
     setPinErrorMessage(errorMsg);
     setPendingBiometricAction(null);
