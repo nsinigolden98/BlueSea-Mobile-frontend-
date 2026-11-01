@@ -749,8 +749,6 @@ export function LandingPage() {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-6">
             {[
-              { label: 'Airtime', icon: Smartphone },
-              { label: 'Data', icon: Wifi },
               { label: 'Bill payments', icon: CreditCard },
               { label: 'Wallet', icon: Wallet },
               { label: 'Transfers', icon: RefreshCw },
