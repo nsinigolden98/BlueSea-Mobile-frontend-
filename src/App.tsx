@@ -72,6 +72,7 @@ import './App.css';
 import { useAuth } from '@/context/AuthContext';
 import { AuthLoader } from '@/components/ui-custom';
 import { DashboardAccessGuard } from '@/components/ui-custom/DashboardAccessGuard';
+import { WorkspaceDashboard, WorkspaceSelectionPage } from '@/features/workspace/WorkspaceDashboard';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
@@ -213,6 +214,11 @@ function AppRoutes() {
            ========================================= */}
         <Route element={<AuthenticatedLayout />}>
           <Route path="/dashboard" element={<ProtectedRoute><DashboardAccessGuard><Dashboard /></DashboardAccessGuard></ProtectedRoute>} />
+          <Route path="/workspace/select" element={<ProtectedRoute><DashboardAccessGuard><WorkspaceSelectionPage /></DashboardAccessGuard></ProtectedRoute>} />
+          <Route path="/workspace/affiliate" element={<ProtectedRoute><DashboardAccessGuard><WorkspaceDashboard workspace="affiliate" /></DashboardAccessGuard></ProtectedRoute>} />
+          <Route path="/workspace/marketplace" element={<ProtectedRoute><DashboardAccessGuard><WorkspaceDashboard workspace="marketplace" /></DashboardAccessGuard></ProtectedRoute>} />
+          <Route path="/workspace/payroll" element={<ProtectedRoute><DashboardAccessGuard><WorkspaceDashboard workspace="payroll" /></DashboardAccessGuard></ProtectedRoute>} />
+          <Route path="/workspace/vault" element={<ProtectedRoute><DashboardAccessGuard><WorkspaceDashboard workspace="vault" /></DashboardAccessGuard></ProtectedRoute>} />
           <Route path="/blueconnect" element={<ProtectedRoute><BlueConnectPage /></ProtectedRoute>} />
           <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
           <Route path="/airtime" element={<ProtectedRoute><Airtime /></ProtectedRoute>} />

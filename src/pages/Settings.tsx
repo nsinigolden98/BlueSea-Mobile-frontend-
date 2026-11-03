@@ -405,6 +405,24 @@ export function Settings() {
               </div>
             )}
 
+            {/* PRIMARY WORKSPACE: local preference adapter; backend can be connected later. */}
+            <button
+              type="button"
+              onClick={() => navigate('/workspace/select')}
+              className="w-full flex items-center justify-between gap-3 rounded-2xl border border-sky-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-left hover:border-sky-400 transition-colors"
+            >
+              <span className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/40 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                </span>
+                <span>
+                  <span className="block text-sm font-bold text-slate-800 dark:text-slate-100">Preferred Workspace</span>
+                  <span className="block text-xs text-slate-500 dark:text-slate-400 mt-1">Choose which dashboard opens as Home</span>
+                </span>
+              </span>
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+            </button>
+
             {/* PROFILE HEADER CARD */}
             <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
               <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 dark:bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />

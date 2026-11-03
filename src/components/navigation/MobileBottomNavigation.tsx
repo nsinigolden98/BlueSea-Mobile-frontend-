@@ -4,6 +4,8 @@ import { Home, Gift, Store, Settings } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { cn } from '@/lib/utils';
 import { navStyles } from './MobileBottomNavigation.styles';
+import { useEffect, useState } from 'react';
+import { getPreferredWorkspace, WORKSPACE_HOME, type WorkspaceId } from '@/features/workspace/workspacePreference';
 
 interface NavigationItem {
   id: string;
@@ -20,7 +22,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
 ];
 
 function isItemActive(pathname: string, path: string): boolean {
-  if (path === '/dashboard') {
+  if (path === '/dashboard' || path.startsWith('/workspace/')) {
     return pathname === '/' || pathname === '/dashboard' ||
       pathname.startsWith('/dashboard/');
   }
@@ -30,6 +32,18 @@ function isItemActive(pathname: string, path: string): boolean {
 
 export function MobileBottomNavigation() {
   const location = useLocation();
+  const [workspace, setWorkspace] = useState<WorkspaceId>('personal');
+
+  useEffect(() => {
+    let active = true;
+    void getPreferredWorkspace().then((value) => { if (active) setWorkspace(value); });
+    return () => { active = false; };
+  }, [location.pathname]);
+
+  const homePath = WORKSPACE_HOME[workspace];
+  const navigationItems = NAVIGATION_ITEMS.map((item) =>
+    item.id === 'home' ? { ...item, path: homePath } : item
+  );
 
   // Keep the mobile dock native-only, matching the existing app behavior.
   if (!Capacitor.isNativePlatform()) return null;
@@ -39,7 +53,7 @@ export function MobileBottomNavigation() {
       className={navStyles.wrapper}
       aria-label="BlueSea Mobile primary navigation"
     >
-      {NAVIGATION_ITEMS.map((item) => {
+      {navigationItems.map((item) => {
         const Icon = item.icon;
         const active = isItemActive(location.pathname, item.path);
 
