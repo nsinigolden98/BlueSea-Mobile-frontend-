@@ -48,10 +48,11 @@ const WORKSPACES: Record<Exclude<WorkspaceId, 'personal'>, WorkspaceMeta> = {
   payroll: {
     id: 'payroll', title: 'Payroll Workspace', subtitle: 'Manage your payroll workflow from one place.',
     theme: 'from-blue-600 to-indigo-700', spotlight: 'Payroll Pro',
-    description: 'Quick access to payroll and company management.',
+    description: 'Quick access to payroll, company management, and reports.',
     actions: [
       { label: 'Payroll Pro', path: '/payroll-pro', icon: BriefcaseBusiness },
       { label: 'Work Account', path: '/payroll-pro', icon: Building2, note: 'Open payroll workspace' },
+      { label: 'Payroll Reports', path: '/payroll-reports', icon: FileText },
       { label: 'Explore Services', path: '/services', icon: LayoutGrid },
     ],
   },
@@ -105,7 +106,7 @@ export function WorkspaceDashboard({ workspace }: { workspace: Exclude<Workspace
                   <h1 className="text-lg font-bold mt-1">{meta.title}</h1>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{meta.subtitle}</p>
                 </div>
-                <button onClick={() => navigate('/workspace/select')} className="text-xs font-semibold text-sky-600 dark:text-sky-400 rounded-lg border border-sky-100 dark:border-slate-700 px-3 py-2">
+                <button onClick={() => void changeWorkspace()} className="text-xs font-semibold text-sky-600 dark:text-sky-400 rounded-lg border border-sky-100 dark:border-slate-700 px-3 py-2 hover:bg-sky-50 dark:hover:bg-slate-800 transition-colors">
                   Change
                 </button>
               </div>
@@ -170,7 +171,10 @@ export function WorkspaceDashboard({ workspace }: { workspace: Exclude<Workspace
                 <span className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-900/40 flex items-center justify-center"><LayoutGrid className="w-4 h-4 text-sky-600" /></span>
                 <span className="text-left"><span className="block text-xs font-bold">Explore All Services</span><span className="block text-[10px] text-slate-500">Discover more BlueSea services</span></span>
               </span>
-              <ChevronRight className="w-4 h-4 text-slate-400" />
+              <span className="flex items-center gap-1">
+                <span className="text-[10px] text-slate-400 hidden sm:inline">All features</span>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </span>
             </button>
           </div>
         </main>
@@ -225,7 +229,10 @@ export function WorkspaceSelectionPage() {
             </button>
           ))}
         </div>
-        <div className="flex gap-2"><button onClick={() => navigate('/dashboard', { replace: true })} className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 py-3 text-sm font-semibold">Skip for now</button><button disabled={saving} onClick={() => void confirm()} className="flex-1 rounded-xl bg-sky-500 hover:bg-sky-600 disabled:opacity-60 text-white rounded-xl py-3 text-sm font-semibold">{saving ? 'Saving…' : 'Use this workspace'}</button></div>
+        <div className="flex gap-2">
+          <button onClick={() => navigate('/dashboard', { replace: true })} className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 py-3 text-sm font-semibold">Skip for now</button>
+          <button disabled={saving} onClick={() => void confirm()} className="flex-1 rounded-xl bg-sky-500 hover:bg-sky-600 disabled:opacity-60 text-white py-3 text-sm font-semibold">{saving ? 'Saving…' : 'Use this workspace'}</button>
+        </div>
       </div>
     </div>
   );
