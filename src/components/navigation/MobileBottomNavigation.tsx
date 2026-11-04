@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import { Home, Gift, Store, Settings } from 'lucide-react';
+import { Home, Gift, Store, Settings, Briefcase } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { cn } from '@/lib/utils';
 import { navStyles } from './MobileBottomNavigation.styles';
@@ -17,6 +17,7 @@ interface NavigationItem {
 const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: 'home', label: 'Home', path: '/dashboard', icon: Home },
   { id: 'rewards', label: 'Rewards', path: '/rewards', icon: Gift },
+  { id: 'payroll', label: 'Payroll', path: '/payroll-pro', icon: Briefcase },
   { id: 'tickets', label: 'BlueTickets', path: '/marketplace', icon: Store },
   { id: 'settings', label: 'Settings', path: '/settings', icon: Settings },
 ];
@@ -49,6 +50,7 @@ export function MobileBottomNavigation() {
   if (!Capacitor.isNativePlatform()) return null;
 
   return (
+    <>
     <nav
       className={navStyles.wrapper}
       aria-label="BlueSea Mobile primary navigation"
@@ -99,6 +101,9 @@ export function MobileBottomNavigation() {
         );
       })}
     </nav>
+      {/* Reserve footer space in the layout so the final scrollable content clears the fixed dock. */}
+      <div aria-hidden="true" className="h-[calc(84px+env(safe-area-inset-bottom,0px))] md:hidden shrink-0" />
+    </>
   );
 }
 

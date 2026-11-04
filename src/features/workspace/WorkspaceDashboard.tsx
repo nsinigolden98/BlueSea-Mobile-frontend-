@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowDownToLine, ArrowLeftRight, Repeat2, Smartphone, Wifi, Zap,
   Store, Ticket, PlusCircle, Users, ScanLine, BriefcaseBusiness, Building2,
-  FileText, Shield, Coins, History, LayoutGrid, ChevronRight, Home,
+  Shield, Coins, History, LayoutGrid, ChevronRight, Home, ArrowLeft,
 } from 'lucide-react';
 import { Sidebar } from '@/components/ui-custom';
 import { DashboardHeader } from '@/components/ui-custom/DashboardHeader';
@@ -29,7 +29,6 @@ const WORKSPACES: Record<Exclude<WorkspaceId, 'personal'>, WorkspaceMeta> = {
       { label: 'Affiliate Dashboard', path: '/affiliate/dashboard', icon: Users },
       { label: 'Discover & Earn', path: '/campaigns', icon: Coins },
       { label: 'Rewards', path: '/rewards', icon: Ticket },
-      { label: 'Explore Services', path: '/services', icon: LayoutGrid },
     ],
   },
   marketplace: {
@@ -42,18 +41,15 @@ const WORKSPACES: Record<Exclude<WorkspaceId, 'personal'>, WorkspaceMeta> = {
       { label: 'My Tickets', path: '/my-tickets', icon: Ticket },
       { label: 'Create Ticket', path: '/event-manager', icon: PlusCircle },
       { label: 'Scanning', path: '/scanner-assignments', icon: ScanLine },
-      { label: 'Explore Services', path: '/services', icon: LayoutGrid },
     ],
   },
   payroll: {
     id: 'payroll', title: 'Payroll Workspace', subtitle: 'Manage your payroll workflow from one place.',
     theme: 'from-blue-600 to-indigo-700', spotlight: 'Payroll Pro',
-    description: 'Quick access to payroll, company management, and reports.',
+    description: 'Quick access to payroll and company management.',
     actions: [
       { label: 'Payroll Pro', path: '/payroll-pro', icon: BriefcaseBusiness },
       { label: 'Work Account', path: '/payroll-pro', icon: Building2, note: 'Open payroll workspace' },
-      { label: 'Payroll Reports', path: '/payroll-reports', icon: FileText },
-      { label: 'Explore Services', path: '/services', icon: LayoutGrid },
     ],
   },
   vault: {
@@ -63,7 +59,6 @@ const WORKSPACES: Record<Exclude<WorkspaceId, 'personal'>, WorkspaceMeta> = {
     actions: [
       { label: 'Open Vault', path: '/vault', icon: Shield },
       { label: 'Rewards', path: '/rewards', icon: Coins },
-      { label: 'Explore Services', path: '/services', icon: LayoutGrid },
     ],
   },
 };
@@ -87,11 +82,6 @@ export function WorkspaceDashboard({ workspace }: { workspace: Exclude<Workspace
     localStorage.setItem('dashboard_showBalance', String(showBalance));
   }, [showBalance]);
 
-  const changeWorkspace = async () => {
-    await savePreferredWorkspace(workspace);
-    navigate('/workspace/select');
-  };
-
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex overflow-hidden">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -106,9 +96,6 @@ export function WorkspaceDashboard({ workspace }: { workspace: Exclude<Workspace
                   <h1 className="text-lg font-bold mt-1">{meta.title}</h1>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{meta.subtitle}</p>
                 </div>
-                <button onClick={() => void changeWorkspace()} className="text-xs font-semibold text-sky-600 dark:text-sky-400 rounded-lg border border-sky-100 dark:border-slate-700 px-3 py-2 hover:bg-sky-50 dark:hover:bg-slate-800 transition-colors">
-                  Change
-                </button>
               </div>
             </section>
 
@@ -171,10 +158,7 @@ export function WorkspaceDashboard({ workspace }: { workspace: Exclude<Workspace
                 <span className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-900/40 flex items-center justify-center"><LayoutGrid className="w-4 h-4 text-sky-600" /></span>
                 <span className="text-left"><span className="block text-xs font-bold">Explore All Services</span><span className="block text-[10px] text-slate-500">Discover more BlueSea services</span></span>
               </span>
-              <span className="flex items-center gap-1">
-                <span className="text-[10px] text-slate-400 hidden sm:inline">All features</span>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </span>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
             </button>
           </div>
         </main>
@@ -218,7 +202,12 @@ export function WorkspaceSelectionPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8">
       <div className="max-w-xl mx-auto space-y-4">
-        <div className="flex items-center gap-2 text-sky-600"><Home className="w-5 h-5" /><span className="text-sm font-bold">BlueSea Mobile</span></div>
+        <div className="flex items-center justify-between gap-3">
+          <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" aria-label="Go back">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
+          <div className="flex items-center gap-2 text-sky-600"><Home className="w-5 h-5" /><span className="text-sm font-bold">BlueSea Mobile</span></div>
+        </div>
         <div><h1 className="text-2xl font-bold">Choose your Home workspace</h1><p className="text-sm text-slate-500 mt-2">This changes your Home dashboard. Your other services remain available.</p></div>
         <div className="space-y-2">
           {options.map((option) => (
@@ -229,10 +218,7 @@ export function WorkspaceSelectionPage() {
             </button>
           ))}
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => navigate('/dashboard', { replace: true })} className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 py-3 text-sm font-semibold">Skip for now</button>
-          <button disabled={saving} onClick={() => void confirm()} className="flex-1 rounded-xl bg-sky-500 hover:bg-sky-600 disabled:opacity-60 text-white py-3 text-sm font-semibold">{saving ? 'Saving…' : 'Use this workspace'}</button>
-        </div>
+        <div className="flex gap-2"><button onClick={() => navigate('/dashboard', { replace: true })} className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 py-3 text-sm font-semibold">Skip for now</button><button disabled={saving} onClick={() => void confirm()} className="flex-1 rounded-xl bg-sky-500 hover:bg-sky-600 disabled:opacity-60 text-white rounded-xl py-3 text-sm font-semibold">{saving ? 'Saving…' : 'Use this workspace'}</button></div>
       </div>
     </div>
   );
