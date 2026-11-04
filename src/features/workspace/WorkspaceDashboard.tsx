@@ -89,15 +89,6 @@ export function WorkspaceDashboard({ workspace }: { workspace: Exclude<Workspace
         <DashboardHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <main className="flex-1 overflow-y-auto p-3 md:p-6">
           <div className="max-w-4xl mx-auto space-y-3.5 md:space-y-5">
-            <section className="rounded-2xl border border-sky-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-3.5 md:p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[.16em] font-bold text-sky-600 dark:text-sky-400">Primary workspace</p>
-                  <h1 className="text-lg font-bold mt-1">{meta.title}</h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{meta.subtitle}</p>
-                </div>
-              </div>
-            </section>
 
             <div className="relative rounded-2xl overflow-hidden">
               <BalanceCard
