@@ -515,7 +515,7 @@ export function LandingPage() {
               ))}
               <div className="flex gap-2 pt-2">
                 <Button variant="outline" className="flex-1 rounded-full" onClick={() => navigate('/login')}>Sign in</Button>
-                <Button className="flex-1 rounded-full bg-sky-500 hover:bg-sky-600" onClick={goToSignup}>Get Started</Button>
+                <Button className="flex-1 rounded-full bg-sky-500 hover:bg-sky-600" onClick={() => navigate('/download')}>DownLoad App</Button>
               </div>
             </div>
           </div>
