@@ -88,39 +88,18 @@ import PayrollDetail from './screens/payroll-pro/PayrollDetail';
 
 // AFFILIATE ROUTES
 import { 
-  AffiliateLayout, 
-  AffiliateDashboard, 
-  AffiliateRegistration, 
-  AffiliatePending 
-} from '@/pages/Affiliate';
+  AffiliateLayout, AffiliateDashboard, AffiliateRegistration, AffiliatePending } from '@/pages/Affiliate';
 
 // VAULT / REWARDS SYSTEM IMPORT
 import { Rewards } from '@/pages/vault';
 
 // LEGAL CENTER IMPORTS
-import {
-  TermsAndConditions,
-  PrivacyPolicy,
-  RefundPolicy,
-  SecurityPolicy,
-  CookiePolicy,
-  KYCPolicy,
-  AcceptableUsePolicy,
-} from '@/pages/legal-center';
+import { TermsAndConditions, PrivacyPolicy, RefundPolicy, SecurityPolicy, CookiePolicy, KYCPolicy, AcceptableUsePolicy,} from '@/pages/legal-center';
 
 //for Paylink
-import { 
-  PayLinkHome, 
-  CreatePayLink, 
-  PayLinkPayment, 
-  PayLinkDetails, 
-  ScanPay, 
-  MyQR, 
-  OpenPayLink, 
-  BusinessManager, 
-  ProductsManager, 
-  PayLinkHistory 
-} from '@/pages/paylink';
+import { PayLinkHome, CreatePayLink, PayLinkPayment, PayLinkDetails, ScanPay, MyQR, OpenPayLink, BusinessManager, ProductsManager, PayLinkHistory } from '@/pages/paylink';
+
+import Download from "./pages/download/Download";
 
 import { Withdraw } from '@/pages/Withdraw';
 import { Deposit } from '@/pages/Deposit';
@@ -208,6 +187,7 @@ function AppRoutes() {
         <Route path="/legal/cookies" element={<CookiePolicy />} />
         <Route path="/legal/kyc" element={<KYCPolicy />} />
         <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
+        <Route path="/download" element={<Download />} />
 
         {/* =========================================
             3. AUTHENTICATED ROUTES (UNIVERSAL PULL-TO-REFRESH ENABLED)

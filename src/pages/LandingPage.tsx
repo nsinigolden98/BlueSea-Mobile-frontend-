@@ -75,14 +75,6 @@ type Partner = {
   accent: string;
 };
 
-type Testimonial = {
-  id: string;
-  quote: string;
-  name: string;
-  context: string;
-  rating: number;
-};
-
 const features: Feature[] = [
   {
     id: 'everyday-services',
@@ -308,33 +300,7 @@ const partnerPlaceholders: Partner[] = [
   },
 ];
 
-const testimonialPlaceholders: Testimonial[] = [
-  // Replace sample testimonials with real, permissioned customer reviews.
-  {
-    id: 'review-one',
-    quote:
-      'The sample testimonial layout gives customers a clear, readable way to share their experience with BlueSea Mobile.',
-    name: 'Sample customer',
-    context: 'Placeholder review',
-    rating: 5,
-  },
-  {
-    id: 'review-two',
-    quote:
-      'Use this space for an authentic customer statement about a specific service and the experience they had.',
-    name: 'Sample customer',
-    context: 'Placeholder review',
-    rating: 5,
-  },
-  {
-    id: 'review-three',
-    quote:
-      'A short, genuine review can help new visitors understand how BlueSea Mobile supports everyday digital needs.',
-    name: 'Sample customer',
-    context: 'Placeholder review',
-    rating: 5,
-  },
-];
+
 
 // Demo values for layout integration only. Replace with verified API data before production.
 const statPlaceholders = [
@@ -520,8 +486,8 @@ export function LandingPage() {
           </div>
           <div className="hidden items-center gap-3 md:flex">
             <Button variant="ghost" className="rounded-full px-5" onClick={() => navigate('/login')}>Sign in</Button>
-            <Button className="rounded-full bg-sky-500 px-6 shadow-lg shadow-sky-500/20 hover:bg-sky-600" onClick={goToSignup}>
-              Get Started <ArrowRight className="ml-2 h-4 w-4" />
+            <Button className="rounded-full bg-sky-500 px-6 shadow-lg shadow-sky-500/20 hover:bg-sky-600" onClick={() => navigate('/download')}>
+            DownLoad App <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
           <button
@@ -581,8 +547,8 @@ export function LandingPage() {
               <Button size="lg" className="rounded-full bg-sky-500 px-7 shadow-lg shadow-sky-500/25 transition hover:scale-[1.02] hover:bg-sky-600" onClick={goToSignup}>
                 Get Started <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <Button size="lg" variant="outline" className="rounded-full border-slate-200 px-7 transition hover:border-sky-200 hover:bg-sky-50 dark:border-slate-700 dark:hover:bg-slate-900" onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}>
-                Explore Features
+              <Button size="lg" variant="outline" className="rounded-full border-slate-200 px-7 transition hover:border-sky-200 hover:bg-sky-50 dark:border-slate-700 dark:hover:bg-slate-900" onClick={() => navigate('/download')}>
+                DownLoad App
               </Button>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-2 text-xs text-slate-500 dark:text-slate-400 lg:justify-start">
@@ -819,35 +785,6 @@ export function LandingPage() {
             <Button variant="outline" className="mt-4 rounded-full border-sky-200 bg-white text-sky-700 hover:bg-sky-100 dark:bg-slate-900" onClick={() => navigate('/contact')}>
               Explore partnership <ArrowUpRight className="ml-2 h-4 w-4" />
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials: sample copy should be replaced with permissioned customer reviews. */}
-      <section className="bg-slate-50 px-4 py-16 dark:bg-slate-900/50 sm:px-6 sm:py-20 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mx-auto mb-10 max-w-2xl text-center sm:mb-14">
-            <span className="inline-flex rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-sky-700 shadow-sm dark:bg-slate-800 dark:text-sky-300">Customer experiences</span>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">Experiences that matter.</h2>
-            <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-400 sm:text-base">
-              A place for genuine feedback from people using BlueSea Mobile.
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {testimonialPlaceholders.map((testimonial) => (
-              <article key={testimonial.id} className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <div className="mb-4 flex gap-1" aria-label={`${testimonial.rating} out of 5 stars`}>
-                  {Array.from({ length: testimonial.rating }).map((_, index) => (
-                    <Star key={index} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">“{testimonial.quote}”</p>
-                <div className="mt-6 border-t border-slate-100 pt-4 dark:border-slate-800">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{testimonial.name}</p>
-                  <p className="mt-1 text-xs text-slate-500">{testimonial.context}</p>
-                </div>
-              </article>
-            ))}
           </div>
         </div>
       </section>
