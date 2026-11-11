@@ -17,6 +17,9 @@ android/
 # deliberately not tracked on this branch either.
 ios/
 
+# The Tauri desktop shell is created locally as well.
+src-tauri/
+
 # os / editor
 .DS_Store
 .vscode/
