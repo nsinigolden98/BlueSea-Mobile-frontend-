@@ -41,13 +41,46 @@ import {
   Info,
   ExternalLink,
   Award,
-  AlertCircle
+  AlertCircle,
+  Download
 } from 'lucide-react';
+
+interface BiometricAvailability {
+  isAvailable?: boolean;
+  available?: boolean;
+  isBiometryAvailable?: boolean;
+}
+
+interface BiometricPluginRegistry {
+  NativeBiometrics?: {
+    verifyIdentity(options: {
+      reason: string;
+      title: string;
+      subtitle: string;
+      description: string;
+    }): Promise<unknown>;
+    isAvailable(): Promise<BiometricAvailability>;
+  };
+  Biometrics?: {
+    verify(options: { reason: string; title: string }): Promise<unknown>;
+    isAvailable(): Promise<BiometricAvailability>;
+  };
+  BiometricAuth?: {
+    authenticate(options: { reason: string }): Promise<unknown>;
+    checkBiometry(): Promise<BiometricAvailability>;
+  };
+}
+
+interface CapacitorWindow extends Window {
+  Capacitor?: {
+    Plugins?: BiometricPluginRegistry;
+  };
+}
 
 const performBiometricPrompt = async (reason: string): Promise<boolean> => {
   if (!Capacitor.isNativePlatform()) return false;
   try {
-    const plugins = (window as any).Capacitor?.Plugins;
+    const plugins = (window as CapacitorWindow).Capacitor?.Plugins;
     if (plugins?.NativeBiometrics) {
       await plugins.NativeBiometrics.verifyIdentity({
         reason,
@@ -90,7 +123,7 @@ const ADMIN_SUPPORT_ROUTE = '/admin/support';
 const checkBiometricSupport = async (): Promise<boolean> => {
   if (!Capacitor.isNativePlatform()) return false;
   try {
-    const plugins = (window as any).Capacitor?.Plugins;
+    const plugins = (window as CapacitorWindow).Capacitor?.Plugins;
     if (plugins?.NativeBiometrics) {
       const res = await plugins.NativeBiometrics.isAvailable();
       return !!(res?.isAvailable || res?.available);
@@ -482,6 +515,48 @@ export function Settings() {
               </span>
               <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
             </button>
+
+            {/* APP DOWNLOAD
+                Opens the existing public download page. Keep this separate from
+                account settings so users can find the app download quickly. */}
+            <section
+              aria-labelledby="download-app-heading"
+              className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-sky-200/80 dark:border-sky-800/60 bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/50 p-4 sm:p-5 shadow-sm"
+            >
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-sky-400/10 dark:bg-sky-400/10 blur-3xl"
+              />
+              <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                  <div className="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-sky-500/20">
+                    <Download className="w-6 h-6 stroke-[2]" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3
+                      id="download-app-heading"
+                      className="text-base sm:text-lg font-bold text-slate-900 dark:text-white"
+                    >
+                      Download BlueSea Mobile
+                    </h3>
+                    <p className="mt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                      Get the BlueSea app on your device for a smoother mobile experience.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/download')}
+                  className="relative inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-sky-500/20 transition-all duration-200 hover:bg-sky-600 hover:shadow-lg hover:shadow-sky-500/25 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+                  aria-label="Go to the BlueSea Mobile app download page"
+                >
+                  <Download className="w-4 h-4" aria-hidden="true" />
+                  Download App
+                  <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                </button>
+              </div>
+            </section>
 
             {/* PRIVILEGED WORKSPACE
                 Visibility is controlled by the backend's is_staff / is_admin flags.

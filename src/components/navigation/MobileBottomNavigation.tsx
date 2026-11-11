@@ -3,7 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { Home, Gift, Store, Settings, Briefcase } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { cn } from '@/lib/utils';
-import { navStyles } from './MobileBottomNavigation.styles';
+import { navMotionStyles, navStyles } from './MobileBottomNavigation.styles';
 import { useEffect, useState } from 'react';
 import { getPreferredWorkspace, WORKSPACE_HOME, type WorkspaceId } from '@/features/workspace/workspacePreference';
 
@@ -51,58 +51,62 @@ export function MobileBottomNavigation() {
 
   return (
     <>
-    <nav
-      className={navStyles.wrapper}
-      aria-label="BlueSea Mobile primary navigation"
-    >
-      {navigationItems.map((item) => {
-        const Icon = item.icon;
-        const active = isItemActive(location.pathname, item.path);
+      <style>{navMotionStyles}</style>
+      <nav
+        className={navStyles.wrapper}
+        aria-label="BlueSea Mobile primary navigation"
+      >
+        {navigationItems.map((item) => {
+          const Icon = item.icon;
+          const active = isItemActive(location.pathname, item.path);
 
-        return (
-          <NavLink
-            key={item.id}
-            to={item.path}
-            aria-label={item.label}
-            aria-current={active ? 'page' : undefined}
-            title={item.label}
-            className={({ isActive }) =>
-              cn(
-                navStyles.link,
-                (active || isActive) && navStyles.activeLink,
-              )
-            }
-          >
-            <span
-              className={cn(
-                navStyles.iconCircle,
-                active
-                  ? navStyles.activeIconCircle
-                  : navStyles.inactiveIconCircle,
-              )}
+          return (
+            <NavLink
+              key={item.id}
+              to={item.path}
+              aria-label={item.label}
+              aria-current={active ? 'page' : undefined}
+              title={item.label}
+              className={({ isActive }) =>
+                cn(
+                  navStyles.link,
+                  (active || isActive) && navStyles.activeLink,
+                )
+              }
             >
-              <Icon
+              <span
                 className={cn(
-                  navStyles.navIcon,
-                  active ? navStyles.activeIcon : navStyles.inactiveIcon,
+                  navStyles.iconCircle,
+                  active
+                    ? navStyles.activeIconCircle
+                    : navStyles.inactiveIconCircle,
                 )}
-                aria-hidden
-              />
-            </span>
-            <span
-              className={cn(
-                navStyles.label,
-                active ? navStyles.activeLabel : navStyles.inactiveLabel,
-              )}
-            >
-              {item.label}
-            </span>
-          </NavLink>
-        );
-      })}
-    </nav>
-      {/* Reserve footer space in the layout so the final scrollable content clears the fixed dock. */}
-      <div aria-hidden="true" className="h-[calc(84px+env(safe-area-inset-bottom,0px))] md:hidden shrink-0" />
+              >
+                <Icon
+                  className={cn(
+                    navStyles.navIcon,
+                    active ? navStyles.activeIcon : navStyles.inactiveIcon,
+                  )}
+                  aria-hidden
+                />
+              </span>
+              <span
+                className={cn(
+                  navStyles.label,
+                  active ? navStyles.activeLabel : navStyles.inactiveLabel,
+                )}
+              >
+                {item.label}
+              </span>
+            </NavLink>
+          );
+        })}
+      </nav>
+      {/* Preserve the existing scroll clearance below the fixed dock. */}
+      <div
+        aria-hidden="true"
+        className="h-[calc(84px+env(safe-area-inset-bottom,0px))] md:hidden shrink-0"
+      />
     </>
   );
 }
