@@ -2,20 +2,14 @@
  * BlueSea Mobile floating glass bottom navigation.
  * Brand accent: BlueSea sky blue (#1DA1F2).
  *
- * The dock keeps its existing floating position and content spacing.
- * Its former static outer border is replaced by a fine animated orbital
- * highlight. The glass surface remains translucent so scrolling content
- * can softly show through it in both themes.
+ * The dock uses a single translucent glass surface. Its perimeter highlight
+ * is drawn with an SVG stroke so the animated light follows the pill shape
+ * consistently in Android WebView without CSS mask/composite artifacts.
  */
 
 const join = (...classes: string[]) => classes.join(' ');
 
 export const navMotionStyles = `
-  @keyframes blueSeaOrbit {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
   @keyframes blueSeaDrop {
     0% { transform: scale(0.86); }
     48% { transform: scale(1.13); }
@@ -23,36 +17,11 @@ export const navMotionStyles = `
     100% { transform: scale(1.06); }
   }
 
-  .bluesea-nav-orbit::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    z-index: 0;
-    padding: 1px;
-    border-radius: 9999px;
-    pointer-events: none;
-    background: conic-gradient(
-      from 0deg,
-      transparent 0deg,
-      transparent 245deg,
-      rgba(29, 161, 242, 0.10) 278deg,
-      #1DA1F2 318deg,
-      #8BD8FF 338deg,
-      transparent 360deg
-    );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    animation: blueSeaOrbit 6s linear infinite;
-  }
-
   .bluesea-nav-active-drop {
     animation: blueSeaDrop 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .bluesea-nav-orbit::before,
     .bluesea-nav-active-drop {
       animation: none !important;
     }
@@ -61,27 +30,25 @@ export const navMotionStyles = `
 
 export const navStyles = {
   wrapper: join(
-    'bluesea-nav-orbit',
     'fixed z-[100] isolate left-1/2 -translate-x-1/2',
     'bottom-[calc(env(safe-area-inset-bottom,0px)+12px)]',
     'flex items-center justify-between',
-    'w-[calc(100vw-24px)] max-w-[460px]',
-    'min-h-[72px] px-2 py-2',
+    'w-[calc(100vw-36px)] max-w-[460px]',
+    'min-h-[76px] px-2.5 py-2',
     'rounded-full',
-    'bg-[rgba(244,250,255,0.56)]',
+    'bg-[rgba(244,250,255,0.48)]',
     'backdrop-blur-2xl [-webkit-backdrop-filter:blur(24px)]',
-    'shadow-[0_7px_26px_rgba(29,161,242,0.11)]',
+    'shadow-[0_7px_26px_rgba(29,161,242,0.10)]',
     'select-none',
-    'dark:bg-[rgba(15,30,45,0.58)]',
+    'dark:bg-[rgba(15,30,45,0.52)]',
     'dark:shadow-[0_7px_26px_rgba(0,0,0,0.24)]',
-    // Fine orbital stroke; no second solid container or static outer edge.
-    // Keep dock contents above the animated perimeter.
-    '[&>*]:relative [&>*]:z-10',
+    // Only navigation links sit above the animated SVG perimeter.
+    '[&>a]:relative [&>a]:z-10',
   ),
 
   link: join(
     'flex flex-1 min-w-0 flex-col items-center justify-center',
-    'gap-1 min-h-[56px] px-0.5 rounded-full',
+    'gap-1 min-h-[58px] px-0.5 rounded-full',
     'outline-none transition-[transform,color] duration-300',
     '[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]',
     'active:scale-[0.96]',
@@ -97,6 +64,7 @@ export const navStyles = {
     '[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]',
   ),
 
+  // Keep the existing water-drop click/selection animation unchanged.
   activeIconCircle: join(
     'bluesea-nav-active-drop scale-[1.06]',
     'bg-[#1DA1F2]/[0.19] border-[#1DA1F2]/40',
