@@ -59,8 +59,7 @@ import {
   ExternalLink,
   Award,
   AlertCircle,
-  BarChart3,
-  Megaphone
+  Download
 } from 'lucide-react';
 
 const API_BASE = String(import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
@@ -74,8 +73,6 @@ const authHeaders = () => {
 };
 
 const ADMIN_SUPPORT_ROUTE = '/admin/support';
-const ADMIN_BROADCAST_ROUTE = '/admin/broadcast';
-const ADMIN_ANALYSIS_ROUTE = '/admin/analysis';
 
 export function Settings() {
   const navigate = useNavigate();
@@ -338,7 +335,7 @@ export function Settings() {
     }
   };
 
-  const handlePinVerificationError = (errorResponse?: any) => {
+  const handlePinVerificationError = (errorResponse?: { message?: string; error?: string }) => {
     const errorMsg = errorResponse?.message || errorResponse?.error || 'Invalid Transaction PIN. Please try again.';
     setPinErrorMessage(errorMsg);
     setPendingBiometricAction(null);
@@ -418,76 +415,6 @@ export function Settings() {
               </div>
             )}
 
-            {/* PRIVILEGED WORKSPACE
-                Visibility is controlled by the backend's is_staff / is_admin flags.
-                These links are intentionally not rendered for ordinary users. */}
-            {privileges.loaded && (canAccessStaffSupport || isAdmin) && (
-              <section className="space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
-                  Administration
-                </h3>
-
-                <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
-                  {canAccessStaffSupport && (
-                    <button
-                      type="button"
-                      onClick={() => navigate(ADMIN_SUPPORT_ROUTE)}
-                      className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                          <Headset className="w-5 h-5 stroke-[1.75]" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Support Administration</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Manage customer tickets and support conversations</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                    </button>
-                  )}
-
-                  {isAdmin && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => navigate(ADMIN_BROADCAST_ROUTE)}
-                        className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
-                      >
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/30 text-violet-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                            <Megaphone className="w-5 h-5 stroke-[1.75]" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Broadcast</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Send platform-wide messages and announcements</p>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => navigate(ADMIN_ANALYSIS_ROUTE)}
-                        className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
-                      >
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                            <BarChart3 className="w-5 h-5 stroke-[1.75]" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Platform Analysis</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Detailed platform performance and operational analysis</p>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </section>
-            )}
-
             {/* PROFILE HEADER CARD */}
             <div className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 md:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
               <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 dark:bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -547,6 +474,96 @@ export function Settings() {
                 </div>
               </div>
             </div>
+
+            {/* PRIMARY WORKSPACE: local preference adapter; backend can be connected later. */}
+            <button
+              type="button"
+              onClick={() => navigate('/workspace/select')}
+              className="w-full flex items-center justify-between gap-3 rounded-2xl border border-sky-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-left hover:border-sky-400 transition-colors"
+            >
+              <span className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/40 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                </span>
+                <span>
+                  <span className="block text-sm font-bold text-slate-800 dark:text-slate-100">Preferred Workspace</span>
+                  <span className="block text-xs text-slate-500 dark:text-slate-400 mt-1">Choose which dashboard opens as Home</span>
+                </span>
+              </span>
+              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+            </button>
+
+            {/* APP DOWNLOAD
+                Opens the existing public download page. Keep this separate from
+                account settings so users can find the app download quickly. */}
+            <section
+              aria-labelledby="download-app-heading"
+              className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-sky-200/80 dark:border-sky-800/60 bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/50 p-4 sm:p-5 shadow-sm"
+            >
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-sky-400/10 dark:bg-sky-400/10 blur-3xl"
+              />
+              <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                  <div className="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-sky-500/20">
+                    <Download className="w-6 h-6 stroke-[2]" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3
+                      id="download-app-heading"
+                      className="text-base sm:text-lg font-bold text-slate-900 dark:text-white"
+                    >
+                      Download BlueSea Mobile
+                    </h3>
+                    <p className="mt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                      Get the BlueSea app on your device for a smoother mobile experience.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/download')}
+                  className="relative inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow-md shadow-sky-500/20 transition-all duration-200 hover:bg-sky-600 hover:shadow-lg hover:shadow-sky-500/25 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+                  aria-label="Go to the BlueSea Mobile app download page"
+                >
+                  <Download className="w-4 h-4" aria-hidden="true" />
+                  Download App
+                  <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                </button>
+              </div>
+            </section>
+
+            {/* PRIVILEGED WORKSPACE
+                Visibility is controlled by the backend's is_staff / is_admin flags.
+                Staff and admins see only Support Administration. */}
+            {privileges.loaded && canAccessStaffSupport && (
+              <section className="space-y-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                  Administration
+                </h3>
+
+                <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm divide-y divide-slate-50 dark:divide-slate-800/50">
+                  <button
+                    type="button"
+                    onClick={() => navigate(ADMIN_SUPPORT_ROUTE)}
+                    className="w-full flex items-center justify-between p-4 sm:px-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-left group"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <Headset className="w-5 h-5 stroke-[1.75]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">Support Administration</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Manage customer tickets and support conversations</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  </button>
+                </div>
+              </section>
+            )}
 
             {/* ACCOUNT SECTION */}
             <section className="space-y-2">

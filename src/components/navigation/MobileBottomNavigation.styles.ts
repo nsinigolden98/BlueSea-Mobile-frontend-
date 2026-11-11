@@ -1,34 +1,90 @@
 /**
- * Styling configurations for BlueSea Mobile Bottom Navigation.
- * Follows the existing design system guidelines, color palette, and layout requirements.
+ * BlueSea Mobile floating glass bottom navigation.
+ * Brand accent: BlueSea sky blue (#1DA1F2).
+ *
+ * The dock uses a single translucent glass surface. Its perimeter highlight
+ * is drawn with an SVG stroke so the animated light follows the pill shape
+ * consistently in Android WebView without CSS mask/composite artifacts.
  */
+
+const join = (...classes: string[]) => classes.join(' ');
+
+export const navMotionStyles = `
+  @keyframes blueSeaDrop {
+    0% { transform: scale(0.86); }
+    48% { transform: scale(1.13); }
+    72% { transform: scale(0.97); }
+    100% { transform: scale(1.06); }
+  }
+
+  .bluesea-nav-active-drop {
+    animation: blueSeaDrop 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bluesea-nav-active-drop {
+      animation: none !important;
+    }
+  }
+`;
+
 export const navStyles = {
-  // Mobile-only block layout that naturally flows with page content
-  wrapper: "md:hidden w-full bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80 transition-colors duration-300 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_12px_rgba(0,0,0,0.02)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.12)]",
-  
-  // Dynamic layout auto-allocating equal width to any number of rendered items
-  container: "grid grid-flow-col auto-cols-fr h-[74px] w-full items-center px-1",
-  
-  // Navigation links - provides vertical centering & satisfies the 44px minimum target
-  link: "flex flex-col items-center justify-center h-full w-full gap-1.5 transition-all duration-300 select-none relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
-  
-  // Icons styling mapping
-  iconContainer: "relative flex items-center justify-center w-7 h-7 transition-all duration-300",
-  activeIcon: "text-sky-500 dark:text-sky-400 scale-110 transition-transform duration-300 ease-out",
-  inactiveIcon: "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors duration-200",
-  
-  // Labels styling mapping
-  label: "text-[11px] font-medium tracking-normal transition-all duration-300 text-center leading-none",
-  activeLabel: "text-sky-500 dark:text-sky-400 font-bold",
-  inactiveLabel: "text-slate-500 dark:text-slate-400",
-  
-  // Profile specific stylings
-  avatarWrapper: "w-7 h-7 rounded-full overflow-hidden flex items-center justify-center border-2 transition-all duration-300 ease-out",
-  activeAvatar: "border-sky-500 dark:border-sky-400 scale-110 shadow-sm",
-  inactiveAvatar: "border-slate-200 dark:border-slate-700 scale-100",
-  avatarInitials: "text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 w-full h-full flex items-center justify-center",
-  
-  // Active Indicator Dot (Subtle bottom bar/dot for native-app-like feel)
-  indicator: "absolute bottom-1 w-1.5 h-1.5 rounded-full bg-sky-500 dark:bg-sky-400 transition-all duration-300 scale-100 opacity-100 ease-out",
-  hiddenIndicator: "absolute bottom-1 w-1.5 h-1.5 rounded-full bg-transparent scale-0 opacity-0 transition-all duration-200"
+  wrapper: join(
+    'fixed z-[100] isolate left-1/2 -translate-x-1/2',
+    'bottom-[calc(env(safe-area-inset-bottom,0px)+12px)]',
+    'flex items-center justify-between',
+    'w-[calc(100vw-36px)] max-w-[460px]',
+    'min-h-[76px] px-2.5 py-2',
+    'rounded-full',
+    'bg-[rgba(244,250,255,0.48)]',
+    'backdrop-blur-2xl [-webkit-backdrop-filter:blur(24px)]',
+    'shadow-[0_7px_26px_rgba(29,161,242,0.10)]',
+    'select-none',
+    'dark:bg-[rgba(15,30,45,0.52)]',
+    'dark:shadow-[0_7px_26px_rgba(0,0,0,0.24)]',
+    // Only navigation links sit above the animated SVG perimeter.
+    '[&>a]:relative [&>a]:z-10',
+  ),
+
+  link: join(
+    'flex flex-1 min-w-0 flex-col items-center justify-center',
+    'gap-1 min-h-[58px] px-0.5 rounded-full',
+    'outline-none transition-[transform,color] duration-300',
+    '[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]',
+    'active:scale-[0.96]',
+    'focus-visible:ring-2 focus-visible:ring-sky-500',
+  ),
+
+  activeLink: 'text-[#1DA1F2]',
+
+  iconCircle: join(
+    'flex items-center justify-center',
+    'w-[42px] h-[42px] rounded-full border',
+    'transition-[background-color,border-color,box-shadow,transform] duration-500',
+    '[transition-timing-function:cubic-bezier(0.22,1,0.36,1)]',
+  ),
+
+  // Keep the existing water-drop click/selection animation unchanged.
+  activeIconCircle: join(
+    'bluesea-nav-active-drop scale-[1.06]',
+    'bg-[#1DA1F2]/[0.19] border-[#1DA1F2]/40',
+    'shadow-[0_0_16px_rgba(29,161,242,0.28),inset_0_0_8px_rgba(29,161,242,0.08)]',
+  ),
+
+  inactiveIconCircle: 'bg-transparent border-transparent',
+
+  navIcon: 'w-[22px] h-[22px] shrink-0 transition-all duration-300',
+
+  activeIcon: 'text-[#078FE0] dark:text-[#69C5FF]',
+
+  inactiveIcon: 'text-slate-500 dark:text-slate-300',
+
+  label: join(
+    'text-[10px] font-medium leading-none whitespace-nowrap',
+    'transition-colors duration-300',
+  ),
+
+  activeLabel: 'text-[#168FE0] dark:text-[#69C5FF] font-semibold',
+
+  inactiveLabel: 'text-slate-600 dark:text-slate-300',
 };
