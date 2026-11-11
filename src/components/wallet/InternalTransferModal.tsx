@@ -150,8 +150,8 @@ export function InternalTransferModal({ isOpen, open, onClose }: InternalTransfe
           bank_code: bankCode,
         });
         if (stale) return;
-        if (res && (res.success || res.status === 'success' || res.account_name)) {
-          setBankAccountName(res.account_name || '');
+        if (res?.success && res?.data?.accountName) {
+          setBankAccountName(res.data.accountName);
         } else {
           setBankAccountName('');
           setTransferError(res?.message || res?.error || 'Unable to verify account details');

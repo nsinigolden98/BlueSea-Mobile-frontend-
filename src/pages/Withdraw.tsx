@@ -60,10 +60,13 @@ interface ApiErrorResponse {
 
 interface VerifyAccountResponse {
   success?: boolean;
-  status?: string;
-  account_name?: string;
   message?: string;
   error?: string;
+  data?: {
+    accountNumber?: string;
+    accountName?: string;
+    bankCode?: string;
+  };
 }
 
 export function Withdraw() {
@@ -194,8 +197,8 @@ export function Withdraw() {
 
       if (requestId !== verificationRequestId.current) return;
        
-      if (response && (response.success || response.status === 'success' || response.account_name)) {
-        setAccountName(response.account_name || '');
+      if (response?.success && response?.data?.accountName) {
+        setAccountName(response.data.accountName);
         setAccountVerified(true);
       } else {
         const errDetail = response?.message || response?.error || 'Unable to verify account details';

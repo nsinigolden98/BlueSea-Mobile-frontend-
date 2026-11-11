@@ -24,7 +24,7 @@ export default function BranchCard({ branch }: BranchCardProps) {
             <h3 className="font-bold text-[var(--tm-text-main)] truncate">{branch.name}</h3>
             <StatusBadge status={branch.status} size="sm" />
           </div>
-          <p className="text-xs text-[var(--tm-text-muted)] mb-2 line-clamp-1">{branch.address}</p>
+          <p className="text-xs text-[var(--tm-text-muted)] mb-2 line-clamp-1">{branch.address ?? 'No address recorded'}</p>
           <div className="flex items-center gap-4 text-xs text-[var(--tm-text-muted)]">
             <span className="flex items-center gap-1">
               <Users className="w-3.5 h-3.5" />

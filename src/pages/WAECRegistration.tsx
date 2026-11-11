@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar, Header, Toast, TransactionModal, PinModal, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,10 +6,9 @@ import { Label } from '@/components/ui/label';
 
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { usePlans, toEducationPlans } from '@/hooks/usePlans';
 import { Users, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const WAEC_REGISTRATION_AMOUNT = 14500;
 
 export function WAECRegistration() {
   const { user } = useAuth();
@@ -27,12 +26,20 @@ export function WAECRegistration() {
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
+  const { plans } = usePlans();
+  const educationPlans = useMemo(() => toEducationPlans(plans.education ?? []), [plans]);
+  const plan = educationPlans.find((p) => p.service === 'waec-registration');
+  const amount = plan?.price ?? null;
 
   const payload = {
     phone_number: phoneNumber,
   };
   
   const handleContinue = async () => {
+    if (!plan) {
+      showToast('Education product unavailable');
+      return;
+    }
     if (!phoneNumber) {
       showToast('Please enter your phone number');
       return;
@@ -66,13 +73,13 @@ export function WAECRegistration() {
   useEffect(() => {
     if (message) {
       setIsOpen(true);
-      if (message?.success || message?.code === '000') {
-        showToast(message?.response_description || '');
-        setToastMessage(message?.response_description || '');
+      if (message?.success) {
+        showToast(message?.message || '');
+        setToastMessage(message?.message || '');
         setTxStatus(true);
       } else {
-        showToast(message?.error || message?.response_description || '');
-        setToastMessage(message?.error || message?.response_description || '');
+        showToast(message?.error || message?.message || '');
+        setToastMessage(message?.error || message?.message || '');
         setTxStatus(false);
       }
     } else {
@@ -118,14 +125,14 @@ export function WAECRegistration() {
                     <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-500">Registration Fee</span>
-                        <span className="font-medium">₦{WAEC_REGISTRATION_AMOUNT.toLocaleString()}</span>
+                        <span className="font-medium">{amount == null ? 'Unavailable' : `₦${amount.toLocaleString()}`}</span>
                       </div>
                     </div>
 
                     <Button
                       onClick={handleContinue}
                       className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
-                      disabled={!phoneNumber}
+                      disabled={!phoneNumber || !plan}
                     >
                       Continue Payment
                     </Button>
@@ -210,7 +217,7 @@ export function WAECRegistration() {
       <PinComponent type="waec-registration" value={payload} />
       <ToastComponent />
       {isOpen && (
-        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
+        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} transactionData={message?.data ?? {}} />
       )}
     </div>
   );

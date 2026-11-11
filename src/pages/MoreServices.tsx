@@ -29,6 +29,7 @@ import {
   QrCode,
   Store,
   Trophy,
+  Briefcase,
   ChevronRight,
 } from 'lucide-react';
 
@@ -58,6 +59,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   QrCode,
   Store,
   Trophy,
+  Briefcase,
 };
 
 export function MoreServices() {
@@ -78,11 +80,8 @@ export function MoreServices() {
       // TV Subscription
       'tv1': '/tv-subscription',
       'tv2': '/tv-subscription',
-      'tv3': '/tv-subscription',
-      'tv4': '/tv-subscription',
       // Education
       'e1': '/waec-registration',
-      'e2': '/waec-result',
       'e3': '/jamb-registration',
       // Utilities
       'u1': '/light-bills',
@@ -91,6 +90,7 @@ export function MoreServices() {
       'f1': '/wallet',
       'f2': '/group-payment',
       'f3': '/marketplace',
+      'f4': '/payroll-pro',
       // Others
       'o3': '/loyalty',
       'o4': '/rewards',

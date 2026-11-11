@@ -5,11 +5,12 @@ const config: CapacitorConfig = {
   appName: 'BlueSea Mobile',
   webDir: 'dist',
   server: {
-    url: 'https://blueseamobile.com',
+    url:'https://fonts-sons-activities-dirt.trycloudflare.com',// 'https://blueseamobile.com',
     cleartext: true,
     allowNavigation: [
-      'blueseamobile.com', 
-      '*.blueseamobile.com'
+      'fonts-sons-activities-dirt.trycloudflare.com '    
+      //'blueseamobile.com', 
+      //'*.blueseamobile.com'
     ]
   },
   android: {

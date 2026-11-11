@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar, Header, Toast, TransactionModal, PinModal, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,25 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { usePlans, toEducationPlans } from '@/hooks/usePlans';
 import { Users, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const JAMB_FEES = {
-  'utme': 6200,
-  'utme-mock': 7700,
-};
-
-const examTypes = [
-  { id: 'utme', name: 'UTME (Regular)', amount: JAMB_FEES.utme },
-  { id: 'utme-mock', name: 'UTME + Mock', amount: JAMB_FEES['utme-mock'] },
-];
 
 export function JAMBRegistration() {
   const { user } = useAuth();
   const defaultPhone = user?.phone ? "0" + user.phone.slice(-10) : '';
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState(defaultPhone);
-  const [examType, setExamType] = useState('utme');
+  const [examType, setExamType] = useState('jamb-utme');
   const { PinComponent, showPinModal, modalData, message } = PinModal();
   const { LoaderComponent } = Loader();
   const navigate = useNavigate();
@@ -37,18 +28,30 @@ export function JAMBRegistration() {
   const [isGroupPayment, setIsGroupPayment] = useState(false);
   const [inviteMembers, setInviteMembers] = useState<string[]>(['']);
   const [groupName, setGroupName] = useState('');
+  const { plans } = usePlans();
+  const educationPlans = useMemo(() => toEducationPlans(plans.education ?? []), [plans]);
+  const examOptions = educationPlans.filter(
+    (plan) =>
+      plan.service === 'jamb-utme' ||
+      plan.service === 'jamb-mock' ||
+      plan.service === 'jamb-mock-only',
+  );
+  const selectedPlan = examOptions.find((plan) => plan.service === examType) ?? null;
 
-  const examFee = JAMB_FEES[examType as keyof typeof JAMB_FEES];
+  const examFee = selectedPlan?.price ?? null;
 
   const payload = {
     exam_type: examType,
-    billersCode: '',
     phone_number: phoneNumber,
   };
   
   const handleContinue = async () => {
-    if (!phoneNumber || !examType) {
-      showToast('Please fill in all fields');
+    if (!selectedPlan) {
+      showToast('JAMB product unavailable');
+      return;
+    }
+    if (!phoneNumber) {
+      showToast('Please enter your phone number');
       return;
     } else if (!user?.pin_is_set) {
       navigate('/settings');
@@ -80,13 +83,13 @@ export function JAMBRegistration() {
   useEffect(() => {
     if (message) {
       setIsOpen(true);
-      if (message?.success || message?.code === '000') {
-        showToast(message?.response_description || '');
-        setToastMessage(message?.response_description || '');
+      if (message?.success) {
+        showToast(message?.message || '');
+        setToastMessage(message?.message || '');
         setTxStatus(true);
       } else {
-        showToast(message?.error || message?.response_description || '');
-        setToastMessage(message?.error || message?.response_description || '');
+        showToast(message?.error || message?.message || '');
+        setToastMessage(message?.error || message?.message || '');
         setTxStatus(false);
       }
     } else {
@@ -124,9 +127,9 @@ export function JAMBRegistration() {
                           <SelectValue placeholder="Select exam type" />
                         </SelectTrigger>
                         <SelectContent>
-                          {examTypes.map((type) => (
-                            <SelectItem key={type.id} value={type.id}>
-                              {type.name} - ₦{type.amount.toLocaleString()}
+                          {examOptions.map((plan) => (
+                            <SelectItem key={plan.service} value={plan.service}>
+                              {plan.name} - ₦{plan.price.toLocaleString()}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -148,14 +151,14 @@ export function JAMBRegistration() {
                     <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-500">Registration Fee</span>
-                        <span className="font-medium">₦{examFee.toLocaleString()}</span>
+                        <span className="font-medium">{examFee == null ? 'Unavailable' : `₦${examFee.toLocaleString()}`}</span>
                       </div>
                     </div>
 
                     <Button
                       onClick={handleContinue}
                       className="w-full rounded-full bg-sky-500 hover:bg-sky-600 py-6"
-                      disabled={!phoneNumber || !examType}
+                      disabled={!phoneNumber || !selectedPlan}
                     >
                       Continue Payment
                     </Button>
@@ -240,7 +243,7 @@ export function JAMBRegistration() {
       <PinComponent type="jamb" value={payload} />
       <ToastComponent />
       {isOpen && (
-        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
+        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} transactionData={message?.data ?? {}} />
       )}
     </div>
   );

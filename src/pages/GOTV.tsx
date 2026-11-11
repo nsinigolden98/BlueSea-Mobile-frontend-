@@ -19,6 +19,8 @@ export function GOTV() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [smartCardNumber, setSmartCardNumber] = useState('');
   const [selectedPlan, setSelectedPlan] = useState('');
+  // VTpass subscription_type: user-selectable (change = new bouquet, renew = current bouquet).
+  const [subscriptionType, setSubscriptionType] = useState<'change' | 'renew'>('renew');
   // Phone is sent silently from the profile (backend requires it); no input.
   const phoneNumber = defaultPhone;
   const { PinComponent, showPinModal, modalData, message } = PinModal();
@@ -42,9 +44,6 @@ export function GOTV() {
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const lookupSeq = useRef(0);
 
-  // Payer is the account owner, never the lookup-returned name.
-  const payerName = `${user?.firstName ?? ''} ${user?.surname ?? ''}`.trim();
-
   const payload = isGroupPayment ? {
     name: groupName,
     description: groupDescription,
@@ -54,12 +53,13 @@ export function GOTV() {
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
     plan: selectedPlan,
     plan_id: selectedPlan,
+    subscription_type: subscriptionType,
 
   }: {
-    billersCode: smartCardNumber,
+    smart_card_number: smartCardNumber,
     gotv_plan: selectedPlan,
+    subscription_type: subscriptionType,
     phone_number: phoneNumber,
-    payerName,
   };
   
 
@@ -67,7 +67,7 @@ export function GOTV() {
   // Auto-lookup: fire when the card number reaches 10 digits.
   useEffect(() => {
     const digits = smartCardNumber.replace(/\D/g, '');
-    if (digits.length < 10) {
+    if (digits.length < 10 || !selectedPlan) {
       setVerifiedCustomer(null);
       setVerifyError(null);
       setVerifying(false);
@@ -79,14 +79,11 @@ export function GOTV() {
     const t = setTimeout(async () => {
       try {
         const res: any = await postRequest(ENDPOINTS.cable_lookup, {
-          provider: 'gotv',
-          billersCode: digits,
+          productId: selectedPlan,
+          smart_card_number: digits,
         });
         if (lookupSeq.current !== seq) return;
-        const customer = res?.customer ?? res?.data ?? null;
-        const name = typeof customer === 'string'
-          ? customer
-          : (customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? null);
+        const name = typeof res?.customerName === 'string' ? res.customerName : null;
         if (res?.success && name) {
           setVerifiedCustomer(String(name));
         } else {
@@ -102,7 +99,7 @@ export function GOTV() {
       }
     }, 600);
     return () => clearTimeout(t);
-  }, [smartCardNumber]);
+  }, [smartCardNumber, selectedPlan]);
 
   const handleContinue = async () => {
     if (!smartCardNumber || !selectedPlan) {
@@ -161,9 +158,9 @@ export function GOTV() {
   useEffect(() => {
     if (message) {
       setIsOpen(true);
-      if (message?.success || message?.code === '000') {
-        showToast(message?.response_description || message?.message || '');
-        setToastMessage(message?.response_description || message?.message || '');
+      if (message?.success) {
+        showToast(message?.message || '');
+        setToastMessage(message?.message || '');
         setTxStatus(true);
         
         if (isGroupPayment) {
@@ -172,8 +169,8 @@ export function GOTV() {
           setInviteMembers(['']);
         }
       } else {
-        showToast(message?.error || message?.response_description || '');
-        setToastMessage(message?.error || message?.response_description || '');
+        showToast(message?.error || message?.message || '');
+        setToastMessage(message?.error || message?.message || '');
         setTxStatus(false);
       }
     } else {
@@ -247,6 +244,37 @@ selectedPlan === plan.value
                         ))}
                         </div>
                         )}
+                    </div>
+
+                    
+                    <div className="space-y-2">
+                      <Label>Subscription Type</Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setSubscriptionType('renew')}
+                          className={cn(
+                            'p-3 rounded-xl border-2 transition-all text-center text-sm font-medium',
+                            subscriptionType === 'renew'
+                              ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
+                              : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
+                          )}
+                        >
+                          Renew
+                          <p className="text-xs text-slate-500 mt-1 font-normal">Renew current bouquet</p>
+                        </button>
+                        <button
+                          onClick={() => setSubscriptionType('change')}
+                          className={cn(
+                            'p-3 rounded-xl border-2 transition-all text-center text-sm font-medium',
+                            subscriptionType === 'change'
+                              ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
+                              : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
+                          )}
+                        >
+                          Change
+                          <p className="text-xs text-slate-500 mt-1 font-normal">Switch to a new bouquet</p>
+                        </button>
+                      </div>
                     </div>
 
                     {selectedPlan && (
@@ -372,7 +400,7 @@ selectedPlan === plan.value
       <PinComponent type={isGroupPayment ? "group-gotv" : "gotv"} value={payload} />
       <ToastComponent />
       {isOpen && (
-        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
+        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} transactionData={message?.data ?? {}} />
       )}
     </div>
   );

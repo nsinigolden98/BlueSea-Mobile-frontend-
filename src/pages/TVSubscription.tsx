@@ -16,18 +16,6 @@ const tvServices = [
     description: 'Subscribe to GOTV packages',
     color: 'bg-orange-500',
   },
-  {
-    id: 'startimes',
-    name: 'Startimes',
-    description: 'Subscribe to Startimes packages',
-    color: 'bg-blue-500',
-  },
-  {
-    id: 'showmax',
-    name: 'ShowMax',
-    description: 'Stream movies and shows',
-    color: 'bg-purple-500',
-  },
 ];
 
 export function TVSubscription() {

@@ -12,7 +12,7 @@ export const navItems: NavItem[] = [
  //{ id: 'PayLink', label: 'PayLink', icon: 'ScanQrCode', path: '/paylink' },
 //   { id: 'bluespere', label: 'BlueSpere', icon: 'Orbit', path: '/bluesphere' },
   { id: 'more-services', label: 'More Services', icon: 'Grid3X3', path: '/more-services' },
- // { id: 'payroll-pro', label: 'Payroll Pro', icon: 'Briefcase', path: '/payroll-pro' },
+  { id: 'payroll-pro', label: 'Payroll Pro', icon: 'Briefcase', path: '/payroll-pro' },
     { id: 'scanner', label: 'Scanner', icon: 'QrCode', path: '/scanner-assignments' },
   { id: 'support', label: 'Support', icon: 'Headphones', path: '/support' },
 ];
@@ -195,8 +195,6 @@ export const moreServiceCategories: ServiceCategory[] = [
     services: [
       { id: 'tv1', name: 'DSTV', icon: 'Tv' },
       { id: 'tv2', name: 'GOTV', icon: 'Tv' },
-      { id: 'tv3', name: 'Startimes', icon: 'Tv' },
-      { id: 'tv4', name: 'ShowMax', icon: 'Tv' },
     ],
   },
   {
@@ -204,7 +202,6 @@ export const moreServiceCategories: ServiceCategory[] = [
     name: 'Education',
     services: [
       { id: 'e1', name: 'WAEC Registration', icon: 'BookOpen' },
-      { id: 'e2', name: 'WAEC Result', icon: 'FileText' },
       { id: 'e3', name: 'JAMB Registration', icon: 'GraduationCap' },
     ],
   },
@@ -223,6 +220,7 @@ export const moreServiceCategories: ServiceCategory[] = [
       { id: 'f1', name: 'Wallet', icon: 'Wallet' },
       { id: 'f2', name: 'Group Payment', icon: 'Users' },
       { id: 'f3', name: 'Blue Tickets', icon: 'Store' },
+      { id: 'f4', name: 'Payroll', icon: 'Briefcase' },
     ],
   },
   {

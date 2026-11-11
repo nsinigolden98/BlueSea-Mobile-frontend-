@@ -28,6 +28,8 @@ interface Message {
   message?: string;
   state?: boolean;
   is_active?: boolean;
+  /** Raw provider response body (VTpass full envelope) for the receipt. */
+  data?: Record<string, any>;
 }
 
 export function PinModal() {
@@ -86,17 +88,19 @@ export function PinModal() {
       'data-Glo': () => postRequest(ENDPOINTS.buy_glo, payload),
       'data-Airtel': () => postRequest(ENDPOINTS.buy_airtel, payload),
       'data-9mobile': () => postRequest(ENDPOINTS.buy_etisalat, payload),
+      'data-Smile': () => postRequest(ENDPOINTS.buy_smile, payload),
+      'data-Spectranet': () => postRequest(ENDPOINTS.buy_spectranet, payload),
       'marketplace': () => postRequest(ENDPOINTS.marketplace_purchase(value.event_id), {
         ticket_type: value.ticket_type,
         quantity: value.quantity,
         ...confirmation,
       }),
+      'payroll-invite': () => postRequest(ENDPOINTS.payroll_invite(value.company_id), payload),
+      'payroll-approve': () => postRequest(ENDPOINTS.payroll_approve(value.id), payload),
+      'payroll-retry': () => postRequest(ENDPOINTS.payroll_retry(value.id), payload),
       'dstv': () => postRequest(ENDPOINTS.dstv, payload),
       'gotv': () => postRequest(ENDPOINTS.gotv, payload),
-      'startimes': () => postRequest(ENDPOINTS.startimes, payload),
-      'showmax': () => postRequest(ENDPOINTS.showmax, payload),
       'waec-registration': () => postRequest(ENDPOINTS.waec_registration, payload),
-      'waec-result': () => postRequest(ENDPOINTS.waec_result, payload),
       'jamb': () => postRequest(ENDPOINTS.jamb_registration, payload),
       'auto-topup': () => postRequest(ENDPOINTS.auto_topup_create, payload),
       'auto-topup-reactivate': () => postRequest(ENDPOINTS.auto_topup_reactivate(value.id?.toString()), confirmation),
@@ -104,8 +108,6 @@ export function PinModal() {
       'group-data': () => postRequest(ENDPOINTS.create_group, payload),
       'group-gotv': () => postRequest(ENDPOINTS.create_group, payload),
       'group-dstv': () => postRequest(ENDPOINTS.create_group, payload),
-      'group-startimes': () => postRequest(ENDPOINTS.create_group, payload),
-      'group-showmax': () => postRequest(ENDPOINTS.create_group, payload),
       'group-lightbill': () => postRequest(ENDPOINTS.create_group, payload),
       'group-transfer': () => postRequest(ENDPOINTS.create_group, payload),
       'group-withdrawal': () => postRequest(ENDPOINTS.create_group, payload),

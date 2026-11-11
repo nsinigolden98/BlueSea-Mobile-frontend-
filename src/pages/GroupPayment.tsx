@@ -378,7 +378,7 @@ export function GroupPayment() {
     } else if (selectedGroup?.service_type === 'data') {
       service_detail = {
         network: selectedGroup?.plan_type,
-        billersCode: selectedGroup.sub_number,
+        phone_number: selectedGroup.sub_number,
         plan_id : selectedGroup?.plan
       }
     } else if (selectedGroup?.service_type === 'electricity') {

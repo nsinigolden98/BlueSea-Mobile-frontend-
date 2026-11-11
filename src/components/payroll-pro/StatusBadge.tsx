@@ -1,7 +1,7 @@
-import type { EmployeeStatus, BranchStatus, VerificationStatus, ApprovalStatus, PayrollStatus, LeaveStatus } from '@/types/payroll-pro';
+import type { EmployeeStatus, BranchStatus, PayrollStatus } from '@/types/payroll-pro';
 
 interface StatusBadgeProps {
-  status: EmployeeStatus | BranchStatus | VerificationStatus | ApprovalStatus | PayrollStatus | LeaveStatus | string;
+  status: EmployeeStatus | BranchStatus | PayrollStatus | string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
@@ -26,10 +26,9 @@ const statusConfig: Record<string, { className: string; label: string }> = {
   pending_approval: { className: 'tm-status-pending', label: 'Pending Approval' },
   processing: { className: 'tm-status-review', label: 'Processing' },
   completed: { className: 'tm-status-active', label: 'Completed' },
-  failed: { className: 'tm-status-suspended', label: 'Failed' },
-  // Leave statuses
+  partially_completed: { className: 'tm-status-pending', label: 'Partial' },
   cancelled: { className: 'tm-status-suspended', label: 'Cancelled' },
-  leave_completed: { className: 'tm-status-active', label: 'Completed' },
+  failed: { className: 'tm-status-suspended', label: 'Failed' },
 };
 
 export default function StatusBadge({ status, size = 'sm', className = '' }: StatusBadgeProps) {

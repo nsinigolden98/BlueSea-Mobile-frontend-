@@ -16,7 +16,7 @@ export const serviceCategories = [
   'Wallet & Rewards',
   'Marketplace & Commerce',
   'Finance',
-  // 'Business Tools',
+  'Business Tools',
   'Community & Experience',
   'Advanced Services',
 ];
@@ -26,7 +26,7 @@ export const services: Service[] = [
   { id: 'ep-1', name: 'Airtime', description: 'Recharge any network instantly', icon: 'Smartphone', route: '/airtime', category: 'Everyday Payments', badge: 'Popular' },
   { id: 'ep-2', name: 'Data', description: 'Buy internet data bundles', icon: 'Wifi', route: '/data', category: 'Everyday Payments', badge: 'Popular' },
   { id: 'ep-3', name: 'Electricity', description: 'Pay prepaid & postpaid bills', icon: 'Zap', route: '/light-bills', category: 'Everyday Payments' },
-  { id: 'ep-4', name: 'TV Subscription', description: 'DSTV, GOTV, Startimes', icon: 'Tv', route: '/tv-subscription', category: 'Everyday Payments' },
+  { id: 'ep-4', name: 'TV Subscription', description: 'DSTV, GOTV', icon: 'Tv', route: '/tv-subscription', category: 'Everyday Payments' },
   { id: 'ep-5', name: 'Smart Top-up', description: 'Automate your regular recharges', icon: 'RefreshCw', route: '/auto-topup', category: 'Everyday Payments' },
   { id: 'ep-6', name: 'Betting', description: 'Fund your betting wallet', icon: 'Coins', route: '/betting', category: 'Everyday Payments' },
 
@@ -56,7 +56,7 @@ export const services: Service[] = [
   //{ id: 'fi-5', name: 'Insurance', description: 'Protect what matters most', icon: 'ShieldCheck', route: '/finance/insurance', category: 'Finance' },
 
   // Business Tools
-  // { id: 'bt-1', name: 'Payroll', description: 'Automate staff salaries', icon: 'ShieldCheckIcon', route: '/payroll-pro', category: 'Business Tools' },
+  { id: 'bt-1', name: 'Payroll', description: 'Automate staff salaries & onboard staff', icon: 'Briefcase', route: '/payroll-pro', category: 'Business Tools' },
  // { id: 'bt-2', name: 'Properties', description: 'Manage real estate assets', icon: 'Building', route: '/business/properties', category: 'Business Tools' },
  // { id: 'bt-3', name: 'Appointments', description: 'Schedule client bookings', icon: 'Calendar', route: '/business/appointments', category: 'Business Tools' },
 

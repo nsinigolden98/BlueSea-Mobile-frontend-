@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar, Header, TransactionModal, PinModal, Toast } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { networks, airtimeAmounts } from '@/data';
+import { airtimeAmounts } from '@/data';
+import { usePlans, toAirtimeNetworks } from '@/hooks/usePlans';
 import { cn } from '@/lib/utils';
 import type { Network } from '@/types';
 import { useAuth } from '@/context/AuthContext';
@@ -18,6 +19,9 @@ export function Airtime() {
   const { showToast, ToastComponent } = Toast();
 
   // Existing State
+  const { plans: livePlans, unavailable: plansUnavailable } = usePlans();
+  const availableNetworks = useMemo(() => toAirtimeNetworks(livePlans.airtime ?? []), [livePlans]);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<Network>('MTN');
   const [phoneNumber, setPhoneNumber] = useState(defaultNumber);
@@ -61,6 +65,13 @@ export function Airtime() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Keep the selection on a network the live catalogue actually vends.
+  useEffect(() => {
+    if (availableNetworks.length > 0 && !availableNetworks.includes(selectedNetwork)) {
+      setSelectedNetwork(availableNetworks[0]);
+    }
+  }, [availableNetworks, selectedNetwork]);
+
   const saveToRecent = (num: string) => {
     const updated = [num, ...recentNumbers.filter(item => item !== num)].slice(0, 3);
     setRecentNumbers(updated);
@@ -79,7 +90,12 @@ export function Airtime() {
 
   const handleBuyAirtime = async () => {
     const amount = selectedAmount || Number(customAmount);
-    
+
+    if (availableNetworks.length === 0) {
+      showToast('Airtime is currently unavailable — no airtime products in the live catalogue');
+      return;
+    }
+
     // Validation
     if (!phoneNumber || phoneNumber.length !== 11) {
       showToast('Please enter a valid 11-digit phone number');
@@ -143,10 +159,10 @@ export function Airtime() {
       setTimeout(() => {
         setIsLoading(false);
         setIsOpen(true);
-        if (message?.success || message?.code === '000') {
+        if (message?.success) {
           saveToRecent(phoneNumber);
-          showToast(message?.response_description || message?.message || 'Success');
-          setToastMessage(message?.response_description || message?.message || 'Success');
+          showToast(message?.message || 'Success');
+          setToastMessage(message?.message || 'Success');
           setTxStatus(true);
 
           if (isGroupPayment) {
@@ -155,8 +171,8 @@ export function Airtime() {
             setInviteMembers(['']);
           }
         } else {
-          showToast(message?.error || message?.response_description || 'Failed');
-          setToastMessage(message?.error || message?.response_description || 'Failed');
+          showToast(message?.error || message?.message || 'Failed');
+          setToastMessage(message?.error || message?.message || 'Failed');
           setTxStatus(false);
         }
       }, 1500);
@@ -189,8 +205,13 @@ export function Airtime() {
                 {/* Network Selection */}
                 <div className="space-y-3">
                   <Label>Select Network</Label>
+                  {availableNetworks.length === 0 ? (
+                    <p className="text-xs text-amber-600 font-medium">
+                      {plansUnavailable ? 'Airtime unavailable — live catalog has no airtime products' : 'Loading airtime networks…'}
+                    </p>
+                  ) : (
                   <div className="flex flex-wrap gap-2">
-                    {networks.map((network) => (
+                    {availableNetworks.map((network) => (
                       <button
                         key={network}
                         onClick={() => setSelectedNetwork(network)}
@@ -205,6 +226,7 @@ export function Airtime() {
                       </button>
                     ))}
                   </div>
+                  )}
                 </div>
 
                 {/* Phone Number with Dropdown */}
@@ -430,7 +452,7 @@ export function Airtime() {
       <PinComponent type={isGroupPayment ? "group-airtime" : "airtime"} value={payload} />
       <ToastComponent />
       {isOpen && (
-        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
+        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} transactionData={message?.data ?? {}} />
       )}
     </div>
   );

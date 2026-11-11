@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Sidebar, Header, Toast, TransactionModal, PinModal, Loader } from '@/components/ui-custom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,50 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { usePlans, toElectricityProviders } from '@/hooks/usePlans';
 import { ENDPOINTS, postRequest } from '@/types';
-import { Users, Plus, X, RefreshCw, ChevronDown, History, Check, ChevronRight } from 'lucide-react';
+import { Users, Plus, X, ChevronDown, History, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface BillerName {
-  'Ikeja Electric(IKEDC)': string;
-  'Eko Electric(EKEDC)': string;
-  'Kano Electric(KEDCO)': string;
-  'Port-harcourt Electric(PHED)': string;
-  'Jos Electric(JED)': string;
-  'Ibadan Electric(IBEDC)': string;
-  'Kaduna Electric(KAEDCO)': string;
-  'Abuja Electric(AEDC)': string;
-  'Enugu Electric(EEDC)': string;
-  'Benin Electric(BEDC)': string;
-  'Aba Electric(ABA)': string;
-  'Yola Electric(YEDC)': string;
-}
-const BILLER_NAME: BillerName = {
-  'Ikeja Electric(IKEDC)': 'ikeja-electric',
-  'Eko Electric(EKEDC)': 'eko-electric',
-  'Kano Electric(KEDCO)': 'kano-electric',
-  'Port-harcourt Electric(PHED)': 'portharcourt-electric',
-  'Jos Electric(JED)': 'jos-electric',
-  'Ibadan Electric(IBEDC)': 'ibadan-electric',
-  'Kaduna Electric(KAEDCO)': 'kaduna-electric',
-  'Abuja Electric(AEDC)': 'abuja-electric',
-  'Enugu Electric(EEDC)': 'enugu-electric',
-  'Benin Electric(BEDC)': 'benin-electric',
-  'Aba Electric(ABA)': 'aba-electric',
-  'Yola Electric(YEDC)': 'yola-electric'
-};
-const billers = Object.keys(BILLER_NAME);
 
 interface VerificationData {
-  Customer_Name?: string;
-  Address?: string;
-  Customer_Number?: string;
-  Meter_Number?: string;
-  MeterNumber?: string;
-  Customer_Phone?: string;
-  Customer_Arrears?: number | string;
-  Meter_Type?: string;
-  Service?: string;
+  customerName?: string | null;
+  priceType?: string | null;
+  price?: number | null;
   [key: string]: any;
 }
 
@@ -64,13 +30,18 @@ export function LightBills() {
   // Verification State Management
   const [verificationData, setVerificationData] = useState<VerificationData | null>(null);
   const [isVerified, setIsVerified] = useState(false);
-  const [showMoreDetails, setShowMoreDetails] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const lookupSeq = useRef(0);
 
   const { PinComponent, showPinModal, modalData, message } = PinModal();
   const { user, refreshUser } = useAuth();
+  const { plans: livePlans, unavailable: electricityUnavailable } = usePlans();
+  const electricityProviders = useMemo(
+    () => toElectricityProviders(livePlans['electricity'] ?? []),
+    [livePlans],
+  );
+  const selectedProvider = electricityProviders.find((p) => p.id === biller) ?? null;
   const { LoaderComponent } = Loader();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState('');
@@ -91,11 +62,16 @@ export function LightBills() {
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
 
-  const pricePerUnit = 70;
-  const units = amount ? Math.floor(Number(amount) / pricePerUnit) : 0;
-  
   // Points logic: 100 Naira = 1 point
   const pointsEarned = Number(amount || 0) / 100;
+
+  // Keep the meter type on a type the selected biller actually vends.
+  useEffect(() => {
+    if (!selectedProvider || selectedProvider.meterTypes.length === 0) return;
+    if (!selectedProvider.meterTypes.includes(meterType as 'Prepaid' | 'Postpaid')) {
+      setMeterType(selectedProvider.meterTypes[0]);
+    }
+  }, [selectedProvider, meterType]);
 
   const payload = isGroupPayment ? {
     name: groupName,
@@ -104,12 +80,12 @@ export function LightBills() {
     sub_number: meterNumber,
     target_amount: Number(amount),
     invite_members: inviteMembers.filter(e => e.trim()).join(','),
-    plan: BILLER_NAME[biller as keyof BillerName],
+    plan: biller,
     plan_type: meterType.toLowerCase()
   } : {
-    billerCode: meterNumber,
+    meter_number: meterNumber,
     amount: Number(amount),
-    biller_name: BILLER_NAME[biller as keyof BillerName],
+    biller,
     meter_type: meterType.toLowerCase(),
   };
 
@@ -118,7 +94,6 @@ export function LightBills() {
     setIsVerified(false);
     setVerificationData(null);
     setCustomer('');
-    setShowMoreDetails(false);
     setVerifyError(null);
   }, [meterNumber, meterType, biller]);
 
@@ -141,17 +116,17 @@ export function LightBills() {
     const t = setTimeout(async () => {
       try {
         const data = {
-          meter_number: Number(digits),
+          meter_number: digits,
           meter_type: meterType.toLowerCase(),
-          biller: BILLER_NAME[biller as keyof BillerName]
+          biller,
         };
         const response = await postRequest(ENDPOINTS.electricity_user, data);
         if (lookupSeq.current !== seq) return;
         if (response.success) {
-          const customerDetails = response.response || response.data || {};
-          if (customerDetails.Customer_Name || customerDetails.Customer_Number || customerDetails.Address) {
+          const customerDetails = response as VerificationData;
+          if (customerDetails.customerName) {
             setVerificationData(customerDetails);
-            setCustomer(`Customer: ${customerDetails.Customer_Name || 'Verified'}`);
+            setCustomer(`Customer: ${customerDetails.customerName}`);
             setIsVerified(true);
           } else {
             setVerifyError('Customer not found. Please check the meter details and try again.');
@@ -272,20 +247,12 @@ export function LightBills() {
         setIsOpen(true);
 
         const targetPayload = message as any;
-        const isSuccess = 
-          targetPayload?.success === true || 
-          targetPayload?.success === 'true' ||
-          targetPayload?.code === '000' || 
-          targetPayload?.code === '200' || 
-          targetPayload?.code === 200 ||
-          targetPayload?.status === 'success' || 
-          targetPayload?.status === '000' || 
-          targetPayload?.state === 'success';
+        const isSuccess = targetPayload?.success === true;
 
         if (isSuccess) {
           saveToRecent(meterNumber);
-          showToast(message?.response_description || message?.message || 'Success');
-          setToastMessage(message?.response_description || message?.message || 'Success');
+          showToast(message?.message || 'Success');
+          setToastMessage(message?.message || 'Success');
           setTxStatus(true);
 
           await refreshUser();
@@ -296,8 +263,8 @@ export function LightBills() {
             setInviteMembers(['']);
           }
         } else {
-          showToast(message?.error || message?.response_description || message?.message || 'Failed');
-          setToastMessage(message?.error || message?.response_description || message?.message || 'Failed');
+          showToast(message?.error || message?.message || 'Failed');
+          setToastMessage(message?.error || message?.message || 'Failed');
           setTxStatus(false);
         }
       }, 1500);
@@ -397,39 +364,52 @@ export function LightBills() {
                         {[
                           { value: 'Prepaid', hint: 'Pay as you go' },
                           { value: 'Postpaid', hint: 'Pay monthly bill' },
-                        ].map((t) => (
+                        ].map((t) => {
+                          const supported =
+                            !selectedProvider ||
+                            selectedProvider.meterTypes.length === 0 ||
+                            selectedProvider.meterTypes.includes(t.value as 'Prepaid' | 'Postpaid');
+                          return (
                           <button
                             key={t.value}
                             type="button"
+                            disabled={!supported}
                             onClick={() => setMeterType(t.value)}
                             className={cn(
                               'p-4 rounded-xl border-2 transition-all text-center',
-                              meterType === t.value
+                              !supported && 'opacity-40 cursor-not-allowed border-slate-200 dark:border-slate-700',
+                              supported && meterType === t.value
                                 ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
                                 : 'border-slate-200 dark:border-slate-700 hover:border-sky-300'
                             )}
                           >
                             <p className="font-bold text-sm text-slate-800 dark:text-white">{t.value}</p>
-                            <p className="text-xs text-slate-500 mt-1">{t.hint}</p>
+                            <p className="text-xs text-slate-500 mt-1">{supported ? t.hint : 'Not available for this biller'}</p>
                           </button>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label className="text-slate-700 dark:text-slate-300">Biller</Label>
-                      <Select value={biller} onValueChange={setBiller}>
+                      <Select value={biller} onValueChange={setBiller} disabled={electricityProviders.length === 0}>
                         <SelectTrigger className="h-12 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                          <SelectValue placeholder="Select Biller" />
+                          <SelectValue placeholder={electricityUnavailable ? 'Providers unavailable' : 'Select Biller'} />
                         </SelectTrigger>
                         <SelectContent>
-                          {billers.map((b) => (
-                            <SelectItem key={b} value={b}>
-                              {b}
+                          {electricityProviders.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {electricityProviders.length === 0 && (
+                        <p className="text-xs text-red-500">
+                          Could not load the electricity catalogue. Please try again later.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -457,14 +437,6 @@ export function LightBills() {
 
                     <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-5 space-y-3 border border-slate-200/60 dark:border-slate-700">
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500 dark:text-slate-400">Price per unit</span>
-                        <span className="font-medium text-slate-700 dark:text-slate-300">₦{pricePerUnit}/unit</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500 dark:text-slate-400">Units you'll receive</span>
-                        <span className="font-semibold text-slate-900 dark:text-white">{units}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm pt-3 border-t border-slate-200 dark:border-slate-700 mt-1">
                         <span className="text-slate-600 dark:text-slate-400 font-medium italic">Points Earned</span>
                         <span className="font-bold text-sky-600 dark:text-sky-400">
                           +{pointsEarned.toFixed(1).replace(/\.0$/, '')} pts
@@ -572,128 +544,48 @@ export function LightBills() {
                               <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 text-sm">
                                 Meter Successfully Verified
                               </h4>
-                              {verificationData.Customer_Name && (
+                              {verificationData.customerName && (
                                 <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                  {verificationData.Customer_Name}
+                                  {verificationData.customerName}
                                 </p>
                               )}
                             </div>
-                          </div>
-
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {verificationData.Service && (
-                              <span className="inline-flex items-center rounded-full bg-white/80 dark:bg-slate-800 px-3 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200 border border-emerald-100 dark:border-slate-700">
-                                {verificationData.Service}
-                              </span>
-                            )}
-                            {verificationData.Meter_Type && (
-                              <span className="inline-flex items-center rounded-full bg-white/80 dark:bg-slate-800 px-3 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200 border border-emerald-100 dark:border-slate-700">
-                                {verificationData.Meter_Type}
-                              </span>
-                            )}
                           </div>
                         </div>
 
-                        <div className="p-5 space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {verificationData.Meter_Number && (
-                              <div>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                  Meter Number
-                                </p>
-                                <p className="text-sm font-semibold text-slate-900 dark:text-white font-mono break-all">
-                                  {verificationData.Meter_Number}
-                                </p>
-                              </div>
-                            )}
-
-                            {verificationData.Customer_Number && (
-                              <div>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                  Customer Number
-                                </p>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 font-mono break-all">
-                                  {verificationData.Customer_Number}
-                                </p>
-                              </div>
-                            )}
+                        <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
+                              Meter Number
+                            </p>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white font-mono break-all">
+                              {meterNumber}
+                            </p>
                           </div>
-
-                          {verificationData.Address && (
+                          <div>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
+                              Provider
+                            </p>
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                              {selectedProvider?.name ?? '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
+                              Meter Type
+                            </p>
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                              {meterType}
+                            </p>
+                          </div>
+                          {verificationData.priceType && (
                             <div>
                               <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                Customer Address
+                                Price Type
                               </p>
-                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
-                                {verificationData.Address}
+                              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                {verificationData.priceType}
                               </p>
-                            </div>
-                          )}
-
-                          {verificationData.Customer_Arrears !== undefined &&
-                            verificationData.Customer_Arrears !== null &&
-                            verificationData.Customer_Arrears !== '' && (
-                              <div className="rounded-xl border border-amber-200/70 dark:border-amber-900/50 bg-amber-50/70 dark:bg-amber-900/10 px-4 py-3.5">
-                                <p className="text-[11px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider mb-1">
-                                  Customer Arrears
-                                </p>
-                                <p className="text-lg font-bold text-slate-900 dark:text-white">
-                                  ₦{Number(verificationData.Customer_Arrears).toLocaleString('en-NG', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                  })}
-                                </p>
-                              </div>
-                            )}
-
-                          <button
-                            type="button"
-                            onClick={() => setShowMoreDetails(!showMoreDetails)}
-                            className="w-full flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                          >
-                            <span>{showMoreDetails ? 'Hide more details' : 'View more details'}</span>
-                            <ChevronRight
-                              className={cn(
-                                "w-4 h-4 transition-transform duration-200",
-                                showMoreDetails && "rotate-90"
-                              )}
-                            />
-                          </button>
-
-                          {showMoreDetails && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 animate-in fade-in slide-in-from-top-1">
-                              {verificationData.Customer_Phone && (
-                                <div>
-                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                    Customer Phone
-                                  </p>
-                                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300 font-mono">
-                                    {verificationData.Customer_Phone}
-                                  </p>
-                                </div>
-                              )}
-
-                              {verificationData.Meter_Type && (
-                                <div>
-                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                    Meter Type
-                                  </p>
-                                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    {verificationData.Meter_Type}
-                                  </p>
-                                </div>
-                              )}
-
-                              {verificationData.Service && (
-                                <div>
-                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
-                                    Service Provider
-                                  </p>
-                                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    {verificationData.Service}
-                                  </p>
-                                </div>
-                              )}
                             </div>
                           )}
                         </div>
@@ -712,16 +604,6 @@ export function LightBills() {
                       {isLoading
                         ? "Processing..."
                         : "Continue Payment"}
-                    </Button>
-
-                    {/* Auto Top-Up Button */}
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate(`/auto-topup?service_type=lightbill&network=${BILLER_NAME[biller as keyof BillerName] || biller}&phone_number=${meterNumber}&amount=${amount}`)}
-                      className="w-full rounded-full py-6 mt-3 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Set Up Auto Top-Up
                     </Button>
 
                   </div>
@@ -745,7 +627,8 @@ export function LightBills() {
               window.location.reload();
             }
           }} 
-          toastMessage={toastMessage} 
+          toastMessage={toastMessage}
+          transactionData={message?.data ?? {}}
         />
       )}
     </div>

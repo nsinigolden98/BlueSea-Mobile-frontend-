@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { 
   Loader2, 
   CheckCircle2, 
@@ -22,14 +22,19 @@ import {
   Check,
   AlertTriangle,
   Building2,
-  Receipt
+  Receipt,
+  Download,
+  Image as ImageIcon,
+  Braces,
+  ChevronDown
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import './Toast.css';
 import './TransactionModal.css';
 
 export function Toast() {
   const [toastData, setToastData] = useState<{ msg: string; visible: boolean }>({ msg: '', visible: false });
-  const showToast = useCallback((msg: string, ms = 10000) => {
+  const showToast = useCallback((msg: string, ms = 5000) => {
     setToastData({ msg, visible: true });
     setTimeout(() => setToastData((prev) => ({ ...prev, visible: false })), ms);
   }, []);
@@ -53,14 +58,16 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   toastMessage,
   transactionData = {},
   errorData = null,
-  onRetry,
-  onViewReceipt
+  onRetry
 }) => {
   // UI State mapping
   const [visualStep, setVisualStep] = useState(0);
   const [showReceipt, setShowReceipt] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [showRaw, setShowRaw] = useState(false);
+  const [saving, setSaving] = useState<'pdf' | 'image' | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   // Deep recursive parser for backend error structures
   const parseBackendError = useCallback((error: any, fallback: string): { message: string; details?: string[] } => {
@@ -143,6 +150,64 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     }
   };
 
+  // Receipt export: image download (PNG) + printable PDF view.
+  // Uses html2canvas (already in dependencies) — the rendered receipt node
+  // is captured so the saved file shows exactly what the user sees.
+  const captureReceipt = async (): Promise<HTMLCanvasElement | null> => {
+    const node = receiptRef.current;
+    if (!node) return null;
+    return html2canvas(node, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+  };
+
+  const downloadImage = async () => {
+    setSaving('image');
+    try {
+      const canvas = await captureReceipt();
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.download = `bluesea-receipt-${new Date().toISOString().slice(0, 10)}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const printPdf = async () => {
+    setSaving('pdf');
+    try {
+      const canvas = await captureReceipt();
+      if (!canvas) return;
+      const image = canvas.toDataURL('image/png');
+      const win = window.open('', '_blank', 'width=800,height=1000');
+      if (!win) return;
+      // Build via DOM APIs instead of document.write (deprecated + XSS-prone).
+      const doc = win.document;
+      doc.open();
+      doc.write('<!doctype html>');
+      doc.close();
+      const head = doc.createElement('head');
+      const title = doc.createElement('title');
+      title.textContent = 'BlueSea Receipt';
+      head.appendChild(title);
+      doc.head.appendChild(head);
+      const style = doc.createElement('style');
+      style.textContent = 'body{margin:24px;font-family:sans-serif}img{width:100%;max-width:700px}';
+      doc.head.appendChild(style);
+      const img = doc.createElement('img');
+      img.src = image;
+      img.alt = 'Receipt';
+      doc.body.appendChild(img);
+      img.onload = () => {
+        win.focus();
+        win.print();
+        win.onafterprint = () => win.close();
+      };
+    } finally {
+      setSaving(null);
+    }
+  };
+
   // --- DYNAMIC DATA RENDERING ENGINE ---
   const formatValue = (key: string, value: any) => {
     const k = key.toLowerCase();
@@ -176,38 +241,71 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   };
 
   const primaryAmountKeys = ['amount', 'total', 'total_amount', 'price'];
-  const deliverableKeys = ['token', 'pin', 'recharge_code', 'voucher', 'code'];
+  const deliverableKeys = ['token', 'pin', 'recharge_code', 'voucher', 'code', 'purchased_code', 'tokens'];
 
-  const amountKey = Object.keys(transactionData).find(k => primaryAmountKeys.includes(k.toLowerCase()));
-  const amountValue = amountKey ? formatValue(amountKey, transactionData[amountKey]) : null;
+  // Flatten every nested VTpass field so the receipt shows everything,
+  // including content.transactions.* and top-level purchased_code/token.
+  const flatten = useCallback((obj: any, prefix = ''): Array<{ key: string; path: string; value: any }> => {
+    const out: Array<{ key: string; path: string; value: any }> = [];
+    if (obj === null || obj === undefined || obj === '') return out;
+    if (typeof obj !== 'object') {
+      if (prefix) out.push({ key: prefix.split('.').pop() || prefix, path: prefix, value: obj });
+      return out;
+    }
+    if (Array.isArray(obj)) {
+      obj.forEach((item, i) => {
+        if (item !== null && typeof item === 'object') {
+          out.push(...flatten(item, `${prefix}[${i}]`));
+        } else if (prefix) {
+          out.push({ key: `${prefix}[${i}]`, path: `${prefix}[${i}]`, value: item });
+        }
+      });
+      return out;
+    }
+    for (const [k, v] of Object.entries(obj)) {
+      const path = prefix ? `${prefix}.${k}` : k;
+      if (v !== null && typeof v === 'object') {
+        out.push(...flatten(v, path));
+      } else if (v !== null && v !== undefined && v !== '') {
+        out.push({ key: k, path, value: v });
+      }
+    }
+    return out;
+  }, []);
 
-  const deliverableKey = Object.keys(transactionData).find(k => deliverableKeys.includes(k.toLowerCase()));
-  const deliverableValue = deliverableKey ? transactionData[deliverableKey] : null;
+  const flatRows = useMemo(() => flatten(transactionData), [transactionData, flatten]);
 
-  const filteredData = Object.entries(transactionData).filter(([k]) => k !== amountKey && k !== deliverableKey);
+  const amountRow = flatRows.find((r) => primaryAmountKeys.includes(r.key.toLowerCase()));
+  const amountValue = amountRow ? formatValue(amountRow.key, amountRow.value) : null;
 
-  const renderDataRow = (key: string, value: any) => {
-    if (value === null || value === undefined || value === '') return null;
-    const formattedLabel = key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-    const Icon = getIconForKey(key);
-    const displayVal = formatValue(key, value);
-    const canCopy = isCopyable(key);
+  const deliverableRow = flatRows.find((r) => deliverableKeys.includes(r.key.toLowerCase()));
+  const deliverableValue = deliverableRow ? deliverableRow.value : null;
+
+  const filteredRows = flatRows.filter(
+    (r) => r !== amountRow && r !== deliverableRow
+  );
+
+  const renderDataRow = (row: { key: string; path: string; value: any }, index: number) => {
+    const formattedLabel = row.path.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+    const Icon = getIconForKey(row.key);
+    const displayVal = formatValue(row.key, row.value);
+    const canCopy = isCopyable(row.key);
 
     return (
-      <div className="tm-receipt-row flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800/60 last:border-0" key={key}>
-        <span className="tm-receipt-label flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-          <Icon size={13} className="tm-receipt-icon text-slate-400" /> 
-          {formattedLabel}
+      <div className="tm-receipt-row flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800/60 last:border-0" key={`${row.path}-${index}`}>
+        <span className="tm-receipt-label flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 min-w-0">
+          <Icon size={13} className="tm-receipt-icon text-slate-400 shrink-0" />
+          <span className="truncate">{formattedLabel}</span>
         </span>
-        <div className="flex items-center gap-1.5 font-medium text-xs text-slate-800 dark:text-slate-200">
+        <div className="flex items-center gap-1.5 font-medium text-xs text-slate-800 dark:text-slate-200 shrink-0 ml-2">
           <span className="truncate max-w-[180px]">{displayVal}</span>
           {canCopy && (
             <button
-              onClick={() => handleCopy(String(value), key)}
+              onClick={() => handleCopy(String(row.value), row.path)}
               className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
               title="Copy"
             >
-              {copiedKey === key ? (
+              {copiedKey === row.path ? (
                 <Check className="w-3.5 h-3.5 text-emerald-500" />
               ) : (
                 <Copy className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" />
@@ -311,7 +409,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
             {/* RECEIPT VIEW (Visible on Success) */}
             {showReceipt && isSuccess === true && (
-              <div className="tm-receipt slide-up delay-1 space-y-4">
+              <div className="tm-receipt slide-up delay-1 space-y-4" ref={receiptRef}>
                 
                 {/* 1. Large Amount Display */}
                 {amountValue && (
@@ -333,27 +431,27 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   <div className="tm-highlight-box bg-slate-50 dark:bg-slate-800/40 border border-sky-500/30 dark:border-sky-500/40 p-4 rounded-2xl space-y-1.5">
                     <div className="flex justify-between items-center">
                       <span className="tm-highlight-label text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">
-                        {deliverableKey?.replace(/_/g, ' ')}
+                        {deliverableRow?.path.replace(/_/g, ' ')}
                       </span>
                       <button
-                        onClick={() => handleCopy(String(deliverableValue), deliverableKey || 'deliverable')}
+                        onClick={() => handleCopy(String(deliverableValue), deliverableRow?.path || 'deliverable')}
                         className="flex items-center gap-1 text-[10px] font-bold text-sky-600 dark:text-sky-400 hover:underline"
                       >
-                        {copiedKey === deliverableKey ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                        <span>{copiedKey === deliverableKey ? 'Copied' : 'Copy'}</span>
+                        {copiedKey === deliverableRow?.path ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedKey === deliverableRow?.path ? 'Copied' : 'Copy'}</span>
                       </button>
                     </div>
                     <div className="tm-highlight-value text-lg font-mono font-black text-slate-800 dark:text-slate-50 tracking-widest break-all">
                       {deliverableValue}
                     </div>
                     <p className="tm-highlight-hint text-[10px] text-slate-400 dark:text-slate-500">
-                      Use this {deliverableKey?.replace(/_/g, ' ')} to complete or redeem your service.
+                      Use this {deliverableRow?.path.replace(/_/g, ' ')} to complete or redeem your service.
                     </p>
                   </div>
                 )}
 
                 {/* 3. Detailed Data Breakdown */}
-                {filteredData.length > 0 && (
+                {filteredRows.length > 0 && (
                   <div className="tm-receipt-details bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
                     <div className="tm-section-title px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800/60">
                       <Receipt className="w-3.5 h-3.5 text-slate-400" />
@@ -362,7 +460,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       </span>
                     </div>
                     <div className="tm-receipt-grid px-4 py-2 divide-y divide-slate-100 dark:divide-slate-800/60">
-                      {filteredData.map(([key, value]) => renderDataRow(key, value))}
+                      {filteredRows.map((row, i) => renderDataRow(row, i))}
                       <div className="tm-receipt-row flex items-center justify-between py-2">
                         <span className="tm-receipt-label flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
                           <ShieldCheck size={13} className="tm-receipt-icon text-emerald-500" /> 
@@ -376,6 +474,25 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   </div>
                 )}
 
+                {/* 4. Full raw provider response (every VTpass field) */}
+                <div className="tm-receipt-details bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
+                  <button
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800/60 text-left"
+                    onClick={() => setShowRaw((v) => !v)}
+                  >
+                    <Braces className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex-1">
+                      Full Provider Response
+                    </span>
+                    <ChevronDown size={14} className={`text-slate-400 transition-transform ${showRaw ? 'rotate-180' : ''}`} />
+                  </button>
+                  {showRaw && (
+                    <pre className="px-4 py-3 text-[10px] leading-relaxed text-slate-600 dark:text-slate-300 overflow-x-auto whitespace-pre-wrap break-all max-h-64 overflow-y-auto">
+                      {JSON.stringify(transactionData, null, 2)}
+                    </pre>
+                  )}
+                </div>
+
               </div>
             )}
           </div>
@@ -385,14 +502,22 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         <footer className={`tm-footer p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 shrink-0 flex items-center gap-3 ${showReceipt ? 'slide-up delay-2' : 'hidden'}`}>
           {isSuccess === true && (
             <>
-              {onViewReceipt && (
-                <button 
-                  className="tm-btn tm-btn-secondary flex-1 h-12 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2" 
-                  onClick={onViewReceipt}
-                >
-                  <FileText size={18} /> Receipt
-                </button>
-              )}
+              <button
+                className="tm-btn h-12 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                onClick={printPdf}
+                disabled={saving !== null}
+                title="Save receipt as PDF (print dialog)"
+              >
+                <Download size={16} /> PDF
+              </button>
+              <button
+                className="tm-btn h-12 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                onClick={downloadImage}
+                disabled={saving !== null}
+                title="Download receipt as image"
+              >
+                <ImageIcon size={16} /> PNG
+              </button>
               <button 
                 className="tm-btn tm-btn-primary flex-1 h-12 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs shadow-lg shadow-sky-500/15 transition-all flex items-center justify-center gap-1" 
                 onClick={handleClose}

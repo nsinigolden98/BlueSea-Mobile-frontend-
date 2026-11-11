@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
-import { Sidebar, Header } from '@/components/ui-custom';
+import { Sidebar, Header,Toast } from '@/components/ui-custom';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { PinModal } from '@/components/ui-custom/PinModal';
 import { Capacitor } from '@capacitor/core';
@@ -84,6 +84,7 @@ export function Settings() {
 
   // PinModal Hook
   const { showPinModal, hidePinModal, PinComponent, modalData } = PinModal();
+  const {showToast} = Toast();
 
   // Navigation Drawer state
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -236,7 +237,7 @@ export function Settings() {
    */
   const handleLogout = async () => {
     try {
-      await logout();
+       logout();
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
@@ -341,7 +342,8 @@ export function Settings() {
     const errorMsg = errorResponse?.message || errorResponse?.error || 'Invalid Transaction PIN. Please try again.';
     setPinErrorMessage(errorMsg);
     setPendingBiometricAction(null);
-    
+
+    showToast("errorMsg");
     // Explicitly dismiss modal and clean up state on verification error
     hidePinModal();
   };

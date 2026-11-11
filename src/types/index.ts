@@ -80,7 +80,7 @@ export interface Transaction {
 }
 
 // Network Types
-export type Network = 'MTN' | 'Glo' | 'Airtel' | '9mobile';
+export type Network = 'MTN' | 'Glo' | 'Airtel' | '9mobile' | 'Smile' | 'Spectranet';
 
 export interface DataPlan {
   id: string;
@@ -367,11 +367,16 @@ export const ENDPOINTS = {
   balance: `${API_BASE}/wallet/balance/`,
   dvaAssign: `${API_BASE}/accounts/dva/assign/`,
   checkUserVerification: (email: string) => `${API_BASE}/user_preference/check/${encodeURIComponent(email)}/`,
-  fund: `${API_BASE}/transactions/nomba/fund-wallet/`,
+  fund: `${API_BASE}/transactions/fund-wallet/`,
   history: `${API_BASE}/transactions/history/`,
   user: `${API_BASE}/user_preference/user/`,
   kyc_status: `${API_BASE}/accounts/kyc/`,
   kyc_submit: `${API_BASE}/accounts/kyc/submit/`,
+  payroll_me: `${API_BASE}/payroll/me`,
+  payroll_portal: `${API_BASE}/payroll/portal`,
+  payroll_invite: (id: string) => `${API_BASE}/payroll/companies/${id}/invites`,
+  payroll_approve: (id: string) => `${API_BASE}/payroll/runs/${id}/approve`,
+  payroll_retry: (id: string) => `${API_BASE}/payroll/runs/${id}/retry-failed`,
   pin_set: `${API_BASE}/accounts/pin/set/`,
   pin_verify: `${API_BASE}/accounts/pin/verify/`,
   pin_reset: `${API_BASE}/accounts/pin/reset/`,
@@ -388,6 +393,8 @@ export const ENDPOINTS = {
   buy_mtn: `${API_BASE}/payments/mtn-data/`,
   buy_glo: `${API_BASE}/payments/glo-data/`,
   buy_etisalat: `${API_BASE}/payments/9mobile-data/`,
+  buy_smile: `${API_BASE}/payments/smile-data/`,
+  buy_spectranet: `${API_BASE}/payments/spectranet-data/`,
   account_name: `${API_BASE}/transactions/account-name/`,
   verify_account_name: `${API_BASE}/marketplace/verify-account-name/`,
   event_public: (id: string) => `${API_BASE}/marketplace/events/public/${id}/`,
@@ -426,11 +433,8 @@ loyalty_rewards: `${API_BASE}/loyalty/rewards/`,
   betting_fund: `${API_BASE}/payments/betting/fund/`,
   betting_providers: `${API_BASE}/payments/betting/providers/`,
   betting_lookup: `${API_BASE}/payments/betting/lookup/`,
-  showmax: `${API_BASE}/payments/showmax/`,
-  startimes: `${API_BASE}/payments/startimes/`,
   gotv: `${API_BASE}/payments/gotv/`,
   waec_registration: `${API_BASE}/payments/waec-registration/`,
-  waec_result: `${API_BASE}/payments/waec-result/`,
   jamb_registration: `${API_BASE}/payments/jamb-registration/`,
   auto_topup_list: `${API_BASE}/autotopup/list/`,
   auto_topup_create: `${API_BASE}/autotopup/create/`,

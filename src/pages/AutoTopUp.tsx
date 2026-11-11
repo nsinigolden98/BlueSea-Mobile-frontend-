@@ -42,7 +42,7 @@ export function AutoTopUp() {
   const [autoTopUps, setAutoTopUps] = useState<AutoTopUp[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [serviceType, setServiceType] = useState<'airtime' | 'data' | 'dstv' | 'gotv' | 'showmax' | 'startimes' | 'lightbill'>('airtime');
+  const [serviceType, setServiceType] = useState<'airtime' | 'data' | 'dstv' | 'gotv' | 'lightbill'>('airtime');
   const [selectedNetwork, setSelectedNetwork] = useState('MTN');
   const [selectedPlan, setSelectedPlan] = useState('');
   const [phoneNumber, setPhoneNumber] = useState(user?.phone ? '0'+ user?.phone.slice(-10,) : '');
@@ -68,7 +68,7 @@ export function AutoTopUp() {
 
   useEffect(() => {
     // Check for URL params from payment pages
-    const serviceTypeParam = searchParams.get('service_type') as 'airtime' | 'data' | 'dstv' | 'gotv' | 'showmax' | 'startimes' | 'lightbill' | null;
+    const serviceTypeParam = searchParams.get('service_type') as 'airtime' | 'data' | 'dstv' | 'gotv' | 'lightbill' | null;
     const networkParam = searchParams.get('network');
     const phoneParam = searchParams.get('phone_number');
     const amountParam = searchParams.get('amount');

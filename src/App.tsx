@@ -43,11 +43,8 @@ import {
   VendorVerification,
   DSTV,
   GOTV,
-  Startimes,
-  ShowMax,
   // Rewards, // Replaced by Vault modular system
   WAECRegistration,
-  WAECResult,
   JAMBRegistration,
   TVSubscription,
   AutoTopUp,
@@ -86,6 +83,8 @@ import EmployeePortal from './screens/payroll-pro/EmployeePortal';
 import AddEmployee from './screens/payroll-pro/AddEmployee';
 import CreateBranch from './screens/payroll-pro/CreateBranch';
 import PayrollDetail from './screens/payroll-pro/PayrollDetail';
+import RunPayroll from './screens/payroll-pro/RunPayroll';
+import InviteAccept from './screens/payroll-pro/InviteAccept';
 
 // AFFILIATE ROUTES
 import { 
@@ -270,10 +269,7 @@ function AppRoutes() {
           <Route path="/vendor-verification" element={<ProtectedRoute><VendorVerification /></ProtectedRoute>} />
           <Route path="/dstv" element={<ProtectedRoute><DSTV /></ProtectedRoute>} />
           <Route path="/gotv" element={<ProtectedRoute><GOTV /></ProtectedRoute>} />
-          <Route path="/startimes" element={<ProtectedRoute><Startimes /></ProtectedRoute>} />
-          <Route path="/showmax" element={<ProtectedRoute><ShowMax /></ProtectedRoute>} />
           <Route path="/waec-registration" element={<ProtectedRoute><WAECRegistration /></ProtectedRoute>} />
-          <Route path="/waec-result" element={<ProtectedRoute><WAECResult /></ProtectedRoute>} />
           <Route path="/jamb-registration" element={<ProtectedRoute><JAMBRegistration /></ProtectedRoute>} />
           <Route path="/tv-subscription" element={<ProtectedRoute><TVSubscription /></ProtectedRoute>} />
           <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
@@ -304,6 +300,8 @@ function AppRoutes() {
           <Route path="/payroll-pro/employee/:employeeId" element={<ProtectedRoute><EmployeeProfile /></ProtectedRoute>} />
           <Route path="/payroll-pro/portal/:companyId" element={<ProtectedRoute><EmployeePortal /></ProtectedRoute>} />
           <Route path="/payroll-pro/payroll/:payrollId" element={<ProtectedRoute><PayrollDetail /></ProtectedRoute>} />
+          <Route path="/payroll-pro/company/:companyId/run-payroll" element={<ProtectedRoute><RunPayroll /></ProtectedRoute>} />
+          <Route path="/payroll-pro/invite/:token" element={<ProtectedRoute><InviteAccept /></ProtectedRoute>} />
 
 
           {/* SECURED PAYLINK ROUTES */}

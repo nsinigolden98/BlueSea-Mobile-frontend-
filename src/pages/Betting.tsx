@@ -6,12 +6,11 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { postRequest, ENDPOINTS } from '@/types';
-import { usePlans, toBettingProviders, DEFAULT_BETTING_PROVIDERS, BETTING_MIN_LOOKUP_LENGTH, type BettingProvider } from '@/hooks/usePlans';
+import { usePlans, toBettingProviders, BETTING_MIN_LOOKUP_LENGTH, type BettingProvider } from '@/hooks/usePlans';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, ChevronDown, History } from 'lucide-react';
+import { ArrowLeft, ChevronDown, History } from 'lucide-react';
 
-// Fallback providers (Nomba-supported only) until the plans socket serves
-// the live list. `lookupCode` is the Nomba `lookup_id` the API requires.
+// Providers come from the live plans socket; product codes are never guessed.
 
 const bettingAmounts = [100, 500, 1000, 2000];
 
@@ -23,29 +22,24 @@ export function Betting() {
 
   // State
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // Live Nomba providers via `/ws/plans/` key `betting`; fallback offline.
-  const { plans: livePlans } = usePlans();
-  const liveBetting = useMemo(
-    () => toBettingProviders(livePlans['betting'] ?? []),
-    [livePlans],
-  );
-  const providers: BettingProvider[] =
-    liveBetting.length > 0 ? liveBetting : DEFAULT_BETTING_PROVIDERS;
-  const [selectedProvider, setSelectedProvider] = useState<BettingProvider>(
-    DEFAULT_BETTING_PROVIDERS[0],
-  );
+  // Providers are out of catalogue scope; the page stays in the UI until
+  // the betting vertical is decided.
+  const { unavailable: providersUnavailable } = usePlans();
+  const providers: BettingProvider[] = useMemo(() => toBettingProviders([]), []);
+  const [selectedProvider, setSelectedProvider] = useState<BettingProvider | null>(null);
 
   // Adopt the live list once it arrives (keep selection when still offered).
   useEffect(() => {
-    if (liveBetting.length === 0) return;
+    if (providers.length === 0) return;
     setSelectedProvider((prev) => {
-      const match =
-        liveBetting.find((p) => p.lookupCode === prev.lookupCode) ??
-        liveBetting.find((p) => p.name.toLowerCase() === prev.name.toLowerCase()) ??
-        liveBetting[0];
-      return match;
+      if (!prev) return providers[0];
+      return (
+        providers.find((p) => p.productId === prev.productId) ??
+        providers.find((p) => p.name.toLowerCase() === prev.name.toLowerCase()) ??
+        providers[0]
+      );
     });
-  }, [liveBetting]);
+  }, [providers]);
   const [identifier, setIdentifier] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState('');
@@ -108,6 +102,10 @@ export function Betting() {
   };
 
   const handleFundWallet = async () => {
+    if (!selectedProvider) {
+      showToast('Providers unavailable');
+      return;
+    }
     const minLen = selectedProvider.lookupAt ?? BETTING_MIN_LOOKUP_LENGTH;
     if (!identifier || identifier.replace(/\D/g, '').length < minLen) {
       showToast(`Invalid ${selectedProvider.label} length`);
@@ -137,6 +135,12 @@ export function Betting() {
 
   // Auto-lookup: exact length when known, otherwise on typing pause (≥9).
   useEffect(() => {
+    if (!selectedProvider) {
+      setVerifiedCustomer(null);
+      setVerifyError(null);
+      setVerifying(false);
+      return;
+    }
     const digits = identifier.replace(/\D/g, '');
     const trigger = selectedProvider.lookupAt;
     const minLen = trigger ?? BETTING_MIN_LOOKUP_LENGTH;
@@ -153,14 +157,11 @@ export function Betting() {
     const t = setTimeout(async () => {
       try {
         const res: any = await postRequest(ENDPOINTS.betting_lookup, {
-          provider: selectedProvider.id,
+          productId: selectedProvider.productId,
           customer_id: identifier,
         });
         if (lookupSeq.current !== seq) return;
-        const customer = res?.customer ?? res?.data ?? null;
-        const name = typeof customer === 'string'
-          ? customer
-          : (customer?.Customer_Name ?? customer?.customer_name ?? customer?.name ?? customer?.fullName ?? null);
+        const name = typeof res?.customerName === 'string' ? res.customerName : null;
         if (res?.success && name) {
           setVerifiedCustomer(String(name));
         } else {
@@ -178,12 +179,14 @@ export function Betting() {
     return () => clearTimeout(t);
   }, [identifier, selectedProvider]);
 
-  // Payload for the system (backend funds by customer_id, verified above)
-  const payload = {
-    provider: selectedProvider.id,
-    customer_id: identifier,
-    amount: String(finalAmount)
-  };
+  // Payload for the system (backend funds by product code and customer id).
+  const payload = selectedProvider
+    ? {
+        productId: selectedProvider.productId,
+        customer_id: identifier,
+        amount: String(finalAmount),
+      }
+    : {};
 
   // Handle transaction feedback
   useEffect(() => {
@@ -192,9 +195,9 @@ export function Betting() {
       // Simulate API processing delay as per requirements
       setTimeout(() => {
         setIsLoading(false);
-        if (message?.success || message?.code === '000') {
+        if (message?.success) {
           saveToRecent(identifier);
-          setToastMessage(message?.response_description || 'Funding Successful');
+          setToastMessage(message?.message || 'Funding Successful');
           setTxStatus(true);
           setIsOpen(true);
         } else {
@@ -212,6 +215,22 @@ export function Betting() {
       bodyDivRef.current.style.opacity = modalData.visible ? '0.5' : '1';
     }
   }, [modalData.visible]);
+
+  if (!selectedProvider) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-3">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white">Betting providers unavailable</h1>
+          <p className="text-sm text-slate-500">
+            {providersUnavailable
+              ? 'Could not load the live provider list. Please check your connection and try again.'
+              : 'No betting providers are available in the live catalog yet.'}
+          </p>
+          <Button variant="outline" onClick={() => navigate(-1)}>Go back</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -279,11 +298,11 @@ export function Betting() {
                             )
                             .map((provider) => (
                               <button
-                                key={provider.lookupCode}
+                                key={provider.productId}
                                 type="button"
                                 className={cn(
                                   "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b last:border-0 border-slate-50 dark:border-slate-700",
-                                  selectedProvider.lookupCode === provider.lookupCode
+                                  selectedProvider.productId === provider.productId
                                     ? "bg-sky-50 dark:bg-sky-900/20"
                                     : "hover:bg-slate-50 dark:hover:bg-slate-700"
                                 )}
@@ -304,7 +323,7 @@ export function Betting() {
                                     {provider.name}
                                   </span>
                                 </span>
-                                {selectedProvider.lookupCode === provider.lookupCode && (
+                                {selectedProvider.productId === provider.productId && (
                                   <span className="ml-auto text-sky-500 text-sm font-bold">✓</span>
                                 )}
                               </button>
@@ -455,15 +474,6 @@ export function Betting() {
                     {isLoading ? "Processing..." : `Fund ${selectedProvider.name}`}
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate(`/auto-topup?service_type=betting&provider=${selectedProvider.id}&identifier=${identifier}&amount=${finalAmount}`)}
-                    className="w-full rounded-full py-6 border-sky-500 text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/10 active:scale-95 transition-transform"
-                    disabled={!identifier || finalAmount < 100}
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Set Auto Funding
-                  </Button>
                 </div>
 
               </div>
@@ -480,7 +490,8 @@ export function Betting() {
         <TransactionModal 
           isSuccess={txStatus} 
           onClose={() => setIsOpen(false)} 
-          toastMessage={toastMessage} 
+          toastMessage={toastMessage}
+          transactionData={message?.data ?? {}}
         />
       )}
     </div>

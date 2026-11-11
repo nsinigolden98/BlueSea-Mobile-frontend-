@@ -8,29 +8,12 @@ import {
   ChevronLeft, ChevronDown, X, Copy, Check, Printer, Share2, 
   ArrowUpRight, ArrowDownLeft, FileText, Image as ImageIcon, User, Zap, ShieldCheck
 } from 'lucide-react';
-import { type Transaction, ENDPOINTS, postRequest } from '@/types';
+import { type Transaction } from '@/types';
 import { cn } from '@/lib/utils';
 import { TransactionsData } from '@/data';
 import { parseTransactionInfo, type ParsedTransaction } from '@/utils/transactionParser';
 
 type DateFilter = 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'last_year' | 'custom' | 'all';
-
-const getBillerSlug = (provider: string = '') => {
-  const p = provider.toLowerCase();
-  if (p.includes('ikeja') || p.includes('ikedc')) return 'ikeja-electric';
-  if (p.includes('eko') || p.includes('ekedc')) return 'eko-electric';
-  if (p.includes('kano') || p.includes('kedco')) return 'kano-electric';
-  if (p.includes('port') || p.includes('phed')) return 'portharcourt-electric';
-  if (p.includes('jos') || p.includes('jed')) return 'jos-electric';
-  if (p.includes('ibadan') || p.includes('ibedc')) return 'ibadan-electric';
-  if (p.includes('kaduna') || p.includes('kaedco')) return 'kaduna-electric';
-  if (p.includes('abuja') || p.includes('aedc')) return 'abuja-electric';
-  if (p.includes('enugu') || p.includes('eedc')) return 'enugu-electric';
-  if (p.includes('benin') || p.includes('bedc')) return 'benin-electric';
-  if (p.includes('aba')) return 'aba-electric';
-  if (p.includes('yola') || p.includes('yedc')) return 'yola-electric';
-  return provider;
-};
 
 export const TransactionFilterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -40,9 +23,6 @@ export const TransactionFilterPage: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<ParsedTransaction | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  
-  const [liveMeterData, setLiveMeterData] = useState<any>(null);
-  const [loadingMeterData, setLoadingMeterData] = useState(false);
   
   const { showToast, ToastComponent } = Toast();
   
@@ -71,66 +51,6 @@ export const TransactionFilterPage: React.FC = () => {
     };
     fetchTransactions();
   }, [showToast]);
-
-  useEffect(() => {
-    const fetchLiveDetails = async () => {
-      if (!selectedTransaction) return;
-
-      const category = selectedTransaction.parsed?.category || '';
-      const desc = (selectedTransaction.description || '').toUpperCase();
-      const isElectricity = category === 'ELECTRICITY' || desc.includes('LIGHT') || desc.includes('ELECTRIC') || desc.includes('METER');
-      
-      if (!isElectricity) {
-        setLiveMeterData(null);
-        return;
-      }
-
-      const txAny = selectedTransaction as any;
-      const meterNum = txAny.billerCode || 
-                       txAny.metadata?.meter_number || 
-                       txAny.metadata?.billerCode || 
-                       txAny.parsed?.meterNumber ||
-                       txAny.recipient_number;
-
-      const rawBiller = txAny.biller_name || 
-                        txAny.metadata?.biller_name || 
-                        txAny.metadata?.plan ||
-                        txAny.parsed?.serviceProvider || 
-                        '';
-
-      const rawType = txAny.meter_type || 
-                      txAny.metadata?.meter_type || 
-                      txAny.metadata?.plan_type || 
-                      (txAny.parsed?.token ? 'prepaid' : 'postpaid');
-
-      const billerSlug = getBillerSlug(rawBiller);
-      const meterTypeFormatted = String(rawType).toLowerCase().includes('post') ? 'postpaid' : 'prepaid';
-      
-      if (!meterNum || !billerSlug) {
-        return;
-      }
-
-      setLoadingMeterData(true);
-      try {
-        const data = {
-          meter_number: Number(meterNum),
-          meter_type: meterTypeFormatted,
-          biller: billerSlug
-        };
-        
-        const response = await postRequest(ENDPOINTS.electricity_user, data);
-        if (response?.success) {
-          setLiveMeterData(response.response || response.data || {});
-        }
-      } catch (error) {
-        console.error("Live user payload processing failed:", error);
-      } finally {
-        setLoadingMeterData(false);
-      }
-    };
-
-    fetchLiveDetails();
-  }, [selectedTransaction]);
 
   // Opacity masking alignment when a modal is active
   useEffect(() => {
@@ -459,38 +379,26 @@ export const TransactionFilterPage: React.FC = () => {
                         <div>
                           <span className="text-slate-400 block mb-0.5">Customer Name</span>
                           <span className="font-bold text-slate-900 dark:text-slate-200 uppercase">
-                            {loadingMeterData ? (
-                              <span className="animate-pulse text-blue-500 font-semibold">Fetching...</span>
-                            ) : (
-                              liveMeterData?.Customer_Name || dynamicTx.parsed?.customerName || dynamicTx.metadata?.customerName || '-'
-                            )}
+                            {dynamicTx.parsed?.customerName || dynamicTx.metadata?.customerName || '-'}
                           </span>
                         </div>
                       </div>
                       <div>
                         <span className="text-slate-400 block mb-0.5">Customer Address</span>
                         <span className="font-bold text-slate-900 dark:text-slate-200 uppercase line-clamp-2">
-                          {loadingMeterData ? (
-                            <span className="animate-pulse text-blue-500 font-semibold">Fetching...</span>
-                          ) : (
-                            liveMeterData?.Address || dynamicTx.parsed?.customerAddress || dynamicTx.metadata?.customerAddress || '-'
-                          )}
+                          {dynamicTx.parsed?.customerAddress || dynamicTx.metadata?.customerAddress || '-'}
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400 block mb-0.5">Customer Phone / Number</span>
                         <span className="font-bold text-slate-900 dark:text-slate-200 font-mono">
-                          {loadingMeterData ? (
-                            <span className="animate-pulse text-blue-500 font-semibold">Fetching...</span>
-                          ) : (
-                            liveMeterData?.Customer_Number || dynamicTx.metadata?.customerNumber || matchedMeterNumber
-                          )}
+                          {dynamicTx.metadata?.customerNumber || matchedMeterNumber}
                         </span>
                       </div>
                       <div>
                         <span className="text-slate-400 block mb-0.5">Token Units</span>
                         <span className="font-bold text-slate-900 dark:text-slate-200 text-sm">
-                          {dynamicTx.amount ? `${Math.floor(Number(dynamicTx.amount) / 70)} kWh` : '-'}
+                          {dynamicTx.metadata?.units || dynamicTx.parsed?.units || '-'}
                         </span>
                       </div>
                     </div>

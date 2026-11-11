@@ -25,7 +25,7 @@ const BUSINESS_TYPES: { type: BusinessType; label: string; icon: any }[] = [
 ];
 
 const MODULES = [
-  { label: 'Payroll', icon: Users, path: '/business/payroll', desc: 'Manage staff salaries', color: 'text-violet-500', bg: 'bg-violet-500/10' },
+  { label: 'Payroll', icon: Users, path: '/payroll-pro', desc: 'Manage staff salaries', color: 'text-violet-500', bg: 'bg-violet-500/10' },
   { label: 'Sales', icon: Receipt, path: '/business/sales', desc: 'Track sales and payments', color: 'text-sky-500', bg: 'bg-sky-500/10' },
   { label: 'Properties', icon: Home, path: '/business/properties', desc: 'Manage rent & tenants', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   { label: 'Appointments', icon: Calendar, path: '/business/appointments', desc: 'Booking management', color: 'text-amber-500', bg: 'bg-amber-500/10' },

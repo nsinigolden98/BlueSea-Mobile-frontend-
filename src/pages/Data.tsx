@@ -3,7 +3,6 @@ import { Sidebar, Header, PinModal, TransactionModal, Toast } from '@/components
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { networks } from '@/data';
 import { usePlans, toDataPlans } from '@/hooks/usePlans';
 import { cn } from '@/lib/utils';
 import type { Network, DataPlan } from '@/types';
@@ -42,12 +41,25 @@ export function Data() {
   const { plans: livePlans, unavailable: plansUnavailable } = usePlans();
   const dataPlans = useMemo(() => {
     const out: DataPlan[] = [];
-    (['mtn', 'airtel', 'glo', '9mobile'] as const).forEach((key) => {
+    (['mtn', 'airtel', 'glo', '9mobile', 'smile', 'spectranet'] as const).forEach((key) => {
       out.push(...toDataPlans(key, livePlans[key] ?? []));
     });
     console.log('[plans] Data render: rawKeys=', Object.keys(livePlans), 'unavailable=', plansUnavailable, 'adapted=', out.length);
     return out;
   }, [livePlans, plansUnavailable]);
+
+  // Only networks whose biller exposes data products in the live catalog.
+  const availableNetworks = useMemo(() => {
+    const seen = new Set<Network>();
+    for (const plan of dataPlans) seen.add(plan.network);
+    return (['MTN', 'Airtel', 'Glo', '9mobile', 'Smile', 'Spectranet'] as Network[]).filter((network) => seen.has(network));
+  }, [dataPlans]);
+
+  useEffect(() => {
+    if (availableNetworks.length > 0 && !availableNetworks.includes(selectedNetwork)) {
+      setSelectedNetwork(availableNetworks[0]);
+    }
+  }, [availableNetworks, selectedNetwork]);
 
   // --- DYNAMIC PLAN TYPE LOGIC START ---
   
@@ -118,7 +130,6 @@ export function Data() {
     plan_type: selectedNetwork.toLowerCase()
   } : {
     plan: selectedPlan?.id,
-    billersCode: phoneNumber,
     phone_number: phoneNumber,
   };
 
@@ -166,10 +177,10 @@ export function Data() {
       setTimeout(() => {
         setIsLoading(false);
         setIsOpen(true);
-        if (message?.success || message?.code === '000') {
+        if (message?.success) {
           saveToRecent(phoneNumber);
-          showToast(message?.response_description || message?.message || 'Success');
-          setToastMessage(message?.response_description || message?.message || 'Success');
+          showToast(message?.message || 'Success');
+          setToastMessage(message?.message || 'Success');
           setTxStatus(true);
           
           if (isGroupPayment) {
@@ -178,8 +189,8 @@ export function Data() {
             setInviteMembers(['']);
           }
         } else {
-          showToast(message?.error || message?.response_description || 'Failed');
-          setToastMessage(message?.error || message?.response_description || 'Failed');
+          showToast(message?.error || message?.message || 'Failed');
+          setToastMessage(message?.error || message?.message || 'Failed');
           setTxStatus(false);
         }
       }, 1500);
@@ -212,8 +223,13 @@ export function Data() {
                 {/* Network Selection */}
                 <div className="space-y-3">
                   <Label>Select Network</Label>
+                  {availableNetworks.length === 0 ? (
+                    <p className="text-xs text-amber-600 font-medium">
+                      {plansUnavailable ? 'Data unavailable — live catalog has no data products' : 'Loading data networks…'}
+                    </p>
+                  ) : (
                   <div className="flex flex-wrap gap-2">
-                    {networks.map((network) => (
+                    {availableNetworks.map((network) => (
                       <button
                         key={network}
                         onClick={() => setSelectedNetwork(network)}
@@ -228,6 +244,7 @@ export function Data() {
                       </button>
                     ))}
                   </div>
+                  )}
                 </div>
 
                 {/* Phone Number with Dropdown */}
@@ -505,7 +522,7 @@ export function Data() {
       <PinComponent type={isGroupPayment ? "group-data" : `data-${selectedPlan?.network}`} value={payload} />
       <ToastComponent />
       {isOpen && (
-        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} />
+        <TransactionModal isSuccess={txStatus} onClose={() => setIsOpen(false)} toastMessage={toastMessage} transactionData={message?.data ?? {}} />
       )}
     </div>
   );

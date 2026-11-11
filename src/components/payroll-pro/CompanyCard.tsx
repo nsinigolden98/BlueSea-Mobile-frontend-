@@ -1,8 +1,6 @@
-import { useNavigate } from 'react-router';
-import { Building2, Users, MapPin, ChevronRight, Shield, Clock, AlertCircle } from 'lucide-react';
 import type { Company } from '@/types/payroll-pro';
-import StatusBadge from './StatusBadge';
-import { getCompanyEmployees, getCompanyBranches } from '@/mocks/payroll-data';
+import { useNavigate } from 'react-router';
+import { Building2, Users, MapPin, ChevronRight } from 'lucide-react';
 
 interface CompanyCardProps {
   company: Company;
@@ -12,20 +10,13 @@ interface CompanyCardProps {
 
 export default function CompanyCard({ company, role = 'owner', showActions = true }: CompanyCardProps) {
   const navigate = useNavigate();
-  const employeeCount = getCompanyEmployees(company.id).length;
-  const branchCount = getCompanyBranches(company.id).length;
+  const employeeCount = company.stats.totalEmployees;
+  const branchCount = company.stats.totalBranches;
 
   const handleClick = () => {
     if (role === 'owner') {
       navigate(`/payroll-pro/company/${company.id}`);
     }
-  };
-
-  const verificationIcon = {
-    verified: <Shield className="w-3.5 h-3.5 text-[var(--tm-success)]" />,
-    under_review: <Clock className="w-3.5 h-3.5 text-[var(--tm-warning)]" />,
-    pending: <Clock className="w-3.5 h-3.5 text-[var(--tm-warning)]" />,
-    rejected: <AlertCircle className="w-3.5 h-3.5 text-[var(--tm-danger)]" />,
   };
 
   return (
@@ -41,7 +32,9 @@ export default function CompanyCard({ company, role = 'owner', showActions = tru
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-bold text-[var(--tm-text-main)] truncate">{company.name}</h3>
-            <StatusBadge status={company.verification.status} size="sm" />
+            {company.membershipRole === 'owner' && (
+              <span className="tm-status-badge px-2 py-0.5 text-[0.65rem] tm-status-active whitespace-nowrap">Owner</span>
+            )}
           </div>
           <p className="text-xs text-[var(--tm-text-muted)] mb-2">{company.address}</p>
           <div className="flex items-center gap-4 text-xs text-[var(--tm-text-muted)]">
@@ -59,18 +52,6 @@ export default function CompanyCard({ company, role = 'owner', showActions = tru
           <ChevronRight className="w-5 h-5 text-[var(--tm-text-muted)] flex-shrink-0 self-center" />
         )}
       </div>
-      {role === 'owner' && company.verification.status !== 'verified' && (
-        <div className="mt-3 pt-3 border-t border-[var(--tm-border)]">
-          <div className="flex items-center gap-2 text-xs">
-            {verificationIcon[company.verification.status]}
-            <span className="text-[var(--tm-text-muted)]">
-              {company.verification.status === 'under_review' && 'Verification under review - typically 2-3 business days'}
-              {company.verification.status === 'pending' && 'Complete verification to unlock all features'}
-              {company.verification.status === 'rejected' && `Verification rejected: ${company.verification.rejectionReason || 'Please contact support'}`}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

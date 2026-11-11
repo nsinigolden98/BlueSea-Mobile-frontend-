@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, ChevronRight, FileText, Send } from 'lucide-react';
 import { Sidebar, Header } from '@/components/ui-custom';
-import { useForm } from '@/hooks/usePayrollPro';
+import { useCreateCompany } from '@/lib/payrollApi';
 import { cn } from '@/lib/utils';
 
 type Step = 'info' | 'review' | 'submitted';
@@ -23,35 +23,71 @@ export default function CreateCompany() {
   const [step, setStep] = useState<Step>('info');
   const [submittedCompany, setSubmittedCompany] = useState<string>('');
   
-  const { data, updateField, errors, isSubmitting } = useForm({
-    name: '', cacNumber: '', businessType: 'limited_liability' as string,
+  // Local form state (kept in this component; the API client is the source of truth after save).
+  const createCompany = useCreateCompany();
+  const [data, setData] = useState<Record<string, string>>({
+    name: '', cacNumber: '', businessType: 'limited_liability',
     email: '', phone: '', address: '',
     expectedEmployeeCount: '', expectedBranchCount: '', expectedMonthlyPayroll: '',
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string>('');
+  const updateField = (field: string, value: string) => {
+    setData(prev => ({ ...prev, [field]: value }));
+    setErrors(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+  const isSubmitting = createCompany.isPending;
 
   const validateStep = () => {
     const newErrors: Record<string, string> = {};
     if (!data.name.trim()) newErrors.name = 'Company name is required';
-    if (!data.cacNumber.trim()) newErrors.cacNumber = 'CAC number is required';
+    if (data.cacNumber.trim() && data.cacNumber.trim().length > 80) newErrors.cacNumber = 'CAC number is too long';
     if (!data.email.trim()) newErrors.email = 'Business email is required';
-    else if (!/\S+@\S+\.\S+/.test(data.email)) newErrors.email = 'Invalid email address';
-    if (!data.phone.trim()) newErrors.phone = 'Phone number is required';
+    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(data.email.trim())) newErrors.email = 'Invalid email address';
+    if (data.phone.trim() && data.phone.trim().length > 32) newErrors.phone = 'Phone number is too long';
     if (!data.address.trim()) newErrors.address = 'Business address is required';
-    if (!data.expectedEmployeeCount) newErrors.expectedEmployeeCount = 'Required';
-    if (!data.expectedBranchCount) newErrors.expectedBranchCount = 'Required';
-    if (!data.expectedMonthlyPayroll) newErrors.expectedMonthlyPayroll = 'Required';
-    return { valid: Object.keys(newErrors).length === 0, errors: newErrors };
+    if (data.expectedEmployeeCount && Number(data.expectedEmployeeCount) < 0) newErrors.expectedEmployeeCount = 'Must be >= 0';
+    if (data.expectedBranchCount && Number(data.expectedBranchCount) < 0) newErrors.expectedBranchCount = 'Must be >= 0';
+    if (data.expectedMonthlyPayroll && Number(data.expectedMonthlyPayroll) < 0) newErrors.expectedMonthlyPayroll = 'Must be >= 0';
+    setErrors(newErrors);
+    return { valid: Object.keys(newErrors).length === 0 };
   };
 
   const handleReview = () => {
     const { valid } = validateStep();
     if (!valid) return;
     setSubmittedCompany(data.name);
+    setSubmitError('');
     setStep('review');
   };
 
   const handleSubmit = () => {
-    setStep('submitted');
+    setSubmitError('');
+    createCompany.mutate({
+      name: data.name.trim(),
+      business_type: data.businessType,
+      cac_number: data.cacNumber.trim() || undefined,
+      email: data.email.trim().toLowerCase(),
+      phone: data.phone.trim() || undefined,
+      address: data.address.trim(),
+      expected_employee_count: data.expectedEmployeeCount ? Number(data.expectedEmployeeCount) : undefined,
+      expected_branch_count: data.expectedBranchCount ? Number(data.expectedBranchCount) : undefined,
+      expected_monthly_payroll: data.expectedMonthlyPayroll ? Number(data.expectedMonthlyPayroll) : undefined,
+    }, {
+      onSuccess: (company) => {
+        setStep('submitted');
+        // Give the success screen a beat, then open the new workspace.
+        window.setTimeout(() => navigate(`/payroll-pro/company/${company.id}`), 900);
+      },
+      onError: (error: any) => {
+        setSubmitError(error?.message ?? 'Could not create the company. Please try again.');
+        setStep('info');
+      },
+    });
   };
 
   const renderProgress = () => (
@@ -289,6 +325,9 @@ export default function CreateCompany() {
                   </div>
                 </div>
 
+                {submitError && (
+                  <p className="text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 rounded-xl px-3 py-2">{submitError}</p>
+                )}
                 <div className="flex gap-3">
                   <button 
                     onClick={() => setStep('info')} 
@@ -325,11 +364,11 @@ export default function CreateCompany() {
                 
                 <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/30 text-xs font-bold shadow-sm">
                   <FileText className="w-3.5 h-3.5" />
-                  Audit Pending Review
+                  Payroll Workspace Ready
                 </div>
 
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 max-w-[280px] mx-auto leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4">
-                  Standard compliance checking reviews clear inside 2-3 enterprise banking operating sessions. Notifications trigger on final resolution.
+                  You can now add branches and employees, then run your first payroll.
                 </p>
 
                 <button 

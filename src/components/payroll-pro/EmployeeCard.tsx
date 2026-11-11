@@ -34,12 +34,12 @@ export default function EmployeeCard({ employee, showBranch = true }: EmployeeCa
           <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--tm-text-muted)]">
             <span className="flex items-center gap-1">
               <Mail className="w-3 h-3" />
-              <span className="truncate max-w-[140px]">{employee.email}</span>
+              <span className="truncate max-w-[140px]">{employee.email ?? 'No email'}</span>
             </span>
             {showBranch && (
               <span className="flex items-center gap-1">
                 <MapPin className="w-3 h-3" />
-                {employee.branchName}
+                {employee.branchName ?? 'No branch'}
               </span>
             )}
           </div>

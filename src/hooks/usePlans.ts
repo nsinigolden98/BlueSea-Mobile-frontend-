@@ -1,5 +1,5 @@
 // Live plans from `/ws/plans/` with local caching. Replaces the old
-// hardcoded dicts (stale VTpass-era prices/codes): when the socket has no
+// hardcoded dicts (stale provider-era prices/codes): when the socket has no
 // data the hook reports `unavailable` instead of inventing prices.
 
 import { useEffect, useState } from 'react';
@@ -127,6 +127,8 @@ const DISPLAY: Record<string, string> = {
   airtel: 'Airtel',
   glo: 'Glo',
   '9mobile': '9mobile',
+  smile: 'Smile',
+  spectranet: 'Spectranet',
 };
 
 function parsePlanDetails(planName: string): { volume: string; validity: string; type: string } {
@@ -167,16 +169,16 @@ function num(v: unknown): number {
 }
 
 /// Server data items `{plan, amount, productId}` -> DataPlan list.
-/// `id` is the Nomba product id: that is what the backend prices and vends.
+/// `id` is the VTpass variation code: that is what the backend publishes and vends.
 export function toDataPlans(key: PlanKey, items: PlanItem[]): DataPlan[] {
   const network = (DISPLAY[key] ?? key) as Network;
   return items.map((it) => {
-    const label = str(it.plan ?? it.name ?? it.description);
-    const id = str(it.productId ?? it.product_id ?? it.id ?? it.planId ?? it.code);
+    const label = str(it.plan);
+    const id = str(it.productId);
     const details = parsePlanDetails(label);
     return {
       id,
-      price: num(it.amount ?? it.price),
+      price: num(it.amount),
       size: details.volume,
       validity: details.validity,
       planType: details.type,
@@ -186,87 +188,146 @@ export function toDataPlans(key: PlanKey, items: PlanItem[]): DataPlan[] {
   }).filter((p) => p.id && p.price > 0);
 }
 
+/// Server airtime items `{id, name, productId}` -> supported networks.
+/// Only networks whose biller exposes an airtime product are published.
+export function toAirtimeNetworks(items: PlanItem[]): Network[] {
+  const out: Network[] = [];
+  for (const it of items) {
+    const display = DISPLAY[str(it.id)];
+    if (display) out.push(display as Network);
+  }
+  return out;
+}
+
 export interface CablePlan {
   /** Display label. */
   label: string;
-  /** Value sent as the plan (Nomba subscription type). */
+  /** Value sent as the plan (VTpass variation code). */
   value: string;
   price: number;
 }
 
-/// Server cable items `{subScriptionType, amount}` -> selectable plans.
+/// Server cable items `{id, name, amount}` -> selectable plans.
+/// `value` is the VTpass variation code sent as the plan.
 export function toCablePlans(items: PlanItem[]): CablePlan[] {
   return items
     .map((it) => {
-      const value = str(it.subScriptionType ?? it.subscriptionType ?? it.id ?? it.code);
-      const price = num(it.amount ?? it.price);
-      if (!value || price <= 0) return null;
-      return { label: `${value} - ₦${price.toLocaleString()}`, value, price };
+      const value = str(it.id);
+      const name = str(it.name);
+      const price = num(it.amount);
+      if (!value || !name || price <= 0) return null;
+      return { label: `${name} - ₦${price.toLocaleString()}`, value, price };
     })
     .filter((p): p is CablePlan => p !== null);
 }
 
 export interface BettingProvider {
-  /** Display name (Nomba `name`). */
+  /** Display name (`name` from `/ws/plans/`). */
   name: string;
-  /**
-   * Code the lookup/vend calls need: Nomba `id` (e.g. `bet9ja`), per the
-   * lookup docs example. (`lookup_id` is kept for reference.)
-   */
+  /** VTpass serviceID from `/ws/plans/`; display-only for this flow. */
   id: string;
-  lookupCode: string;
+  /** VTpass variation code; required for lookup and funding. */
+  productId: string;
   label: string;
   placeholder: string;
   maxLength: number;
   /** Input keyboard: phone numbers get `tel`. */
   type: 'phone' | 'id';
-  /**
-   * Exact identifier length that auto-fires verification (`null` for
-   * providers with no known fixed length — those verify on typing pause).
-   */
   lookupAt: number | null;
 }
 
-/// Fallback list when the socket has no betting providers yet. Only Nomba-
-/// supported providers: `1xBet` is absent from Nomba and can never verify.
-export const DEFAULT_BETTING_PROVIDERS: BettingProvider[] = [
-  { name: 'SportyBet', id: 'sportybet', lookupCode: 'SPORTYBET', label: 'Phone Number', placeholder: 'Enter your SportyBet phone number', maxLength: 11, type: 'phone', lookupAt: 11 },
-  { name: 'Bet9ja', id: 'bet9ja', lookupCode: 'BET9JA', label: 'User ID', placeholder: 'Enter your Bet9ja User ID', maxLength: 10, type: 'id', lookupAt: 10 },
-  { name: 'NairaBet', id: 'nairabet', lookupCode: 'NAIRABET', label: 'User ID', placeholder: 'Enter your NairaBet ID', maxLength: 10, type: 'id', lookupAt: 10 },
-];
+const KNOWN_PROVIDERS = [
+  { name: 'SportyBet', label: 'Phone Number', placeholder: 'Enter your SportyBet phone number', maxLength: 20, type: 'phone', lookupAt: null },
+  { name: 'IlotBet', label: 'Phone Number', placeholder: 'Enter your IlotBet phone number', maxLength: 20, type: 'phone', lookupAt: null },
+] as const;
 
-/// Backend caps `customer_id` at 50 chars — the input ceiling for providers
-/// with no known fixed length.
 export const BETTING_MAX_LENGTH = 50;
 
 /** Minimum digits before pause-based verification kicks in (unknown lengths). */
 export const BETTING_MIN_LOOKUP_LENGTH = 9;
 
-/// Server betting items `{id, lookup_id, name}` -> selectable providers.
-/// Lengths/UX labels come from the fallback table by name match; unknown
-/// providers get generic limits (backend caps `customer_id` at 50 chars).
+/// Server betting items `{id, name, productId}` -> selectable providers.
+/// Product IDs are not guessed: the plans socket must supply them.
 export function toBettingProviders(items: PlanItem[]): BettingProvider[] {
   return items
     .map((it) => {
-      const name = str(it.name ?? it.id);
+      const name = str(it.name);
       const id = str(it.id);
-      const lookupCode = str(it.lookup_id ?? it.lookupId ?? it.id);
-      if (!name || !id) return null;
-      const known = DEFAULT_BETTING_PROVIDERS.find(
+      const productId = str(it.productId);
+      if (!name || !productId) return null;
+      const known = KNOWN_PROVIDERS.find(
         (d) => d.name.toLowerCase() === name.toLowerCase(),
       );
-      return {
+      const provider: BettingProvider = {
         name,
         id,
-        lookupCode,
+        productId,
         label: known?.label ?? 'Customer ID',
-        placeholder: known?.placeholder ?? `Enter your ${name} ID`,
+        placeholder: known?.placeholder ?? `Enter your ${name} customer ID`,
         maxLength: known?.maxLength ?? BETTING_MAX_LENGTH,
         type: known?.type ?? 'id',
         lookupAt: known?.lookupAt ?? null,
-      } satisfies BettingProvider;
+      };
+      return provider;
     })
     .filter((p): p is BettingProvider => p !== null);
+}
+
+export interface EducationPlan {
+  /** Catalog service key, e.g. `waec-result`, `jamb-utme`. */
+  service: string;
+  productId: string;
+  name: string;
+  price: number;
+}
+
+/// Server education items `{service, productId, name, amount}` -> plans.
+export function toEducationPlans(items: PlanItem[]): EducationPlan[] {
+  return items
+    .map((it) => {
+      const service = str(it.service);
+      const productId = str(it.productId);
+      const name = str(it.name);
+      const price = num(it.amount);
+      if (!service || !productId || !name || price <= 0) return null;
+      return { service, productId, name, price };
+    })
+    .filter((p): p is EducationPlan => p !== null);
+}
+
+export type MeterType = 'Prepaid' | 'Postpaid';
+
+export interface ElectricityProvider {
+  /** VTpass serviceID (`code`); also sent as the `biller` field. */
+  id: string;
+  name: string;
+  /** Meter types the catalog exposes for this biller (from product names). */
+  meterTypes: MeterType[];
+}
+
+/// Server electricity items `{id, name, products}` -> selectable providers.
+/// Products must be present; meter types are derived from product names.
+export function toElectricityProviders(items: PlanItem[]): ElectricityProvider[] {
+  return items
+    .map((it) => {
+      const id = str(it.id);
+      const name = str(it.name);
+      const products = Array.isArray(it.products) ? it.products : [];
+      if (!id || !name || products.length === 0) return null;
+      const types = new Set<MeterType>();
+      for (const p of products) {
+        const productName = str((p as PlanItem)?.name).toLowerCase();
+        if (productName.includes('postpaid')) types.add('Postpaid');
+        else if (productName.includes('prepaid')) types.add('Prepaid');
+      }
+      if (types.size === 0) {
+        const haystack = `${id} ${name}`.toLowerCase();
+        if (haystack.includes('postpaid')) types.add('Postpaid');
+        else if (haystack.includes('prepaid')) types.add('Prepaid');
+      }
+      return { id, name, meterTypes: [...types] };
+    })
+    .filter((p): p is ElectricityProvider => p !== null);
 }
 
 export function sessionTokenPresent(): boolean {
