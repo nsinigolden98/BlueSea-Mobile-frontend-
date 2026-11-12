@@ -199,14 +199,12 @@ export function InternalTransferModal({ isOpen, open, onClose }: InternalTransfe
         ...(isAccountNumber ? { plan: bankCode, plan_type: bankAccountName } : {}),
       });
     } else if (isAccountNumber) {
-      const numericAmount = Number(transferData.amount) || 0;
       setPinValue({
         account_name: bankAccountName,
         account_number: transferData.recipient.trim(),
         bank_code: bankCode,
         bank_name: NIGERIAN_BANKS.find((b) => b.code === bankCode)?.name || '',
         amount: transferData.amount,
-        service_charge: numericAmount > 10000 ? 60 : numericAmount > 0 ? 10 : 0,
       });
     } else {
       setPinValue({

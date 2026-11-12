@@ -24,8 +24,6 @@ export { MyTickets } from './MyTickets';
 export { VendorVerification } from './VendorVerification';
 export { DSTV } from './DSTV';
 export { GOTV } from './GOTV';
-export { WAECRegistration } from './WAECRegistration';
-export { JAMBRegistration } from './JAMBRegistration';
 export { TVSubscription } from './TVSubscription';
 export { AutoTopUp } from './AutoTopUp';
 export { Support } from './Support';

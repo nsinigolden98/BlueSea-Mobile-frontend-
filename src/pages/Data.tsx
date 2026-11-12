@@ -41,7 +41,7 @@ export function Data() {
   const { plans: livePlans, unavailable: plansUnavailable } = usePlans();
   const dataPlans = useMemo(() => {
     const out: DataPlan[] = [];
-    (['mtn', 'airtel', 'glo', '9mobile', 'smile', 'spectranet'] as const).forEach((key) => {
+    (['mtn', 'airtel', 'glo', '9mobile'] as const).forEach((key) => {
       out.push(...toDataPlans(key, livePlans[key] ?? []));
     });
     console.log('[plans] Data render: rawKeys=', Object.keys(livePlans), 'unavailable=', plansUnavailable, 'adapted=', out.length);
@@ -52,7 +52,7 @@ export function Data() {
   const availableNetworks = useMemo(() => {
     const seen = new Set<Network>();
     for (const plan of dataPlans) seen.add(plan.network);
-    return (['MTN', 'Airtel', 'Glo', '9mobile', 'Smile', 'Spectranet'] as Network[]).filter((network) => seen.has(network));
+    return (['MTN', 'Airtel', 'Glo', '9mobile'] as Network[]).filter((network) => seen.has(network));
   }, [dataPlans]);
 
   useEffect(() => {

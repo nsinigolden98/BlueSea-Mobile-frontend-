@@ -127,8 +127,6 @@ const DISPLAY: Record<string, string> = {
   airtel: 'Airtel',
   glo: 'Glo',
   '9mobile': '9mobile',
-  smile: 'Smile',
-  spectranet: 'Spectranet',
 };
 
 function parsePlanDetails(planName: string): { volume: string; validity: string; type: string } {
@@ -169,7 +167,7 @@ function num(v: unknown): number {
 }
 
 /// Server data items `{plan, amount, productId}` -> DataPlan list.
-/// `id` is the VTpass variation code: that is what the backend publishes and vends.
+/// `id` is the Nomba product id: that is what the backend publishes and vends.
 export function toDataPlans(key: PlanKey, items: PlanItem[]): DataPlan[] {
   const network = (DISPLAY[key] ?? key) as Network;
   return items.map((it) => {
@@ -207,13 +205,13 @@ export interface CablePlan {
   price: number;
 }
 
-/// Server cable items `{id, name, amount}` -> selectable plans.
-/// `value` is the VTpass variation code sent as the plan.
+/// Server cable items `{subScriptionType, amount}` -> selectable plans.
+/// `value` is the Nomba subscription type sent as the plan.
 export function toCablePlans(items: PlanItem[]): CablePlan[] {
   return items
     .map((it) => {
-      const value = str(it.id);
-      const name = str(it.name);
+      const value = str(it.subScriptionType) || str(it.id);
+      const name = str(it.name) || str(it.subScriptionType);
       const price = num(it.amount);
       if (!value || !name || price <= 0) return null;
       return { label: `${name} - ₦${price.toLocaleString()}`, value, price };
@@ -224,9 +222,9 @@ export function toCablePlans(items: PlanItem[]): CablePlan[] {
 export interface BettingProvider {
   /** Display name (`name` from `/ws/plans/`). */
   name: string;
-  /** VTpass serviceID from `/ws/plans/`; display-only for this flow. */
+  /** Nomba provider id from `/ws/plans/`; used for lookup and funding. */
   id: string;
-  /** VTpass variation code; required for lookup and funding. */
+  /** Nomba product id; required for lookup and funding. */
   productId: string;
   label: string;
   placeholder: string;
@@ -273,32 +271,10 @@ export function toBettingProviders(items: PlanItem[]): BettingProvider[] {
     .filter((p): p is BettingProvider => p !== null);
 }
 
-export interface EducationPlan {
-  /** Catalog service key, e.g. `waec-result`, `jamb-utme`. */
-  service: string;
-  productId: string;
-  name: string;
-  price: number;
-}
-
-/// Server education items `{service, productId, name, amount}` -> plans.
-export function toEducationPlans(items: PlanItem[]): EducationPlan[] {
-  return items
-    .map((it) => {
-      const service = str(it.service);
-      const productId = str(it.productId);
-      const name = str(it.name);
-      const price = num(it.amount);
-      if (!service || !productId || !name || price <= 0) return null;
-      return { service, productId, name, price };
-    })
-    .filter((p): p is EducationPlan => p !== null);
-}
-
 export type MeterType = 'Prepaid' | 'Postpaid';
 
 export interface ElectricityProvider {
-  /** VTpass serviceID (`code`); also sent as the `biller` field. */
+  /** Nomba provider id (`id`); also sent as the `biller` field. */
   id: string;
   name: string;
   /** Meter types the catalog exposes for this biller (from product names). */

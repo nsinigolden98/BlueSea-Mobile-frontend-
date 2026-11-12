@@ -80,7 +80,7 @@ export interface Transaction {
 }
 
 // Network Types
-export type Network = 'MTN' | 'Glo' | 'Airtel' | '9mobile' | 'Smile' | 'Spectranet';
+export type Network = 'MTN' | 'Glo' | 'Airtel' | '9mobile';
 
 export interface DataPlan {
   id: string;
@@ -393,8 +393,6 @@ export const ENDPOINTS = {
   buy_mtn: `${API_BASE}/payments/mtn-data/`,
   buy_glo: `${API_BASE}/payments/glo-data/`,
   buy_etisalat: `${API_BASE}/payments/9mobile-data/`,
-  buy_smile: `${API_BASE}/payments/smile-data/`,
-  buy_spectranet: `${API_BASE}/payments/spectranet-data/`,
   account_name: `${API_BASE}/transactions/account-name/`,
   verify_account_name: `${API_BASE}/marketplace/verify-account-name/`,
   event_public: (id: string) => `${API_BASE}/marketplace/events/public/${id}/`,
@@ -434,8 +432,6 @@ loyalty_rewards: `${API_BASE}/loyalty/rewards/`,
   betting_providers: `${API_BASE}/payments/betting/providers/`,
   betting_lookup: `${API_BASE}/payments/betting/lookup/`,
   gotv: `${API_BASE}/payments/gotv/`,
-  waec_registration: `${API_BASE}/payments/waec-registration/`,
-  jamb_registration: `${API_BASE}/payments/jamb-registration/`,
   auto_topup_list: `${API_BASE}/autotopup/list/`,
   auto_topup_create: `${API_BASE}/autotopup/create/`,
   auto_topup_details: (id: string) => `${API_BASE}/autotopup/${id}/`,

@@ -231,16 +231,16 @@ const acceptableUsePolicySections: LegalSectionData[] = [
     id: 'sec-12-bill-payments',
     chapterNumber: '12',
     title: 'Proper Use of Bill Payment Services',
-    subtitle: 'Utility, Airtime, Data & Education PINs',
+    subtitle: 'Utility, Airtime, Data & Betting Payments',
     body: (
       <div className="space-y-4">
         <p>
-          Bill payment services (including electricity, cable TV, internet, airtime, and education PINs) must be used for genuine consumption:
+          Bill payment services (including electricity, cable TV, airtime, data, and betting funding) must be used for genuine consumption:
         </p>
         <ul className="list-disc pl-5 space-y-2 text-sm">
           <li>Ensure utility meter numbers, smartcard numbers, and telephone numbers are correctly entered before confirmation.</li>
           <li>Do not use automated carding scripts or stolen payment credentials to purchase airtime or utility tokens for unauthorized resale.</li>
-          <li>Education PINs (WAEC, NECO, JAMB) purchased through the platform must not be resold above statutory price caps in violation of consumer protection guidelines.</li>
+          <li>Betting account funding purchased through the platform must not be used for unlicensed gambling or resale of betting credits in violation of consumer protection guidelines.</li>
         </ul>
       </div>
     )

@@ -88,8 +88,6 @@ export function PinModal() {
       'data-Glo': () => postRequest(ENDPOINTS.buy_glo, payload),
       'data-Airtel': () => postRequest(ENDPOINTS.buy_airtel, payload),
       'data-9mobile': () => postRequest(ENDPOINTS.buy_etisalat, payload),
-      'data-Smile': () => postRequest(ENDPOINTS.buy_smile, payload),
-      'data-Spectranet': () => postRequest(ENDPOINTS.buy_spectranet, payload),
       'marketplace': () => postRequest(ENDPOINTS.marketplace_purchase(value.event_id), {
         ticket_type: value.ticket_type,
         quantity: value.quantity,
@@ -100,8 +98,6 @@ export function PinModal() {
       'payroll-retry': () => postRequest(ENDPOINTS.payroll_retry(value.id), payload),
       'dstv': () => postRequest(ENDPOINTS.dstv, payload),
       'gotv': () => postRequest(ENDPOINTS.gotv, payload),
-      'waec-registration': () => postRequest(ENDPOINTS.waec_registration, payload),
-      'jamb': () => postRequest(ENDPOINTS.jamb_registration, payload),
       'auto-topup': () => postRequest(ENDPOINTS.auto_topup_create, payload),
       'auto-topup-reactivate': () => postRequest(ENDPOINTS.auto_topup_reactivate(value.id?.toString()), confirmation),
       'group-airtime': () => postRequest(ENDPOINTS.create_group, payload),

@@ -21,8 +21,7 @@ const VALID_APP_ROUTES = new Set([
   '/transactions', '/rewards', '/transaction-history',  '/airtime-buyback', 
   '/group-payment', '/loyalty', '/more-services', '/notifications', '/event-manager', 
   '/scanner', '/scanner-assignments', '/my-tickets', '/vendor-verification', '/dstv', 
-  '/gotv', '/waec-registration',
-  '/jamb-registration', '/tv-subscription', '/auto-topup', '/support', '/checkout', '/payroll-pro',
+  '/gotv', '/tv-subscription', '/auto-topup', '/support', '/checkout', '/payroll-pro',
   '/messages',  '/products', '/history', '/identity-center',  '/paylink', '/blueconnect', '/deposit',
    '/withdraw'
 ]);

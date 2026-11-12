@@ -168,11 +168,11 @@ export function Wallet() {
                     <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Virtual Account</h4>
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Generate dedicated account details for instant automated funding</p>
                   </div>
-                  <Button 
-                    onClick={() => setVirtualAccountModalOpen(true)}
-                    className="shrink-0 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl h-9 px-4 text-[11px] font-bold border border-slate-200 dark:border-white/10 shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  <Button
+                    disabled
+                    className="shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl h-9 px-4 text-[11px] font-bold border border-slate-200 dark:border-white/10 cursor-not-allowed"
                   >
-                   View Account
+                   View Account — Coming Soon
                   </Button>
                 </div>
               )}

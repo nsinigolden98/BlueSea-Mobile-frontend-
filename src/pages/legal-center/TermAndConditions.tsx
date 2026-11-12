@@ -385,7 +385,7 @@ const termsAndConditionsSections: LegalSectionData[] = [
     id: 'sec-15-bill-payments',
     chapterNumber: '15',
     title: 'Utility, Telecom & Bill Payment Services',
-    subtitle: 'Airtime, Data, Electricity, Cable TV & Education PINs',
+    subtitle: 'Airtime, Data, Electricity, Cable TV & Betting Funding',
     body: (
       <div className="space-y-4">
         <p>
@@ -395,8 +395,7 @@ const termsAndConditionsSections: LegalSectionData[] = [
           <li><strong>Airtime & Data Subscriptions:</strong> MTN, Airtel, Glo, and 9mobile network recharges.</li>
           <li><strong>Electricity Meter Tokens:</strong> Prepaid and postpaid billing across licensed distribution companies (IKEDC, EKEDC, AEDC, IBEDC, KAEDCO, PHED, EEDC, KEDCO, etc.).</li>
           <li><strong>Cable TV Subscriptions:</strong> MultiChoice (DSTV, GOTV), Startimes, and Showmax.</li>
-          <li><strong>Internet Bills:</strong> Spectranet, Smile, Swift, and Fibre broadband providers.</li>
-          <li><strong>Education PINs:</strong> Examination e-PINs for WAEC, JAMB, and NECO.</li>
+          <li><strong>Betting Funding:</strong> account top-ups for licensed betting operators.</li>
         </ul>
         <p>
           All utility and bill payments are routed through third-party aggregator networks and utility operator gateways. Once a bill payment transaction is executed and a digital token/PIN is generated, the sale is final and non-refundable.

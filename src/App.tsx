@@ -44,8 +44,6 @@ import {
   DSTV,
   GOTV,
   // Rewards, // Replaced by Vault modular system
-  WAECRegistration,
-  JAMBRegistration,
   TVSubscription,
   AutoTopUp,
   Marketplace,
@@ -255,8 +253,6 @@ function AppRoutes() {
           <Route path="/vendor-verification" element={<ProtectedRoute><VendorVerification /></ProtectedRoute>} />
           <Route path="/dstv" element={<ProtectedRoute><DSTV /></ProtectedRoute>} />
           <Route path="/gotv" element={<ProtectedRoute><GOTV /></ProtectedRoute>} />
-          <Route path="/waec-registration" element={<ProtectedRoute><WAECRegistration /></ProtectedRoute>} />
-          <Route path="/jamb-registration" element={<ProtectedRoute><JAMBRegistration /></ProtectedRoute>} />
           <Route path="/tv-subscription" element={<ProtectedRoute><TVSubscription /></ProtectedRoute>} />
           <Route path="/auto-topup" element={<ProtectedRoute><AutoTopUp /></ProtectedRoute>} />
           <Route path="/bluesphere" element={<ProtectedRoute><BlueSphere /></ProtectedRoute>} />

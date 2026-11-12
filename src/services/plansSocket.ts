@@ -1,7 +1,7 @@
-// Live data/cable plans + electricity/education providers over
-// `/ws/plans/` (JWT in `?token=`). Keys: mtn, airtel, glo, 9mobile, smile,
-// spectranet, dstv, gotv, startimes, showmax, electricity, education,
-// airtime. `get_all` returns everything (`plans_all`); `get_plans {key}`
+// Live data/cable plans + electricity/betting providers over
+// `/ws/plans/` (JWT in `?token=`). Keys: mtn, airtel, glo, 9mobile,
+// dstv, gotv, startimes, showmax, electricity, betting, airtime.
+// `get_all` returns everything (`plans_all`); `get_plans {key}`
 // refreshes one list (`plans`). Same auth semantics as the wallet socket.
 
 import { ReconnectWS, toWebSocketBase, type CloseHandler } from './reconnectWs';
@@ -12,14 +12,12 @@ export const PLAN_KEYS = [
   'airtel',
   'glo',
   '9mobile',
-  'smile',
-  'spectranet',
   'dstv',
   'gotv',
   'startimes',
   'showmax',
   'electricity',
-  'education',
+  'betting',
   'airtime',
 ] as const;
 

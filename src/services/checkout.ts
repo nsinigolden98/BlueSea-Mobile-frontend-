@@ -2,13 +2,13 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 
 /**
- * Opens the Paystack checkout authorization URL inside an in-app browser overlay
- * when running within a native Capacitor environment (Android/iOS).
+ * Opens the hosted checkout URL inside an in-app browser overlay when
+ * running within a native Capacitor environment (Android/iOS).
  *
  * Resolves when the checkout session closes/finishes, returning control
  * back to the native app context.
  */
-export async function openMobilePaystackCheckout(authorizationUrl: string): Promise<void> {
+export async function openMobileCheckout(authorizationUrl: string): Promise<void> {
   if (!authorizationUrl) {
     throw new Error('Authorization URL is required.');
   }
@@ -48,7 +48,7 @@ export async function openMobilePaystackCheckout(authorizationUrl: string): Prom
           presentationStyle: 'popover',
         });
       } catch (error) {
-        console.error('Error opening native Paystack checkout:', error);
+        console.error('Error opening native checkout:', error);
         await cleanup();
         // Fallback if native browser overlay fails
         window.location.href = authorizationUrl;

@@ -43,7 +43,7 @@ const privacyPolicySections: LegalSectionData[] = [
         </p>
         <ul className="list-disc pl-5 space-y-2 text-sm">
           <li><strong>Core Wallet Services:</strong> Digital stored-value accounts, NIBSS bank transfers, deposits, and automated withdrawals.</li>
-          <li><strong>Utility & Services Payments:</strong> Mobile airtime, data subscriptions, electricity prepaid/postpaid tokens, cable television, internet subscriptions, and education e-PINs.</li>
+          <li><strong>Utility & Services Payments:</strong> Mobile airtime, data subscriptions, electricity prepaid/postpaid tokens, cable television, and betting account funding.</li>
           <li><strong>Blue Connect Network:</strong> Peer-to-peer social payment transfers using verified handles (@username), QR codes, and dynamic request links.</li>
           <li><strong>Corporate Solutions:</strong> Enterprise payroll automated disbursement systems, bulk settlements, and B2B vendor management portals.</li>
           <li><strong>Marketplace Facilities:</strong> Digital event ticketing passes, QR validation tags, and online promotional vouchers.</li>

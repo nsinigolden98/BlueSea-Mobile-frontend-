@@ -198,14 +198,6 @@ export const moreServiceCategories: ServiceCategory[] = [
     ],
   },
   {
-    id: 'education',
-    name: 'Education',
-    services: [
-      { id: 'e1', name: 'WAEC Registration', icon: 'BookOpen' },
-      { id: 'e3', name: 'JAMB Registration', icon: 'GraduationCap' },
-    ],
-  },
-  {
     id: 'utilities',
     name: 'Utilities',
     services: [

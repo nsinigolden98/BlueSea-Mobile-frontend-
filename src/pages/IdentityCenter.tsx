@@ -549,12 +549,15 @@ export function IdentityCenter() {
                     <Info className="w-3.5 h-3.5" /> Why verify financial identity?
                   </button>
 
+                  {/* Dedicated accounts are not offered to users yet; the
+                      backend flow stays in place behind this gate. */}
                   {financialStatus !== 'VERIFIED' && (
                     <button
                       onClick={() => setActiveModal('financial')}
-                      className="px-5 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-semibold transition-colors shadow-sm"
+                      disabled
+                      className="px-5 h-10 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-semibold cursor-not-allowed"
                     >
-                      {financialStatus === 'PENDING' ? 'View Pending Request' : 'Start Financial Verification'}
+                      Coming Soon
                     </button>
                   )}
                 </div>

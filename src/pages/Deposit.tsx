@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { useAuth } from '@/context/AuthContext';
 import { postRequest, ENDPOINTS } from '@/types';
-import { openMobilePaystackCheckout } from '@/services/paystackCheckout';
+import { openMobileCheckout } from '@/services/checkout';
 import { DedicatedVirtualAccountModal } from '@/components/wallet/DedicatedVirtualAccountModal';
 import { 
   CreditCard, 
@@ -19,7 +19,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-type DepositMethod = 'paystack' | 'virtual_account';
+type DepositMethod = 'checkout' | 'virtual_account';
 
 export function Deposit() {
   const { user } = useAuth();
@@ -31,9 +31,9 @@ export function Deposit() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Selected Method
-  const [selectedMethod, setSelectedMethod] = useState<DepositMethod>('virtual_account');
+  const [selectedMethod, setSelectedMethod] = useState<DepositMethod>('checkout');
 
-  // Paystack Form State
+  // Checkout form state
   const [rawAmount, setRawAmount] = useState('');
   const [depositError, setDepositError] = useState('');
   const [processing, setProcessing] = useState(false);
@@ -50,9 +50,8 @@ export function Deposit() {
   // Calculation Utilities
   const numericAmount = Number(rawAmount.replace(/\D/g, '')) || 0;
   
-  // Deposit service fee: ₦5 for every deposit.
-  const depositFee = numericAmount > 0 ? 5 : 0;
-  const depositTotal = numericAmount + depositFee;
+  // Deposits carry no fees: the wallet is credited the exact amount paid.
+  const depositTotal = numericAmount;
 
   const formatNaira = (val: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -62,7 +61,7 @@ export function Deposit() {
     }).format(val);
   };
 
-  const handlePaystackCheckout = async () => {
+  const handleCheckout = async () => {
     if (numericAmount < 100) {
       setDepositError('Minimum deposit amount is ₦100.00');
       return;
@@ -78,7 +77,7 @@ export function Deposit() {
       if (response.success && response.data?.checkoutUrl) {
         if (Capacitor.isNativePlatform()) {
           setProcessing(false);
-          await openMobilePaystackCheckout(response.data.checkoutUrl);
+          await openMobileCheckout(response.data.checkoutUrl);
 
           const authCtx = user as any;
           const refreshFn = authCtx?.refreshUser || authCtx?.checkAuth || authCtx?.fetchUserData;
@@ -98,7 +97,7 @@ export function Deposit() {
         setDepositError(response.message || 'Could not initiate payment. Please try again.');
       }
     } catch (error: any) {
-      console.error('Paystack checkout error:', error);
+      console.error('Checkout error:', error);
       setProcessing(false);
       setDepositError(error?.message || 'Payment initiation failed. Please check your connection.');
     }
@@ -199,15 +198,15 @@ export function Deposit() {
                   Direct Bank Transfer
                 </p>
                 <span className="inline-block mt-3 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
-                  Fee: ₦5
+                  No fees
                 </span>
               </div>
 
-              {/* Paystack Card Option */}
+              {/* Card checkout option */}
               <div
-                onClick={() => setSelectedMethod('paystack')}
+                onClick={() => setSelectedMethod('checkout')}
                 className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer ${
-                  selectedMethod === 'paystack'
+                  selectedMethod === 'checkout'
                     ? 'border-sky-500 bg-sky-500/5 shadow-md'
                     : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
                 }`}
@@ -216,30 +215,30 @@ export function Deposit() {
                   <div className="p-2.5 bg-sky-500/10 text-sky-500 rounded-xl">
                     <CreditCard className="w-5 h-5" />
                   </div>
-                  {selectedMethod === 'paystack' && (
+                  {selectedMethod === 'checkout' && (
                     <CheckCircle2 className="w-5 h-5 text-sky-500" />
                   )}
                 </div>
                 <h3 className="text-sm font-black text-slate-900 dark:text-white mt-4">
-                  Paystack Checkout
+                  Secure Checkout
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                   Card, Bank Transfer, USSD
                 </p>
                 <span className="inline-block mt-3 text-[10px] font-bold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full">
-                  Fee: 0%
+                  No fees
                 </span>
               </div>
             </div>
 
             {/* DETAILED METHOD PANELS */}
             
-            {/* 1. PAYSTACK METHOD */}
-            {selectedMethod === 'paystack' && (
+            {/* 1. HOSTED CHECKOUT METHOD */}
+            {selectedMethod === 'checkout' && (
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
                 <div>
                   <h2 className="text-base font-black text-slate-900 dark:text-white">
-                    Paystack Deposit
+                    Card Deposit
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Fast and convenient online payment
@@ -283,14 +282,6 @@ export function Deposit() {
                         {formatNaira(numericAmount)}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-500 dark:text-slate-400 font-medium">
-                        Deposit service fee
-                      </span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">
-                        {formatNaira(depositFee)}
-                      </span>
-                    </div>
                     <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex justify-between items-center text-sm font-black">
                       <span className="text-slate-900 dark:text-white">Total payable</span>
                       <span className="text-sky-500">{formatNaira(depositTotal)}</span>
@@ -302,13 +293,13 @@ export function Deposit() {
                 <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
                   <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    A 0% processing fee will be added to your deposit amount before payment is completed. Your wallet will be credited with exact requested amount of <strong>{formatNaira(numericAmount)}</strong>.
+                    No processing fee is charged. Your wallet is credited with the exact amount of <strong>{formatNaira(numericAmount)}</strong>.
                   </p>
                 </div>
 
                 {/* Submit Action */}
                 <Button
-                  onClick={handlePaystackCheckout}
+                  onClick={handleCheckout}
                   disabled={processing || numericAmount < 100}
                   className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-sm font-black shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all cursor-pointer"
                 >
@@ -332,6 +323,7 @@ export function Deposit() {
                     Transfer money directly from any banking app
                   </p>
                 </div>
+
 
                 {/* Dedicated Account details are rendered directly from the authenticated backend profile. */}
                 {hasVirtualAccount && (
@@ -404,14 +396,6 @@ export function Deposit() {
                             {formatNaira(numericAmount)}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-500 dark:text-slate-400 font-medium">
-                            Deposit service fee
-                          </span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {formatNaira(depositFee)}
-                          </span>
-                        </div>
                         <div className="border-t border-slate-200 dark:border-slate-700 pt-3 flex justify-between items-center text-sm font-black">
                           <span className="text-slate-900 dark:text-white">Total required transfer</span>
                           <span className="text-sky-500">{formatNaira(depositTotal)}</span>
@@ -422,16 +406,17 @@ export function Deposit() {
                     <div className="flex items-start gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
                       <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                        A flat ₦5 deposit service fee applies to every deposit. The fee is shown clearly before you proceed.
+                        No deposit fee is charged. The full amount you transfer is credited to your wallet.
                       </p>
                     </div>
 
                     {!hasVirtualAccount && (
                       <Button
                         onClick={handleRequestDedicatedAccount}
-                        className="w-full bg-sky-500 hover:bg-sky-600 text-white h-14 rounded-2xl text-sm font-black shadow-lg shadow-sky-500/20 active:scale-[0.98] transition-all cursor-pointer"
+                        disabled
+                        className="w-full bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 h-14 rounded-2xl text-sm font-black cursor-not-allowed"
                       >
-                        Request Dedicated Account
+                        Request Dedicated Account — Coming Soon
                       </Button>
                     )}
               </div>

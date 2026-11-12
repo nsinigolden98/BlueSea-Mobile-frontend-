@@ -80,11 +80,11 @@ export const parseTransactionInfo = (transaction: Transaction): ParsedDetails =>
     if (nameMatch) details.recipientName = nameMatch[1].trim();
   }
   // 5. Wallet Funding
-  else if (desc.includes('FUND') || desc.includes('DEPOSIT') || (transaction.transaction_type === 'CREDIT' && desc.includes('PAYSTACK'))) {
+  else if (desc.includes('FUND') || desc.includes('DEPOSIT') || (transaction.transaction_type === 'CREDIT' && desc.includes('NOMBA'))) {
     details.category = 'WALLET_FUNDING';
     details.icon = Landmark;
     details.title = 'Wallet Funding';
-    if (desc.includes('PAYSTACK')) details.serviceProvider = 'Paystack';
+    if (desc.includes('NOMBA')) details.serviceProvider = 'Nomba';
   }
   // 6. Cable TV
   else if (PATTERNS.CABLE.test(desc)) {

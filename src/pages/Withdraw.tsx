@@ -40,7 +40,6 @@ interface PinPayload {
   bank_code: string;
   bank_name: string;
   amount: string;
-  service_charge: number;
 }
 
 interface PinModalMessage {
@@ -111,11 +110,9 @@ export function Withdraw() {
   const hasVerifiedFinancialIdentity = user?.has_DVA === true;
   const withdrawalLimit = hasVerifiedFinancialIdentity ? 500000 : 100000;
 
-  // Transfer service charge: ₦10 for transfers up to ₦10,000,
-  // and ₦60 total (₦50 + ₦10 service charge) for transfers above ₦10,000.
+  // Withdrawals carry no fees: the recipient gets the full amount.
   const numericAmount = Number(withdrawAmount) || 0;
-  const serviceCharge = numericAmount > 10000 ? 60 : numericAmount > 0 ? 10 : 0;
-  const expectedAmountReceived = Math.max(0, numericAmount - serviceCharge);
+  const expectedAmountReceived = numericAmount;
   
   const isUnderMinimum = numericAmount > 0 && numericAmount < 500;
   const isOverWithdrawalLimit = numericAmount > withdrawalLimit;
@@ -321,7 +318,6 @@ export function Withdraw() {
       bank_code: selectedBank,
       bank_name: selectedBankObj?.name || '',
       amount: withdrawAmount,
-      service_charge: serviceCharge,
     });
     showPinModal();
   };
@@ -581,19 +577,13 @@ export function Withdraw() {
                         <Info className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1 space-y-2">
                           <p className="text-xs font-black">
-                            Transfer fee
+                            Transfer summary
                           </p>
                           <div className="space-y-1 text-xs font-medium text-slate-700 dark:text-slate-300">
                             <div className="flex justify-between gap-4">
                               <span>Transfer amount</span>
                               <strong className="text-slate-900 dark:text-white">
                                 ₦{numericAmount.toLocaleString()}
-                              </strong>
-                            </div>
-                            <div className="flex justify-between gap-4">
-                              <span>Service fee</span>
-                              <strong className="text-slate-900 dark:text-white">
-                                ₦{serviceCharge.toLocaleString()}
                               </strong>
                             </div>
                             <div className="flex justify-between gap-4 pt-1 border-t border-sky-500/10">
@@ -604,7 +594,7 @@ export function Withdraw() {
                             </div>
                           </div>
                           <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
-                            A ₦10 service fee applies to transfers up to ₦10,000. Transfers above ₦10,000 include a ₦50 transfer charge plus the ₦10 service fee (₦60 total).
+                            No fees are charged on withdrawals: the recipient receives the exact amount withdrawn.
                           </p>
                         </div>
                       </div>

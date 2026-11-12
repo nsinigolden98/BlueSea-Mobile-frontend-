@@ -22,10 +22,12 @@ export function Betting() {
 
   // State
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // Providers are out of catalogue scope; the page stays in the UI until
-  // the betting vertical is decided.
-  const { unavailable: providersUnavailable } = usePlans();
-  const providers: BettingProvider[] = useMemo(() => toBettingProviders([]), []);
+  // Providers come from the live Nomba catalogue (`betting` plans key).
+  const { plans: livePlans, unavailable: providersUnavailable } = usePlans();
+  const providers: BettingProvider[] = useMemo(
+    () => toBettingProviders(livePlans.betting ?? []),
+    [livePlans],
+  );
   const [selectedProvider, setSelectedProvider] = useState<BettingProvider | null>(null);
 
   // Adopt the live list once it arrives (keep selection when still offered).

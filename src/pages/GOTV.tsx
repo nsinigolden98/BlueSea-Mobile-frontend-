@@ -79,6 +79,7 @@ export function GOTV() {
     const t = setTimeout(async () => {
       try {
         const res: any = await postRequest(ENDPOINTS.cable_lookup, {
+          provider: PROVIDER_KEY,
           productId: selectedPlan,
           smart_card_number: digits,
         });

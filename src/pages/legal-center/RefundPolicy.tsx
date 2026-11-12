@@ -66,8 +66,8 @@ const refundPolicySections: LegalSectionData[] = [
           <li>Blue Connect Social Transfers (@handles &amp; Dynamic Payment Request Links).</li>
           <li>Airtime Purchase &amp; Data Bundle Top-Ups (MTN, Airtel, Glo, 9mobile).</li>
           <li>Utility Payments (Prepaid &amp; Postpaid Electricity Tokens across all Nigerian DisCos).</li>
-          <li>Cable TV Subscriptions (DSTV, GOTV, StarTimes, Showmax) &amp; Internet Broadband Top-Ups.</li>
-          <li>Education PINs (WAEC, NECO, JAMB, NABTEB).</li>
+          <li>Cable TV Subscriptions (DSTV, GOTV, StarTimes, Showmax).</li>
+          <li>Betting Account Funding for licensed betting operators.</li>
           <li>Corporate Payroll Disbursements &amp; Merchant Commerce Payments.</li>
           <li>Event, Concert &amp; Transport Ticket Purchases.</li>
           <li>Future Cryptocurrency &amp; Digital Asset Service Transactions.</li>
@@ -87,7 +87,7 @@ const refundPolicySections: LegalSectionData[] = [
         </p>
         <ol className="list-decimal pl-5 space-y-2 text-sm">
           <li><strong>Unfulfilled Value Rule:</strong> If your account is debited but the third-party service provider fails to deliver the purchased service or token, you are entitled to a 100% full refund to your BlueSea Mobile wallet.</li>
-          <li><strong>Delivered Value Irreversibility Rule:</strong> Once digital value (airtime, data bundle, electricity token, education PIN, or cable TV activation) has been successfully generated and delivered to the correct recipient identifier, the transaction is final and irreversible.</li>
+          <li><strong>Delivered Value Irreversibility Rule:</strong> Once digital value (airtime, data bundle, electricity token, cable TV activation, or betting credit) has been successfully generated and delivered to the correct recipient identifier, the transaction is final and irreversible.</li>
           <li><strong>User Attribution Rule:</strong> BlueSea Mobile is not responsible for losses arising from correct processing of incorrect data entered by the user (e.g., entering an incorrect phone number, wrong meter number, or incorrect bank account number).</li>
         </ol>
       </div>
@@ -328,30 +328,33 @@ const refundPolicySections: LegalSectionData[] = [
     )
   },
   {
-    id: 'sec-18-internet-refunds',
+    id: 'sec-18-betting-refunds',
     chapterNumber: '18',
-    title: 'Internet Bill Payments',
-    subtitle: 'Fiber & LTE Broadband Subscriptions',
+    title: 'Betting Account Funding',
+    subtitle: 'Credits Sent to Licensed Betting Operators',
     body: (
       <div className="space-y-4">
         <p>
-          Internet service payments (Spectranet, Smile, Swift, IPNX) credit account numbers managed by ISPs. Successful account top-ups are non-refundable. In the event of an ISP system error where funds are debited without account top-up, BlueSea Mobile will verify with the ISP and process a full refund within 24 hours.
+          Betting account funding credits a customer identifier held by a licensed betting operator. Once the operator confirms the credit, the transaction is non-refundable.
+        </p>
+        <p>
+          In the event of an operator system error where funds are debited without the account being credited, BlueSea Mobile will verify with the operator and process a full refund within 24 hours.
         </p>
       </div>
     )
   },
   {
-    id: 'sec-19-education-pins',
+    id: 'sec-19-data-bundles',
     chapterNumber: '19',
-    title: 'Education PIN Purchases',
-    subtitle: 'WAEC, NECO, JAMB & NABTEB Exam Tokens',
+    title: 'Data Bundle Purchases',
+    subtitle: 'MTN, Airtel, Glo & 9mobile Data Top-Ups',
     body: (
       <div className="space-y-4">
         <p>
-          Education PINs are confidential cryptographic numbers generated from official examination board servers.
+          Data bundles are delivered straight to the phone number supplied at checkout.
         </p>
         <p>
-          Once an Education PIN is generated and displayed on your screen or delivered via SMS/Email, the PIN is deemed consumed and <strong>strictly non-refundable</strong> under any circumstances to prevent digital reproduction fraud.
+          Once a bundle has been delivered to the network, the purchase is <strong>strictly non-refundable</strong>: the value has already been credited to the subscriber account with the network.
         </p>
       </div>
     )

@@ -81,8 +81,6 @@ export function MoreServices() {
       'tv1': '/tv-subscription',
       'tv2': '/tv-subscription',
       // Education
-      'e1': '/waec-registration',
-      'e3': '/jamb-registration',
       // Utilities
       'u1': '/light-bills',
       'u2': '/betting',
