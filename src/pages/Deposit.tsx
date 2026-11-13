@@ -94,7 +94,15 @@ export function Deposit() {
         }
       } else {
         setProcessing(false);
-        setDepositError(response.message || 'Could not initiate payment. Please try again.');
+        // The backend reports failures as `error` (tier limit, provider
+        // trouble) or as a DRF-style field error list; show the real reason
+        // instead of a generic message.
+        const detail =
+          response.message ||
+          response.error ||
+          (Array.isArray(response.amount) ? response.amount[0] : null) ||
+          'Could not initiate payment. Please try again.';
+        setDepositError(detail);
       }
     } catch (error: any) {
       console.error('Checkout error:', error);
