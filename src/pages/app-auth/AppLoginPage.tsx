@@ -1,6 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Fingerprint } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { useAuth } from '@/context/AuthContext';
+import { API_BASE } from '@/types';
+import { refreshAccessToken, setSessionRefresh } from '@/lib/session';
+import {
+  getBiometricFlag,
+  getBiometricLoginCredential,
+  isBiometricSupported,
+} from '@/lib/security/biometrics';
 import { AppAuthLayout } from '../../components/app-auth/AppAuthLayout';
 import { AppAuthHeader } from '../../components/app-auth/AppAuthHeader';
 import { AppAuthInput } from '../../components/app-auth/AppAuthInput';
@@ -10,7 +19,7 @@ import { AppGoogleButton } from '../../components/app-auth/AppGoogleButton';
 import { validateGmail } from '../../utils/platform';
 
 export const AppLoginPage: React.FC = () => {
-  const { login, googleLogin } = useAuth();
+  const { login, googleLogin, refreshUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,13 +29,76 @@ export const AppLoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
+  const [biometricMessage, setBiometricMessage] = useState<string | null>(null);
+  const biometricAttempted = useRef(false);
 
-  // Pre-fill email address if forwarded via location state from success screen
+  // Pre-fill email address if forwarded via location state from success screen.
   useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
     }
   }, [location.state]);
+
+  // The AuthProvider owns the one-time automatic biometric prompt during app
+  // bootstrap. This page only exposes a manual retry and never prompts twice
+  // automatically when React mounts or re-renders.
+  useEffect(() => {
+    let active = true;
+
+    const checkBiometricAvailability = async () => {
+      if (!Capacitor.isNativePlatform() || !getBiometricFlag('biometricLoginEnabled')) {
+        if (active) setBiometricAvailable(false);
+        return;
+      }
+
+      const supported = await isBiometricSupported();
+      if (active) setBiometricAvailable(supported);
+    };
+
+    void checkBiometricAvailability();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleBiometricLogin = useCallback(async () => {
+    if (biometricLoading || loading || googleLoading) return;
+
+    setBiometricLoading(true);
+    setError(null);
+    setBiometricMessage(null);
+
+    try {
+      // This helper first verifies the user's biometric, then reads the
+      // refresh credential from the native Keychain/Keystore vault.
+      const credential = await getBiometricLoginCredential();
+      if (!credential) {
+        setBiometricMessage('Fingerprint sign-in was cancelled or not completed. You can sign in with your password instead.');
+        return;
+      }
+
+      setSessionRefresh(credential.refreshToken);
+      const restored = await refreshAccessToken(API_BASE);
+
+      if (!restored) {
+        setBiometricMessage('Your saved sign-in has expired. Please sign in with your email and password again.');
+        return;
+      }
+
+      await refreshUser();
+      // refreshUser updates the shared AuthContext after fetching the
+      // authenticated profile and wallet. Confirm that it actually succeeded
+      // before navigating away from the login form.
+      navigate('/dashboard');
+    } catch (err: any) {
+      console.error('Biometric login failed:', err);
+      setBiometricMessage('Fingerprint sign-in could not be completed. Please use your email and password.');
+    } finally {
+      setBiometricLoading(false);
+    }
+  }, [biometricLoading, loading, googleLoading, refreshUser, navigate]);
 
   const handleNativeGoogleAuth = async (idToken: string) => {
     try {
@@ -57,6 +129,7 @@ export const AppLoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setBiometricMessage(null);
 
     if (!validateGmail(email)) {
       setError('Only standard @gmail.com email addresses are allowed.');
@@ -77,7 +150,7 @@ export const AppLoginPage: React.FC = () => {
         setError(typeof response === 'string' ? response : 'Login failed');
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Login failed. Please check your credentials.');
+      setError(err?.response?.data?.message || err?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -92,6 +165,24 @@ export const AppLoginPage: React.FC = () => {
           onBack={() => navigate('/app-auth')}
         />
 
+        {biometricAvailable && (
+          <button
+            type="button"
+            onClick={handleBiometricLogin}
+            disabled={biometricLoading || loading || googleLoading}
+            className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-[#00D1FF]/30 bg-[#00D1FF]/10 px-4 py-3.5 text-sm font-semibold text-[#00D1FF] transition hover:bg-[#00D1FF]/15 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Fingerprint className="h-5 w-5" aria-hidden="true" />
+            {biometricLoading ? 'Verifying fingerprint…' : 'Use fingerprint'}
+          </button>
+        )}
+
+        {biometricMessage && (
+          <div className="mb-4 rounded-xl border border-slate-700/80 bg-slate-800/50 p-3 text-xs text-slate-300" role="status">
+            {biometricMessage}
+          </div>
+        )}
+
         <AppGoogleButton
           mode="login"
           text="Sign in with Google"
@@ -100,16 +191,16 @@ export const AppLoginPage: React.FC = () => {
           loading={googleLoading}
         />
 
-        <div className="relative flex py-3 items-center mb-4">
+        <div className="relative mb-4 flex items-center py-3">
           <div className="flex-grow border-t border-slate-700/80"></div>
-          <span className="flex-shrink mx-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <span className="mx-4 flex-shrink text-xs font-semibold uppercase tracking-wider text-slate-500">
             Or sign in with email
           </span>
           <div className="flex-grow border-t border-slate-700/80"></div>
         </div>
 
         {error && (
-          <div className="p-3 mb-4 text-xs rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+          <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-400" role="alert">
             {error}
           </div>
         )}
@@ -130,8 +221,8 @@ export const AppLoginPage: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <div className="flex items-center justify-between my-3">
-            <label className="flex items-center space-x-2 text-xs text-slate-400 cursor-pointer">
+          <div className="my-3 flex items-center justify-between">
+            <label className="flex cursor-pointer items-center space-x-2 text-xs text-slate-400">
               <input
                 type="checkbox"
                 checked={rememberMe}
@@ -160,8 +251,9 @@ export const AppLoginPage: React.FC = () => {
         <p className="text-xs text-slate-400">
           Don't have an account?{' '}
           <button
+            type="button"
             onClick={() => navigate('/app-auth/signup')}
-            className="text-[#00D1FF] font-semibold hover:underline"
+            className="font-semibold text-[#00D1FF] hover:underline"
           >
             Create Account
           </button>
