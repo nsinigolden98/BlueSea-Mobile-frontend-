@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Fingerprint } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
@@ -32,8 +32,6 @@ export const AppLoginPage: React.FC = () => {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [biometricMessage, setBiometricMessage] = useState<string | null>(null);
-  const biometricAttempted = useRef(false);
-
   // Pre-fill email address if forwarded via location state from success screen.
   useEffect(() => {
     if (location.state?.email) {
