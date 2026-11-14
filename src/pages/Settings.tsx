@@ -18,6 +18,7 @@ import {
   openPushSettings,
 } from '@/services/appPush';
 import { ENDPOINTS } from '@/types';
+import { getSessionRefresh, getSessionToken } from '@/lib/session';
 import {
   promptBiometric as performBiometricPrompt,
   isBiometricSupported as checkBiometricSupport,
@@ -25,6 +26,8 @@ import {
   setBiometricToken,
   getBiometricFlag,
   setBiometricFlag,
+  setBiometricLoginCredential,
+  clearBiometricLoginCredential,
 } from '@/lib/security/biometrics';
 import {
   User,
@@ -66,7 +69,7 @@ const API_BASE = String(import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
 const CURRENT_USER_URL = `${API_BASE}/user_preference/user/`;
 
 const authHeaders = () => {
-  const token = Cookies.get('access_token') || Cookies.get('token') || '';
+  const token = getSessionToken() || Cookies.get('access_token') || Cookies.get('token') || '';
   return token
     ? { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
     : {};
@@ -105,7 +108,20 @@ export function Settings() {
   const [pushEnabled, setPushEnabledState] = useState<boolean>(() => isPushEnabled());
   const [pushPermission, setPushPermission] = useState<string>('unknown');
   useEffect(() => {
-    getPushPermissionStatus().then(setPushPermission).catch(() => setPushPermission('unknown'));
+    let active = true;
+    const refreshPermission = () => {
+      void getPushPermissionStatus()
+        .then((status) => { if (active) setPushPermission(status); })
+        .catch(() => { if (active) setPushPermission('unknown'); });
+    };
+    refreshPermission();
+    window.addEventListener('focus', refreshPermission);
+    document.addEventListener('visibilitychange', refreshPermission);
+    return () => {
+      active = false;
+      window.removeEventListener('focus', refreshPermission);
+      document.removeEventListener('visibilitychange', refreshPermission);
+    };
   }, []);
   const handlePushToggle = async (next: boolean) => {
     if (next) {
@@ -200,7 +216,11 @@ export function Settings() {
       try {
         const res = await axios.get(ENDPOINTS.biometric_status, { headers: authHeaders() });
         if (cancelled) return;
-        const enrolled = !!res.data?.enabled && !!getBiometricToken();
+        const statusData = res.data?.data && typeof res.data.data === 'object' ? res.data.data : res.data;
+        const serverEnabled = statusData?.enabled === true || statusData?.is_enabled === true || statusData?.enrolled === true || statusData?.biometric_enabled === true;
+        const storedToken = await getBiometricToken();
+        if (cancelled) return;
+        const enrolled = serverEnabled && !!storedToken;
         setBiometricEnabled(enrolled);
         setBiometricFlag('biometricEnabled', enrolled);
         if (!enrolled) {
@@ -304,20 +324,25 @@ export function Settings() {
 
     if (action === 'enable') {
       // Server verified the PIN and minted a device token (returned once).
-      const token = response?.token;
+      const token = response?.token || response?.biometric_token || response?.device_token || response?.data?.token;
       if (!token) {
         setPinErrorMessage('Could not add your fingerprint. Please try again.');
         return;
       }
       const bioSuccess = await performBiometricPrompt('Confirm your fingerprint to finish setup');
       if (bioSuccess) {
-        setBiometricToken(token);
+        try {
+          await setBiometricToken(token);
+        } catch {
+          setPinErrorMessage('Your fingerprint was verified, but secure storage failed. Please try again.');
+          return;
+        }
         setBiometricFlag('biometricEnabled', true);
-        setBiometricFlag('biometricLoginEnabled', true);
+        setBiometricFlag('biometricLoginEnabled', false);
         setBiometricFlag('biometricPaymentEnabled', true);
         localStorage.setItem('stayLoggedIn', 'false');
         setBiometricEnabled(true);
-        setBiometricLoginEnabled(true);
+        setBiometricLoginEnabled(false);
         setBiometricPaymentEnabled(true);
       } else {
         // Token deliberately not stored: payments stay on the PIN until
@@ -325,7 +350,13 @@ export function Settings() {
         setPinErrorMessage('Fingerprint not confirmed. Tap Add fingerprint to try again.');
       }
     } else if (action === 'disable') {
-      setBiometricToken('');
+      try {
+        await setBiometricToken('');
+        await clearBiometricLoginCredential();
+      } catch {
+        setPinErrorMessage('Could not clear secure biometric storage. Please try again.');
+        return;
+      }
       setBiometricFlag('biometricEnabled', false);
       setBiometricFlag('biometricLoginEnabled', false);
       setBiometricFlag('biometricPaymentEnabled', false);
@@ -340,18 +371,33 @@ export function Settings() {
     setPinErrorMessage(errorMsg);
     setPendingBiometricAction(null);
 
-    showToast("errorMsg");
+    showToast(errorMsg);
     // Explicitly dismiss modal and clean up state on verification error
     hidePinModal();
   };
 
-  const handleLoginBiometricToggle = () => {
-    if (!biometricEnabled) return;
+  const handleLoginBiometricToggle = async () => {
+    if (!biometricEnabled || !isNative) return;
     const newValue = !biometricLoginEnabled;
-    setBiometricLoginEnabled(newValue);
-    setBiometricFlag('biometricLoginEnabled', newValue);
     if (newValue) {
-      localStorage.setItem('stayLoggedIn', 'false');
+      const refreshToken = getSessionRefresh();
+      if (!refreshToken || !user?.email) {
+        showToast('Please sign in again before enabling biometric login.');
+        return;
+      }
+      try {
+        await setBiometricLoginCredential(user.email, refreshToken);
+        setBiometricFlag('biometricLoginEnabled', true);
+        setBiometricLoginEnabled(true);
+        showToast('Biometric login enabled on this device.');
+      } catch (error) {
+        console.error('Unable to enable biometric login:', error);
+        showToast('Could not securely save biometric login. Please try again.');
+      }
+    } else {
+      await clearBiometricLoginCredential();
+      setBiometricFlag('biometricLoginEnabled', false);
+      setBiometricLoginEnabled(false);
     }
   };
 
@@ -653,35 +699,21 @@ export function Settings() {
                 </button>
 
                 <div className="w-full flex items-center justify-between gap-3 p-4 sm:px-5">
-                  <button
-                    onClick={() => navigate('/notifications')}
-                    className="flex items-center gap-3.5 min-w-0 text-left"
-                  >
+                  <div className="flex items-center gap-3.5 min-w-0">
                     <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0">
                       <Bell className="w-5 h-5 stroke-[1.75]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
-                        System tray alerts
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        Show a system notification when the app is in the background
-                      </p>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">System tray alerts</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Show a system notification when the app is in the background</p>
                       {pushEnabled && pushPermission === 'denied' && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); void openPushSettings(); }}
-                          className="text-xs text-sky-500 hover:text-sky-600 font-medium mt-0.5"
-                        >
+                        <button type="button" onClick={() => { void openPushSettings(); }} className="text-xs text-sky-500 hover:text-sky-600 font-medium mt-0.5">
                           Blocked by OS — open system settings
                         </button>
                       )}
                     </div>
-                  </button>
-                  <Switch
-                    checked={pushEnabled}
-                    onCheckedChange={(v) => { void handlePushToggle(v); }}
-                    aria-label="Toggle system tray alerts"
-                  />
+                  </div>
+                  <Switch checked={pushEnabled} onCheckedChange={(v) => { void handlePushToggle(v); }} aria-label="Toggle system tray alerts" />
                 </div>
 
                 <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-60 cursor-not-allowed">
@@ -821,8 +853,8 @@ export function Settings() {
                               </button>
                             </div>
 
-                            {/* Use Biometrics for Login */}
-                            <div className={cn("flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800", !biometricEnabled && "opacity-50 pointer-events-none")}>
+                            {/* Native-only biometric login; credentials are held in Keychain/Keystore. */}
+                            {isNative && <div className={cn("flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800", !biometricEnabled && "opacity-50 pointer-events-none")}>
                               <div>
                                 <p className="text-sm font-semibold text-slate-800 dark:text-white">
                                   Use Biometrics for Login
@@ -849,7 +881,7 @@ export function Settings() {
                                   )}
                                 />
                               </button>
-                            </div>
+                            </div>}
 
                             {/* Use Biometrics for Payments */}
                             <div className={cn("flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800", !biometricEnabled && "opacity-50 pointer-events-none")}>

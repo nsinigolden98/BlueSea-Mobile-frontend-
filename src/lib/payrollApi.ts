@@ -77,7 +77,7 @@ async function call<T>(method: 'get' | 'post' | 'patch' | 'delete', url: string,
 
   const doRequest = () =>
     axios.request<T>({
-      url,
+      url: `${API_BASE}${url}`,
       method: method.toUpperCase() as any,
       withCredentials: true,
       timeout: 90000,

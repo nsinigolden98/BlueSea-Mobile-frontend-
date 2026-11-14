@@ -23,6 +23,11 @@ export function getSessionRefresh(): string | null {
   return memoryRefresh;
 }
 
+/** Set a refresh credential without creating an access-token session. */
+export function setSessionRefresh(refresh: string | null) {
+  memoryRefresh = refresh && refresh.length > 0 ? refresh : null;
+}
+
 export function hasSessionToken(): boolean {
   return memoryToken !== null;
 }
