@@ -84,6 +84,7 @@ import CreateBranch from './screens/payroll-pro/CreateBranch';
 import PayrollDetail from './screens/payroll-pro/PayrollDetail';
 import RunPayroll from './screens/payroll-pro/RunPayroll';
 import InviteAccept from './screens/payroll-pro/InviteAccept';
+import MrGLinksApp from './screens/mrg-links';
 
 // AFFILIATE ROUTES
 import { 
@@ -297,6 +298,9 @@ function AppRoutes() {
           <Route path="/paylink/businesses" element={<ProtectedRoute><BusinessManager /></ProtectedRoute>} />
           <Route path="/paylink/products" element={<ProtectedRoute><ProductsManager /></ProtectedRoute>} />
           <Route path="/paylink/history" element={<ProtectedRoute><PayLinkHistory /></ProtectedRoute>} />
+        
+          {/* SECURED MR G LINKS PRODUCT WORKSPACE */}
+<Route path="/mrg-links/*" element={<ProtectedRoute><MrGLinksApp /></ProtectedRoute>} />
 
           {/* =========================================
             AFFILIATE ROUTES (ALL SUB-ROUTES REGISTERED)
