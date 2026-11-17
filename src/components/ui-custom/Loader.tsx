@@ -1,216 +1,90 @@
 import { useCallback, useState } from 'react';
+import './Loader.css';
 
 /**
- * Shared BlueSea loader artwork.
- * The original circular logo is never scaled, flipped, or compressed by the
- * blink animation. Only the two translucent eyelids move over its centre.
+ * Shared BlueSea loader visual.
+ * The original logo artwork is rendered as an image; it is never redrawn as text.
  */
 function SharedLoaderUI() {
   return (
-    <>
-      <div
-        className="bs-loader-screen"
-        id="loader"
-        role="status"
-        aria-label="BlueSea Mobile is loading"
-      >
-        <div className="bs-loader-mark" aria-hidden="true">
-          <img
-            className="bs-loader-logo"
-            src="/bluesea-logo.png"
-            alt=""
-            draggable={false}
-          />
+    <div className="bs-loader-screen" id="loader" role="status" aria-label="Loading">
+      <div className="bs-loader-orb" aria-hidden="true">
+        {/* Keep the supplied, original 1024x1024 BlueSea artwork intact. */}
+        <img
+          className="bs-loader-logo"
+          src="/bluesea-logo.png"
+          alt=""
+          draggable={false}
+        />
 
-          {/* A restrained moving sheen keeps the water-like circle alive. */}
-          <div className="bs-loader-water-sheen" />
+        {/* Moving light over the water already present in the logo artwork. */}
+        <div className="bs-loader-water-shimmer" />
 
-          {/* These cover only a horizontal band across the BS lettering. */}
-          <div className="bs-loader-eyelid bs-loader-eyelid--top">
-            <span className="bs-loader-eyelid-highlight" />
-          </div>
-          <div className="bs-loader-eyelid bs-loader-eyelid--bottom">
-            <span className="bs-loader-eyelid-highlight" />
-          </div>
+        {/* Eyelids only cover the centre band; the circular outline stays visible. */}
+        <div className="bs-loader-eyelid bs-loader-eyelid-top">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="bsTopLidGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#b9f5ff" stopOpacity="0.98" />
+                <stop offset="0.28" stopColor="#168eea" stopOpacity="0.98" />
+                <stop offset="0.72" stopColor="#0752c8" stopOpacity="0.99" />
+                <stop offset="1" stopColor="#032d79" stopOpacity="1" />
+              </linearGradient>
+              <linearGradient id="bsTopLidHighlight" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor="#00eaff" stopOpacity="0" />
+                <stop offset="0.5" stopColor="#d9ffff" stopOpacity="0.95" />
+                <stop offset="1" stopColor="#00bfff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M0 50Q50 -5 100 50L100 50Q50 50 0 50Z" fill="url(#bsTopLidGradient)" />
+            <path d="M0 50Q50 -5 100 50" fill="none" stroke="url(#bsTopLidHighlight)" strokeWidth="1.8" />
+            <path d="M12 48Q50 7 88 48" fill="none" stroke="#d9fbff" strokeOpacity=".48" strokeWidth="1.1" />
+          </svg>
         </div>
+
+        <div className="bs-loader-eyelid bs-loader-eyelid-bottom">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="bsBottomLidGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#0648b5" stopOpacity="1" />
+                <stop offset="0.45" stopColor="#087edc" stopOpacity="0.99" />
+                <stop offset="1" stopColor="#8ceeff" stopOpacity="0.98" />
+              </linearGradient>
+              <linearGradient id="bsBottomLidHighlight" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor="#00dfff" stopOpacity="0" />
+                <stop offset="0.5" stopColor="#e7ffff" stopOpacity="0.9" />
+                <stop offset="1" stopColor="#00dfff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M0 50Q50 105 100 50L100 50Q50 50 0 50Z" fill="url(#bsBottomLidGradient)" />
+            <path d="M0 50Q50 105 100 50" fill="none" stroke="url(#bsBottomLidHighlight)" strokeWidth="1.8" />
+            <path d="M12 52Q50 93 88 52" fill="none" stroke="#d9fbff" strokeOpacity=".42" strokeWidth="1.1" />
+          </svg>
+        </div>
+
+        {/* Filter definition for a very restrained liquid refraction on the logo. */}
+        <svg className="bs-loader-filter-defs" aria-hidden="true" focusable="false">
+          <filter id="bsWaterRefraction" x="-8%" y="-8%" width="116%" height="116%">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.012 0.018"
+              numOctaves="2"
+              seed="8"
+              result="waterNoise"
+            >
+              <animate
+                attributeName="baseFrequency"
+                dur="3.2s"
+                values="0.010 0.015;0.016 0.022;0.010 0.015"
+                repeatCount="indefinite"
+              />
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="waterNoise" scale="2.2" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </svg>
       </div>
-
-      <style>{`
-        .bs-loader-screen {
-          position: fixed;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          min-height: 100dvh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px;
-          box-sizing: border-box;
-          background: #030711;
-          z-index: 9999;
-          pointer-events: none;
-          overflow: hidden;
-        }
-
-        .bs-loader-mark {
-          position: relative;
-          width: clamp(112px, 32vw, 220px);
-          aspect-ratio: 1 / 1;
-          flex: 0 0 auto;
-          isolation: isolate;
-          overflow: hidden;
-          border-radius: 50%;
-          background: #006dff;
-          box-shadow:
-            0 0 24px rgba(0, 153, 255, 0.22),
-            0 0 64px rgba(0, 102, 255, 0.12);
-        }
-
-        .bs-loader-logo {
-          position: absolute;
-          inset: 0;
-          display: block;
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          border-radius: 50%;
-          user-select: none;
-          -webkit-user-drag: none;
-        }
-
-        .bs-loader-water-sheen {
-          position: absolute;
-          z-index: 1;
-          inset: -24%;
-          border-radius: 50%;
-          pointer-events: none;
-          opacity: 0.2;
-          mix-blend-mode: screen;
-          background:
-            radial-gradient(ellipse at 24% 42%, rgba(117, 245, 255, 0.7) 0%, transparent 29%),
-            radial-gradient(ellipse at 76% 58%, rgba(0, 117, 255, 0.58) 0%, transparent 34%),
-            linear-gradient(118deg, transparent 34%, rgba(179, 250, 255, 0.42) 48%, transparent 61%);
-          background-size: 145% 145%;
-          animation: bsWaterDrift 2.8s ease-in-out infinite alternate;
-        }
-
-        .bs-loader-eyelid {
-          position: absolute;
-          z-index: 2;
-          left: -2%;
-          width: 104%;
-          height: 34%;
-          overflow: hidden;
-          pointer-events: none;
-          opacity: 0;
-          background:
-            linear-gradient(180deg,
-              rgba(13, 183, 255, 0.94) 0%,
-              rgba(0, 92, 220, 0.96) 48%,
-              rgba(0, 30, 112, 0.94) 100%);
-          box-shadow:
-            inset 0 2px 5px rgba(183, 250, 255, 0.62),
-            inset 0 -5px 12px rgba(0, 13, 75, 0.46),
-            0 0 12px rgba(0, 197, 255, 0.22);
-          backdrop-filter: blur(5px) saturate(1.2);
-          -webkit-backdrop-filter: blur(5px) saturate(1.2);
-          will-change: transform, opacity;
-          animation: bsEyeBlink 1s cubic-bezier(0.42, 0, 0.28, 1) infinite;
-        }
-
-        .bs-loader-eyelid--top {
-          top: 17%;
-          border-radius: 0 0 50% 50% / 0 0 85% 85%;
-          transform: translateY(-112%);
-          transform-origin: center bottom;
-          border-bottom: 1px solid rgba(166, 250, 255, 0.85);
-        }
-
-        .bs-loader-eyelid--bottom {
-          bottom: 17%;
-          border-radius: 50% 50% 0 0 / 85% 85% 0 0;
-          transform: translateY(112%);
-          transform-origin: center top;
-          border-top: 1px solid rgba(166, 250, 255, 0.78);
-          animation-name: bsEyeBlinkBottom;
-        }
-
-        .bs-loader-eyelid-highlight {
-          position: absolute;
-          left: 13%;
-          right: 13%;
-          height: 1px;
-          opacity: 0.8;
-          background: linear-gradient(90deg, transparent, rgba(220, 255, 255, 0.95), transparent);
-        }
-
-        .bs-loader-eyelid--top .bs-loader-eyelid-highlight {
-          bottom: 3px;
-        }
-
-        .bs-loader-eyelid--bottom .bs-loader-eyelid-highlight {
-          top: 3px;
-        }
-
-        @keyframes bsWaterDrift {
-          0% {
-            transform: translate3d(-3%, -1%, 0) rotate(-5deg);
-            background-position: 0% 45%;
-            opacity: 0.13;
-          }
-          100% {
-            transform: translate3d(3%, 1%, 0) rotate(5deg);
-            background-position: 100% 55%;
-            opacity: 0.25;
-          }
-        }
-
-        /* One complete blink per second: open, close, brief hold, reopen. */
-        @keyframes bsEyeBlink {
-          0%, 16%, 100% {
-            transform: translateY(-112%);
-            opacity: 0;
-          }
-          24% {
-            opacity: 1;
-          }
-          43%, 49% {
-            transform: translateY(76%);
-            opacity: 1;
-          }
-          62% {
-            transform: translateY(-112%);
-            opacity: 0;
-          }
-        }
-
-        @keyframes bsEyeBlinkBottom {
-          0%, 16%, 100% {
-            transform: translateY(112%);
-            opacity: 0;
-          }
-          24% {
-            opacity: 1;
-          }
-          43%, 49% {
-            transform: translateY(-76%);
-            opacity: 1;
-          }
-          62% {
-            transform: translateY(112%);
-            opacity: 0;
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .bs-loader-water-sheen,
-          .bs-loader-eyelid {
-            animation-duration: 3s;
-          }
-        }
-      `}</style>
-    </>
+      <span className="bs-loader-sr-only">Loading</span>
+    </div>
   );
 }
 
