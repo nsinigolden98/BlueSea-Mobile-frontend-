@@ -13,7 +13,7 @@ export const navItems: NavItem[] = [
 //   { id: 'bluespere', label: 'BlueSpere', icon: 'Orbit', path: '/bluesphere' },
   { id: 'more-services', label: 'More Services', icon: 'Grid3X3', path: '/more-services' },
   { id: 'payroll-pro', label: 'Payroll Pro', icon: 'Briefcase', path: '/payroll-pro' },
-  { id: 'mrg-links', label: 'MrG Links', icon: 'link', path: '/mrg-links' },
+  //{ id: 'mrg-links', label: 'MrG Links', icon: 'link', path: '/mrg-links' },
     { id: 'scanner', label: 'Scanner', icon: 'QrCode', path: '/scanner-assignments' },
   { id: 'support', label: 'Support', icon: 'Headphones', path: '/support' },
 ];
