@@ -1,180 +1,212 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
+/**
+ * Shared BlueSea loader artwork.
+ * The original circular logo is never scaled, flipped, or compressed by the
+ * blink animation. Only the two translucent eyelids move over its centre.
+ */
 function SharedLoaderUI() {
   return (
     <>
-      <div className="loader-screen" id="loader">
-        <div className="loader-container">
-          {/* LAYER 3: ECHO WAVE */}
-          <div className="loader-echo-wave" />
+      <div
+        className="bs-loader-screen"
+        id="loader"
+        role="status"
+        aria-label="BlueSea Mobile is loading"
+      >
+        <div className="bs-loader-mark" aria-hidden="true">
+          <img
+            className="bs-loader-logo"
+            src="/bluesea-logo.png"
+            alt=""
+            draggable={false}
+          />
 
-          {/* LAYER 2: ROTATING RING */}
-          <div className="loader-ring" />
+          {/* A restrained moving sheen keeps the water-like circle alive. */}
+          <div className="bs-loader-water-sheen" />
 
-          {/* LAYER 1: CENTER LOGO */}
-          <div
-            className="loader-logo-wrapper"
-            style={{ perspective: '1000px' }}
-          >
-            <div className="loader-logo">
-              <span>BS</span>
-            </div>
-
-            <div className="loader-logo-edge" />
+          {/* These cover only a horizontal band across the BS lettering. */}
+          <div className="bs-loader-eyelid bs-loader-eyelid--top">
+            <span className="bs-loader-eyelid-highlight" />
+          </div>
+          <div className="bs-loader-eyelid bs-loader-eyelid--bottom">
+            <span className="bs-loader-eyelid-highlight" />
           </div>
         </div>
       </div>
 
       <style>{`
-        #loader,
-        .loader-screen {
+        .bs-loader-screen {
           position: fixed;
-          top: 0;
-          left: 0;
+          inset: 0;
           width: 100%;
           height: 100%;
-          background: transparent;
+          min-height: 100dvh;
           display: flex;
-          flex-direction: column;
-          justify-content: center;
           align-items: center;
+          justify-content: center;
+          padding: 24px;
+          box-sizing: border-box;
+          background: #030711;
           z-index: 9999;
           pointer-events: none;
+          overflow: hidden;
         }
 
-        .loader-container {
+        .bs-loader-mark {
           position: relative;
-          width: 80px;
-          height: 80px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          animation: breath 4s ease-in-out infinite;
-          will-change: transform;
+          width: clamp(112px, 32vw, 220px);
+          aspect-ratio: 1 / 1;
+          flex: 0 0 auto;
+          isolation: isolate;
+          overflow: hidden;
+          border-radius: 50%;
+          background: #006dff;
+          box-shadow:
+            0 0 24px rgba(0, 153, 255, 0.22),
+            0 0 64px rgba(0, 102, 255, 0.12);
         }
 
-        /* LAYER 3: ECHO WAVE */
-        .loader-echo-wave {
+        .bs-loader-logo {
           position: absolute;
           inset: 0;
-          border-radius: 9999px;
-          border: 1.5px solid rgba(56, 189, 248, 0.35);
-          animation: echoWave 2.8s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-          pointer-events: none;
-          will-change: transform, opacity;
-        }
-
-        /* LAYER 2: ROTATING RING */
-        .loader-ring {
-          position: absolute;
-          inset: -6px;
-          border-radius: 9999px;
-          border: 2px solid rgba(56, 189, 248, 0.15);
-          border-top-color: #38bdf8;
-          border-right-color: rgba(56, 189, 248, 0.5);
-          animation: spinRing 1.2s linear infinite;
-          pointer-events: none;
-          will-change: transform;
-        }
-
-        /* LAYER 1: CENTER LOGO WRAPPER */
-        .loader-logo-wrapper {
-          position: relative;
-          z-index: 1;
-        }
-
-        .loader-logo {
-          width: 48px;
-          height: 48px;
-          border-radius: 9999px;
-
-          background: linear-gradient(
-            135deg,
-            #38bdf8 0%,
-            #0ea5e9 50%,
-            #0284c7 100%
-          );
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          color: #fff;
-          font-weight: 700;
-          font-size: 14px;
-          letter-spacing: -0.5px;
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          border-radius: 50%;
           user-select: none;
-
-          transform-style: preserve-3d;
-
-          animation:
-            coinFlip 2.5s ease-in-out infinite,
-            glowPulse 2s ease-in-out infinite;
-          will-change: transform, box-shadow;
+          -webkit-user-drag: none;
         }
 
-        .loader-logo-edge {
+        .bs-loader-water-sheen {
           position: absolute;
-          inset: 0;
-          border-radius: 9999px;
-          border: 2px solid rgba(255, 255, 255, 0.2);
+          z-index: 1;
+          inset: -24%;
+          border-radius: 50%;
           pointer-events: none;
+          opacity: 0.2;
+          mix-blend-mode: screen;
+          background:
+            radial-gradient(ellipse at 24% 42%, rgba(117, 245, 255, 0.7) 0%, transparent 29%),
+            radial-gradient(ellipse at 76% 58%, rgba(0, 117, 255, 0.58) 0%, transparent 34%),
+            linear-gradient(118deg, transparent 34%, rgba(179, 250, 255, 0.42) 48%, transparent 61%);
+          background-size: 145% 145%;
+          animation: bsWaterDrift 2.8s ease-in-out infinite alternate;
         }
 
-        /* KEYFRAME ANIMATIONS */
-        @keyframes coinFlip {
+        .bs-loader-eyelid {
+          position: absolute;
+          z-index: 2;
+          left: -2%;
+          width: 104%;
+          height: 34%;
+          overflow: hidden;
+          pointer-events: none;
+          opacity: 0;
+          background:
+            linear-gradient(180deg,
+              rgba(13, 183, 255, 0.94) 0%,
+              rgba(0, 92, 220, 0.96) 48%,
+              rgba(0, 30, 112, 0.94) 100%);
+          box-shadow:
+            inset 0 2px 5px rgba(183, 250, 255, 0.62),
+            inset 0 -5px 12px rgba(0, 13, 75, 0.46),
+            0 0 12px rgba(0, 197, 255, 0.22);
+          backdrop-filter: blur(5px) saturate(1.2);
+          -webkit-backdrop-filter: blur(5px) saturate(1.2);
+          will-change: transform, opacity;
+          animation: bsEyeBlink 1s cubic-bezier(0.42, 0, 0.28, 1) infinite;
+        }
+
+        .bs-loader-eyelid--top {
+          top: 17%;
+          border-radius: 0 0 50% 50% / 0 0 85% 85%;
+          transform: translateY(-112%);
+          transform-origin: center bottom;
+          border-bottom: 1px solid rgba(166, 250, 255, 0.85);
+        }
+
+        .bs-loader-eyelid--bottom {
+          bottom: 17%;
+          border-radius: 50% 50% 0 0 / 85% 85% 0 0;
+          transform: translateY(112%);
+          transform-origin: center top;
+          border-top: 1px solid rgba(166, 250, 255, 0.78);
+          animation-name: bsEyeBlinkBottom;
+        }
+
+        .bs-loader-eyelid-highlight {
+          position: absolute;
+          left: 13%;
+          right: 13%;
+          height: 1px;
+          opacity: 0.8;
+          background: linear-gradient(90deg, transparent, rgba(220, 255, 255, 0.95), transparent);
+        }
+
+        .bs-loader-eyelid--top .bs-loader-eyelid-highlight {
+          bottom: 3px;
+        }
+
+        .bs-loader-eyelid--bottom .bs-loader-eyelid-highlight {
+          top: 3px;
+        }
+
+        @keyframes bsWaterDrift {
           0% {
-            transform: rotateY(0deg);
-          }
-          25% {
-            transform: rotateY(180deg);
-          }
-          50% {
-            transform: rotateY(180deg);
-          }
-          75% {
-            transform: rotateY(360deg);
+            transform: translate3d(-3%, -1%, 0) rotate(-5deg);
+            background-position: 0% 45%;
+            opacity: 0.13;
           }
           100% {
-            transform: rotateY(360deg);
+            transform: translate3d(3%, 1%, 0) rotate(5deg);
+            background-position: 100% 55%;
+            opacity: 0.25;
           }
         }
 
-        @keyframes glowPulse {
-          0%, 100% {
-            box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+        /* One complete blink per second: open, close, brief hold, reopen. */
+        @keyframes bsEyeBlink {
+          0%, 16%, 100% {
+            transform: translateY(-112%);
+            opacity: 0;
           }
-          50% {
-            box-shadow: 0 0 40px rgba(14, 165, 233, 0.5);
+          24% {
+            opacity: 1;
           }
-        }
-
-        @keyframes spinRing {
-          0% {
-            transform: rotate(0deg);
+          43%, 49% {
+            transform: translateY(76%);
+            opacity: 1;
           }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-
-        @keyframes echoWave {
-          0% {
-            transform: scale(0.85);
-            opacity: 0.8;
-          }
-          100% {
-            transform: scale(1.75);
+          62% {
+            transform: translateY(-112%);
             opacity: 0;
           }
         }
 
-        @keyframes breath {
-          0%, 100% {
-            transform: scale(1);
+        @keyframes bsEyeBlinkBottom {
+          0%, 16%, 100% {
+            transform: translateY(112%);
+            opacity: 0;
           }
-          50% {
-            transform: scale(1.04);
+          24% {
+            opacity: 1;
+          }
+          43%, 49% {
+            transform: translateY(-76%);
+            opacity: 1;
+          }
+          62% {
+            transform: translateY(112%);
+            opacity: 0;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .bs-loader-water-sheen,
+          .bs-loader-eyelid {
+            animation-duration: 3s;
           }
         }
       `}</style>
@@ -210,4 +242,3 @@ export function Loader() {
 export function AuthLoader() {
   return <SharedLoaderUI />;
 }
- 

@@ -1,75 +1,131 @@
-#loader{
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent; 
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    z-index: 9999;
+/* BlueSea Mobile loader styles.
+   The main Loader and AuthLoader also include these styles inline so their
+   appearance remains self-contained if this stylesheet is not imported. */
+
+#loader.bs-loader-screen,
+.bs-loader-screen {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: #030711;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
 }
-  .loader-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent; /* Black brand color */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    z-index: 9999;
-  }
 
-  /* TEMPORARY LOGO (BS) */
-  .logo {
-    font-size: 100px;
-    font-weight: 650;
-    font-family: 'Poppins', sans-serif;
-    letter-spacing: -8px;
-    animation: pulse 1.4s infinite ease-in-out;
-    user-select: none;
-    background: linear-gradient(
-    to bottom,
-    #4CCBFF 0%,
-    #1A8DFF 50%,
-    #0056FF 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-   display: inline-block;    /* ← Fix #1 */
-  padding-right: 10px;       /* ← Fix #2 */
+.bs-loader-mark {
+  position: relative;
+  width: clamp(112px, 32vw, 220px);
+  aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #006dff;
+  box-shadow: 0 0 24px rgba(0, 153, 255, 0.22), 0 0 64px rgba(0, 102, 255, 0.12);
 }
-  
 
-  /* PULSE ANIMATION */
-  @keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.12); opacity: 0.85; }
-    100% { transform: scale(1); opacity: 1; }
-  }
+.bs-loader-logo {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
 
-  /* Loading text */
-  .loading-text {
-    color: #4CCBFF;
-    font-size: 30px;
-    opacity: 0;
-    animation: fade 1.5s infinite;
-  }
+.bs-loader-water-sheen {
+  position: absolute;
+  z-index: 1;
+  inset: -24%;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.2;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(ellipse at 24% 42%, rgba(117, 245, 255, 0.7) 0%, transparent 29%),
+    radial-gradient(ellipse at 76% 58%, rgba(0, 117, 255, 0.58) 0%, transparent 34%),
+    linear-gradient(118deg, transparent 34%, rgba(179, 250, 255, 0.42) 48%, transparent 61%);
+  background-size: 145% 145%;
+  animation: bsWaterDrift 2.8s ease-in-out infinite alternate;
+}
 
-  @keyframes fade {
-    0% { opacity: 0; }
-    50% { opacity: 1; }
-    100% { opacity: 0; }
-  }
+.bs-loader-eyelid {
+  position: absolute;
+  z-index: 2;
+  left: -2%;
+  width: 104%;
+  height: 34%;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(180deg, rgba(13, 183, 255, 0.94) 0%, rgba(0, 92, 220, 0.96) 48%, rgba(0, 30, 112, 0.94) 100%);
+  box-shadow: inset 0 2px 5px rgba(183, 250, 255, 0.62), inset 0 -5px 12px rgba(0, 13, 75, 0.46), 0 0 12px rgba(0, 197, 255, 0.22);
+  backdrop-filter: blur(5px) saturate(1.2);
+  -webkit-backdrop-filter: blur(5px) saturate(1.2);
+  will-change: transform, opacity;
+  animation: bsEyeBlink 1s cubic-bezier(0.42, 0, 0.28, 1) infinite;
+}
 
-  #S{
-    margin-left: -10px;
-  }
+.bs-loader-eyelid--top {
+  top: 17%;
+  border-radius: 0 0 50% 50% / 0 0 85% 85%;
+  transform: translateY(-112%);
+  transform-origin: center bottom;
+  border-bottom: 1px solid rgba(166, 250, 255, 0.85);
+}
+
+.bs-loader-eyelid--bottom {
+  bottom: 17%;
+  border-radius: 50% 50% 0 0 / 85% 85% 0 0;
+  transform: translateY(112%);
+  transform-origin: center top;
+  border-top: 1px solid rgba(166, 250, 255, 0.78);
+  animation-name: bsEyeBlinkBottom;
+}
+
+.bs-loader-eyelid-highlight {
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  height: 1px;
+  opacity: 0.8;
+  background: linear-gradient(90deg, transparent, rgba(220, 255, 255, 0.95), transparent);
+}
+
+.bs-loader-eyelid--top .bs-loader-eyelid-highlight { bottom: 3px; }
+.bs-loader-eyelid--bottom .bs-loader-eyelid-highlight { top: 3px; }
+
+@keyframes bsWaterDrift {
+  0% { transform: translate3d(-3%, -1%, 0) rotate(-5deg); background-position: 0% 45%; opacity: 0.13; }
+  100% { transform: translate3d(3%, 1%, 0) rotate(5deg); background-position: 100% 55%; opacity: 0.25; }
+}
+
+@keyframes bsEyeBlink {
+  0%, 16%, 100% { transform: translateY(-112%); opacity: 0; }
+  24% { opacity: 1; }
+  43%, 49% { transform: translateY(76%); opacity: 1; }
+  62% { transform: translateY(-112%); opacity: 0; }
+}
+
+@keyframes bsEyeBlinkBottom {
+  0%, 16%, 100% { transform: translateY(112%); opacity: 0; }
+  24% { opacity: 1; }
+  43%, 49% { transform: translateY(-76%); opacity: 1; }
+  62% { transform: translateY(112%); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bs-loader-water-sheen,
+  .bs-loader-eyelid { animation-duration: 3s; }
+}
