@@ -104,7 +104,7 @@ import Download from "./pages/download/Download";
 import { Withdraw } from '@/pages/Withdraw';
 import { Deposit } from '@/pages/Deposit';
 import AdminSupport from '@/pages/admin/support/AdminSupport';
-
+import BlueHavenHome from '@/screens/bluehaven/BlueHavenHome';
 
 /**
  * Global Layout Wrapper
@@ -301,6 +301,10 @@ function AppRoutes() {
         
           {/* SECURED MR G LINKS PRODUCT WORKSPACE */}
 <Route path="/mrg-links/*" element={<ProtectedRoute><MrGLinksApp /></ProtectedRoute>} />
+
+{/* SECURED BLUEHAVEN DOCUMENT STORAGE */}
+          <Route path="/bluehaven" element={<ProtectedRoute><BlueHavenHome /></ProtectedRoute>} />
+
 
           {/* =========================================
             AFFILIATE ROUTES (ALL SUB-ROUTES REGISTERED)
