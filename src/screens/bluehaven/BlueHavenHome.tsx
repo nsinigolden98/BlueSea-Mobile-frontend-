@@ -13,7 +13,7 @@ import {
   type BlueHavenShare, loadMetadata, saveMetadata, putFile, getFile, deleteFile,
   formatBytes, formatDate, daysUntil,
 } from '@/lib/bluehaven/storage';
-import { createZip, decryptBlueArchive, downloadBlob, encryptBlueArchive, extractStoredZip } from '@/lib/bluehaven/archive';
+import { createZip, decryptBlueArchive, downloadBlob, encryptBlueArchive, extractStoredZip, uint8ArrayToArrayBuffer } from '@/lib/bluehaven/archive';
 import './bluehaven.css';
 
 type Section = 'overview' | 'documents' | 'smart' | 'shared' | 'expiring' | 'archives' | 'storage' | 'cloud' | 'security' | 'settings';
@@ -272,7 +272,7 @@ export default function BlueHavenHome() {
       let importedBytes = usedBytes;
       for (const entry of entries) {
         if (entry.name.endsWith('/')) continue;
-        const blob = new Blob([entry.data]);
+        const blob = new Blob([uint8ArrayToArrayBuffer(entry.data)]);
         if (importedBytes + blob.size > capacityBytes) break;
         importedBytes += blob.size;
         const id = makeId(); await putFile(id, blob);

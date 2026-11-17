@@ -16,6 +16,12 @@ function crc32(data: Uint8Array): number {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
+export function uint8ArrayToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+}
+
 function write16(view: DataView, offset: number, value: number) { view.setUint16(offset, value, true); }
 function write32(view: DataView, offset: number, value: number) { view.setUint32(offset, value >>> 0, true); }
 
@@ -32,7 +38,7 @@ export async function createZip(entries: ArchiveEntry[]): Promise<Blob> {
     let method = 0;
     if ('CompressionStream' in globalThis) {
       try {
-        const stream = new Blob([entry.data]).stream().pipeThrough(new CompressionStream('deflate-raw' as CompressionFormat));
+        const stream = new Blob([uint8ArrayToArrayBuffer(entry.data)]).stream().pipeThrough(new CompressionStream('deflate-raw' as CompressionFormat));
         compressed = new Uint8Array(await new Response(stream).arrayBuffer());
         method = 8;
       } catch { compressed = entry.data; method = 0; }
@@ -61,7 +67,11 @@ export async function createZip(entries: ArchiveEntry[]): Promise<Blob> {
   write32(ev, 0, 0x06054b50); write16(ev, 4, 0); write16(ev, 6, 0);
   write16(ev, 8, entries.length); write16(ev, 10, entries.length);
   write32(ev, 12, centralSize); write32(ev, 16, offset); write16(ev, 20, 0);
-  return new Blob([...localParts, ...centralParts, end], { type: 'application/zip' });
+  return new Blob([
+    ...localParts.map(uint8ArrayToArrayBuffer),
+    ...centralParts.map(uint8ArrayToArrayBuffer),
+    uint8ArrayToArrayBuffer(end),
+  ], { type: 'application/zip' });
 }
 
 export async function encryptBlueArchive(zip: Blob, password: string): Promise<Blob> {
@@ -108,7 +118,7 @@ export async function extractStoredZip(zip: ArrayBuffer): Promise<ArchiveEntry[]
     let data = bytes.slice(dataStart, end);
     if (method === 8) {
       if (!('DecompressionStream' in globalThis)) throw new Error('This browser cannot extract compressed ZIP entries.');
-      const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw' as CompressionFormat));
+      const stream = new Blob([uint8ArrayToArrayBuffer(data)]).stream().pipeThrough(new DecompressionStream('deflate-raw' as CompressionFormat));
       data = new Uint8Array(await new Response(stream).arrayBuffer());
     }
     if (data.length !== size) throw new Error('An archive entry could not be decompressed correctly.');
