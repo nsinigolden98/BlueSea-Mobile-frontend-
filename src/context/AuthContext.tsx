@@ -36,7 +36,7 @@ interface AuthContextType extends AuthState {
   login: (data: LoginFormData) => Promise<string | { email: string }>;
   signup: (data: SignupFormData) => Promise<SignUpResponse>;
   logout: () => void;
-  googleLogin: (credentialResponse: GoogleLoginInput) => Promise<void> | void;
+  googleLogin: (credentialResponse: GoogleLoginInput) => Promise<void>;
   load?: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -473,13 +473,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, loading: true }));
 
     const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
-    const idToken = 'credential' in credentialResponse && credentialResponse.credential
+    const idToken = ('credential' in credentialResponse && credentialResponse.credential)
       ? credentialResponse.credential
       : (credentialResponse as any).idToken || (credentialResponse as any).credential;
 
     if (!idToken) {
       setState((prev) => ({ ...prev, loading: false }));
-      return;
+      throw new Error('Google did not return an authentication token. Please try again.');
     }
 
     try {
@@ -489,34 +489,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response?.success || !response?.access_token || !response?.refresh_token) {
-        setState({ isAuthenticated: false, user: null, loading: false });
-        return;
+        const message = response?.detail || response?.message || response?.error;
+        throw new Error(typeof message === 'string' ? message : 'Google authentication was not accepted. Please try again.');
       }
 
       setSessionToken(response.access_token, response.refresh_token);
-
       await referral();
 
-      const [profileResponse, balanceResponse] = await Promise.all([
-        getRequest(ENDPOINTS.user),
-        getRequest(ENDPOINTS.balance),
-      ]);
+      let profileResponse: any;
+      let balanceResponse: any;
+      try {
+        [profileResponse, balanceResponse] = await Promise.all([
+          getRequestStrict(ENDPOINTS.user),
+          getRequestStrict(ENDPOINTS.balance),
+        ]);
+      } catch (profileError: any) {
+        const status = profileError?.response?.status ?? profileError?.status ?? 0;
+        throw new Error(
+          status === 0
+            ? 'Google sign-in succeeded, but BlueSea could not reach your account services. Check your connection and try again.'
+            : `Google sign-in succeeded, but your account could not be loaded (${status}).`,
+        );
+      }
 
       const profile = unwrapResponse<any>(profileResponse);
       const balance = unwrapResponse<any>(balanceResponse);
-
-      if (!profile?.email) throw new Error('Google login succeeded but profile loading failed.');
+      if (!profile?.email) {
+        throw new Error('Google sign-in succeeded, but your BlueSea profile could not be loaded. Please try again.');
+      }
 
       setState({
         isAuthenticated: true,
         user: buildUser(profile, balance),
         loading: false,
       });
-      // Start the plans socket now that the memory token exists.
       resetPlansSocket();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google login failed:', error);
+      setSessionToken(null);
       setState({ isAuthenticated: false, user: null, loading: false });
+      const responseMessage = error?.response?.data?.detail
+        || error?.response?.data?.message
+        || error?.message;
+      throw new Error(typeof responseMessage === 'string' && responseMessage.trim()
+        ? responseMessage
+        : 'Google Sign-In failed. Please try again.');
     }
   }, [buildUser, referral]);
 

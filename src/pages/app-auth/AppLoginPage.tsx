@@ -118,7 +118,7 @@ export const AppLoginPage: React.FC = () => {
       await googleLogin(credentialResponse);
       navigate('/dashboard');
     } catch (err: any) {
-      setError('Google Sign-In failed');
+      setError(err?.response?.data?.detail || err?.response?.data?.message || err?.message || 'Google Sign-In failed. Please try again.');
     } finally {
       setGoogleLoading(false);
     }
@@ -187,6 +187,7 @@ export const AppLoginPage: React.FC = () => {
           onGoogleAuth={handleNativeGoogleAuth}
           onWebSuccess={handleWebGoogleSuccess}
           loading={googleLoading}
+          onError={(googleError) => setError(googleError.message)}
         />
 
         <div className="relative mb-4 flex items-center py-3">

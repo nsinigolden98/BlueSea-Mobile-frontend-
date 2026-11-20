@@ -63,15 +63,24 @@ export function AuthPage() {
     try {
       showLoader();
       const idToken = await performNativeGoogleSignIn();
-      if (idToken) {
-        await googleLogin({ credential: idToken });
-      }
-    } catch (error: Error | unknown) {
-      console.error('Native Google login error:', error);
-      const msg = (error instanceof Error) ? error.message : '';
-      if (!msg.toLowerCase().includes('cancel') && !msg.toLowerCase().includes('dismiss')) {
-        showToast(msg || 'Google Sign-In failed');
-      }
+      await googleLogin({ credential: idToken });
+      navigate('/dashboard');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Google Sign-In failed. Please try again.';
+      const normalized = message.toLowerCase();
+      if (!normalized.includes('cancel') && !normalized.includes('dismiss')) showToast(message);
+    } finally {
+      hideLoader();
+    }
+  };
+
+  const handleWebGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      showLoader();
+      await googleLogin(credentialResponse);
+      navigate('/dashboard');
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : 'Google Sign-In failed. Please try again.');
     } finally {
       hideLoader();
     }
@@ -81,36 +90,39 @@ export function AuthPage() {
     e.preventDefault();
     showLoader();
 
-    if (mode === 'login') {
-      const response = await login({ email, password, rememberMe });
-      if (response && typeof response === 'object' && 'email' in response) {
-        navigate('/dashboard');
-      } else if (response) {
-        showToast(response);
+    try {
+      if (mode === 'login') {
+        const response = await login({ email, password, rememberMe });
+        if (response && typeof response === 'object' && 'email' in response) {
+          navigate('/dashboard');
+        } else if (response) {
+          showToast(response);
+        }
+        return;
       }
-    } else {
+
       if (password !== confirmPassword) {
         showToast('Passwords do not match');
-        hideLoader();
         return;
-      } else {
-        const response = await signup({ email, phone, firstName, surname, password, confirmPassword, agreeToTerms });
-
-        if (response.state) {
-          showToast(response.message);
-          setComponentVisibilty(true);
-        } else if (response?.errors?.email?.[0] === 'Email already exists.') {
-          const otpResponse = await postRequest(ENDPOINTS.sendOtp, { email: email });
-          console.log(otpResponse);
-          showToast(otpResponse.message);
-          setComponentVisibilty(true);
-        } else {
-          showToast(response.message);
-        }
-        navigate('/login');
       }
+
+      const response = await signup({ email, phone, firstName, surname, password, confirmPassword, agreeToTerms });
+      if (response.state) {
+        showToast(response.message);
+        setComponentVisibilty(true);
+      } else if (response?.errors?.email?.[0] === 'Email already exists.') {
+        const otpResponse = await postRequest(ENDPOINTS.sendOtp, { email });
+        showToast(otpResponse.message || 'A verification code has been sent.');
+        setComponentVisibilty(true);
+      } else {
+        showToast(response.message || 'Unable to create your account. Please try again.');
+      }
+      navigate('/login');
+    } catch (error: any) {
+      showToast(error?.response?.data?.detail || error?.response?.data?.message || error?.message || 'Authentication failed. Please try again.');
+    } finally {
+      hideLoader();
     }
-    hideLoader();
   };
 
   // If already authenticated or redirecting to mobile app view, render loader immediately
@@ -120,24 +132,43 @@ export function AuthPage() {
 
   return (
     <div>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
-        {/* Header */}
-        <div className="p-4 md:p-6">
-          <Logo size="sm" />
-        </div>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 md:dark:bg-[#090f1b] md:grid md:grid-cols-[1.05fr_0.95fr]">
+        {/* Desktop brand panel. The existing compact mobile presentation remains below. */}
+        <section className="relative hidden min-h-screen overflow-hidden bg-[#0b1726] px-14 py-12 text-white md:flex md:flex-col md:justify-between lg:px-20">
+          <div className="pointer-events-none absolute -right-40 -bottom-56 h-[620px] w-[620px] rounded-full border border-cyan-300/10" />
+          <div className="pointer-events-none absolute -right-24 -bottom-40 h-[480px] w-[480px] rounded-full border border-cyan-300/10" />
+          <div className="pointer-events-none absolute right-0 top-1/3 h-80 w-80 rounded-full bg-cyan-400/10 blur-[100px]" />
+          <div className="relative z-10"><Logo size="sm" /></div>
+          <div className="relative z-10 max-w-2xl pb-12 lg:pb-20">
+            <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.32em] text-cyan-300/75">Clarity in every transaction</p>
+            <h1 className="max-w-xl text-5xl font-semibold leading-[1.12] tracking-tight text-white lg:text-6xl">Your money, <span className="text-cyan-300">moving smarter.</span></h1>
+            <p className="mt-6 max-w-lg text-base leading-7 text-slate-400">A simpler way to manage payments, transfers and everyday financial services — all in one secure place.</p>
+            <div className="mt-12 max-w-md rounded-2xl border border-cyan-200/15 bg-slate-950/35 p-5 shadow-2xl shadow-cyan-950/20 backdrop-blur-sm">
+              <div className="mb-5 flex items-center justify-between"><span className="text-xs font-medium text-slate-400">BlueSea overview</span><span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-300">Secure access</span></div>
+              <svg viewBox="0 0 360 92" className="h-24 w-full" role="img" aria-label="Abstract rising financial activity line">
+                <defs><linearGradient id="blueseaAuthLine" x1="0" x2="1"><stop offset="0%" stopColor="#22d3ee" stopOpacity=".35"/><stop offset="100%" stopColor="#2dd4bf"/></linearGradient></defs>
+                <path d="M0 76 C34 70 43 52 72 58 S119 67 146 43 S194 51 222 30 S267 41 291 18 S330 24 360 4" fill="none" stroke="url(#blueseaAuthLine)" strokeWidth="3" strokeLinecap="round"/>
+                <path d="M0 76 C34 70 43 52 72 58 S119 67 146 43 S194 51 222 30 S267 41 291 18 S330 24 360 4 L360 92 L0 92Z" fill="url(#blueseaAuthLine)" opacity=".08"/>
+              </svg>
+              <div className="mt-3 flex items-center justify-between text-[10px] text-slate-500"><span>Payments</span><span>Transfers</span><span>Wallet</span></div>
+            </div>
+          </div>
+          <p className="relative z-10 text-[10px] tracking-wide text-slate-500">BlueSea Mobile · Secure financial services</p>
+        </section>
 
-        {/* Main Content */}
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-md">
+        <section className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 md:dark:bg-[#090f1b]">
+          <div className="p-4 md:hidden"><Logo size="sm" /></div>
+          <div className="flex flex-1 items-center justify-center p-4 md:px-10 md:py-12 lg:px-16">
+            <div className="w-full max-w-md">
             {/* Tabs */}
-            <div className="flex mb-6 bg-white dark:bg-slate-800 rounded-full p-1 shadow-sm">
+            <div className="flex mb-6 bg-white dark:bg-slate-800 rounded-full p-1 shadow-sm md:bg-slate-800/80 md:shadow-none">
               <button
                 onClick={() => setMode('login')}
                 className={cn(
                   'flex-1 py-2.5 text-center font-medium transition-all rounded-full',
                   mode === 'login'
                     ? 'bg-sky-500 text-white shadow-md'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 )}
               >
                 Log in
@@ -148,7 +179,7 @@ export function AuthPage() {
                   'flex-1 py-2.5 text-center font-medium transition-all rounded-full',
                   mode === 'signup'
                     ? 'bg-sky-500 text-white shadow-md'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 )}
               >
                 Sign up
@@ -156,12 +187,12 @@ export function AuthPage() {
             </div>
 
             {/* Form Card */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:rounded-none md:bg-transparent md:p-0 md:shadow-none">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-1">
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-1 md:text-3xl md:tracking-tight">
                   {mode === 'login' ? 'Welcome Back!' : 'Create Account'}
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                <p className="text-slate-500 dark:text-slate-400 text-sm md:mt-2 md:text-slate-400">
                   {mode === 'login' ? 'Sign in to continue to BlueSea Mobile' : 'Join thousands of users today'}
                 </p>
               </div>
@@ -184,8 +215,8 @@ export function AuthPage() {
                   </Button>
                 ) : (
                   <GoogleLogin
-                    onSuccess={googleLogin}
-                    onError={() => { console.log('Google Login error'); }}
+                    onSuccess={handleWebGoogleSuccess}
+                    onError={() => showToast('Google Sign-In could not be completed. Please try again.')}
                     type="standard"
                     size="large"
                     theme="filled_blue"
@@ -401,8 +432,9 @@ export function AuthPage() {
                 </Button>
               </form>
             </div>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
       <ToastComponent />
       <LoaderComponent />

@@ -19,7 +19,10 @@ export const initializeNativeGoogleAuth = async (): Promise<void> => {
     });
     isInitialized = true;
   } catch (error) {
+    isInitialized = false;
     console.error('Failed to initialize native Google Auth:', error);
+    const detail = error instanceof Error ? error.message : 'Unknown initialization error';
+    throw new Error(`Google Sign-In could not be initialized. ${detail}`);
   }
 };
 
@@ -32,7 +35,11 @@ export const performNativeGoogleSignIn = async (): Promise<string> => {
     await initializeNativeGoogleAuth();
   }
 
-  // Omit explicit scopes to avoid native MainActivity error
+  if (!isInitialized) {
+    throw new Error('Google Sign-In is not ready. Please close and reopen the app, then try again.');
+  }
+
+  // Keep the existing provider options: the release login flow is now working.
   const result = await SocialLogin.login({
     provider: 'google',
     options: {},
