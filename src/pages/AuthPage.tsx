@@ -133,27 +133,68 @@ export function AuthPage() {
   return (
     <div>
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 md:dark:bg-[#090f1b] md:grid md:grid-cols-[1.05fr_0.95fr]">
-        {/* Desktop brand panel. The existing compact mobile presentation remains below. */}
-        <section className="relative hidden min-h-screen overflow-hidden bg-[#0b1726] px-14 py-12 text-white md:flex md:flex-col md:justify-between lg:px-20">
-          <div className="pointer-events-none absolute -right-40 -bottom-56 h-[620px] w-[620px] rounded-full border border-cyan-300/10" />
-          <div className="pointer-events-none absolute -right-24 -bottom-40 h-[480px] w-[480px] rounded-full border border-cyan-300/10" />
-          <div className="pointer-events-none absolute right-0 top-1/3 h-80 w-80 rounded-full bg-cyan-400/10 blur-[100px]" />
-          <div className="relative z-10"><Logo size="sm" /></div>
-          <div className="relative z-10 max-w-2xl pb-12 lg:pb-20">
-            <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.32em] text-cyan-300/75">Clarity in every transaction</p>
-            <h1 className="max-w-xl text-5xl font-semibold leading-[1.12] tracking-tight text-white lg:text-6xl">Your money, <span className="text-cyan-300">moving smarter.</span></h1>
-            <p className="mt-6 max-w-lg text-base leading-7 text-slate-400">A simpler way to manage payments, transfers and everyday financial services — all in one secure place.</p>
-            <div className="mt-12 max-w-md rounded-2xl border border-cyan-200/15 bg-slate-950/35 p-5 shadow-2xl shadow-cyan-950/20 backdrop-blur-sm">
-              <div className="mb-5 flex items-center justify-between"><span className="text-xs font-medium text-slate-400">BlueSea overview</span><span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-300">Secure access</span></div>
-              <svg viewBox="0 0 360 92" className="h-24 w-full" role="img" aria-label="Abstract rising financial activity line">
-                <defs><linearGradient id="blueseaAuthLine" x1="0" x2="1"><stop offset="0%" stopColor="#22d3ee" stopOpacity=".35"/><stop offset="100%" stopColor="#2dd4bf"/></linearGradient></defs>
-                <path d="M0 76 C34 70 43 52 72 58 S119 67 146 43 S194 51 222 30 S267 41 291 18 S330 24 360 4" fill="none" stroke="url(#blueseaAuthLine)" strokeWidth="3" strokeLinecap="round"/>
-                <path d="M0 76 C34 70 43 52 72 58 S119 67 146 43 S194 51 222 30 S267 41 291 18 S330 24 360 4 L360 92 L0 92Z" fill="url(#blueseaAuthLine)" opacity=".08"/>
-              </svg>
-              <div className="mt-3 flex items-center justify-between text-[10px] text-slate-500"><span>Payments</span><span>Transfers</span><span>Wallet</span></div>
+        {/* Desktop brand panel: BlueSea colours and a purposeful financial activity chart. */}
+        <section className="relative hidden min-h-screen overflow-hidden bg-[#071a2d] px-12 py-10 text-white md:flex md:flex-col md:justify-between lg:px-[clamp(3.5rem,7vw,7rem)] lg:py-12">
+          <div className="pointer-events-none absolute -right-44 -bottom-64 h-[700px] w-[700px] rounded-full border border-sky-400/[0.09]" />
+          <div className="pointer-events-none absolute -right-24 -bottom-44 h-[520px] w-[520px] rounded-full border border-sky-400/[0.10]" />
+          <div className="pointer-events-none absolute right-[-8%] top-[27%] h-[420px] w-[420px] rounded-full bg-blue-500/[0.12] blur-[110px]" />
+          <div className="pointer-events-none absolute left-[-12%] bottom-[8%] h-[340px] w-[340px] rounded-full bg-cyan-500/[0.07] blur-[100px]" />
+
+          <div className="relative z-10 flex items-center justify-between">
+            <Logo size="sm" />
+            <span className="rounded-full border border-sky-300/20 bg-sky-300/[0.07] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-sky-100/75">BlueSea Mobile</span>
+          </div>
+
+          <div className="relative z-10 my-auto max-w-[620px] py-12 lg:py-16">
+            <p className="mb-5 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-sky-300">
+              <span className="h-px w-8 bg-sky-400/80" /> Banking that moves with you
+            </p>
+            <h1 className="max-w-[590px] text-[clamp(2.8rem,4.3vw,4.35rem)] font-semibold leading-[1.08] tracking-[-0.045em] text-white">
+              Your money, <span className="text-sky-300">under your control.</span>
+            </h1>
+            <p className="mt-6 max-w-[510px] text-[15px] leading-7 text-slate-300/80 lg:text-base lg:leading-8">
+              Make everyday payments, send money, manage your wallet and stay on top of your finances — all from one secure place built around you.
+            </p>
+
+            <div className="mt-10 max-w-[510px] overflow-hidden rounded-2xl border border-sky-200/15 bg-[#0a2035]/90 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)] backdrop-blur-md lg:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-400">Your financial overview</p>
+                  <p className="mt-1.5 text-sm font-semibold text-white">A clearer picture of your activity</p>
+                </div>
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-300/15 bg-emerald-300/[0.08] px-2.5 py-1.5 text-[9px] font-semibold text-emerald-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Secure & connected
+                </span>
+              </div>
+
+              <div className="mt-5 rounded-xl border border-sky-100/[0.07] bg-[#071a2d]/75 px-3 pt-3 pb-2">
+                <div className="mb-2 flex items-center justify-between text-[9px] font-medium text-slate-500">
+                  <span>ACTIVITY TREND</span><span>ILLUSTRATIVE OVERVIEW</span>
+                </div>
+                <svg viewBox="0 0 480 142" className="h-[112px] w-full" role="img" aria-label="Illustrative financial activity trend line">
+                  <defs>
+                    <linearGradient id="blueSeaActivityStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#38bdf8"/><stop offset="100%" stopColor="#60a5fa"/></linearGradient>
+                    <linearGradient id="blueSeaActivityFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#38bdf8" stopOpacity=".19"/><stop offset="100%" stopColor="#38bdf8" stopOpacity="0"/></linearGradient>
+                  </defs>
+                  {[24, 58, 92, 126].map((y) => <line key={y} x1="0" y1={y} x2="480" y2={y} stroke="#8ab7d8" strokeOpacity=".10" strokeDasharray="3 6" />)}
+                  {[60, 156, 252, 348, 444].map((x) => <line key={x} x1={x} y1="12" x2={x} y2="130" stroke="#8ab7d8" strokeOpacity=".07" />)}
+                  <path d="M0 105 C28 101 39 84 66 89 S105 102 132 76 S177 82 204 65 S246 73 274 51 S317 63 344 42 S389 48 414 29 S454 34 480 14 L480 132 L0 132Z" fill="url(#blueSeaActivityFill)" />
+                  <path d="M0 105 C28 101 39 84 66 89 S105 102 132 76 S177 82 204 65 S246 73 274 51 S317 63 344 42 S389 48 414 29 S454 34 480 14" fill="none" stroke="url(#blueSeaActivityStroke)" strokeWidth="3" strokeLinecap="round" />
+                  <circle cx="480" cy="14" r="4" fill="#7dd3fc" stroke="#071a2d" strokeWidth="3" />
+                </svg>
+                <div className="mt-1 flex justify-between text-[9px] text-slate-500"><span>Payments</span><span>Transfers</span><span>Wallet activity</span></div>
+              </div>
+              <div className="mt-4 grid grid-cols-3 divide-x divide-sky-100/10">
+                <div className="pr-3"><p className="text-[9px] text-slate-500">PAYMENTS</p><p className="mt-1 text-xs font-semibold text-slate-200">Simple & fast</p></div>
+                <div className="px-3"><p className="text-[9px] text-slate-500">TRANSFERS</p><p className="mt-1 text-xs font-semibold text-slate-200">Move with ease</p></div>
+                <div className="pl-3"><p className="text-[9px] text-slate-500">WALLET</p><p className="mt-1 text-xs font-semibold text-slate-200">Stay in control</p></div>
+              </div>
             </div>
           </div>
-          <p className="relative z-10 text-[10px] tracking-wide text-slate-500">BlueSea Mobile · Secure financial services</p>
+
+          <div className="relative z-10 flex items-center justify-between gap-4 border-t border-sky-100/10 pt-5 text-[9px] tracking-[0.12em] text-slate-500">
+            <span>BLUESEA MOBILE</span><span>YOUR FINANCES. ONE SECURE PLACE.</span>
+          </div>
         </section>
 
         <section className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 md:dark:bg-[#090f1b]">
