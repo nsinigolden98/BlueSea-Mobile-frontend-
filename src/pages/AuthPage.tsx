@@ -16,6 +16,16 @@ import { isNativeAndroid, performNativeGoogleSignIn } from '@/lib/nativeGoogleAu
 
 type AuthMode = 'login' | 'signup';
 
+const normalizeNigerianPhone = (value: string) => {
+  const compact = value.replace(/[\s()-]/g, '');
+  if (compact.startsWith('+234')) return `0${compact.slice(4).replace(/\D/g, '').slice(0, 10)}`;
+  return compact.replace(/\D/g, '').slice(0, 11);
+};
+
+const isValidNigerianPhone = (value: string) => /^0[789]\d{9}$/.test(value);
+const isValidGmail = (value: string) => /^(?!\.)(?!.*\.\.)[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(?<!\.)@gmail\.com$/i.test(value.trim());
+const isValidPersonName = (value: string) => /^[\p{L}][\p{L}\s'-]{1,39}$/u.test(value.trim());
+
 export function AuthPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -38,6 +48,8 @@ export function AuthPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [referralCode, setReferralCode] = useState(searchParams.get('ref') || '');
+  const [failedLoginAttempts, setFailedLoginAttempts] = useState(0);
+  const [formError, setFormError] = useState('');
 
   // Synchronous check for mobile native environment
   const isNative = isNativeAndroid();
@@ -88,25 +100,60 @@ export function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    showLoader();
+    setFormError('');
 
+    if (mode === 'login') {
+      if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        setFormError('Enter a valid email address.');
+        return;
+      }
+      if (!password) {
+        setFormError('Enter your password to continue.');
+        return;
+      }
+    } else {
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!isValidGmail(normalizedEmail)) {
+        setFormError('Please use a valid Gmail address ending in @gmail.com.');
+        return;
+      }
+      if (!isValidNigerianPhone(phone)) {
+        setFormError('Enter a valid Nigerian mobile number, for example 08031234567.');
+        return;
+      }
+      if (!isValidPersonName(firstName) || !isValidPersonName(surname)) {
+        setFormError('First name and surname must contain letters only (spaces, hyphens and apostrophes are allowed).');
+        return;
+      }
+      if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+        setFormError('Use at least 8 characters, including one letter and one number.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setFormError('Passwords do not match.');
+        return;
+      }
+      if (!agreeToTerms) {
+        setFormError('Please accept the Terms & Conditions to create your account.');
+        return;
+      }
+    }
+
+    showLoader();
     try {
       if (mode === 'login') {
-        const response = await login({ email, password, rememberMe });
+        const response = await login({ email: email.trim().toLowerCase(), password, rememberMe });
         if (response && typeof response === 'object' && 'email' in response) {
+          setFailedLoginAttempts(0);
           navigate('/dashboard');
         } else if (response) {
-          showToast(response);
+          setFailedLoginAttempts((attempts) => attempts + 1);
+          setFormError(String(response));
         }
         return;
       }
 
-      if (password !== confirmPassword) {
-        showToast('Passwords do not match');
-        return;
-      }
-
-      const response = await signup({ email, phone, firstName, surname, password, confirmPassword, agreeToTerms });
+      const response = await signup({ email: email.trim().toLowerCase(), phone, firstName: firstName.trim(), surname: surname.trim(), password, confirmPassword, agreeToTerms });
       if (response.state) {
         showToast(response.message);
         setComponentVisibilty(true);
@@ -119,7 +166,9 @@ export function AuthPage() {
       }
       navigate('/login');
     } catch (error: any) {
-      showToast(error?.response?.data?.detail || error?.response?.data?.message || error?.message || 'Authentication failed. Please try again.');
+      const message = error?.response?.data?.detail || error?.response?.data?.message || error?.message || 'Authentication failed. Please try again.';
+      if (mode === 'login') setFailedLoginAttempts((attempts) => attempts + 1);
+      setFormError(message);
     } finally {
       hideLoader();
     }
@@ -197,16 +246,16 @@ export function AuthPage() {
           </div>
         </section>
 
-        <section className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 md:dark:bg-[#090f1b]">
+        <section className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 md:dark:bg-[#090f1b] md:h-screen md:min-h-0 md:overflow-hidden">
           <div className="p-4 md:hidden"><Logo size="sm" /></div>
-          <div className="flex flex-1 items-center justify-center p-4 md:px-10 md:py-12 lg:px-16">
-            <div className="w-full max-w-md">
+          <div className="flex flex-1 items-center justify-center p-3 sm:p-4 md:min-h-0 md:px-8 md:py-3 lg:px-12">
+            <div className="w-full max-w-[430px] md:max-h-full md:overflow-y-auto md:overscroll-contain md:py-1">
             {/* Tabs */}
-            <div className="flex mb-6 bg-white dark:bg-slate-800 rounded-full p-1 shadow-sm md:bg-slate-800/80 md:shadow-none">
+            <div className="mb-3 flex rounded-full bg-white p-1 shadow-sm dark:bg-slate-800 md:mb-3 md:bg-slate-800/80 md:shadow-none">
               <button
-                onClick={() => setMode('login')}
+                onClick={() => { setMode('login'); setFormError(''); }}
                 className={cn(
-                  'flex-1 py-2.5 text-center font-medium transition-all rounded-full',
+                  'flex-1 rounded-full py-2 text-center text-sm font-semibold transition-all',
                   mode === 'login'
                     ? 'bg-sky-500 text-white shadow-md'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -215,9 +264,9 @@ export function AuthPage() {
                 Log in
               </button>
               <button
-                onClick={() => setMode('signup')}
+                onClick={() => { setMode('signup'); setFormError(''); }}
                 className={cn(
-                  'flex-1 py-2.5 text-center font-medium transition-all rounded-full',
+                  'flex-1 rounded-full py-2 text-center text-sm font-semibold transition-all',
                   mode === 'signup'
                     ? 'bg-sky-500 text-white shadow-md'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -228,12 +277,12 @@ export function AuthPage() {
             </div>
 
             {/* Form Card */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 md:rounded-none md:bg-transparent md:p-0 md:shadow-none">
-              <div className="text-center mb-6">
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-1 md:text-3xl md:tracking-tight">
+            <div className="rounded-[26px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_55px_rgba(15,35,60,0.09)] dark:border-slate-700/70 dark:bg-slate-800 sm:p-5 md:rounded-[24px] md:border-slate-700/70 md:bg-slate-900/55 md:p-3.5 md:shadow-[0_22px_60px_rgba(0,0,0,0.22)] lg:p-4">
+              <div className="mb-3 text-center md:mb-3">
+                <h2 className="mb-1 text-xl font-bold text-slate-800 dark:text-white md:text-2xl md:tracking-tight">
                   {mode === 'login' ? 'Welcome Back!' : 'Create Account'}
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm md:mt-2 md:text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400 md:mt-1 md:text-slate-400">
                   {mode === 'login' ? 'Sign in to continue to BlueSea Mobile' : 'Join thousands of users today'}
                 </p>
               </div>
@@ -244,7 +293,7 @@ export function AuthPage() {
                   <Button
                     type="button"
                     onClick={handleNativeGoogleLogin}
-                    className="w-full h-11 bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-full flex items-center justify-center gap-2 shadow-sm"
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-sky-500 font-medium text-white shadow-sm hover:bg-sky-600"
                   >
                     <svg className="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 24 24">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -270,7 +319,7 @@ export function AuthPage() {
               </div>
 
               {/* Divider */}
-              <div className="relative my-6">
+              <div className="relative my-3 md:my-2">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-slate-200 dark:border-slate-700" />
                 </div>
@@ -279,19 +328,21 @@ export function AuthPage() {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-2.5 md:space-y-1.5" noValidate>
                 {/* Email */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       id="email"
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder={mode === 'signup' ? 'yourname@gmail.com' : 'Enter your email'}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 h-11"
+                      maxLength={254}
+                      autoComplete="email"
+                      onChange={(e) => { setEmail(e.target.value.slice(0, 254)); setFormError(''); }}
+                      className="h-10 pl-10 text-sm md:h-9"
                       required
                     />
                   </div>
@@ -299,18 +350,20 @@ export function AuthPage() {
 
                 {/* Phone (Signup only) */}
                 {mode === 'signup' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="phone" className="text-xs font-semibold">Phone Number</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="0803 123 4567 or +2348031234567"
+                        placeholder="0803 123 4567 or +234 803 123 4567"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="pl-10 h-11"
+                        onChange={(e) => setPhone(normalizeNigerianPhone(e.target.value))}
+                        className="h-10 pl-10 text-sm md:h-9"
                         maxLength={11}
+                        inputMode="tel"
+                        autoComplete="tel-national"
                         required
                       />
                     </div>
@@ -320,28 +373,32 @@ export function AuthPage() {
                 {/* First Name & Surname (Signup only) */}
                 {mode === 'signup' && (
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName" className="text-sm font-medium">First Name</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="firstName" className="text-xs font-semibold">First Name</Label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <Input
                           id="firstName"
                           placeholder="e.g. John"
                           value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          className="pl-10 h-11"
+                          maxLength={40}
+                          autoComplete="given-name"
+                          onChange={(e) => setFirstName(e.target.value.replace(/[^\p{L}\s'-]/gu, '').slice(0, 40))}
+                          className="h-10 pl-10 text-sm md:h-9"
                           required
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="surname" className="text-sm font-medium">Surname</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="surname" className="text-xs font-semibold">Surname</Label>
                       <Input
                         id="surname"
                         placeholder="Your surname"
                         value={surname}
-                        onChange={(e) => setSurname(e.target.value)}
-                        className="h-11"
+                        maxLength={40}
+                        autoComplete="family-name"
+                        onChange={(e) => setSurname(e.target.value.replace(/[^\p{L}\s'-]/gu, '').slice(0, 40))}
+                        className="h-10 text-sm md:h-9"
                         required
                       />
                     </div>
@@ -350,8 +407,8 @@ export function AuthPage() {
 
                 {/* Referral Code (Signup only) */}
                 {mode === 'signup' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="referralCode" className="text-sm font-medium">Referral Code</Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="referralCode" className="text-xs font-semibold">Referral Code</Label>
                     <div className="relative">
                       <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
@@ -359,15 +416,15 @@ export function AuthPage() {
                         placeholder="Enter referral code"
                         value={referralCode}
                         onChange={(e) => setReferralCode(e.target.value)}
-                        className="pl-10 h-11"
+                        className="h-10 pl-10 text-sm md:h-9"
                       />
                     </div>
                   </div>
                 )}
 
                 {/* Password */}
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">
+                <div className="space-y-1">
+                  <Label htmlFor="password" className="text-xs font-semibold">
                     Password
                   </Label>
                   <div className="relative">
@@ -377,8 +434,8 @@ export function AuthPage() {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Enter your password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10 h-11"
+                      onChange={(e) => { setPassword(e.target.value); setFormError(''); }}
+                      className="h-10 pl-10 pr-10 text-sm md:h-9"
                       required
                       minLength={mode === 'signup' ? 8 : undefined}
                     />
@@ -391,14 +448,14 @@ export function AuthPage() {
                     </button>
                   </div>
                   {mode === 'signup' && (
-                    <p className="text-xs text-slate-400">Min 8 chars, letter + digit</p>
+                    <p className="text-[10px] leading-tight text-slate-400">At least 8 characters, including a letter and a number.</p>
                   )}
                 </div>
 
                 {/* Confirm Password (Signup only) */}
                 {mode === 'signup' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm password</Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="confirmPassword" className="text-xs font-semibold">Confirm password</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
@@ -406,8 +463,8 @@ export function AuthPage() {
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="Confirm your password"
                         value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="pl-10 pr-10 h-11"
+                        onChange={(e) => { setConfirmPassword(e.target.value); setFormError(''); }}
+                        className="h-10 pl-10 pr-10 text-sm md:h-9"
                         required
                       />
                       <button
@@ -443,14 +500,14 @@ export function AuthPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-start gap-2">
                     <Checkbox
                       id="terms"
                       checked={agreeToTerms}
                       onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
                       required
                     />
-                    <Label htmlFor="terms" className="text-sm font-normal cursor-pointer">
+                    <Label htmlFor="terms" className="cursor-pointer text-xs font-normal leading-5">
                       I agree to the{' '}
                       <button
                         type="button"
@@ -463,10 +520,21 @@ export function AuthPage() {
                   </div>
                 )}
 
+                {formError && (
+                  <div role="alert" aria-live="polite" className="rounded-xl border border-rose-500/20 bg-rose-500/[0.07] px-3 py-2 text-xs leading-relaxed text-rose-600 dark:text-rose-300">
+                    {formError}
+                  </div>
+                )}
+                {mode === 'login' && failedLoginAttempts >= 5 && (
+                  <div role="status" className="rounded-xl border border-amber-500/25 bg-amber-500/[0.08] px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-200">
+                    We noticed {failedLoginAttempts} unsuccessful sign-in attempts. Check your details before trying again. If you do not remember your password, use “Forgot password?”.
+                  </div>
+                )}
+
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full rounded-xl bg-sky-500 hover:bg-sky-600 h-11 font-medium"
+                  className="h-10 w-full rounded-xl bg-sky-500 font-semibold hover:bg-sky-600 md:h-9"
                   disabled={loading}
                 >
                   {mode === 'login' ? 'Log in' : 'Sign up'}
