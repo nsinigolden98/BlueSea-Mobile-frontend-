@@ -19,7 +19,8 @@ type AuthMode = 'login' | 'signup';
 const normalizeNigerianPhone = (value: string) => {
   const compact = value.replace(/[\s()-]/g, '');
   if (compact.startsWith('+234')) return `0${compact.slice(4).replace(/\D/g, '').slice(0, 10)}`;
-  return compact.replace(/\D/g, '').slice(0, 11);
+  const digits = compact.replace(/\D/g, '').slice(0, 11);
+  return digits.length === 10 ? `0${digits}` : digits;
 };
 
 const isValidNigerianPhone = (value: string) => /^0[789]\d{9}$/.test(value);
@@ -180,10 +181,10 @@ export function AuthPage() {
   }
 
   return (
-    <div>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 md:dark:bg-[#090f1b] md:grid md:grid-cols-[1.05fr_0.95fr]">
+    <div className="md:h-dvh md:overflow-hidden">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 md:grid md:h-dvh md:min-h-0 md:grid-cols-[1.05fr_0.95fr] md:overflow-hidden md:overscroll-none md:dark:bg-[#090f1b]">
         {/* Desktop brand panel: BlueSea colours and a purposeful financial activity chart. */}
-        <section className="relative hidden min-h-screen overflow-hidden bg-[#071a2d] px-12 py-10 text-white md:flex md:flex-col md:justify-between lg:px-[clamp(3.5rem,7vw,7rem)] lg:py-12">
+        <section className="relative hidden h-full min-h-0 overflow-hidden bg-[#071a2d] px-8 py-6 text-white md:flex md:flex-col md:justify-between lg:px-[clamp(3rem,5vw,5.5rem)] lg:py-7">
           <div className="pointer-events-none absolute -right-44 -bottom-64 h-[700px] w-[700px] rounded-full border border-sky-400/[0.09]" />
           <div className="pointer-events-none absolute -right-24 -bottom-44 h-[520px] w-[520px] rounded-full border border-sky-400/[0.10]" />
           <div className="pointer-events-none absolute right-[-8%] top-[27%] h-[420px] w-[420px] rounded-full bg-blue-500/[0.12] blur-[110px]" />
@@ -194,18 +195,18 @@ export function AuthPage() {
             <span className="rounded-full border border-sky-300/20 bg-sky-300/[0.07] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-sky-100/75">BlueSea Mobile</span>
           </div>
 
-          <div className="relative z-10 my-auto max-w-[620px] py-12 lg:py-16">
-            <p className="mb-5 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-sky-300">
+          <div className="relative z-10 my-auto max-w-[620px] py-5 lg:py-6">
+            <p className="mb-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-sky-300">
               <span className="h-px w-8 bg-sky-400/80" /> Banking that moves with you
             </p>
             <h1 className="max-w-[590px] text-[clamp(2.8rem,4.3vw,4.35rem)] font-semibold leading-[1.08] tracking-[-0.045em] text-white">
               Your money, <span className="text-sky-300">under your control.</span>
             </h1>
-            <p className="mt-6 max-w-[510px] text-[15px] leading-7 text-slate-300/80 lg:text-base lg:leading-8">
+            <p className="mt-4 max-w-[510px] text-sm leading-6 text-slate-300/80 lg:text-[15px] lg:leading-7">
               Make everyday payments, send money, manage your wallet and stay on top of your finances — all from one secure place built around you.
             </p>
 
-            <div className="mt-10 max-w-[510px] overflow-hidden rounded-2xl border border-sky-200/15 bg-[#0a2035]/90 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.28)] backdrop-blur-md lg:p-6">
+            <div className="mt-6 max-w-[510px] overflow-hidden rounded-2xl border border-sky-200/15 bg-[#0a2035]/90 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.28)] backdrop-blur-md lg:p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-400">Your financial overview</p>
@@ -220,7 +221,7 @@ export function AuthPage() {
                 <div className="mb-2 flex items-center justify-between text-[9px] font-medium text-slate-500">
                   <span>ACTIVITY TREND</span><span>ILLUSTRATIVE OVERVIEW</span>
                 </div>
-                <svg viewBox="0 0 480 142" className="h-[112px] w-full" role="img" aria-label="Illustrative financial activity trend line">
+                <svg viewBox="0 0 480 142" className="h-[82px] w-full" role="img" aria-label="Illustrative financial activity trend line">
                   <defs>
                     <linearGradient id="blueSeaActivityStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#38bdf8"/><stop offset="100%" stopColor="#60a5fa"/></linearGradient>
                     <linearGradient id="blueSeaActivityFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#38bdf8" stopOpacity=".19"/><stop offset="100%" stopColor="#38bdf8" stopOpacity="0"/></linearGradient>
@@ -246,12 +247,12 @@ export function AuthPage() {
           </div>
         </section>
 
-        <section className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 md:dark:bg-[#090f1b] md:h-screen md:min-h-0 md:overflow-hidden">
+        <section className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 md:h-full md:min-h-0 md:overflow-hidden md:dark:bg-[#090f1b]">
           <div className="p-4 md:hidden"><Logo size="sm" /></div>
-          <div className="flex flex-1 items-center justify-center p-3 sm:p-4 md:min-h-0 md:px-8 md:py-3 lg:px-12">
-            <div className="w-full max-w-[430px] md:max-h-full md:overflow-y-auto md:overscroll-contain md:py-1">
+          <div className="flex flex-1 items-center justify-center p-3 sm:p-4 md:min-h-0 md:overflow-hidden md:px-6 md:py-2 lg:px-9">
+            <div className="w-full max-w-[440px] md:max-h-full md:overflow-visible md:py-0">
             {/* Tabs */}
-            <div className="mb-3 flex rounded-full bg-white p-1 shadow-sm dark:bg-slate-800 md:mb-3 md:bg-slate-800/80 md:shadow-none">
+            <div className="mb-2 flex rounded-full bg-white p-1 shadow-sm dark:bg-slate-800 md:mb-2 md:bg-slate-800/80 md:shadow-none">
               <button
                 onClick={() => { setMode('login'); setFormError(''); }}
                 className={cn(
@@ -277,8 +278,8 @@ export function AuthPage() {
             </div>
 
             {/* Form Card */}
-            <div className="rounded-[26px] border border-slate-200/80 bg-white p-4 shadow-[0_18px_55px_rgba(15,35,60,0.09)] dark:border-slate-700/70 dark:bg-slate-800 sm:p-5 md:rounded-[24px] md:border-slate-700/70 md:bg-slate-900/55 md:p-3.5 md:shadow-[0_22px_60px_rgba(0,0,0,0.22)] lg:p-4">
-              <div className="mb-3 text-center md:mb-3">
+            <div className="rounded-[26px] border border-slate-200/80 bg-white p-3.5 shadow-[0_18px_55px_rgba(15,35,60,0.09)] dark:border-slate-700/70 dark:bg-slate-800 sm:p-4 md:rounded-[24px] md:border-slate-700/70 md:bg-slate-900/55 md:p-3 lg:p-3.5">
+              <div className="mb-2 text-center md:mb-2">
                 <h2 className="mb-1 text-xl font-bold text-slate-800 dark:text-white md:text-2xl md:tracking-tight">
                   {mode === 'login' ? 'Welcome Back!' : 'Create Account'}
                 </h2>
@@ -319,7 +320,7 @@ export function AuthPage() {
               </div>
 
               {/* Divider */}
-              <div className="relative my-3 md:my-2">
+              <div className="relative my-2 md:my-1.5">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-slate-200 dark:border-slate-700" />
                 </div>
@@ -328,7 +329,7 @@ export function AuthPage() {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-2.5 md:space-y-1.5" noValidate>
+              <form onSubmit={handleSubmit} className="space-y-2 md:space-y-1.5" noValidate>
                 {/* Email */}
                 <div className="space-y-1">
                   <Label htmlFor="email" className="text-xs font-semibold">Email</Label>
@@ -348,31 +349,39 @@ export function AuthPage() {
                   </div>
                 </div>
 
-                {/* Phone (Signup only) */}
+                {/* Country code and phone number (Signup only) */}
                 {mode === 'signup' && (
-                  <div className="space-y-1">
-                    <Label htmlFor="phone" className="text-xs font-semibold">Phone Number</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="0803 123 4567 or +234 803 123 4567"
-                        value={phone}
-                        onChange={(e) => setPhone(normalizeNigerianPhone(e.target.value))}
-                        className="h-10 pl-10 text-sm md:h-9"
-                        maxLength={11}
-                        inputMode="tel"
-                        autoComplete="tel-national"
-                        required
-                      />
+                  <div className="grid grid-cols-[minmax(86px,0.34fr)_minmax(0,1fr)] gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="countryCode" className="text-xs font-semibold">Code</Label>
+                      <div id="countryCode" className="flex h-10 items-center justify-center rounded-md border border-input bg-slate-50 px-3 text-sm font-medium text-slate-600 dark:bg-slate-900 md:h-9">
+                        <span className="mr-1.5" aria-hidden="true">🇳🇬</span> +234
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="phone" className="text-xs font-semibold">Phone Number</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="803 123 4567"
+                          value={phone.startsWith('0') ? phone.slice(1) : phone}
+                          onChange={(e) => setPhone(normalizeNigerianPhone(e.target.value))}
+                          className="h-10 pl-10 text-sm md:h-9"
+                          maxLength={10}
+                          inputMode="numeric"
+                          autoComplete="tel-national"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* First Name & Surname (Signup only) */}
                 {mode === 'signup' && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <Label htmlFor="firstName" className="text-xs font-semibold">First Name</Label>
                       <div className="relative">
@@ -422,61 +431,50 @@ export function AuthPage() {
                   </div>
                 )}
 
-                {/* Password */}
-                <div className="space-y-1">
-                  <Label htmlFor="password" className="text-xs font-semibold">
-                    Password
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => { setPassword(e.target.value); setFormError(''); }}
-                      className="h-10 pl-10 pr-10 text-sm md:h-9"
-                      required
-                      minLength={mode === 'signup' ? 8 : undefined}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {mode === 'signup' && (
-                    <p className="text-[10px] leading-tight text-slate-400">At least 8 characters, including a letter and a number.</p>
-                  )}
-                </div>
-
-                {/* Confirm Password (Signup only) */}
-                {mode === 'signup' && (
+                {/* Password fields: side-by-side on signup, full-width on login */}
+                <div className={mode === 'signup' ? 'grid grid-cols-2 gap-3' : 'block'}>
                   <div className="space-y-1">
-                    <Label htmlFor="confirmPassword" className="text-xs font-semibold">Confirm password</Label>
+                    <Label htmlFor="password" className="text-xs font-semibold">Password</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        placeholder="Confirm your password"
-                        value={confirmPassword}
-                        onChange={(e) => { setConfirmPassword(e.target.value); setFormError(''); }}
-                        className="h-10 pl-10 pr-10 text-sm md:h-9"
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Create password"
+                        value={password}
+                        onChange={(e) => { setPassword(e.target.value); setFormError(''); }}
+                        className="h-10 pl-10 pr-9 text-sm md:h-9 md:pl-9"
                         required
+                        minLength={mode === 'signup' ? 8 : undefined}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                    {mode === 'signup' && <p className="text-[9px] leading-tight text-slate-400">8+ characters, with a letter and a number.</p>}
                   </div>
-                )}
+
+                  {mode === 'signup' && (
+                    <div className="space-y-1">
+                      <Label htmlFor="confirmPassword" className="text-xs font-semibold">Confirm password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input
+                          id="confirmPassword"
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          placeholder="Confirm password"
+                          value={confirmPassword}
+                          onChange={(e) => { setConfirmPassword(e.target.value); setFormError(''); }}
+                          className="h-10 pl-10 pr-9 text-sm md:h-9 md:pl-9"
+                          required
+                        />
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Remember Me / Terms */}
                 {mode === 'login' ? (
