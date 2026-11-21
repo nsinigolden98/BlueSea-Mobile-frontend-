@@ -110,7 +110,7 @@ export function MobileBottomNavigation() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const homeTapCount = useRef(0);
-  const homeTapTimer = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const homeTapTimer = useRef<number | null>(null);
 
   useEffect(() => {
     let active = true;
