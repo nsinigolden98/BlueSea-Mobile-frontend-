@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { postRequest, ENDPOINTS } from '@/types';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
 import { useAuth } from '@/context/AuthContext';
-import { NIGERIAN_BANKS } from '@/data';
+import { usePlans, toBanks, type BankOption } from '@/hooks/usePlans';
 import {
   Landmark,
   CheckCircle2,
@@ -29,10 +29,7 @@ import {
   X,
 } from 'lucide-react';
 
-interface Bank {
-  name: string;
-  code: string;
-}
+type Bank = BankOption;
 
 interface PinPayload {
   account_name: string;
@@ -70,6 +67,8 @@ interface VerifyAccountResponse {
 
 export function Withdraw() {
   const { user } = useAuth();
+  const { plans: livePlans, unavailable: banksUnavailable } = usePlans();
+  const banks = useMemo(() => toBanks(livePlans.banks), [livePlans.banks]);
   const verificationRequestId = useRef(0);
 
   // Layout State
@@ -118,18 +117,16 @@ export function Withdraw() {
   const isOverWithdrawalLimit = numericAmount > withdrawalLimit;
   const isOverBalance = numericAmount > 0 && numericAmount > balance;
 
-  // Bank Filtering Logic
+  // Bank Filtering Logic (live from /ws/plans/ "banks" key)
   const filteredBanks = useMemo(() => {
     const query = bankSearch.trim().toLowerCase();
-    if (!query) return NIGERIAN_BANKS;
-    return NIGERIAN_BANKS.filter((b: Bank) => 
-      b.name.toLowerCase().includes(query)
-    );
-  }, [bankSearch]);
+    if (!query) return banks;
+    return banks.filter((b) => b.name.toLowerCase().includes(query));
+  }, [bankSearch, banks]);
 
   const selectedBankObj = useMemo(() => {
-    return NIGERIAN_BANKS.find((b: Bank) => b.code === selectedBank);
-  }, [selectedBank]);
+    return banks.find((b) => b.code === selectedBank);
+  }, [selectedBank, banks]);
 
   const handleSelectBank = (bank: Bank) => {
     setSelectedBank(bank.code);
@@ -378,8 +375,12 @@ export function Withdraw() {
                   {selectedBank && !isBankDropdownOpen ? (
                     <div className="flex items-center justify-between px-4 bg-white dark:bg-slate-800/80 border border-sky-500/30 rounded-2xl h-16 shadow-sm">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-black text-sm">
-                          <Landmark className="w-5 h-5" />
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-black text-sm overflow-hidden">
+                          {selectedBankObj?.logo ? (
+                            <img src={selectedBankObj.logo} alt="" className="w-full h-full object-contain bg-white" />
+                          ) : (
+                            <Landmark className="w-5 h-5" />
+                          )}
                         </div>
                         <div>
                           <p className="text-sm font-black text-slate-900 dark:text-white">
@@ -438,7 +439,9 @@ export function Withdraw() {
 
                       {filteredBanks.length === 0 ? (
                         <div className="p-4 text-center text-xs text-slate-500 font-medium">
-                          No bank found matching &quot;{bankSearch}&quot;
+                          {banks.length === 0
+                            ? (banksUnavailable ? 'Live banks unavailable — check connection' : 'Loading banks…')
+                            : <>No bank found matching &quot;{bankSearch}&quot;</>}
                         </div>
                       ) : (
                         filteredBanks.map((bank, index) => (
@@ -451,8 +454,12 @@ export function Withdraw() {
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs">
-                                {bank.name.charAt(0)}
+                              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs overflow-hidden">
+                                {bank.logo ? (
+                                  <img src={bank.logo} alt="" className="w-full h-full object-contain bg-white" loading="lazy" />
+                                ) : (
+                                  bank.name.charAt(0)
+                                )}
                               </div>
                               <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
                                 {bank.name}

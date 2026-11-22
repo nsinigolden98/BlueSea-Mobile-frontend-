@@ -19,6 +19,7 @@ export const PLAN_KEYS = [
   'electricity',
   'betting',
   'airtime',
+  'banks',
 ] as const;
 
 export type PlanKey = (typeof PLAN_KEYS)[number];
