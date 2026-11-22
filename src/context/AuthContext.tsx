@@ -12,7 +12,9 @@ import {
   API_BASE,
   getCookie,
 } from '@/types';
-import { hasSessionToken, onSessionRefreshed, refreshAccessToken, setSessionToken, getSessionRefresh } from '@/lib/session';
+import { hasSessionToken, onSessionRefreshed, refreshAccessToken, setSessionToken, setSessionRefresh, getSessionRefresh } from '@/lib/session';
+import { Capacitor } from '@capacitor/core';
+import { getBiometricFlag, setBiometricFlag, getBiometricLoginCredential, setBiometricLoginCredential, clearBiometricLoginCredential } from '@/lib/security/biometrics';
 import { createWalletWebSocket, type BalanceUpdate, type WalletConnected } from '@/services/walletWebSocket';
 import { createNotificationSocket, type ServerNotification } from '@/services/notificationSocket';
 import { resetPlansSocket, stopPlansSocket } from '@/hooks/usePlans';
@@ -31,10 +33,10 @@ interface SignUpResponse {
 interface AuthContextType extends AuthState {
   /** False until the boot bootstrap settles (route guards gate on this). */
   initialized: boolean;
-  login: (data: LoginFormData) => Promise<string>;
+  login: (data: LoginFormData) => Promise<string | { email: string }>;
   signup: (data: SignupFormData) => Promise<SignUpResponse>;
   logout: () => void;
-  googleLogin: (credentialResponse: GoogleLoginInput) => Promise<void> | void;
+  googleLogin: (credentialResponse: GoogleLoginInput) => Promise<void>;
   load?: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -64,6 +66,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // it so they reconnect with the fresh memory token after a 4401.
   const [sessionNonce, setSessionNonce] = useState(0);
   useEffect(() => onSessionRefreshed(() => setSessionNonce((n) => n + 1)), []);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !state.user?.email) return;
+    const persistRotatedRefresh = () => {
+      const refresh = getSessionRefresh();
+      if (!getBiometricFlag('biometricLoginEnabled') || !refresh) return;
+      void setBiometricLoginCredential(state.user!.email, refresh).catch((error) => {
+        console.error('Could not update secure biometric login credentials:', error);
+      });
+    };
+    // Also synchronize once on mount: bootstrap may have rotated the token
+    // before the authenticated user state (and this listener) was established.
+    persistRotatedRefresh();
+    const unsubscribe = onSessionRefreshed(persistRotatedRefresh);
+    return unsubscribe;
+  }, [state.user?.email]);
 
   // Rapid 4401s across sockets mean the session is unrecoverable (fresh
   // tokens still rejected): stop recreating sockets instead of spinning.
@@ -190,6 +208,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => reject(new Error('Auth bootstrap timed out')), 60000),
       );
       try {
+        // On a cold native-app launch, restore the rotating refresh token only
+        // after the device owner passes the biometric prompt. Web auth is untouched.
+        if (Capacitor.isNativePlatform() && !hasSessionToken() && getBiometricFlag('biometricLoginEnabled')) {
+          const savedCredential = await getBiometricLoginCredential();
+          if (savedCredential) {
+            setSessionRefresh(savedCredential.refreshToken);
+            const restored = await refreshAccessToken(API_BASE);
+            if (!restored) {
+              await clearBiometricLoginCredential();
+              setBiometricFlag('biometricLoginEnabled', false);
+            }
+          }
+        }
+
         const [profileResponse, balanceResponse] = await Promise.race([
           Promise.all([
             getRequest(ENDPOINTS.user),
@@ -326,6 +358,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setSessionToken(response.access_token, response.refresh_token);
+      if (Capacitor.isNativePlatform() && getBiometricFlag('biometricLoginEnabled')) {
+        try {
+          await setBiometricLoginCredential(data.email, response.refresh_token);
+        } catch (error) {
+          console.error('Could not update the secure biometric login credential:', error);
+          setBiometricFlag('biometricLoginEnabled', false);
+        }
+      }
 
       await referral();
 
@@ -362,7 +402,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Start the plans socket now that the memory token exists.
       resetPlansSocket();
 
-      return profile.email;
+      return { email: profile.email };
     } catch (error: any) {
       console.error('Login failed:', error);
       setState({ isAuthenticated: false, user: null, loading: false });
@@ -421,6 +461,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       walletSocketRef.current?.close();
       walletSocketRef.current = null;
+      await clearBiometricLoginCredential();
+      setBiometricFlag('biometricLoginEnabled', false);
       setSessionToken(null);
       stopPlansSocket();
       setState({ isAuthenticated: false, user: null, loading: false });
@@ -431,13 +473,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, loading: true }));
 
     const redirect_uri = `${import.meta.env.VITE_BASE_URL}/dashboard`;
-    const idToken = 'credential' in credentialResponse && credentialResponse.credential
+    const idToken = ('credential' in credentialResponse && credentialResponse.credential)
       ? credentialResponse.credential
       : (credentialResponse as any).idToken || (credentialResponse as any).credential;
 
     if (!idToken) {
       setState((prev) => ({ ...prev, loading: false }));
-      return;
+      throw new Error('Google did not return an authentication token. Please try again.');
     }
 
     try {
@@ -447,34 +489,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response?.success || !response?.access_token || !response?.refresh_token) {
-        setState({ isAuthenticated: false, user: null, loading: false });
-        return;
+        const message = response?.detail || response?.message || response?.error;
+        throw new Error(typeof message === 'string' ? message : 'Google authentication was not accepted. Please try again.');
       }
 
       setSessionToken(response.access_token, response.refresh_token);
-
       await referral();
 
-      const [profileResponse, balanceResponse] = await Promise.all([
-        getRequest(ENDPOINTS.user),
-        getRequest(ENDPOINTS.balance),
-      ]);
+      let profileResponse: any;
+      let balanceResponse: any;
+      try {
+        [profileResponse, balanceResponse] = await Promise.all([
+          getRequestStrict(ENDPOINTS.user),
+          getRequestStrict(ENDPOINTS.balance),
+        ]);
+      } catch (profileError: any) {
+        const status = profileError?.response?.status ?? profileError?.status ?? 0;
+        throw new Error(
+          status === 0
+            ? 'Google sign-in succeeded, but BlueSea could not reach your account services. Check your connection and try again.'
+            : `Google sign-in succeeded, but your account could not be loaded (${status}).`,
+        );
+      }
 
       const profile = unwrapResponse<any>(profileResponse);
       const balance = unwrapResponse<any>(balanceResponse);
-
-      if (!profile?.email) throw new Error('Google login succeeded but profile loading failed.');
+      if (!profile?.email) {
+        throw new Error('Google sign-in succeeded, but your BlueSea profile could not be loaded. Please try again.');
+      }
 
       setState({
         isAuthenticated: true,
         user: buildUser(profile, balance),
         loading: false,
       });
-      // Start the plans socket now that the memory token exists.
       resetPlansSocket();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google login failed:', error);
+      setSessionToken(null);
       setState({ isAuthenticated: false, user: null, loading: false });
+      const responseMessage = error?.response?.data?.detail
+        || error?.response?.data?.message
+        || error?.message;
+      throw new Error(typeof responseMessage === 'string' && responseMessage.trim()
+        ? responseMessage
+        : 'Google Sign-In failed. Please try again.');
     }
   }, [buildUser, referral]);
 

@@ -48,7 +48,7 @@ export const AppSignupPage: React.FC = () => {
       await googleLogin(credentialResponse);
       navigate('/dashboard');
     } catch (err: any) {
-      setAuthError('Google Sign-Up failed');
+      setAuthError(err?.response?.data?.detail || err?.response?.data?.message || err?.message || 'Google Sign-Up failed. Please try again.');
     } finally {
       setGoogleLoading(false);
     }
@@ -69,6 +69,7 @@ export const AppSignupPage: React.FC = () => {
           onGoogleAuth={handleNativeGoogleAuth}
           onWebSuccess={handleWebGoogleSuccess}
           loading={googleLoading}
+          onError={(googleError) => setAuthError(googleError.message)}
         />
 
         <div className="relative flex py-3 items-center mb-4">

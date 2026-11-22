@@ -1,0 +1,14 @@
+.mrg-shell {
+  --mrg-accent: #0ea5e9;
+  --mrg-accent-deep: #0369a1;
+  font-feature-settings: "ss01" on;
+}
+.mrg-shell ::selection { background: rgba(14, 165, 233, .22); }
+.mrg-shell * { scrollbar-width: thin; scrollbar-color: rgba(100, 116, 139, .35) transparent; }
+.mrg-shell ::-webkit-scrollbar { width: 7px; height: 7px; }
+.mrg-shell ::-webkit-scrollbar-thumb { border-radius: 99px; background: rgba(100, 116, 139, .28); }
+.mrg-shell button:focus-visible,
+.mrg-shell a:focus-visible,
+.mrg-shell input:focus-visible,
+.mrg-shell select:focus-visible,
+.mrg-shell textarea:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }

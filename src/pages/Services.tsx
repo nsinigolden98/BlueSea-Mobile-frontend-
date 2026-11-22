@@ -9,7 +9,7 @@ import {
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank, 
   CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheckIcon, FileText, 
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat, 
-  Grid3X3, ArrowLeftRight, Search, Clock, Star, QrCode, Headphones, ChevronRight, ScanQrCode, KeyRound, ArrowDownLeft, ArrowUpRight
+  Grid3X3, ArrowLeftRight, Search, Clock, Star, QrCode, Headphones, ChevronRight, ScanQrCode, KeyRound, ArrowDownLeft, ArrowUpRight, Shield
 } from 'lucide-react';
 import { MobileBottomNavigation } from '@/components/navigation/MobileBottomNavigation';
   
@@ -23,7 +23,7 @@ const VALID_APP_ROUTES = new Set([
   '/scanner', '/scanner-assignments', '/my-tickets', '/vendor-verification', '/dstv', 
   '/gotv', '/tv-subscription', '/auto-topup', '/support', '/checkout', '/payroll-pro',
   '/messages',  '/products', '/history', '/identity-center',  '/paylink', '/blueconnect', '/deposit',
-   '/withdraw'
+   '/withdraw', '/bluehaven'
 ]);
 
 // Centralized icon map to safely render string icons from the registry
@@ -32,7 +32,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Store, ShoppingBag, Briefcase, Network, FileSignature, PiggyBank,
   CreditCard, Bitcoin, Umbrella, ShieldCheck, ShieldCheckIcon, FileText,
   Building, Calendar, PieChart, Users, Orbit, PlaySquare, Repeat,
-  Grid3X3, ArrowLeftRight, QrCode, Headphones, ScanQrCode, KeyRound, ArrowDownLeft, ArrowUpRight
+  Grid3X3, ArrowLeftRight, QrCode, Headphones, ScanQrCode, KeyRound, ArrowDownLeft, ArrowUpRight, Shield
 };
 
 const Badge = ({ type }: { type: Service['badge'] }) => {

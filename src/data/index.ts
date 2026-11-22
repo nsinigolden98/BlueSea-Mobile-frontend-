@@ -13,6 +13,7 @@ export const navItems: NavItem[] = [
 //   { id: 'bluespere', label: 'BlueSpere', icon: 'Orbit', path: '/bluesphere' },
   { id: 'more-services', label: 'More Services', icon: 'Grid3X3', path: '/more-services' },
   { id: 'payroll-pro', label: 'Payroll Pro', icon: 'Briefcase', path: '/payroll-pro' },
+  //{ id: 'mrg-links', label: 'MrG Links', icon: 'link', path: '/mrg-links' },
     { id: 'scanner', label: 'Scanner', icon: 'QrCode', path: '/scanner-assignments' },
   { id: 'support', label: 'Support', icon: 'Headphones', path: '/support' },
 ];
@@ -228,7 +229,7 @@ export const moreServiceCategories: ServiceCategory[] = [
   },
 ];
 
-export const airtimeAmounts = [50, 100, 200, 500, 1000, 2000];
+export const airtimeAmounts = [100, 200, 300, 400, 500, 1000];
 
 export const networks = ['MTN', 'Glo', 'Airtel', '9mobile'] as const;
 

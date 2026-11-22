@@ -1,202 +1,98 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useId, useState } from 'react';
+import './Loader.css';
+
+/**
+ * The BlueSea mark is drawn from inline vector paths and CSS.
+ * It intentionally has no PNG, GIF, canvas, or external image dependency.
+ */
+function BlueSeaMark() {
+  const gradientId = useId().replace(/:/g, '');
+
+  return (
+    <svg
+      className="bs-loader-mark"
+      viewBox="0 0 400 400"
+      role="img"
+      aria-label="BlueSea"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id={`bs-metal-b-${gradientId}`} x1="0" y1="0" x2="0.18" y2="1">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="0.22" stopColor="#eafaff" />
+          <stop offset="0.48" stopColor="#9bc9e5" />
+          <stop offset="0.72" stopColor="#f4fdff" />
+          <stop offset="1" stopColor="#7da8cc" />
+        </linearGradient>
+        <linearGradient id={`bs-metal-s-${gradientId}`} x1="0.1" y1="0" x2="0.9" y2="1">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="0.25" stopColor="#d8f2ff" />
+          <stop offset="0.52" stopColor="#8db8d8" />
+          <stop offset="0.76" stopColor="#f5fdff" />
+          <stop offset="1" stopColor="#789fc5" />
+        </linearGradient>
+      </defs>
+
+      {/* Extruded silhouettes create the dark blue bevel visible below the chrome. */}
+      <g className="bs-loader-mark__extrusion">
+        <path fillRule="evenodd" d="M55 69 H157 C211 69 244 94 244 137 C244 164 230 183 208 195 C239 205 257 228 257 262 C257 310 220 337 160 337 H55 Z M101 111 V179 H153 C181 179 196 168 196 145 C196 122 181 111 153 111 Z M101 222 V294 H158 C191 294 208 282 208 258 C208 234 191 222 158 222 Z" />
+        <path d="M333 104 L300 139 C283 122 265 113 244 113 C224 113 211 123 211 139 C211 154 223 162 257 173 L278 180 C326 196 350 220 350 260 C350 310 310 341 254 341 C213 341 179 325 153 297 L189 263 C207 283 228 294 253 294 C278 294 293 283 293 265 C293 248 281 239 248 228 L227 221 C180 205 155 182 155 142 C155 96 191 65 246 65 C281 65 311 79 333 104 Z" />
+      </g>
+
+      <g>
+        <path
+          className="bs-loader-mark__b"
+          fill={`url(#bs-metal-b-${gradientId})`}
+          fillRule="evenodd"
+          d="M48 61 H151 C207 61 240 87 240 132 C240 159 226 178 204 190 C235 200 253 223 253 257 C253 305 216 332 156 332 H48 Z M94 103 V171 H147 C175 171 190 160 190 137 C190 114 175 103 147 103 Z M94 214 V286 H152 C185 286 202 274 202 250 C202 226 185 214 152 214 Z"
+        />
+        <path
+          className="bs-loader-mark__s"
+          fill={`url(#bs-metal-s-${gradientId})`}
+          d="M326 96 L293 131 C276 114 258 105 237 105 C217 105 204 115 204 131 C204 146 216 154 250 165 L271 172 C319 188 343 212 343 252 C343 302 303 333 247 333 C206 333 172 317 146 289 L182 255 C200 275 221 286 246 286 C271 286 286 275 286 257 C286 240 274 231 241 220 L220 213 C173 197 148 174 148 134 C148 88 184 57 239 57 C274 57 304 71 326 96 Z"
+        />
+        <path
+          className="bs-loader-mark__edge"
+          d="M50 63 H151 C207 63 239 88 239 132 M96 104 V171 M96 216 V286 M326 97 C304 72 274 59 239 59"
+        />
+      </g>
+    </svg>
+  );
+}
 
 function SharedLoaderUI() {
   return (
-    <>
-      <div className="loader-screen" id="loader">
-        <div className="loader-container">
-          {/* LAYER 3: ECHO WAVE */}
-          <div className="loader-echo-wave" />
-
-          {/* LAYER 2: ROTATING RING */}
-          <div className="loader-ring" />
-
-          {/* LAYER 1: CENTER LOGO */}
-          <div
-            className="loader-logo-wrapper"
-            style={{ perspective: '1000px' }}
-          >
-            <div className="loader-logo">
-              <span>BS</span>
-            </div>
-
-            <div className="loader-logo-edge" />
-          </div>
-        </div>
+    <div className="bs-loader-screen" id="loader" role="status" aria-label="Loading BlueSea">
+      <div className="bs-loader-orb" aria-hidden="true">
+        <div className="bs-loader-orb__core" />
+        <BlueSeaMark />
+        <div className="bs-loader-glass" />
+        <div className="bs-loader-caustics" />
+        <div className="bs-loader-lid bs-loader-lid--top" />
+        <div className="bs-loader-lid bs-loader-lid--bottom" />
+        <div className="bs-loader-blink-glow" />
+        <div className="bs-loader-rim" />
       </div>
-
-      <style>{`
-        #loader,
-        .loader-screen {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: transparent;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          z-index: 9999;
-          pointer-events: none;
-        }
-
-        .loader-container {
-          position: relative;
-          width: 80px;
-          height: 80px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          animation: breath 4s ease-in-out infinite;
-          will-change: transform;
-        }
-
-        /* LAYER 3: ECHO WAVE */
-        .loader-echo-wave {
-          position: absolute;
-          inset: 0;
-          border-radius: 9999px;
-          border: 1.5px solid rgba(56, 189, 248, 0.35);
-          animation: echoWave 2.8s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-          pointer-events: none;
-          will-change: transform, opacity;
-        }
-
-        /* LAYER 2: ROTATING RING */
-        .loader-ring {
-          position: absolute;
-          inset: -6px;
-          border-radius: 9999px;
-          border: 2px solid rgba(56, 189, 248, 0.15);
-          border-top-color: #38bdf8;
-          border-right-color: rgba(56, 189, 248, 0.5);
-          animation: spinRing 1.2s linear infinite;
-          pointer-events: none;
-          will-change: transform;
-        }
-
-        /* LAYER 1: CENTER LOGO WRAPPER */
-        .loader-logo-wrapper {
-          position: relative;
-          z-index: 1;
-        }
-
-        .loader-logo {
-          width: 48px;
-          height: 48px;
-          border-radius: 9999px;
-
-          background: linear-gradient(
-            135deg,
-            #38bdf8 0%,
-            #0ea5e9 50%,
-            #0284c7 100%
-          );
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          color: #fff;
-          font-weight: 700;
-          font-size: 14px;
-          letter-spacing: -0.5px;
-          user-select: none;
-
-          transform-style: preserve-3d;
-
-          animation:
-            coinFlip 2.5s ease-in-out infinite,
-            glowPulse 2s ease-in-out infinite;
-          will-change: transform, box-shadow;
-        }
-
-        .loader-logo-edge {
-          position: absolute;
-          inset: 0;
-          border-radius: 9999px;
-          border: 2px solid rgba(255, 255, 255, 0.2);
-          pointer-events: none;
-        }
-
-        /* KEYFRAME ANIMATIONS */
-        @keyframes coinFlip {
-          0% {
-            transform: rotateY(0deg);
-          }
-          25% {
-            transform: rotateY(180deg);
-          }
-          50% {
-            transform: rotateY(180deg);
-          }
-          75% {
-            transform: rotateY(360deg);
-          }
-          100% {
-            transform: rotateY(360deg);
-          }
-        }
-
-        @keyframes glowPulse {
-          0%, 100% {
-            box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
-          }
-          50% {
-            box-shadow: 0 0 40px rgba(14, 165, 233, 0.5);
-          }
-        }
-
-        @keyframes spinRing {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-
-        @keyframes echoWave {
-          0% {
-            transform: scale(0.85);
-            opacity: 0.8;
-          }
-          100% {
-            transform: scale(1.75);
-            opacity: 0;
-          }
-        }
-
-        @keyframes breath {
-          0%, 100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.04);
-          }
-        }
-      `}</style>
-    </>
+      <span className="bs-loader-sr-only">Loading</span>
+    </div>
   );
 }
 
 export function Loader() {
-  const [LoaderData, setModalData] = useState<{ visible: boolean }>({
+  const [loaderData, setLoaderData] = useState<{ visible: boolean }>({
     visible: false,
   });
 
   const showLoader = useCallback(() => {
-    setModalData({ visible: true });
+    setLoaderData({ visible: true });
   }, []);
 
   const hideLoader = useCallback(() => {
-    setModalData({ visible: false });
+    setLoaderData({ visible: false });
   }, []);
 
   const LoaderComponent = () => {
-    if (!LoaderData.visible) return null;
+    if (!loaderData.visible) return null;
     return <SharedLoaderUI />;
   };
 
@@ -210,4 +106,3 @@ export function Loader() {
 export function AuthLoader() {
   return <SharedLoaderUI />;
 }
- 

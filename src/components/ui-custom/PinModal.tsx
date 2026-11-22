@@ -178,7 +178,14 @@ export function PinModal() {
       const ok = await promptBiometric('Authenticate transaction payment');
       if (attempt !== attemptIdRef.current) return; // user switched to PIN meanwhile
       if (ok) {
-        await finishWith(null, getBiometricToken());
+        const token = await getBiometricToken();
+        if (attempt !== attemptIdRef.current) return;
+        if (token) {
+          await finishWith(null, token);
+        } else {
+          setIsProcessing(false);
+          setMode('pin');
+        }
       } else {
         // Cancelled or failed: fall back to the PIN keypad.
         setIsProcessing(false);
@@ -268,31 +275,38 @@ export function PinModal() {
 
       try {
         const response = await executeTransaction(type, value, rawPin, biometricToken);
-
-        hidePinModal();
         hideLoader();
         setMessage(response);
-        resetState();
-
-        console.log(response);
 
         const isSuccess = !!response && (
-          response.success === true || 
-          response.state === true || 
+          response.success === true ||
+          response.state === true ||
           (!response.error && response.code === '00') ||
           (!response.error && response.success !== false && response.state !== false)
         );
 
-        // Stale enrollment (PIN changed/disabled elsewhere): drop the
-        // local token so the next attempt falls back to the PIN keypad.
+        // If the backend rejects an expired biometric payment token, keep the
+        // confirmation modal open and move straight to the existing PIN keypad.
+        // Do not retry other payment failures automatically: that could risk a
+        // duplicate transaction when the provider response is ambiguous.
         if (biometricToken && !isSuccess) {
           const err = String(response?.error || response?.message || '');
-          if (err.includes('Fingerprint confirmation expired')) {
-            setBiometricToken('');
+          if (/fingerprint confirmation expired/i.test(err)) {
+            await setBiometricToken('');
             setBiometricFlag('biometricEnabled', false);
             setBiometricFlag('biometricPaymentEnabled', false);
+            setPin('');
+            setVisibleDigitIndex(null);
+            setIsProcessing(false);
+            setMode('pin');
+            setMessage({ success: false, message: 'Fingerprint confirmation expired. Enter your transaction PIN to continue.' });
+            return;
           }
         }
+
+        hidePinModal();
+        resetState();
+        console.log(response);
 
         if (isSuccess && onSuccess) {
           onSuccess(response);
