@@ -7,7 +7,6 @@ import { makeTransactionPin } from '@/lib/security/pinEncryption';
 import {
   biometricPaymentActive,
   getBiometricToken,
-  promptBiometric,
   setBiometricToken,
   setBiometricFlag,
 } from '@/lib/security/biometrics';
@@ -31,6 +30,84 @@ interface Message {
   /** Raw provider response body (VTpass full envelope) for the receipt. */
   data?: Record<string, any>;
 }
+
+const getResponseError = (response: any): string => {
+  if (!response || typeof response !== 'object') return '';
+  const candidates = [
+    response.error,
+    response.detail,
+    response.errors,
+    response.non_field_errors,
+    response.data?.error,
+    response.data?.detail,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
+    if (Array.isArray(candidate) && candidate.length) return String(candidate[0]);
+    if (candidate && typeof candidate === 'object') {
+      const firstValue = Object.values(candidate).flat()[0];
+      if (typeof firstValue === 'string' && firstValue.trim()) return firstValue.trim();
+    }
+  }
+
+  const explicitlyFailed = response.success === false || response.state === false || response.is_active === false;
+  if (explicitlyFailed) {
+    const message = response.message || response.response_description;
+    if (typeof message === 'string') return message.trim();
+  }
+  return '';
+};
+
+const hasBiometricToken = (response: any): boolean => Boolean(
+  (typeof response?.token === 'string' && response.token.trim()) ||
+  (typeof response?.data?.token === 'string' && response.data.token.trim()) ||
+  (typeof response?.biometric_token === 'string' && response.biometric_token.trim()) ||
+  (typeof response?.data?.biometric_token === 'string' && response.data.biometric_token.trim()) ||
+  (typeof response?.device_token === 'string' && response.device_token.trim()) ||
+  (typeof response?.data?.device_token === 'string' && response.data.device_token.trim())
+);
+
+// Keep fingerprint confirmation restricted to request types whose current
+// OpenAPI request schemas explicitly accept `biometric_token`. Other PIN-gated
+// actions continue using the regular PIN flow.
+const BIOMETRIC_PAYMENT_TYPES = new Set([
+  'airtime',
+  'betting',
+  'light',
+  'data-MTN',
+  'data-Glo',
+  'data-Airtel',
+  'data-9mobile',
+  'dstv',
+  'gotv',
+  'auto-topup',
+  'group-airtime',
+  'group-data',
+  'group-gotv',
+  'group-dstv',
+  'group-lightbill',
+  'group-transfer',
+  'group-withdrawal',
+  'withdrawal',
+  'internal_transfer',
+]);
+
+const isSuccessfulResponse = (type: string, response: any): boolean => {
+  if (!response || typeof response !== 'object' || Array.isArray(response)) return false;
+  if (getResponseError(response)) return false;
+  if (response.success === false || response.state === false || response.is_active === false) return false;
+
+  // The enable endpoint promises a one-time token. An empty or malformed 200
+  // body is not sufficient to activate local fingerprint payment controls.
+  if (type === 'enable-biometric') return hasBiometricToken(response);
+
+  if (response.success === true || response.state === true || response.code === '00') return true;
+  if (type === 'disable-biometric') return true; // documented 200 response has an empty schema
+
+  // Preserve compatibility with existing payment endpoints that return an
+  // empty JSON body on HTTP 200, while rejecting missing/non-object responses.
+  return true;
+};
 
 export function PinModal() {
   const [modalData, setModalData] = useState<{ visible: boolean; type?: string; value?: object }>({
@@ -70,7 +147,11 @@ export function PinModal() {
     const confirmation = useBiometric
       ? { biometric_token: biometricToken }
       : { transaction_pin: encryptedPin };
-    const payload = { ...value, ...confirmation };
+    // Biometric enrollment endpoints accept only the encrypted transaction PIN;
+    // modal labels/titles are UI metadata and must never be sent to the API.
+    const payload = type === 'enable-biometric' || type === 'disable-biometric'
+      ? confirmation
+      : { ...value, ...confirmation };
 
     const TRANSACTION_MAP: Record<string, () => Promise<any>> = {
       'verify-pin': async () => {
@@ -167,29 +248,32 @@ export function PinModal() {
       hidePinModal();
     };
 
-    const PIN_ONLY_TYPES = ['verify-pin', 'enable-biometric', 'disable-biometric'];
-    const canUseBiometric = !PIN_ONLY_TYPES.includes(type) && biometricPaymentActive();
+    const canUseBiometric = BIOMETRIC_PAYMENT_TYPES.has(type) && biometricPaymentActive();
 
     // Fire the native fingerprint prompt for the current attempt.
     // success => submit with the enrolled token; cancel/failure => back to PIN.
     const runBiometricAttempt = async () => {
       const attempt = ++attemptIdRef.current;
       setIsProcessing(true);
-      const ok = await promptBiometric('Authenticate transaction payment');
-      if (attempt !== attemptIdRef.current) return; // user switched to PIN meanwhile
-      if (ok) {
+      try {
+        // getSecureCredentials() performs the native biometric check and only
+        // returns a token stored with BIOMETRY_CURRENT_SET access control.
         const token = await getBiometricToken();
         if (attempt !== attemptIdRef.current) return;
-        if (token) {
-          await finishWith(null, token);
-        } else {
+        if (!token) {
           setIsProcessing(false);
           setMode('pin');
+          setMessage({ success: false, message: 'Your secure fingerprint payment token is unavailable. Enter your transaction PIN instead.' });
+          return;
         }
-      } else {
-        // Cancelled or failed: fall back to the PIN keypad.
+
+        await finishWith(null, token);
+      } catch (error) {
+        if (attempt !== attemptIdRef.current) return;
+        console.error('Fingerprint payment confirmation could not start:', error);
         setIsProcessing(false);
         setMode('pin');
+        setMessage({ success: false, message: 'Fingerprint confirmation is unavailable. Enter your transaction PIN instead.' });
       }
     };
 
@@ -278,30 +362,45 @@ export function PinModal() {
         hideLoader();
         setMessage(response);
 
-        const isSuccess = !!response && (
-          response.success === true ||
-          response.state === true ||
-          (!response.error && response.code === '00') ||
-          (!response.error && response.success !== false && response.state !== false)
-        );
+        const isSuccess = isSuccessfulResponse(type, response);
 
-        // If the backend rejects an expired biometric payment token, keep the
-        // confirmation modal open and move straight to the existing PIN keypad.
-        // Do not retry other payment failures automatically: that could risk a
-        // duplicate transaction when the provider response is ambiguous.
+        if (type === 'enable-biometric' && !isSuccess && !getResponseError(response)) {
+          const failure = {
+            success: false,
+            error: 'The server did not return the one-time fingerprint payment token required to finish enrollment. Your transaction PIN remains available.',
+          };
+          hidePinModal();
+          resetState();
+          setMessage(failure);
+          if (onError) onError(failure);
+          else if (onFailure) onFailure(failure);
+          return;
+        }
+
+        // An expired/revoked biometric credential is cleared and the user is
+        // offered the PIN keypad. Never auto-resubmit an ordinary failed or
+        // ambiguous payment: doing so could create a duplicate transaction.
         if (biometricToken && !isSuccess) {
-          const err = String(response?.error || response?.message || '');
-          if (/fingerprint confirmation expired/i.test(err)) {
-            await setBiometricToken('');
+          const errorText = [getResponseError(response), response?.message, response?.response_description].filter((part) => typeof part === 'string').join(' ');
+          if (/fingerprint.*(expired|invalid|revoked)|biometric.*(expired|invalid|revoked|unauthori[sz]ed)|token.*(expired|invalid|revoked)/i.test(errorText)) {
+            try {
+              await setBiometricToken('');
+            } catch (storageError) {
+              console.error('Could not clear rejected fingerprint payment token:', storageError);
+            }
             setBiometricFlag('biometricEnabled', false);
             setBiometricFlag('biometricPaymentEnabled', false);
             setPin('');
             setVisibleDigitIndex(null);
             setIsProcessing(false);
             setMode('pin');
-            setMessage({ success: false, message: 'Fingerprint confirmation expired. Enter your transaction PIN to continue.' });
+            setMessage({ success: false, message: 'Fingerprint authorization is no longer valid. Enter your transaction PIN to continue.' });
             return;
           }
+        }
+
+        if (!isSuccess && !getResponseError(response)) {
+          setMessage({ success: false, message: 'The server did not confirm this transaction. Check your transaction history before trying again.' });
         }
 
         hidePinModal();
@@ -323,7 +422,7 @@ export function PinModal() {
         // must surface: without setMessage the modal just closes silently.
         const failure = {
           success: false,
-          error: (error as any)?.message || 'Transaction failed. Please try again.',
+          error: (error as any)?.response?.data?.detail || (error as any)?.response?.data?.error || (error as any)?.message || 'Transaction failed. Please try again.',
         };
         setMessage(failure);
         if (onError) onError(failure);

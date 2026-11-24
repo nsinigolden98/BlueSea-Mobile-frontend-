@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { NativeBiometric } from '@capgo/capacitor-native-biometric';
+import { AccessControl, NativeBiometric } from '@capgo/capacitor-native-biometric';
 import Cookies from 'js-cookie';
 
 /** Native-only biometric helpers. Secrets are stored in the OS Keychain/Keystore. */
@@ -42,25 +42,81 @@ export const promptBiometric = async (reason: string): Promise<boolean> => {
   }
 };
 
-/** Payment token is stored encrypted by the native Keychain/Keystore, never in a JS cookie. */
+/**
+ * Check presence without retrieving the secret. This is used by Settings to
+ * mirror backend enrollment without triggering a fingerprint prompt.
+ */
+export const hasBiometricToken = async (): Promise<boolean> => {
+  if (!isNativePlatform()) return false;
+  try {
+    const result = await NativeBiometric.isCredentialsSaved({ server: PAYMENT_VAULT_SERVER });
+    return result?.isSaved === true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Retrieve the payment token only through the plugin's biometric-protected
+ * credential API. Older app versions saved this credential without
+ * accessControl; those entries are migrated after an explicit biometric
+ * verification, then re-saved with BIOMETRY_CURRENT_SET protection.
+ */
 export const getBiometricToken = async (): Promise<string> => {
   if (!isNativePlatform()) return '';
   try {
-    const credentials = await NativeBiometric.getCredentials({ server: PAYMENT_VAULT_SERVER });
-    return credentials.password || '';
-  } catch {
-    return '';
+    const credentials = await NativeBiometric.getSecureCredentials({
+      server: PAYMENT_VAULT_SERVER,
+      reason: 'Authenticate to confirm this payment',
+      title: 'Fingerprint Payment',
+      subtitle: 'Verify your identity to continue',
+      description: 'Your fingerprint is required to access your payment authorization token.',
+    });
+    return typeof credentials?.password === 'string' ? credentials.password.trim() : '';
+  } catch (secureError) {
+    const errorCode = Number((secureError as { code?: unknown })?.code);
+    const errorMessage = String((secureError as { message?: unknown })?.message || '');
+    const isLegacyCredential = errorCode === 21 || /no protected credentials found/i.test(errorMessage);
+    if (!isLegacyCredential) {
+      console.info('Biometric payment credential was not unlocked.');
+      return '';
+    }
+
+    // Upgrade credentials created by the earlier unprotected implementation.
+    try {
+      await NativeBiometric.verifyIdentity({
+        reason: 'Secure your existing payment fingerprint setup',
+        title: 'Protect Payment Fingerprint',
+        subtitle: 'Verify your identity to secure this device',
+        description: 'Your existing payment authorization will be protected by your enrolled biometrics.',
+      });
+      const legacyCredentials = await NativeBiometric.getCredentials({ server: PAYMENT_VAULT_SERVER });
+      const legacyToken = typeof legacyCredentials?.password === 'string' ? legacyCredentials.password.trim() : '';
+      if (!legacyToken) return '';
+
+      await NativeBiometric.setCredentials({
+        username: 'payment-confirmation',
+        password: legacyToken,
+        server: PAYMENT_VAULT_SERVER,
+        accessControl: AccessControl.BIOMETRY_CURRENT_SET,
+      });
+      return legacyToken;
+    } catch (migrationError) {
+      console.warn('Legacy payment biometric credential could not be upgraded.');
+      return '';
+    }
   }
 };
 
 export const setBiometricToken = async (token: string): Promise<void> => {
-  if (!isNativePlatform()) return;
+  if (!isNativePlatform()) throw new Error('Fingerprint payments are available only in the mobile app.');
   try {
-    if (token) {
+    if (typeof token === 'string' && token.trim()) {
       await NativeBiometric.setCredentials({
         username: 'payment-confirmation',
-        password: token,
+        password: token.trim(),
         server: PAYMENT_VAULT_SERVER,
+        accessControl: AccessControl.BIOMETRY_CURRENT_SET,
       });
     } else {
       await NativeBiometric.deleteCredentials({ server: PAYMENT_VAULT_SERVER });

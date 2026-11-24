@@ -18,12 +18,14 @@ import {
   UserPlus,
   Phone,
   Edit,
-  CreditCard
+  CreditCard,
+  Fingerprint
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { API_BASE } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import {makeTransactionPin} from '@/lib/security/pinEncryption';
+import { biometricPaymentActive, getBiometricToken, setBiometricToken, setBiometricFlag } from '@/lib/security/biometrics';
 
 interface GroupMember {
   id: string;
@@ -360,76 +362,96 @@ export function GroupPayment() {
     }
   };
 
+  const submitGroupPayment = async (biometricToken = '') => {
+    let service_detail = {};
+    if (selectedGroup?.service_type === 'airtime') {
+      service_detail = { phone_number: selectedGroup.sub_number, network: selectedGroup?.plan };
+    } else if (selectedGroup?.service_type === 'data') {
+      service_detail = { network: selectedGroup?.plan_type, phone_number: selectedGroup.sub_number, plan_id: selectedGroup?.plan };
+    } else if (selectedGroup?.service_type === 'electricity') {
+      service_detail = { billersCode: selectedGroup?.sub_number, disco: selectedGroup?.plan, meter_type: selectedGroup?.plan_type, phone_number: user?.phone };
+    } else if (selectedGroup?.service_type === 'transfer') {
+      service_detail = { recipient_email: selectedGroup?.sub_number, bank_code: selectedGroup?.plan, account_name: selectedGroup?.plan_type };
+    } else if (selectedGroup?.service_type === 'withdrawal') {
+      service_detail = { account_number: selectedGroup?.sub_number, bank_code: selectedGroup?.plan, account_name: selectedGroup?.plan_type };
+    } else {
+      service_detail = { plan_id: selectedGroup?.plan, billersCode: selectedGroup?.sub_number, phone_number: user?.phone };
+    }
+
+    const confirmation = biometricToken
+      ? { biometric_token: biometricToken }
+      : { transaction_pin: makeTransactionPin(pinPay.payment_pin.join('')) };
+
+    const response = await postRequest(ENDPOINTS.group_payment, {
+      ...confirmation,
+      group_id: selectedGroup?.id,
+      payment_type: selectedGroup?.service_type,
+      total_amount: selectedGroup?.target_amount,
+      service_details: service_detail,
+    });
+
+    if (response?.success === true || response?.state === true) {
+      showToast('Payment completed successfully!');
+      setShowPaymentModal(false);
+      setPinPay({ payment_pin: ['', '', '', ''] });
+      fetchGroups();
+      setSelectedGroup(null);
+      return true;
+    }
+
+    const failureMessage = response?.error || response?.detail || response?.message || 'Payment was not confirmed. Check your transaction history before trying again.';
+    if (biometricToken && /fingerprint.*(expired|invalid|revoked)|biometric.*(expired|invalid|revoked|unauthori[sz]ed)|token.*(expired|invalid|revoked)/i.test(String(failureMessage))) {
+      setBiometricFlag('biometricEnabled', false);
+      setBiometricFlag('biometricPaymentEnabled', false);
+      try {
+        await setBiometricToken('');
+      } catch (storageError) {
+        console.error('Could not clear rejected group-payment fingerprint token:', storageError);
+      }
+      showToast('Fingerprint authorization is no longer valid. Use your transaction PIN for this payment and re-enroll fingerprint payments in Settings.');
+      return false;
+    }
+
+    showToast(failureMessage);
+    return false;
+  };
+
   const handleCompletePayment = async () => {
     if (pinPay.payment_pin.join('').length !== 4) {
-      showToast('Please enter your PIN');
+      showToast('Please enter your 4-digit transaction PIN, or use fingerprint confirmation.');
       return;
     }
-    
+    if (processingPayment) return;
+
     setProcessingPayment(true);
     showLoader();
-
-    let service_detail = {}
-    if (selectedGroup?.service_type === 'airtime') {
-      service_detail = {
-        phone_number: selectedGroup.sub_number,
-        network : selectedGroup?.plan,
-      }
-    } else if (selectedGroup?.service_type === 'data') {
-      service_detail = {
-        network: selectedGroup?.plan_type,
-        phone_number: selectedGroup.sub_number,
-        plan_id : selectedGroup?.plan
-      }
-    } else if (selectedGroup?.service_type === 'electricity') {
-      service_detail = {
-        billersCode: selectedGroup?.sub_number,
-        disco: selectedGroup?.plan,
-        meter_type: selectedGroup?.plan_type,
-        phone_number: user?.phone,
-      }
-    } else if (selectedGroup?.service_type === 'transfer') {
-      service_detail = {
-        recipient_email: selectedGroup?.sub_number,
-        bank_code: selectedGroup?.plan,
-        account_name: selectedGroup?.plan_type,
-      }
-    } else if (selectedGroup?.service_type === 'withdrawal') {
-      service_detail = {
-        account_number: selectedGroup?.sub_number,
-        bank_code: selectedGroup?.plan,
-        account_name: selectedGroup?.plan_type,
-      }
-    } else {
-      service_detail = {
-        plan_id: selectedGroup?.plan,
-        billersCode: selectedGroup?.sub_number,
-        phone_number: user?.phone,
-      }
-    }
-
     try {
-      const response = await postRequest(ENDPOINTS.group_payment, {
-        transaction_pin: makeTransactionPin(pinPay.payment_pin.join('')),
-        group_id: selectedGroup?.id,
-        payment_type: selectedGroup?.service_type,
-        total_amount: selectedGroup?.target_amount,
-        service_details: service_detail
-      });
-      
-      if (response?.success) {
-        showToast('Payment completed successfully!');
-        setShowPaymentModal(false);
-        setPinPay({ payment_pin: ['', '', '', ''] });
-        // fetchGroupDetails(selectedGroup!.id);
-        fetchGroups();
-        setSelectedGroup(null);
-      } else {
-        showToast(response?.error || 'Payment failed');
+      await submitGroupPayment();
+    } catch (error) {
+      console.error('Group payment failed:', error);
+      showToast('The payment request could not be completed. Check your transaction history before trying again.');
+    } finally {
+      hideLoader();
+      setProcessingPayment(false);
+    }
+  };
+
+  const handleFingerprintGroupPayment = async () => {
+    if (!biometricPaymentActive() || processingPayment) return;
+    setProcessingPayment(true);
+    showLoader();
+    try {
+      // The secure credential read displays the native fingerprint prompt.
+      const token = await getBiometricToken();
+      if (!token) {
+        showToast('Your secure fingerprint payment token is unavailable. Enter your transaction PIN instead.');
+        return;
       }
-    } catch (err) {
-      console.log(err);
-      showToast('Payment failed');
+
+      await submitGroupPayment(token);
+    } catch (error) {
+      console.error('Fingerprint group payment failed:', error);
+      showToast('Fingerprint payment could not be completed. You can use your transaction PIN instead.');
     } finally {
       hideLoader();
       setProcessingPayment(false);
@@ -805,8 +827,20 @@ export function GroupPayment() {
                         ₦{selectedGroup?.target_amount?.toLocaleString()}
                       </p>
                     </div>
+                    {biometricPaymentActive() && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleFingerprintGroupPayment}
+                        disabled={processingPayment}
+                        className="w-full border-sky-200 text-sky-700 hover:bg-sky-50 dark:border-sky-900 dark:text-sky-300 dark:hover:bg-sky-950/30"
+                      >
+                        <Fingerprint className="mr-2 h-4 w-4" />
+                        Pay with fingerprint
+                      </Button>
+                    )}
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Enter PIN to confirm
+                      Or enter your transaction PIN
                     </label>
                     <div className="flex gap-3 justify-center">
                       {[0, 1, 2, 3].map((index) => (
