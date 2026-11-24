@@ -11,21 +11,23 @@ import { PinModal } from '@/components/ui-custom/PinModal';
 import { Capacitor } from '@capacitor/core';
 import { Switch } from '@/components/ui/switch';
 import {
+  isNativePushSupported,
   isPushEnabled,
   setPushEnabled,
   requestPushPermission,
   getPushPermissionStatus,
-  openPushSettings,
 } from '@/services/appPush';
 import { ENDPOINTS } from '@/types';
-import { getSessionToken } from '@/lib/session';
+import { getSessionRefresh, getSessionToken } from '@/lib/session';
 import {
   promptBiometric as performBiometricPrompt,
-  isBiometricSupported as checkBiometricSupport,
-  hasBiometricToken,
+  getBiometricAvailability,
+  getBiometricToken,
   setBiometricToken,
   getBiometricFlag,
   setBiometricFlag,
+  setBiometricLoginCredential,
+  clearBiometricLoginCredential,
 } from '@/lib/security/biometrics';
 import {
   User,
@@ -103,8 +105,9 @@ export function Settings() {
 
   // Capacitor platform detection & Biometric state
   const isNative = Capacitor.isNativePlatform();
-  const [pushEnabled, setPushEnabledState] = useState<boolean>(() => isPushEnabled());
+  const [pushEnabled, setPushEnabledState] = useState<boolean>(() => isNativePushSupported() && isPushEnabled());
   const [pushPermission, setPushPermission] = useState<string>('unknown');
+  const [pushPermissionBusy, setPushPermissionBusy] = useState(false);
   useEffect(() => {
     let active = true;
     const refreshPermission = () => {
@@ -112,32 +115,57 @@ export function Settings() {
         .then((status) => { if (active) setPushPermission(status); })
         .catch(() => { if (active) setPushPermission('unknown'); });
     };
-    refreshPermission();
-    window.addEventListener('focus', refreshPermission);
-    document.addEventListener('visibilitychange', refreshPermission);
+    if (isNative) refreshPermission();
+    if (isNative) {
+      window.addEventListener('focus', refreshPermission);
+      document.addEventListener('visibilitychange', refreshPermission);
+    }
     return () => {
       active = false;
       window.removeEventListener('focus', refreshPermission);
       document.removeEventListener('visibilitychange', refreshPermission);
     };
-  }, []);
+  }, [isNative]);
   const handlePushToggle = async (next: boolean) => {
-    if (next) {
-      const granted = await requestPushPermission();
-      setPushPermission(await getPushPermissionStatus().catch(() => 'unknown'));
-      if (!granted) return;
-      setPushEnabled(true);
-      setPushEnabledState(true);
-    } else {
+    if (!isNative || pushPermissionBusy) return;
+    if (!next) {
+      // Persist the user's explicit opt-out immediately; permission remains
+      // granted by Android/iOS, but the app will stop showing tray alerts.
       setPushEnabled(false);
       setPushEnabledState(false);
+      return;
+    }
+
+    setPushPermissionBusy(true);
+    try {
+      const granted = await requestPushPermission();
+      const permission = await getPushPermissionStatus().catch(() => 'unknown');
+      setPushPermission(permission);
+      if (!granted) {
+        // Do not silently flip the switch. If OS permission was previously
+        // denied, the guidance below explains how to re-enable it in Android/iOS.
+        setPushEnabled(false);
+        setPushEnabledState(false);
+        return;
+      }
+      setPushEnabled(true);
+      setPushEnabledState(true);
+    } finally {
+      setPushPermissionBusy(false);
     }
   };
   const [biometricAccordionExpanded, setBiometricAccordionExpanded] = useState(false);
-  const [biometricSupported, setBiometricSupported] = useState(true);
+  const [biometricSupported, setBiometricSupported] = useState(false);
+  const [biometricHardwareDetected, setBiometricHardwareDetected] = useState(false);
+  const [biometricAvailabilityError, setBiometricAvailabilityError] = useState('');
+  const [biometricChecking, setBiometricChecking] = useState(true);
 
   const [biometricEnabled, setBiometricEnabled] = useState<boolean>(() => {
     return getBiometricFlag('biometricEnabled');
+  });
+
+  const [biometricLoginEnabled, setBiometricLoginEnabled] = useState<boolean>(() => {
+    return getBiometricFlag('biometricLoginEnabled');
   });
 
   const [biometricPaymentEnabled, setBiometricPaymentEnabled] = useState<boolean>(() => {
@@ -146,7 +174,6 @@ export function Settings() {
 
   // PIN Verification Action state
   const [pendingBiometricAction, setPendingBiometricAction] = useState<'enable' | 'disable' | null>(null);
-  const [biometricBusy, setBiometricBusy] = useState(false);
   const [pinErrorMessage, setPinErrorMessage] = useState<string | null>(null);
 
   // Privileges are read from the backend profile endpoint, not inferred from the UI.
@@ -195,66 +222,70 @@ export function Settings() {
   }, []);
 
   useEffect(() => {
-    if (isNative) {
-      checkBiometricSupport().then((supported) => {
-        setBiometricSupported(supported);
-      });
+    if (!isNative) {
+      setBiometricChecking(false);
+      return;
     }
+    let cancelled = false;
+    const refreshBiometricAvailability = async () => {
+      setBiometricChecking(true);
+      try {
+        const result = await getBiometricAvailability();
+        if (cancelled) return;
+        setBiometricSupported(result.available);
+        setBiometricHardwareDetected(result.hardwareDetected);
+        setBiometricAvailabilityError(result.errorCode);
+      } catch (error) {
+        if (cancelled) return;
+        console.error('Biometric availability check failed:', error);
+        setBiometricSupported(false);
+        setBiometricHardwareDetected(false);
+        setBiometricAvailabilityError('PLUGIN_UNAVAILABLE');
+      } finally {
+        if (!cancelled) setBiometricChecking(false);
+      }
+    };
+    void refreshBiometricAvailability();
+    const onFocus = () => { void refreshBiometricAvailability(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
   }, [isNative]);
 
-  // The backend enrollment status and the device's secure token must both
-  // exist before fingerprint payments are offered. A cookie is only a UI
-  // preference; it is never treated as proof of enrollment.
+  // Server is the source of truth for enrollment: the local flag only
+  // mirrors it (plus the device token) for the payment prompt.
   useEffect(() => {
     if (!isNative) return;
     let cancelled = false;
-
-    const loadPaymentBiometricStatus = async () => {
+    (async () => {
       try {
-        const response = await axios.get(ENDPOINTS.biometric_status, { headers: authHeaders() });
-        const statusData = response.data?.data && typeof response.data.data === 'object'
-          ? response.data.data
-          : response.data;
-        const serverEnabled = [
-          statusData?.enabled,
-          statusData?.is_enabled,
-          statusData?.enrolled,
-          statusData?.biometric_enabled,
-          statusData?.is_active,
-          statusData?.state,
-        ].some((value) => value === true);
-
-        const hasStoredToken = await hasBiometricToken();
+        const res = await axios.get(ENDPOINTS.biometric_status, { headers: authHeaders() });
         if (cancelled) return;
-
-        const enrolled = serverEnabled && hasStoredToken;
+        const statusData = res.data?.data && typeof res.data.data === 'object' ? res.data.data : res.data;
+        const serverEnabled = statusData?.enabled === true || statusData?.is_enabled === true || statusData?.enrolled === true || statusData?.biometric_enabled === true;
+        const storedToken = await getBiometricToken();
+        if (cancelled) return;
+        const enrolled = serverEnabled && !!storedToken;
         setBiometricEnabled(enrolled);
-        setBiometricPaymentEnabled(enrolled);
         setBiometricFlag('biometricEnabled', enrolled);
-        setBiometricFlag('biometricPaymentEnabled', enrolled);
-
-        // A stale local credential must never remain usable when the server
-        // reports that this device is no longer enrolled.
-        if (!serverEnabled && hasStoredToken) {
-          await setBiometricToken('');
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error('Payment biometric status check failed:', error);
-          // Fail closed when the server cannot confirm enrollment. The PIN
-          // remains available and a later visit can re-check enrollment.
-          setBiometricEnabled(false);
+        if (!enrolled) {
+          setBiometricLoginEnabled(false);
           setBiometricPaymentEnabled(false);
-          setBiometricFlag('biometricEnabled', false);
+          setBiometricFlag('biometricLoginEnabled', false);
           setBiometricFlag('biometricPaymentEnabled', false);
-          showToast('Could not verify fingerprint payment status. Use your transaction PIN for now.');
         }
+      } catch (e) {
+        console.error('Biometric status check failed:', e);
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-
-    void loadPaymentBiometricStatus();
-    return () => { cancelled = true; };
-  }, [isNative, showToast]);
+  }, [isNative]);
 
   useEffect(() => {
     try {
@@ -308,48 +339,30 @@ export function Settings() {
     }
   };
 
-  // Payment biometrics are intentionally independent from biometric login.
-  // Verify the device biometric first, then ask the backend to enroll using
-  // the user's existing transaction PIN.
-  const handleMainBiometricToggle = async () => {
-    if (!biometricSupported || biometricBusy) return;
+  // Toggle handlers using PinModal: PIN first (server-verified), then
+  // the fingerprint scan itself — the server mints the device token.
+  const handleMainBiometricToggle = () => {
+    if (!biometricSupported) return;
     setPinErrorMessage(null);
 
-    if (biometricEnabled && biometricPaymentEnabled) {
-      setPendingBiometricAction('disable');
-      showPinModal({
-        type: 'disable-biometric',
-        value: {
-          product_name: 'Remove Payment Fingerprint',
-          title: 'Enter your current transaction PIN',
-        },
-      });
-      return;
-    }
-
-    setBiometricBusy(true);
-    try {
-      if (Capacitor.getPlatform() === 'ios') {
-        const authenticated = await performBiometricPrompt('Verify your fingerprint to enable payment confirmation');
-        if (!authenticated) {
-          showToast('Fingerprint verification was cancelled or unsuccessful. Your payment settings were not changed.');
-          return;
-        }
-      }
-
+    if (!biometricEnabled) {
       setPendingBiometricAction('enable');
       showPinModal({
         type: 'enable-biometric',
         value: {
-          product_name: 'Enable Fingerprint Payments',
-          title: 'Enter your current transaction PIN',
-        },
+          product_name: 'Add Fingerprint',
+          title: 'Enter your current transaction PIN'
+        }
       });
-    } catch (error) {
-      console.error('Unable to start payment biometric enrollment:', error);
-      showToast('Could not start fingerprint setup. Please use your transaction PIN and try again.');
-    } finally {
-      setBiometricBusy(false);
+    } else {
+      setPendingBiometricAction('disable');
+      showPinModal({
+        type: 'disable-biometric',
+        value: {
+          product_name: 'Remove Fingerprint',
+          title: 'Enter your current transaction PIN'
+        }
+      });
     }
   };
 
@@ -359,62 +372,89 @@ export function Settings() {
     setPinErrorMessage(null);
 
     if (action === 'enable') {
-      const token = response?.token
-        || response?.data?.token
-        || response?.biometric_token
-        || response?.data?.biometric_token
-        || response?.device_token
-        || response?.data?.device_token;
-
-      if (typeof token !== 'string' || !token.trim()) {
-        setPinErrorMessage('The server did not return a payment fingerprint token. Your payment PIN will continue to work. Please contact support or try again later.');
+      // Server verified the PIN and minted a device token (returned once).
+      const token = response?.token || response?.biometric_token || response?.device_token || response?.data?.token;
+      if (!token) {
+        setPinErrorMessage('Could not add your fingerprint. Please try again.');
         return;
       }
-
-      try {
-        await setBiometricToken(token.trim());
+      const bioSuccess = await performBiometricPrompt('Confirm your fingerprint to finish setup');
+      if (bioSuccess) {
+        try {
+          await setBiometricToken(token);
+        } catch {
+          setPinErrorMessage('Your fingerprint was verified, but secure storage failed. Please try again.');
+          return;
+        }
         setBiometricFlag('biometricEnabled', true);
+        setBiometricFlag('biometricLoginEnabled', false);
         setBiometricFlag('biometricPaymentEnabled', true);
+        localStorage.setItem('stayLoggedIn', 'false');
         setBiometricEnabled(true);
+        setBiometricLoginEnabled(false);
         setBiometricPaymentEnabled(true);
-        showToast('Fingerprint payment confirmation is now enabled on this device.');
-      } catch (error) {
-        console.error('Secure payment token storage failed:', error);
-        // Fail closed. The backend may have enrolled the device, but without
-        // a locally stored token this app must continue to require the PIN.
-        setBiometricFlag('biometricEnabled', false);
-        setBiometricFlag('biometricPaymentEnabled', false);
-        setBiometricEnabled(false);
-        setBiometricPaymentEnabled(false);
-        setPinErrorMessage('The server enrolled your device, but this phone could not securely save the fingerprint token. Payments will continue to use your PIN. Please retry setup.');
+      } else {
+        // Token deliberately not stored: payments stay on the PIN until
+        // the fingerprint scan is confirmed.
+        setPinErrorMessage('Fingerprint not confirmed. Tap Add fingerprint to try again.');
       }
-      return;
-    }
-
-    if (action === 'disable') {
-      // The backend has confirmed disenrollment before this callback runs.
-      // Disable the local feature immediately, even if secure-store cleanup
-      // fails, so a stale token cannot be submitted by the app.
-      setBiometricFlag('biometricEnabled', false);
-      setBiometricFlag('biometricPaymentEnabled', false);
-      setBiometricEnabled(false);
-      setBiometricPaymentEnabled(false);
+    } else if (action === 'disable') {
       try {
         await setBiometricToken('');
-        showToast('Fingerprint payment confirmation has been disabled.');
-      } catch (error) {
-        console.error('Could not clear the payment biometric token:', error);
-        setPinErrorMessage('Fingerprint payments are disabled, but this device could not clear the old secure token. Please restart the app and contact support if this message remains.');
+        await clearBiometricLoginCredential();
+      } catch {
+        setPinErrorMessage('Could not clear secure biometric storage. Please try again.');
+        return;
       }
+      setBiometricFlag('biometricEnabled', false);
+      setBiometricFlag('biometricLoginEnabled', false);
+      setBiometricFlag('biometricPaymentEnabled', false);
+      setBiometricEnabled(false);
+      setBiometricLoginEnabled(false);
+      setBiometricPaymentEnabled(false);
     }
   };
 
-  const handlePinVerificationError = (errorResponse?: { message?: string; error?: string; detail?: string }) => {
-    const errorMsg = errorResponse?.message || errorResponse?.error || errorResponse?.detail || 'Transaction PIN verification failed. Please try again.';
+  const handlePinVerificationError = (errorResponse?: { message?: string; error?: string }) => {
+    const errorMsg = errorResponse?.message || errorResponse?.error || 'Invalid Transaction PIN. Please try again.';
     setPinErrorMessage(errorMsg);
     setPendingBiometricAction(null);
+
     showToast(errorMsg);
+    // Explicitly dismiss modal and clean up state on verification error
     hidePinModal();
+  };
+
+  const handleLoginBiometricToggle = async () => {
+    if (!biometricEnabled || !isNative) return;
+    const newValue = !biometricLoginEnabled;
+    if (newValue) {
+      const refreshToken = getSessionRefresh();
+      if (!refreshToken || !user?.email) {
+        showToast('Please sign in again before enabling biometric login.');
+        return;
+      }
+      try {
+        await setBiometricLoginCredential(user.email, refreshToken);
+        setBiometricFlag('biometricLoginEnabled', true);
+        setBiometricLoginEnabled(true);
+        showToast('Biometric login enabled on this device.');
+      } catch (error) {
+        console.error('Unable to enable biometric login:', error);
+        showToast('Could not securely save biometric login. Please try again.');
+      }
+    } else {
+      await clearBiometricLoginCredential();
+      setBiometricFlag('biometricLoginEnabled', false);
+      setBiometricLoginEnabled(false);
+    }
+  };
+
+  const handlePaymentBiometricToggle = () => {
+    if (!biometricEnabled) return;
+    const newValue = !biometricPaymentEnabled;
+    setBiometricPaymentEnabled(newValue);
+    setBiometricFlag('biometricPaymentEnabled', newValue);
   };
 
   const legalPolicies = [
@@ -707,23 +747,25 @@ export function Settings() {
                   <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </button>
 
-                <div className="w-full flex items-center justify-between gap-3 p-4 sm:px-5">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0">
-                      <Bell className="w-5 h-5 stroke-[1.75]" />
+                {isNative && (
+                  <div className="w-full flex items-center justify-between gap-3 p-4 sm:px-5">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center shrink-0">
+                        <Bell className="w-5 h-5 stroke-[1.75]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">System tray alerts</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Allow BlueSea to show OS notifications on this device</p>
+                        {pushPermission === 'denied' && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                            Enable notifications in your phone settings: Apps → BlueSea Mobile → Notifications.
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">System tray alerts</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Show a system notification when the app is in the background</p>
-                      {pushEnabled && pushPermission === 'denied' && (
-                        <button type="button" onClick={() => { void openPushSettings(); }} className="text-xs text-sky-500 hover:text-sky-600 font-medium mt-0.5">
-                          Blocked by OS — open system settings
-                        </button>
-                      )}
-                    </div>
+                    <Switch checked={pushEnabled} disabled={pushPermissionBusy} onCheckedChange={(v) => { void handlePushToggle(v); }} aria-label="Toggle system tray alerts" />
                   </div>
-                  <Switch checked={pushEnabled} onCheckedChange={(v) => { void handlePushToggle(v); }} aria-label="Toggle system tray alerts" />
-                </div>
+                )}
 
                 <div className="w-full flex items-center justify-between p-4 sm:px-5 opacity-60 cursor-not-allowed">
                   <div className="flex items-center gap-3.5 min-w-0">
@@ -810,7 +852,7 @@ export function Settings() {
                             Biometric Authentication
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                            Use your device fingerprint to confirm supported payments.
+                            Secure your account using device biometrics.
                           </p>
                         </div>
                       </div>
@@ -825,55 +867,115 @@ export function Settings() {
 
                     {biometricAccordionExpanded && (
                       <div className="bg-slate-50/60 dark:bg-slate-950/40 border-t border-slate-100 dark:border-slate-800/80 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                        {!biometricSupported ? (
-                          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center dark:border-amber-900/60 dark:bg-amber-950/20">
-                            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Fingerprint authentication unavailable</p>
-                            <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">This device does not currently provide supported biometric authentication. You can continue confirming payments with your transaction PIN.</p>
+                        {biometricChecking ? (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium text-center py-2">
+                            Checking this device’s biometric hardware…
+                          </p>
+                        ) : !biometricSupported ? (
+                          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium text-center py-2 space-y-1">
+                            {biometricAvailabilityError === 'BIOMETRICS_NOT_ENROLLED' ? (
+                              <p>Your phone has biometric support, but no fingerprint/face is enrolled for app authentication. Add one in your phone’s Security settings, then return here.</p>
+                            ) : biometricAvailabilityError === 'PASSCODE_NOT_SET' ? (
+                              <p>Set a secure screen lock (PIN, pattern or password) on your phone first, then configure your fingerprint.</p>
+                            ) : biometricAvailabilityError === 'PLUGIN_UNAVAILABLE' ? (
+                              <p>Biometric service could not be reached. The mobile app needs its native biometric plugin synced and rebuilt.</p>
+                            ) : biometricHardwareDetected ? (
+                              <p>A biometric sensor is reported, but Android is not currently making it available to this app. Check the phone’s Security settings and install a freshly synced BlueSea app build.</p>
+                            ) : (
+                              <p>This device does not currently expose biometric authentication to apps. Check the phone’s biometric and screen-lock settings.</p>
+                            )}
                           </div>
                         ) : (
-                          <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-                            <div className="flex items-start gap-3">
-                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400">
-                                <Fingerprint className="h-6 w-6" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-semibold text-slate-800 dark:text-white">Use Fingerprint for Payments</p>
-                                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                                  {biometricEnabled && biometricPaymentEnabled
-                                    ? 'Enabled on this device. Your fingerprint can authorize supported payments instead of entering your transaction PIN.'
-                                    : 'Enable fingerprint confirmation for supported payments. You will verify your fingerprint and enter your current transaction PIN to register this device.'}
+                          <div className="space-y-4">
+                            {/* Enable Biometrics Master Toggle */}
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-semibold text-slate-800 dark:text-white">
+                                  {biometricEnabled ? 'Fingerprint Added' : 'Add Fingerprint'}
+                                </p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  {biometricEnabled
+                                    ? 'Confirm payments with your fingerprint. Tap to remove.'
+                                    : 'Enter your current transaction PIN, then scan your fingerprint.'}
                                 </p>
                               </div>
                               <button
                                 type="button"
                                 role="switch"
-                                aria-label="Use Fingerprint for Payments"
-                                aria-checked={biometricEnabled && biometricPaymentEnabled}
-                                disabled={biometricBusy}
-                                onClick={() => void handleMainBiometricToggle()}
+                                aria-checked={biometricEnabled}
+                                onClick={handleMainBiometricToggle}
                                 className={cn(
-                                  "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
-                                  biometricEnabled && biometricPaymentEnabled ? "bg-sky-500" : "bg-slate-200 dark:bg-slate-700"
+                                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                                  biometricEnabled ? "bg-sky-500" : "bg-slate-200 dark:bg-slate-700"
                                 )}
                               >
-                                <span className={cn(
-                                  "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition duration-200",
-                                  biometricEnabled && biometricPaymentEnabled ? "translate-x-5" : "translate-x-0"
-                                )} />
+                                <span
+                                  className={cn(
+                                    "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out",
+                                    biometricEnabled ? "translate-x-5" : "translate-x-0"
+                                  )}
+                                />
                               </button>
                             </div>
-                            <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3 text-xs dark:border-slate-800">
-                              {biometricEnabled && biometricPaymentEnabled ? (
-                                <>
-                                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                  <span className="font-medium text-emerald-700 dark:text-emerald-400">Payment fingerprint is active on this device</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Lock className="h-4 w-4 text-slate-400" />
-                                  <span className="text-slate-500 dark:text-slate-400">Transaction PIN remains available at all times</span>
-                                </>
-                              )}
+
+                            {/* Native-only biometric login; credentials are held in Keychain/Keystore. */}
+                            {isNative && <div className={cn("flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800", !biometricEnabled && "opacity-50 pointer-events-none")}>
+                              <div>
+                                <p className="text-sm font-semibold text-slate-800 dark:text-white">
+                                  Use Biometrics for Login
+                                </p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  Authenticate using biometrics when opening the app
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                role="switch"
+                                disabled={!biometricEnabled}
+                                aria-checked={biometricLoginEnabled}
+                                onClick={handleLoginBiometricToggle}
+                                className={cn(
+                                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                                  biometricLoginEnabled && biometricEnabled ? "bg-sky-500" : "bg-slate-200 dark:bg-slate-700"
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out",
+                                    biometricLoginEnabled && biometricEnabled ? "translate-x-5" : "translate-x-0"
+                                  )}
+                                />
+                              </button>
+                            </div>}
+
+                            {/* Use Biometrics for Payments */}
+                            <div className={cn("flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800", !biometricEnabled && "opacity-50 pointer-events-none")}>
+                              <div>
+                                <p className="text-sm font-semibold text-slate-800 dark:text-white">
+                                  Use Fingerprint for Payments
+                                </p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  Confirm transactions with your fingerprint instead of the PIN
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                role="switch"
+                                disabled={!biometricEnabled}
+                                aria-checked={biometricPaymentEnabled}
+                                onClick={handlePaymentBiometricToggle}
+                                className={cn(
+                                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                                  biometricPaymentEnabled && biometricEnabled ? "bg-sky-500" : "bg-slate-200 dark:bg-slate-700"
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out",
+                                    biometricPaymentEnabled && biometricEnabled ? "translate-x-5" : "translate-x-0"
+                                  )}
+                                />
+                              </button>
                             </div>
                           </div>
                         )}

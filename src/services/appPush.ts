@@ -1,11 +1,8 @@
-// App push bridge (Option B — no Firebase / no FCM).
-// Turns the existing live pipe (`bluesea:notification` DOM events from the
-// notification WebSocket) into real OS tray notifications while the app is
-// open or backgrounded, using @capacitor/local-notifications.
-//
-// Limits: force-killed app / rebooted phone = no WebSocket = no alert.
-// Upgrading to FCM later reuses this file: FCM handlers call the same
-// `showSystemTray()` + tap routing below.
+// Native-app notification bridge. This uses the existing authenticated
+// notification WebSocket while the native app is running and converts each
+// received event into an OS notification. It is intentionally unavailable
+// to browser/web users. It is not remote push: a force-stopped app cannot
+// receive WebSocket events until it is running again.
 
 import { Capacitor } from '@capacitor/core';
 import {
@@ -35,9 +32,11 @@ export function isNativePushSupported(): boolean {
 export function isPushEnabled(): boolean {
   try {
     const raw = localStorage.getItem(PUSH_ENABLED_KEY);
-    return raw === null ? true : raw === 'true';
+    // Notifications are opt-in. A missing preference must never silently
+    // turn the setting back on after an install, storage reset, or upgrade.
+    return raw === 'true';
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -49,36 +48,26 @@ export function setPushEnabled(enabled: boolean): void {
   }
 }
 
-export async function getPushPermissionStatus(): Promise<'granted' | 'denied' | 'prompt'> {
-  if (!isNativePushSupported()) {
-    if (typeof Notification === 'undefined') return 'denied';
-    return (Notification.permission as 'granted' | 'denied' | 'default') === 'default'
-      ? 'prompt'
-      : (Notification.permission as 'granted' | 'denied');
-  }
+export async function getPushPermissionStatus(): Promise<'granted' | 'denied' | 'prompt' | 'prompt-with-rationale' | 'unsupported'> {
+  if (!isNativePushSupported()) return 'unsupported';
   try {
     const { display } = await LocalNotifications.checkPermissions();
-    return display as 'granted' | 'denied' | 'prompt';
-  } catch {
+    return display as 'granted' | 'denied' | 'prompt' | 'prompt-with-rationale';
+  } catch (error) {
+    console.error('Could not check native notification permission:', error);
     return 'prompt';
   }
 }
 
 export async function requestPushPermission(): Promise<boolean> {
-  if (!isNativePushSupported()) {
-    if (typeof Notification === 'undefined') return false;
-    try {
-      const result = await Notification.requestPermission();
-      return result === 'granted';
-    } catch {
-      return false;
-    }
-  }
+  if (!isNativePushSupported()) return false;
   try {
+    const current = await LocalNotifications.checkPermissions();
+    if (current.display === 'granted') return true;
     const result = await LocalNotifications.requestPermissions();
     return result.display === 'granted';
-  } catch (e) {
-    console.error('Push permission request failed:', e);
+  } catch (error) {
+    console.error('Native notification permission request failed:', error);
     return false;
   }
 }
@@ -126,22 +115,7 @@ async function showSystemTray(n: ServerNotification): Promise<void> {
     type: typeof n.notification_type === 'string' ? (n.notification_type as string) : undefined,
   };
 
-  if (!isNativePushSupported()) {
-    // Web fallback: plain browser Notification (tab must be open).
-    try {
-      if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) {
-        const webNotif = new Notification(title, { body });
-        webNotif.onclick = () => {
-          window.focus();
-          window.dispatchEvent(new CustomEvent<PushTapDetail>(PUSH_TAP_EVENT, { detail: extra }));
-          webNotif.close();
-        };
-      }
-    } catch (e) {
-      console.error('Web notification failed:', e);
-    }
-    return;
-  }
+  if (!isNativePushSupported()) return;
 
   try {
     await LocalNotifications.schedule({
@@ -151,7 +125,9 @@ async function showSystemTray(n: ServerNotification): Promise<void> {
           body,
           id: toScheduleId(n.id),
           channelId: CHANNEL_ID,
+          // Alerts are immediate; exact-alarm access is unnecessary.
           schedule: { at: new Date(Date.now() + 200) },
+          isExactNotification: false,
           sound: undefined,
           extra,
         },
@@ -163,16 +139,15 @@ async function showSystemTray(n: ServerNotification): Promise<void> {
 }
 
 function onServerNotificationEvent(e: Event): void {
-  if (!isPushEnabled()) return;
+  if (!isNativePushSupported() || !isPushEnabled()) return;
   const n = (e as CustomEvent).detail as ServerNotification & {
     notification_type?: string;
   };
   if (typeof n?.id !== 'number') return;
   if (seenIds.has(n.id)) return;
   seenIds.add(n.id);
-  // Foreground web tab already shows the in-app list/toast — only pop the
-  // OS tray when the tab is hidden or running natively (backgrounded app).
-  if (!isNativePushSupported() && !document.hidden) return;
+  // In-app UI handles foreground messages. Native OS tray notifications are
+  // deliberately limited to the Capacitor app; web users never receive them.
   void showSystemTray(n);
 }
 
