@@ -205,6 +205,28 @@ export interface CablePlan {
   price: number;
 }
 
+export interface BankOption {
+  /** Nomba bank code — the value sent on account lookup / transfers. */
+  code: string;
+  name: string;
+  /** Bank logo URL from Nomba (may be empty). */
+  logo: string;
+}
+
+/// Nomba bank codes `{code, name, logo, ...}` -> selectable bank options.
+/// `code` is required because it drives account lookup and transfers.
+export function toBanks(items: PlanItem[] | undefined): BankOption[] {
+  if (!items?.length) return [];
+  const out: BankOption[] = [];
+  for (const p of items) {
+    const code = str(p.code) ?? str(p.bankCode) ?? str(p.nipCode);
+    const name = str(p.name) ?? str(p.bankName);
+    if (!code || !name) continue;
+    out.push({ code, name, logo: str(p.logo) ?? '' });
+  }
+  return out;
+}
+
 /// Server cable items `{subScriptionType, amount}` -> selectable plans.
 /// `value` is the Nomba subscription type sent as the plan.
 export function toCablePlans(items: PlanItem[]): CablePlan[] {

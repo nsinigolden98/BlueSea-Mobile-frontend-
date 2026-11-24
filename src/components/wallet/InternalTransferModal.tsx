@@ -1,11 +1,11 @@
 // src/components/wallet/InternalTransferModal.tsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { postRequest, ENDPOINTS, API_BASE } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import { PinModal, Toast, TransactionModal, LoadingSpinner } from '@/components/ui-custom';
-import { NIGERIAN_BANKS } from '@/data';
+import { usePlans, toBanks } from '@/hooks/usePlans';
 import { Search, User, CheckCircle2, Users, Plus, X, Landmark } from 'lucide-react';
 
 interface FoundUser {
@@ -23,6 +23,8 @@ interface InternalTransferModalProps {
 export function InternalTransferModal({ isOpen, open, onClose }: InternalTransferModalProps) {
   const isVisible = isOpen ?? open ?? false;
   const { user } = useAuth();
+  const { plans: livePlans, unavailable: banksUnavailable } = usePlans();
+  const banks = useMemo(() => toBanks(livePlans.banks), [livePlans.banks]);
 
   const [transferData, setTransferData] = useState({
     recipient: '',
@@ -203,7 +205,7 @@ export function InternalTransferModal({ isOpen, open, onClose }: InternalTransfe
         account_name: bankAccountName,
         account_number: transferData.recipient.trim(),
         bank_code: bankCode,
-        bank_name: NIGERIAN_BANKS.find((b) => b.code === bankCode)?.name || '',
+        bank_name: banks.find((b) => b.code === bankCode)?.name || '',
         amount: transferData.amount,
       });
     } else {
@@ -285,8 +287,12 @@ export function InternalTransferModal({ isOpen, open, onClose }: InternalTransfe
                         value={bankCode}
                         onChange={(e) => setBankCode(e.target.value)}
                       >
-                        <option value="">Select bank</option>
-                        {NIGERIAN_BANKS.map((b) => (
+                        <option value="">
+                          {banks.length === 0
+                            ? (banksUnavailable ? 'Banks unavailable — check connection' : 'Loading banks…')
+                            : 'Select bank'}
+                        </option>
+                        {banks.map((b) => (
                           <option key={b.code} value={b.code}>{b.name}</option>
                         ))}
                       </select>
@@ -298,8 +304,12 @@ export function InternalTransferModal({ isOpen, open, onClose }: InternalTransfe
                     )}
                     {bankAccountName && (
                       <div className="p-5 bg-sky-500/5 border border-sky-500/20 rounded-[2rem] flex items-center gap-5">
-                        <div className="h-16 w-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-md border border-sky-500/20">
-                          <Landmark className="w-7 h-7 text-sky-500" />
+                        <div className="h-16 w-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-md border border-sky-500/20 overflow-hidden">
+                          {banks.find((b) => b.code === bankCode)?.logo ? (
+                            <img src={banks.find((b) => b.code === bankCode)?.logo} alt="" className="w-full h-full object-contain" />
+                          ) : (
+                            <Landmark className="w-7 h-7 text-sky-500" />
+                          )}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
