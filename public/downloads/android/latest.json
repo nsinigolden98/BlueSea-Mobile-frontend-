@@ -2,9 +2,9 @@
   "platform": "android",
   "version": "Ver 1.0.2",
   "versionCode": 1,
-  "releaseDate": "2026-11-09",
+  "releaseDate": "2026-11-25",
   "file": "/downloads/android/versions/bluesea-mobile-1.0.2.apk",
-  "fileSize": "11.49 MB",
+  "fileSize": "22.19 MB",
   "minimumAndroidVersion": "Minimum Android Version -- 7",
   "releaseNotes": [
     "push notification support",
@@ -20,7 +20,7 @@
   "versionCode": 1,
   "releaseDate": "2026-11-09",
   "file": "/downloads/android/versions/bluesea-mobile-1.0.0.apk",
-  "fileSize": "11.49 MB",
+  "fileSize": "12.05 MB",
   "minimumAndroidVersion": "Minimum Android Version -- 7",
   "releaseNotes": [
     "Official BlueSea Mobile release",
