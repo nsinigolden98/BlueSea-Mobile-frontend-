@@ -1,0 +1,14 @@
+include ':app'
+
+def cordovaPluginsDir = new File('./capacitor-cordova-android-plugins')
+if (!cordovaPluginsDir.exists()) {
+    cordovaPluginsDir.mkdirs()
+    new File(cordovaPluginsDir, 'build.gradle').text = "// Dummy build.gradle\n"
+    new File(cordovaPluginsDir, 'cordova.variables.gradle').text = "// Dummy variables\n"
+}
+if (cordovaPluginsDir.exists()) {
+    include ':capacitor-cordova-android-plugins'
+    project(':capacitor-cordova-android-plugins').projectDir = cordovaPluginsDir
+}
+
+apply from: 'capacitor.settings.gradle'

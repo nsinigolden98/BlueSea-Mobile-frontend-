@@ -1,0 +1,33 @@
+{
+	"appId": "com.blueseamobile.app",
+	"appName": "BlueSea Mobile",
+	"webDir": "dist",
+	"server": {
+		"url": "https://blueseamobile.com",
+		"cleartext": true,
+		"allowNavigation": [
+			"blueseamobile.com",
+			"*.blueseamobile.com"
+		]
+	},
+	"android": {
+		"allowMixedContent": true,
+		"captureInput": true,
+		"backgroundColor": "#0284c7"
+	},
+	"plugins": {
+		"SocialLogin": {
+			"google": {
+				"webClientId": "557271059008-u6r4bna1r9jqe5r20rkhcjr4rof9s18u.apps.googleusercontent.com"
+			}
+		}
+	},
+	"packageClassList": [
+		"CAPBrowserPlugin",
+		"CAPCameraPlugin",
+		"LocalNotificationsPlugin",
+		"PushNotificationsPlugin",
+		"NativeBiometricPlugin",
+		"SocialLoginPlugin"
+	]
+}
