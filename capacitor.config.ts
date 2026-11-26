@@ -1,22 +1,17 @@
+
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.blueseamobile.app',
   appName: 'BlueSea Mobile',
   webDir: 'dist',
-  server: {
-    url:'https://blueseamobile.com',
-    cleartext: true,
-    allowNavigation: [    
-      'blueseamobile.com', 
-      '*.blueseamobile.com'
-    ]
-  },
+
   android: {
     allowMixedContent: true,
     captureInput: true,
     backgroundColor: '#0284c7',
   },
+
   plugins: {
     SocialLogin: {
       google: {
