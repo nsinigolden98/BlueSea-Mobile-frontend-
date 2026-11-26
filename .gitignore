@@ -18,6 +18,10 @@ dist/
 # deliberately not tracked on this branch either.
 #ios/
 
+#my signed keystore file
+android/keystore.properties
+
+
 # The Tauri desktop shell is created locally as well.
 src-tauri/
 
